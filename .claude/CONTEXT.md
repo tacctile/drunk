@@ -94,8 +94,10 @@ CREATE POLICY bh_avail_delete ON bh_availability FOR DELETE TO anon USING (true)
 
 ## Data Model
 Each entry in `const cities = [...]` follows this exact shape (Sioux City is the reference implementation):
-`{ id, name, state, miles, drive, description, hotels: [{ name, stars, priceRange, distanceNote, onSite, website }], bars: [{ name, description, distance }], food: [{ name, description, hours }], parking }`
+`{ id, name, state, miles, drive, mapCenter: { lat, lng }, mapZoom, hotels: [{ name, stars, priceRange, distanceNote, onSite, website, coords: { lat, lng } }], bars: [{ name, description, distance, coords }], food: [{ name, description, hours, coords }] }`
 Bars render sorted by parsed `distance` (feet). Food renders in array order.
+- The city-level `description` and `parking` fields have been REMOVED from the model and all rendering code. Do not add them back.
+- `coords` were added to every hotel/bar/food entry (used for Google Maps pins). `mapCenter`/`mapZoom` set the initial map view (Sioux City: Fourth Street Historic District, zoom 15).
 
 ---
 
@@ -103,7 +105,8 @@ Bars render sorted by parsed `distance` (feet). Food renders in array order.
 
 ### Built
 - [x] City list — card list with name, state, miles, drive time, live vote count; sort by distance (default) or A–Z
-- [x] City detail — hero (name/state/miles/drive/description), prominent vote button, HOTELS (cards: stars, price, distance note, on-site, website link), BARS (distance-sorted list), FOOD (list with hours), PARKING (paragraph); full-screen with back button on mobile, sticky side panel on desktop
+- [x] City detail — hero (name/state/miles/drive only — no description/parking), HOTELS (cards: stars, price, distance note, on-site, website link), BARS (distance-sorted list), FOOD (list with hours); full-screen with back button on mobile, sticky side panel on desktop
+- [x] Google Maps integration — map below the hero (320px mobile / 420px ≥600px), custom dark + light map style JSON synced to the theme toggle, `gestureHandling: 'cooperative'` + custom "Use two fingers" overlay hint (Google's built-in one is CSS-suppressed via `.gm-style-moc`), default UI disabled, colored circle pins (hotels #E8A030 / bars #4CAF50 / food #2196F3) with white borders, three 44px filter chips above the map, pin tap → M3 bottom sheet (`#poiScrim`/`#poiSheet`) with per-category content + hotel Visit Website button, list item tap (`data-poi="cat-idx"`) → map pans/zooms to pin + opens sheet without page scroll. Map only initializes in the visible container (panel on desktop, body on mobile); re-renders of the same city preserve center/zoom/filters; async Maps script handled by retry polling in `initCityMap`
 - [x] Voting — one vote per person per trip (`trip_id: 'current'`); first vote prompts for name once; vote stored to Supabase `bh_votes` with silent localStorage fallback; changing city moves the vote; ranked results view with voter names, leader highlight, meters; name changeable from results view (updates both tables + caches)
 - [x] ~~Vote tally FAB~~ — removed (redundant with Results nav tab)
 - [x] Availability calendar — month view, prev/next nav, tap a future date to toggle yourself, per-date counts, day panel listing who's available; Supabase `bh_availability` with silent fallback; past dates disabled
@@ -120,5 +123,5 @@ Bars render sorted by parsed `distance` (feet). Food renders in array order.
 
 ## Current State
 Last updated: 2026-06-11
-Last change: Removed floating vote tally FAB (HTML, CSS, JS). Added History API back button support: `history.replaceState({ view: 'list' })` on load as base state; `go('results')` and `go('avail')` push history states; `openCity()` pushes `{ view: 'city', cityId }` on mobile; `window.addEventListener('popstate')` handler navigates the app from Android/iOS back button. `isPopState` flag prevents double-pushing on popstate-driven navigation.
-Next up: paste real anon key, run schema SQL in Supabase, then add city #2
+Last change: Rebuilt the city detail page. Removed `description` and `parking` from the Sioux City data + all rendering/CSS for them. Added `coords` to all 26 Sioux City hotel/bar/food entries plus `mapCenter`/`mapZoom`. Added full Google Maps integration: themed dark/light map styles, colored circle pins, filter chips, POI bottom sheet, list→map pan/zoom interaction, cooperative gestures with custom two-finger overlay hint. Vote button moved directly below the map (hero shows only name/state/miles/drive).
+Next up: paste real anon key, run schema SQL in Supabase, then add city #2 (must include coords/mapCenter/mapZoom)
