@@ -1,0 +1,21 @@
+last_updated: 2026-06-11
+last_session: >-
+  Initial full build of the /app Next.js webapp: data pipeline (27 cities
+  cleaned against verified-address research), composite scoring + walkability
+  tiers, dashboard, cities browser, city detail with in-app Google Map,
+  atomic city+hotel voting, tri-state availability calendar with group heat
+  map, Supabase realtime with silent localStorage fallback, dark/light
+  theming, and the full .claude/ ecosystem. Supabase v2 schema applied as
+  migration bar_hoppers_v2_schema (incl. realtime publication).
+current_phase: initial_build
+build_complete: true
+supabase_schema_deployed: true
+vercel_deployed: false
+known_issues:
+  - 99 venues remain verified:false (flagged in UI) pending address research
+  - Vote atomicity is sequential upserts, not a DB transaction (fine at this scale)
+next_up:
+  - Create Vercel project with root directory app/ and deploy
+  - Set NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel (optional — fallbacks baked in)
+  - Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in Vercel (optional — fallback baked in)
+  - Restrict the Google Maps API key to the production domain
