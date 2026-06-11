@@ -619,12 +619,19 @@ body[data-view="detail"] .top-bar { display: none; }
 }
 .detail-vote { margin-top: 16px; }
 
-/* ── City map — chips, canvas, touch hint ── */
+/* ── City map — chips, canvas ── */
+.map-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0 12px;
+}
 .map-chips {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 8px;
-  margin: 16px 0 12px;
+  flex: 1;
+  min-width: 0;
 }
 .map-chip {
   display: flex;
@@ -674,28 +681,18 @@ body[data-view="detail"] .top-bar { display: none; }
 @media (min-width: 600px) {
   .city-map { height: 420px; }
 }
-.map-touch-hint {
+/* Suppress Google's built-in cooperative-gesture overlay */
+.gm-style-moc { display: none !important; }
+
+.map-dim-overlay {
   position: absolute;
   inset: 0;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: color-mix(in srgb, var(--surface) 80%, transparent);
-  color: var(--on-surface);
-  font: var(--type-title);
-  text-align: center;
-  padding: 16px;
-  opacity: 0;
+  background: rgba(0, 0, 0, 0.5);
   pointer-events: none;
-  transition: opacity 200ms ease;
+  display: none;
+  z-index: 2;
 }
-.map-touch-hint.show { opacity: 1; }
-.map-touch-hint .msym { font-size: var(--icon-hero); color: var(--primary); }
-/* Suppress Google's built-in cooperative-gesture overlay — we render our own */
-.gm-style-moc { display: none !important; }
+.map-dim-overlay.active { display: block; }
 
 /* Tappable list items pan the map to their pin */
 [data-poi] { cursor: pointer; }
@@ -1863,13 +1860,16 @@ function detailHTML(c) {
         '<span class="meta-item"><span class="msym">schedule</span>' + esc(c.drive) + '</span>' +
       '</div>' +
     '</div>' +
-    '<div class="map-chips" role="group" aria-label="Filter map pins">' +
-      chip('hotel', 'Hotels') + chip('bar', 'Bars') + chip('food', 'Food') +
+    '<div class="map-filter-row">' +
+      '<div class="map-chips" role="group" aria-label="Filter map pins">' +
+        chip('hotel', 'Hotels') + chip('bar', 'Bars') + chip('food', 'Food') +
+      '</div>' +
+      '<button type="button" class="btn btn-text" data-map-show-all aria-label="Show all pins and reset view">' +
+        '<span class="msym">zoom_out_map</span><span>Show All</span></button>' +
     '</div>' +
     '<div class="map-wrap">' +
       '<div class="city-map" aria-label="Map of ' + esc(c.name) + ' hotels, bars, and food"></div>' +
-      '<div class="map-touch-hint" aria-hidden="true">' +
-        '<span class="msym">touch_app</span><span>Use two fingers to move the map</span></div>' +
+      '<div class="map-dim-overlay" aria-hidden="true"></div>' +
     '</div>' +
     '<div class="detail-vote">' + voteBtnHTML(c, 'detail') + '</div>' +
     '<div class="section-label"><span class="msym">hotel</span><h2>Hotels</h2>' +
@@ -1963,6 +1963,67 @@ function markerIcon(cat) {
   };
 }
 
+function markerIconSelected(cat) {
+  return {
+    path: google.maps.SymbolPath.CIRCLE,
+    scale: 12,
+    fillColor: POI_COLORS[cat],
+    fillOpacity: 1,
+    strokeColor: '#ffffff',
+    strokeWeight: 2.5
+  };
+}
+
+function markerIconDimmed(cat) {
+  return {
+    path: google.maps.SymbolPath.CIRCLE,
+    scale: 9,
+    fillColor: POI_COLORS[cat],
+    fillOpacity: 0.25,
+    strokeColor: '#ffffff',
+    strokeWeight: 1.5
+  };
+}
+
+function getMapDimOverlay() {
+  if (!mapState || !mapState.map) return null;
+  const mapEl = mapState.map.getDiv();
+  const wrap = mapEl.closest('.map-wrap') || mapEl.parentElement;
+  return wrap ? wrap.querySelector('.map-dim-overlay') : null;
+}
+
+function selectMapPin(clickedMarker, cat) {
+  if (!mapState) return;
+  mapState.markers.forEach((m) => {
+    if (m.marker === clickedMarker) {
+      m.marker.setIcon(markerIconSelected(m.cat));
+    } else {
+      m.marker.setIcon(markerIconDimmed(m.cat));
+    }
+  });
+  mapState.selectedMarker = clickedMarker;
+  const overlay = getMapDimOverlay();
+  if (overlay) overlay.classList.add('active');
+}
+
+function deselectMapPin() {
+  if (!mapState) return;
+  mapState.markers.forEach((m) => m.marker.setIcon(markerIcon(m.cat)));
+  mapState.selectedMarker = null;
+  const overlay = getMapDimOverlay();
+  if (overlay) overlay.classList.remove('active');
+}
+
+function showAllPins() {
+  if (!mapState) return;
+  mapState.filters = { hotel: true, bar: true, food: true };
+  mapState.markers.forEach((m) => m.marker.setVisible(true));
+  syncMapChips();
+  if (mapState.map && mapState.bounds) {
+    mapState.map.fitBounds(mapState.bounds);
+  }
+}
+
 function initCityMap(c) {
   if (!c.mapCenter) return;
   /* Only the visible container gets a live map: panel on desktop, body on mobile */
@@ -1979,10 +2040,11 @@ function initCityMap(c) {
   }
 
   /* Re-renders of the same city (vote refresh) keep the current view and filters */
+  const isFirstLoad = !(mapState && mapState.cityId === c.id && mapState.map);
   let center = c.mapCenter;
   let zoom = c.mapZoom || 15;
   let filters = { hotel: true, bar: true, food: true };
-  if (mapState && mapState.cityId === c.id && mapState.map) {
+  if (!isFirstLoad) {
     const cc = mapState.map.getCenter();
     if (cc) { center = { lat: cc.lat(), lng: cc.lng() }; zoom = mapState.map.getZoom(); }
     filters = mapState.filters;
@@ -1994,13 +2056,16 @@ function initCityMap(c) {
     disableDefaultUI: true,
     gestureHandling: 'cooperative',
     clickableIcons: false,
+    isFractionalZoomEnabled: true,
     styles: currentMapStyle()
   });
 
-  mapState = { cityId: c.id, map: map, markers: [], filters: filters };
+  mapState = { cityId: c.id, map: map, markers: [], filters: filters, bounds: null, selectedMarker: null };
 
+  const bounds = new google.maps.LatLngBounds();
   const add = (cat, arr) => arr.forEach((item, idx) => {
     if (!item.coords) return;
+    bounds.extend(item.coords);
     const marker = new google.maps.Marker({
       map: map,
       position: item.coords,
@@ -2008,15 +2073,30 @@ function initCityMap(c) {
       title: item.name,
       visible: mapState.filters[cat]
     });
-    marker.addListener('click', () => openPoiSheet(cat, item));
+    marker.addListener('click', () => {
+      selectMapPin(marker, cat);
+      openPoiSheet(cat, item);
+    });
     mapState.markers.push({ cat: cat, idx: idx, marker: marker, data: item });
   });
   add('hotel', c.hotels);
   add('bar', c.bars);
   add('food', c.food);
 
+  mapState.bounds = bounds;
+
+  if (isFirstLoad) {
+    map.fitBounds(bounds);
+    let fired = false;
+    const listener = map.addListener('bounds_changed', () => {
+      if (fired) return;
+      fired = true;
+      google.maps.event.removeListener(listener);
+      map.setZoom(map.getZoom() - 0.5);
+    });
+  }
+
   syncMapChips();
-  wireTouchHint(host);
 }
 
 function syncMapChips() {
@@ -2035,20 +2115,6 @@ function toggleMapFilter(cat) {
   syncMapChips();
 }
 
-/* Single-finger drag hint — cooperative gestures need two fingers on touch devices */
-function wireTouchHint(host) {
-  const wrap = host.querySelector('.map-wrap');
-  const hint = host.querySelector('.map-touch-hint');
-  if (!wrap || !hint) return;
-  let hideTimer = null;
-  wrap.addEventListener('touchmove', (e) => {
-    if (e.touches.length !== 1) { hint.classList.remove('show'); return; }
-    hint.classList.add('show');
-    clearTimeout(hideTimer);
-    hideTimer = setTimeout(() => hint.classList.remove('show'), 1500);
-  }, { passive: true });
-}
-
 /* List item tap → pan/zoom the map to the pin and open its sheet. Page never scrolls. */
 function focusPoi(key) {
   if (!mapState || !mapState.map) return;
@@ -2060,10 +2126,19 @@ function focusPoi(key) {
   if (!mapState.filters[cat]) toggleMapFilter(cat);
   mapState.map.panTo(entry.marker.getPosition());
   if (mapState.map.getZoom() < 16) mapState.map.setZoom(16);
+  selectMapPin(entry.marker, cat);
   openPoiSheet(cat, entry.data);
 }
 
 function openPoiSheet(cat, item) {
+  const mapsUrl = item.coords
+    ? 'https://maps.google.com/?q=' + item.coords.lat + ',' + item.coords.lng
+    : null;
+  const mapsBtn = mapsUrl
+    ? '<a class="btn btn-outlined btn-block" href="' + mapsUrl + '" target="_blank" rel="noopener noreferrer">' +
+        '<span class="msym">open_in_new</span><span>Open in Maps</span></a>'
+    : '';
+
   let rows = '';
   if (cat === 'hotel') {
     rows = starsHTML(item.stars) +
@@ -2073,12 +2148,14 @@ function openPoiSheet(cat, item) {
         '<div class="hotel-row"><span class="msym">room_service</span><span>' + esc(item.onSite) + '</span></div>' +
       '</div>' +
       '<a class="btn btn-outlined btn-block" href="' + esc(item.website) + '" target="_blank" rel="noopener noreferrer">' +
-        '<span class="msym">open_in_new</span><span>Visit website</span></a>';
+        '<span class="msym">open_in_new</span><span>Visit website</span></a>' +
+      mapsBtn;
   } else if (cat === 'bar') {
-    rows = '<p class="poi-desc">' + esc(item.description) + '</p>';
+    rows = '<p class="poi-desc">' + esc(item.description) + '</p>' + mapsBtn;
   } else {
     rows = '<p class="poi-desc">' + esc(item.description) + '</p>' +
-      '<div class="hotel-row"><span class="msym">schedule</span><span>' + esc(item.hours) + '</span></div>';
+      '<div class="hotel-row"><span class="msym">schedule</span><span>' + esc(item.hours) + '</span></div>' +
+      mapsBtn;
   }
   $('poiSheet').innerHTML =
     '<div class="poi-head">' +
@@ -2092,6 +2169,7 @@ function openPoiSheet(cat, item) {
 
 function closePoiSheet() {
   $('poiScrim').classList.remove('open');
+  deselectMapPin();
 }
 
 /* ════════════════════════════════════════════
@@ -2375,6 +2453,9 @@ document.addEventListener('click', (e) => {
 
   const chip = e.target.closest('.map-chip');
   if (chip) { toggleMapFilter(chip.dataset.mapFilter); return; }
+
+  const showAll = e.target.closest('[data-map-show-all]');
+  if (showAll) { showAllPins(); return; }
 
   const sheetClose = e.target.closest('[data-sheet-close]');
   if (sheetClose) { closePoiSheet(); return; }
