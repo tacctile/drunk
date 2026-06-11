@@ -46,6 +46,7 @@ export interface City {
   state: string;
   miles: number;
   drive: string;
+  tagline: string; // hand-written one-sentence hook; editorial, never generated
   mapCenter: Coords;
   mapZoom: number;
   vibes: VibeTag[];
