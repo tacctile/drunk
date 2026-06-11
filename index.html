@@ -2,2367 +2,2118 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Overnight bar-hop trip planner for groups. Browse destinations, compare cities, and vote on where to go.">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="Overnight bar-hop trip planner for groups. Browse destinations, vote on where to go, and mark the dates you're free.">
 <meta name="robots" content="index, follow">
-<meta name="theme-color" content="#1b1b1f" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" content="#f7f7f5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#15130e" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#faf3e5" media="(prefers-color-scheme: light)">
 
 <!-- Open Graph -->
 <meta property="og:type" content="website">
 <meta property="og:title" content="Bar Hoppers — Weekend Trip Guide">
-<meta property="og:description" content="Overnight bar-hop trip planner for groups. Browse destinations, compare cities, and vote on where to go.">
+<meta property="og:description" content="Overnight bar-hop trip planner for groups. Browse destinations, vote on where to go, and mark the dates you're free.">
 <meta property="og:site_name" content="Bar Hoppers">
-<!-- <meta property="og:image" content="https://yourdomain.com/og-image.jpg"> -->
-<!-- <meta property="og:url" content="https://yourdomain.com/"> -->
 
 <!-- Twitter Card -->
-<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Bar Hoppers — Weekend Trip Guide">
-<meta name="twitter:description" content="Overnight bar-hop trip planner for groups. Browse destinations, compare cities, and vote on where to go.">
-<!-- <meta name="twitter:image" content="https://yourdomain.com/og-image.jpg"> -->
+<meta name="twitter:description" content="Overnight bar-hop trip planner for groups. Browse destinations, vote on where to go, and mark the dates you're free.">
 
-<!-- Favicon — replace with your own -->
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍺</text></svg>">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23f6c453'/%3E%3Ctext x='50' y='71' font-family='sans-serif' font-size='58' font-weight='800' text-anchor='middle' fill='%233f2e00'%3EBH%3C/text%3E%3C/svg%3E">
 
 <title>Bar Hoppers — Weekend Trip Guide</title>
+
+<script>
+  /* Apply persisted theme before first paint to avoid a flash. Dark is default. */
+  (function () {
+    try {
+      var t = localStorage.getItem('bh-theme');
+      document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+    } catch (e) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  })();
+</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+
 <style>
-
-  /* --- DARK MODE (default) --- */
-  :root {
-    --bg: #1b1b1f;
-    --surface: #27272b;
-    --surface2: #323237;
-    --border: #3e3e45;
-    --amber: #e49a4a;
-    --amber-dim: #b87a2e;
-    --red: #e25c5c;
-    --green: #4fbe7a;
-    --yellow: #e0c846;
-    --text: #e6e4e1;
-    --text-dim: #a3a09b;
-    --text-muted: #6b6966;
-    --font-display: 'Inter', sans-serif;
-    --font-body: 'Inter', sans-serif;
-    --font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-    --modal-overlay: rgba(10,10,14,0.88);
-    --compare-overlay: rgba(10,10,14,0.92);
-    color-scheme: dark;
-  }
-
-  /* --- LIGHT MODE --- */
-  [data-theme="light"] {
-    --bg: #f7f7f5;
-    --surface: #ffffff;
-    --surface2: #eeeeec;
-    --border: #d8d7d4;
-    --amber: #c27a1a;
-    --amber-dim: #9e6010;
-    --red: #c43c3c;
-    --green: #1d8348;
-    --yellow: #9a7d00;
-    --text: #1d1d1f;
-    --text-dim: #4a4a4d;
-    --text-muted: #7c7c80;
-    --modal-overlay: rgba(0,0,0,0.45);
-    --compare-overlay: rgba(0,0,0,0.55);
-    color-scheme: light;
-  }
-
-  @media (prefers-color-scheme: light) {
-    :root:not([data-theme="dark"]) {
-      --bg: #f7f7f5;
-      --surface: #ffffff;
-      --surface2: #eeeeec;
-      --border: #d8d7d4;
-      --amber: #c27a1a;
-      --amber-dim: #9e6010;
-      --red: #c43c3c;
-      --green: #1d8348;
-      --yellow: #9a7d00;
-      --text: #1d1d1f;
-      --text-dim: #4a4a4d;
-      --text-muted: #7c7c80;
-      --modal-overlay: rgba(0,0,0,0.45);
-      --compare-overlay: rgba(0,0,0,0.55);
-      color-scheme: light;
-    }
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-body);
-    font-size: 15px;
-    line-height: 1.6;
-  }
-
-  /* ─── HEADER ─── */
-  header {
-    background: var(--surface);
-    border-bottom: 2px solid var(--amber);
-    padding: 16px 40px 14px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .header-brand { text-align: center; }
-
-  .header-actions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .logo {
-    font-family: var(--font-display);
-    font-size: 32px;
-    font-weight: 900;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--amber);
-    line-height: 1;
-  }
-
-  .tagline {
-    font-family: var(--font-body);
-    font-size: 10px;
-    font-weight: 500;
-    color: var(--text-dim);
-    padding-bottom: 0;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    margin-top: 2px;
-  }
-
-  /* ─── SECTION TITLES ─── */
-  .section-title {
-    font-family: var(--font-display);
-    font-size: 28px;
-    font-weight: 800;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--amber);
-    padding: 32px 40px 0;
-    word-break: break-word;
-  }
-
-  .section-sub {
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    padding: 4px 40px 16px;
-  }
-
-  /* ─── CONTROLS ─── */
-  select, button {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: var(--font-body);
-    font-size: 12px;
-    font-weight: 500;
-    padding: 7px 14px;
-    border-radius: 4px;
-    cursor: pointer;
-    letter-spacing: 0.3px;
-  }
-
-  select:hover, button:hover {
-    border-color: var(--amber);
-    color: var(--amber);
-  }
-
-  /* ─── COMPARISON TABLE ─── */
-  .table-wrap {
-    padding: 0 40px 40px;
-    overflow-x: auto;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  thead tr {
-    background: var(--surface2);
-    border-bottom: 2px solid var(--amber);
-  }
-
-  th {
-    font-family: var(--font-body);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--amber);
-    padding: 12px 16px;
-    text-align: left;
-    white-space: nowrap;
-  }
-
-  th.sortable { cursor: pointer; user-select: none; }
-  th.sortable:hover { color: #fff; }
-  th .sort-arrow { margin-left: 4px; opacity: 0.4; }
-  th.sort-active .sort-arrow { opacity: 1; color: var(--amber); }
-
-  tbody tr {
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-    transition: background 0.12s;
-  }
-
-  tbody tr:hover { background: var(--surface2); }
-
-  td {
-    padding: 13px 16px;
-    vertical-align: middle;
-    font-size: 13px;
-  }
-
-  .city-name-cell {
-    font-weight: 700;
-    font-size: 14px;
-  }
-
-  .city-state {
-    font-size: 11px;
-    color: var(--text-dim);
-    font-family: var(--font-mono);
-  }
-
-  .view-btn {
-    font-size: 11px;
-    padding: 5px 12px;
-    border-radius: 3px;
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    cursor: pointer;
-    font-family: var(--font-mono);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    transition: all 0.15s;
-  }
-
-  .view-btn:hover {
-    background: var(--amber);
-    color: #000;
-    border-color: var(--amber);
-  }
-
-  .actions-cell {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    align-items: flex-end;
-  }
-
-  .actions-cell .view-btn,
-  .actions-cell .vote-btn {
-    width: 120px;
-    text-align: center;
-    padding: 7px 0;
-    font-size: 11px;
-  }
-
-  /* ─── HOTEL PROXIMITY COLORS (used by tray) ─── */
-  .hotel-prox-walk { color: var(--green); }
-  .hotel-prox-ride { color: var(--amber); }
-  .hotel-prox-far { color: var(--red); }
-
-  /* ─── CLOSE BUTTON (used by compare lightbox) ─── */
-  .modal-close {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    font-size: 20px;
-    width: 36px;
-    height: 36px;
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    padding: 0;
-  }
-
-  .modal-close:hover { border-color: var(--red); color: var(--red); }
-
-  /* ─── COMPARE TRIGGER BUTTON ─── */
-  .compare-trigger-btn {
-    background: var(--amber);
-    color: #000;
-    font-family: var(--font-body);
-    font-size: 12px;
-    font-weight: 800;
-    padding: 8px 18px;
-    border-radius: 4px;
-    border: none;
-    cursor: pointer;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    transition: background 0.15s, transform 0.1s;
-    white-space: nowrap;
-  }
-
-  .compare-trigger-btn:hover {
-    background: #ffb83f;
-    transform: translateY(-1px);
-  }
-
-  /* ─── COMPARE LIGHTBOX ─── */
-  .compare-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: var(--compare-overlay);
-    z-index: 200;
-    overflow-y: auto;
-    padding: 30px 16px;
-  }
-
-  .compare-overlay.open { display: block; }
-
-  .compare-lightbox {
-    max-width: 960px;
-    margin: 0 auto;
-    background: var(--surface);
-    border: 1px solid var(--amber);
-    border-radius: 8px;
-    overflow: hidden;
-  }
-
-  .compare-lightbox-header {
-    background: var(--surface2);
-    padding: 20px 28px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    border-bottom: 2px solid var(--amber);
-    gap: 16px;
-  }
-
-  .compare-lightbox-title {
-    font-size: 22px;
-    font-weight: 900;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--amber);
-  }
-
-  .compare-lightbox-sub {
-    font-size: 12px;
-    color: var(--text-dim);
-    margin-top: 3px;
-    font-weight: 500;
-  }
-
-  .compare-lightbox-body {
-    padding: 24px 28px;
-  }
-
-  /* City picker toggle buttons */
-  .compare-city-picker {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 20px;
-  }
-
-  .compare-city-btn {
-    padding: 8px 16px;
-    border-radius: 4px;
-    border: 1px solid var(--border);
-    background: var(--surface2);
-    color: var(--text-dim);
-    font-family: var(--font-body);
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s;
-    letter-spacing: 0.3px;
-  }
-
-  .compare-city-btn:hover {
-    border-color: var(--amber);
-    color: var(--text);
-  }
-
-  .compare-city-btn.selected {
-    background: var(--amber);
-    color: #000;
-    border-color: var(--amber);
-    font-weight: 800;
-  }
-
-  .compare-city-btn.disabled-pick {
-    opacity: 0.35;
-    cursor: not-allowed;
-  }
-
-  .compare-picker-hint {
-    font-size: 12px;
-    color: var(--text-muted);
-    font-weight: 500;
-    margin-bottom: 20px;
-    font-style: italic;
-  }
-
-  /* Compare result grid */
-  .compare-grid {
-    display: grid;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    overflow: hidden;
-    overflow-x: auto;
-  }
-
-  .compare-grid-2 { grid-template-columns: 1fr 60px 1fr; }
-  .compare-grid-3 { grid-template-columns: 1fr 60px 1fr 60px 1fr; }
-
-  .compare-col-header {
-    padding: 14px 16px;
-    background: var(--surface2);
-    border-bottom: 2px solid var(--border);
-  }
-
-  .compare-col-header.winner-col {
-    background: rgba(245,166,35,0.1);
-    border-bottom-color: var(--amber);
-  }
-
-  .compare-col-name {
-    font-size: 18px;
-    font-weight: 900;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--amber);
-    line-height: 1.1;
-    word-break: break-word;
-  }
-
-  .compare-col-sub {
-    font-size: 11px;
-    color: var(--text-dim);
-    margin-top: 3px;
-    font-weight: 500;
-  }
-
-  .compare-winner-crown {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--amber);
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-top: 5px;
-  }
-
-  .compare-middle-header {
-    padding: 14px 6px;
-    background: var(--bg);
-    border-bottom: 2px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    text-align: center;
-    line-height: 1.3;
-  }
-
-  .compare-cell {
-    padding: 11px 16px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-
-  .compare-cell.win { background: rgba(61,186,111,0.07); }
-  .compare-cell.lose { background: rgba(232,64,64,0.04); }
-  .compare-cell.tie { background: transparent; }
-
-  .compare-cell-value {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-
-  .compare-cell-note {
-    font-size: 11px;
-    color: var(--text-dim);
-    margin-top: 2px;
-    line-height: 1.4;
-    font-weight: 400;
-  }
-
-  .compare-middle-cell {
-    padding: 11px 6px;
-    border-bottom: 1px solid var(--border);
-    background: var(--bg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--text-muted);
-    text-align: center;
-  }
-
-  .win-indicator {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    display: inline-block;
-    flex-shrink: 0;
-  }
-  .win-indicator.green { background: var(--green); }
-  .win-indicator.red { background: var(--red); }
-  .win-indicator.tie-dot { background: var(--text-muted); }
-
-  /* Verdict */
-  .compare-verdict {
-    margin-top: 16px;
-    padding: 18px 20px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    display: flex;
-    gap: 20px;
-    align-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  .compare-verdict-winner {
-    font-size: 26px;
-    font-weight: 900;
-    color: var(--amber);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    line-height: 1;
-    flex-shrink: 0;
-  }
-
-  .compare-verdict-detail { flex: 1; min-width: 200px; }
-
-  .compare-verdict-label {
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin-bottom: 4px;
-  }
-
-  .compare-verdict-text {
-    font-size: 13px;
-    color: var(--text-dim);
-    line-height: 1.55;
-  }
-
-  .compare-score-row {
-    display: flex;
-    gap: 10px;
-    margin-top: 8px;
-    flex-wrap: wrap;
-  }
-
-  .compare-score-chip {
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 700;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-  }
-
-  .compare-score-chip.winner-chip {
-    background: rgba(245,166,35,0.15);
-    border-color: var(--amber);
-    color: var(--amber);
-  }
-
-  /* ─── FOOTER ─── */
-  footer {
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-    padding: 20px 40px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  footer p {
-    font-family: var(--font-body);
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--text-muted);
-    letter-spacing: 0.5px;
-    word-break: break-word;
-  }
-
-
-
-
-
-  /* ─── EXPANDABLE TRAY ─── */
-  .tray-row td {
-    padding: 0 !important;
-    border-bottom: 2px solid var(--amber);
-  }
-
-  .tray-wrap {
-    display: grid;
-    grid-template-rows: 0fr;
-    transition: grid-template-rows 0.25s ease;
-  }
-
-  .tray-row.open .tray-wrap {
-    grid-template-rows: 1fr;
-  }
-
-  .tray-inner {
-    overflow: hidden;
-  }
-
-  .tray-content {
-    padding: 20px 24px 70px;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-  }
-
-  .tray-desc {
-    font-size: 13px;
-    color: var(--text-dim);
-    line-height: 1.65;
-    margin-bottom: 16px;
-  }
-
-  .tray-stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 18px;
-  }
-
-  .tray-stat {
-    background: var(--surface2);
-    padding: 10px 12px;
-    border-radius: 4px;
-  }
-
-  .tray-stat-label {
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    display: block;
-  }
-
-  .tray-stat-value {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--text);
-    margin-top: 2px;
-    display: block;
-  }
-
-  .tray-section-label {
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--amber);
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 6px;
-    margin-bottom: 8px;
-    margin-top: 18px;
-  }
-
-  .tray-bar-item {
-    margin-bottom: 6px;
-    padding: 8px 12px;
-    background: var(--surface2);
-    border-radius: 4px;
-    border-left: 2px solid var(--amber);
-  }
-
-  .tray-bar-item strong { font-size: 13px; }
-
-  .tray-bar-note {
-    display: block;
-    font-size: 11px;
-    color: var(--text-dim);
-    margin-top: 2px;
-  }
-
-  .tray-hotel-item {
-    margin-bottom: 6px;
-    padding: 8px 12px;
-    background: var(--surface2);
-    border-radius: 4px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .tray-hotel-item strong { font-size: 13px; }
-  .tray-hotel-stars { font-size: 11px; color: var(--text-dim); margin-left: 6px; }
-  .tray-hotel-prox { display: block; font-size: 11px; margin-top: 2px; }
-  .tray-hotel-price { font-size: 13px; font-weight: 600; flex-shrink: 0; }
-
-  .tray-poi {
-    margin-top: 14px;
-    padding: 10px 12px;
-    background: rgba(245,166,35,0.06);
-    border: 1px solid rgba(245,166,35,0.2);
-    border-radius: 4px;
-    font-size: 12px;
-    color: var(--text-dim);
-  }
-
-  .tray-poi strong { color: var(--amber); }
-
-  .tray-caveat {
-    margin-top: 12px;
-    padding: 10px 12px;
-    border-radius: 4px;
-    font-size: 12px;
-    line-height: 1.5;
-    color: var(--text-dim);
-    background: var(--surface2);
-  }
-
-  .tray-caveat.caveat-warning { border-left: 3px solid var(--red); }
-  .tray-caveat.caveat-caution { border-left: 3px solid var(--amber); }
-
-  .tray-caveat strong {
-    display: block;
-    margin-bottom: 3px;
-    font-size: 10px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    font-weight: 700;
-  }
-
-  .tray-event {
-    margin-top: 10px;
-    padding: 8px 12px;
-    background: rgba(61,186,111,0.1);
-    border: 1px solid rgba(61,186,111,0.3);
-    border-radius: 4px;
-    font-size: 12px;
-    color: var(--green);
-  }
-
-  /* Active row highlight — sticky when tray open */
-  tbody tr.tray-active {
-    background: var(--surface2);
-    border-bottom-color: var(--amber);
-    position: sticky;
+/* ════════════════════════════════════════════════════════════════
+   BAR HOPPERS — Material 3 design system
+   Seed: amber/gold · Font: Manrope · Icons: Material Symbols Outlined
+
+   Hard rules enforced throughout:
+   · Every interactive element is exactly var(--control-h) = 44px tall
+   · All spacing values are multiples of 4px
+   · All radii come from the radius scale below
+   · All font sizes come from the type scale below
+   ════════════════════════════════════════════════════════════════ */
+
+/* ─── M3 color roles — dark scheme (default) ─── */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --primary: #f6c453;
+  --on-primary: #3f2e00;
+  --primary-container: #5c4300;
+  --on-primary-container: #ffdf9c;
+
+  --secondary: #d6c5a4;
+  --on-secondary: #392f1b;
+  --secondary-container: #51462f;
+  --on-secondary-container: #f3e1bb;
+
+  --tertiary: #a9d0b3;
+  --on-tertiary: #143723;
+  --tertiary-container: #2c4e38;
+  --on-tertiary-container: #c5ecce;
+
+  --error: #ffb4ab;
+  --on-error: #690005;
+  --error-container: #93000a;
+  --on-error-container: #ffdad6;
+
+  --background: #15130e;
+  --on-background: #e9e2d6;
+
+  --surface: #15130e;
+  --surface-dim: #15130e;
+  --surface-bright: #3c382e;
+  --surface-container-lowest: #100e09;
+  --surface-container-low: #1d1b14;
+  --surface-container: #211f17;
+  --surface-container-high: #2c2920;
+  --surface-container-highest: #37332a;
+
+  --on-surface: #e9e2d6;
+  --surface-variant: #4c4639;
+  --on-surface-variant: #cfc6b4;
+
+  --outline: #989080;
+  --outline-variant: #4c4639;
+
+  --scrim: rgba(0, 0, 0, 0.56);
+  --shadow-1: 0 1px 2px rgba(0,0,0,.3), 0 1px 3px 1px rgba(0,0,0,.15);
+  --shadow-2: 0 1px 2px rgba(0,0,0,.3), 0 2px 6px 2px rgba(0,0,0,.15);
+  --shadow-3: 0 4px 8px 3px rgba(0,0,0,.15), 0 1px 3px rgba(0,0,0,.3);
+}
+
+/* ─── M3 color roles — light scheme ─── */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --primary: #7a5900;
+  --on-primary: #ffffff;
+  --primary-container: #ffdf9c;
+  --on-primary-container: #261a00;
+
+  --secondary: #6c5d3f;
+  --on-secondary: #ffffff;
+  --secondary-container: #f5e1bb;
+  --on-secondary-container: #251a04;
+
+  --tertiary: #4a6547;
+  --on-tertiary: #ffffff;
+  --tertiary-container: #cdebc4;
+  --on-tertiary-container: #072109;
+
+  --error: #ba1a1a;
+  --on-error: #ffffff;
+  --error-container: #ffdad6;
+  --on-error-container: #410002;
+
+  --background: #faf3e5;
+  --on-background: #1e1b13;
+
+  --surface: #faf3e5;
+  --surface-dim: #ded8ca;
+  --surface-bright: #faf3e5;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f5eedf;
+  --surface-container: #efe8da;
+  --surface-container-high: #e9e2d4;
+  --surface-container-highest: #e3dccf;
+
+  --on-surface: #1e1b13;
+  --surface-variant: #ece1cb;
+  --on-surface-variant: #4c4639;
+
+  --outline: #7d7567;
+  --outline-variant: #cfc6b4;
+
+  --scrim: rgba(0, 0, 0, 0.4);
+  --shadow-1: 0 1px 2px rgba(0,0,0,.18), 0 1px 3px 1px rgba(0,0,0,.08);
+  --shadow-2: 0 1px 2px rgba(0,0,0,.18), 0 2px 6px 2px rgba(0,0,0,.08);
+  --shadow-3: 0 4px 8px 3px rgba(0,0,0,.08), 0 1px 3px rgba(0,0,0,.18);
+}
+
+/* ─── Shape, sizing, type scale ─── */
+:root {
+  /* Radius scale — tighter than M3 defaults. The ONLY radii used in this app. */
+  --radius-xs: 4px;    /* inputs, chips, small elements */
+  --radius-sm: 6px;    /* buttons, text fields */
+  --radius-md: 10px;   /* cards, panels */
+  --radius-lg: 14px;   /* modals, bottom sheets, large cards */
+  --radius-full: 9999px; /* pills only */
+
+  /* Uniform control height — every interactive element */
+  --control-h: 44px;
+
+  --font: 'Manrope', system-ui, sans-serif;
+
+  /* Type scale (M3 adapted to Manrope) — full `font` shorthands */
+  --type-display:   800 28px/1.2  var(--font);
+  --type-headline:  800 22px/1.25 var(--font);
+  --type-title-lg:  700 18px/1.3  var(--font);
+  --type-title:     700 16px/1.35 var(--font);
+  --type-body-lg:   500 15px/1.5  var(--font);
+  --type-body:      400 14px/1.55 var(--font);
+  --type-label-lg:  600 14px/1.2  var(--font);
+  --type-label:     600 12px/1.2  var(--font);
+  --type-label-sm:  700 11px/1.2  var(--font);
+
+  /* Icon sizes — consistent per context */
+  --icon-nav: 24px;   /* navigation destinations */
+  --icon-btn: 20px;   /* icons inside buttons */
+  --icon-meta: 16px;  /* inline metadata icons */
+  --icon-hero: 40px;  /* empty-state hero icons */
+
+  /* Layout */
+  --nav-h: 64px;      /* bottom nav bar total height */
+  --rail-w: 88px;     /* desktop navigation rail width */
+}
+
+/* ─── Reset & base ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  background: var(--background);
+  color: var(--on-background);
+  font: var(--type-body);
+  letter-spacing: 0.1px;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input { font-family: var(--font); color: inherit; }
+a { color: var(--primary); text-decoration: none; }
+
+::selection { background: var(--primary); color: var(--on-primary); }
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+/* ─── Material Symbols ─── */
+.msym {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-size: var(--icon-btn);
+  font-variation-settings: 'opsz' 24, 'wght' 500, 'FILL' 0, 'GRAD' 0;
+  -webkit-font-feature-settings: 'liga';
+  font-feature-settings: 'liga';
+  user-select: none;
+  flex-shrink: 0;
+}
+.msym.fill { font-variation-settings: 'opsz' 24, 'wght' 500, 'FILL' 1, 'GRAD' 0; }
+
+/* ════════════════════════════════════════════
+   BUTTONS — every variant is exactly 44px tall
+   ════════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: var(--control-h);
+  padding: 0 20px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font: var(--type-label-lg);
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+  transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+.btn .msym { font-size: var(--icon-btn); }
+.btn:active { transform: scale(0.98); }
+
+/* M3 state layer */
+.btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity 160ms ease;
+  pointer-events: none;
+}
+.btn:hover::after { opacity: 0.08; }
+.btn:active::after { opacity: 0.12; }
+
+.btn-filled { background: var(--primary); color: var(--on-primary); }
+.btn-tonal { background: var(--secondary-container); color: var(--on-secondary-container); }
+.btn-outlined {
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid var(--outline);
+}
+.btn-text { background: transparent; color: var(--primary); padding: 0 12px; }
+.btn-elevated {
+  background: var(--surface-container-low);
+  color: var(--primary);
+  box-shadow: var(--shadow-1);
+}
+.btn-block { width: 100%; }
+
+/* Voted state */
+.btn-voted { background: var(--tertiary-container); color: var(--on-tertiary-container); }
+
+/* Icon button — 44×44 circle (pill radius) */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-h);
+  height: var(--control-h);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: background-color 160ms ease, color 160ms ease;
+  flex-shrink: 0;
+}
+.icon-btn .msym { font-size: var(--icon-nav); }
+.icon-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+.icon-btn:hover::after { opacity: 0.08; }
+.icon-btn:active::after { opacity: 0.12; }
+
+/* Segmented button group (sort control) */
+.segmented {
+  display: inline-flex;
+  height: var(--control-h);
+  border: 1px solid var(--outline);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.segmented button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
+  padding: 0 16px;
+  border: none;
+  background: transparent;
+  color: var(--on-surface);
+  font: var(--type-label-lg);
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+.segmented button + button { border-left: 1px solid var(--outline); }
+.segmented button .msym { font-size: var(--icon-btn); }
+.segmented button[aria-pressed="true"] {
+  background: var(--secondary-container);
+  color: var(--on-secondary-container);
+}
+
+/* Text field — 44px tall */
+.text-field {
+  width: 100%;
+  height: var(--control-h);
+  padding: 0 16px;
+  background: var(--surface-container-highest);
+  border: 1px solid var(--outline);
+  border-radius: var(--radius-sm);
+  color: var(--on-surface);
+  font: var(--type-body-lg);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.text-field::placeholder { color: var(--on-surface-variant); opacity: 0.7; }
+.text-field:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+/* ════════════════════════════════════════════
+   APP SHELL
+   ════════════════════════════════════════════ */
+#app {
+  min-height: 100dvh;
+  padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
+}
+
+/* Top app bar */
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 64px;
+  padding: 0 8px 0 16px;
+  background: var(--surface-container);
+  border-bottom: 1px solid var(--outline-variant);
+}
+body[data-view="detail"] .top-bar { display: none; }
+.top-bar .brand {
+  flex: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+.brand-name {
+  font: var(--type-title-lg);
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+.brand-tag {
+  font: var(--type-label-sm);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Bottom navigation (mobile) */
+.nav-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  height: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
+  padding: 8px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  background: var(--surface-container);
+  border-top: 1px solid var(--outline-variant);
+}
+.nav-item {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1;
+  max-width: 152px;
+  height: var(--control-h);
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--on-surface-variant);
+  font: var(--type-label);
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+.nav-item .msym { font-size: var(--icon-nav); }
+.nav-item::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+.nav-item:hover::after { opacity: 0.08; }
+.nav-item[aria-current="page"] {
+  background: var(--secondary-container);
+  color: var(--on-secondary-container);
+}
+.nav-item span:not(.msym) { white-space: nowrap; }
+
+/* Views */
+.view { display: none; animation: view-in 200ms ease; }
+.view.active { display: block; }
+@keyframes view-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px;
+}
+.page-title {
+  font: var(--type-headline);
+  color: var(--on-surface);
+  margin: 8px 0 4px;
+}
+.page-sub {
+  font: var(--type-body);
+  color: var(--on-surface-variant);
+  margin-bottom: 16px;
+}
+
+/* ════════════════════════════════════════════
+   CITY LIST
+   ════════════════════════════════════════════ */
+.list-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.list-count {
+  font: var(--type-label);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+}
+
+.city-grid { display: grid; gap: 12px; }
+
+.city-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--surface-container-low);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+.city-card:hover {
+  background: var(--surface-container);
+  border-color: var(--outline);
+  box-shadow: var(--shadow-1);
+}
+.city-card.selected { border-color: var(--primary); background: var(--surface-container); }
+
+.city-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.city-card-name {
+  font: var(--type-title-lg);
+  color: var(--on-surface);
+}
+.city-card-name .state {
+  font: var(--type-label);
+  color: var(--on-surface-variant);
+  letter-spacing: 0.8px;
+  margin-left: 8px;
+}
+.city-card-arrow { color: var(--on-surface-variant); font-size: var(--icon-nav); }
+
+.meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  margin-top: 8px;
+}
+.meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: var(--type-label-lg);
+  color: var(--on-surface-variant);
+}
+.meta-item .msym { font-size: var(--icon-meta); color: var(--primary); }
+
+.city-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+}
+.vote-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: var(--type-label);
+  color: var(--on-surface-variant);
+}
+.vote-tag .msym { font-size: var(--icon-meta); }
+.vote-tag.has-votes { color: var(--primary); }
+
+/* ════════════════════════════════════════════
+   CITY DETAIL
+   ════════════════════════════════════════════ */
+.detail-top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 64px;
+  padding: 0 8px;
+  background: var(--surface-container);
+  border-bottom: 1px solid var(--outline-variant);
+}
+.detail-top-title {
+  font: var(--type-title);
+  color: var(--on-surface);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.detail-hero { padding: 4px 0 8px; }
+.detail-name {
+  font: var(--type-display);
+  color: var(--on-surface);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.detail-name .state {
+  font: var(--type-title);
+  color: var(--on-surface-variant);
+  letter-spacing: 1px;
+}
+.detail-desc {
+  font: var(--type-body-lg);
+  color: var(--on-surface-variant);
+  margin-top: 12px;
+}
+.detail-vote { margin-top: 16px; }
+
+/* Section labels */
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 28px 0 12px;
+}
+.section-label .msym { font-size: var(--icon-btn); color: var(--primary); }
+.section-label h2 {
+  font: var(--type-label-lg);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+.section-label .count {
+  font: var(--type-label);
+  color: var(--on-surface-variant);
+  margin-left: auto;
+}
+
+/* Hotel cards */
+.hotel-grid { display: grid; gap: 12px; }
+.hotel-card {
+  background: var(--surface-container-low);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+.hotel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.hotel-name { font: var(--type-title); color: var(--on-surface); }
+.stars { display: inline-flex; gap: 0; margin-top: 4px; }
+.stars .msym { font-size: var(--icon-meta); color: var(--primary); }
+.stars .msym.off { color: var(--outline-variant); }
+.hotel-price {
+  font: var(--type-label-lg);
+  color: var(--primary);
+  white-space: nowrap;
+}
+.hotel-rows { display: grid; gap: 8px; margin-top: 12px; }
+.hotel-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font: var(--type-body);
+  color: var(--on-surface-variant);
+}
+.hotel-row .msym { font-size: var(--icon-meta); color: var(--tertiary); margin-top: 4px; }
+.hotel-row.walk { color: var(--on-surface); font-weight: 600; }
+.hotel-card .btn { margin-top: 16px; }
+
+/* Bars & food lists */
+.list-card {
+  background: var(--surface-container-low);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.list-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+}
+.list-row + .list-row { border-top: 1px solid var(--outline-variant); }
+.list-row-main { min-width: 0; }
+.list-row-name { font: var(--type-body-lg); font-weight: 700; color: var(--on-surface); }
+.list-row-desc { font: var(--type-body); color: var(--on-surface-variant); margin-top: 4px; }
+.list-row-end {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: var(--type-label);
+  color: var(--on-surface-variant);
+  white-space: nowrap;
+  padding-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.list-row-end .msym { font-size: var(--icon-meta); color: var(--tertiary); }
+
+/* Parking */
+.parking-card {
+  display: flex;
+  gap: 12px;
+  background: var(--surface-container-low);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+.parking-card .msym { font-size: var(--icon-nav); color: var(--tertiary); }
+.parking-card p { font: var(--type-body-lg); color: var(--on-surface-variant); }
+
+/* ════════════════════════════════════════════
+   VOTE RESULTS
+   ════════════════════════════════════════════ */
+.identity-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface-container-low);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  padding: 8px 8px 8px 16px;
+  margin-bottom: 16px;
+}
+.identity-card .msym.person { font-size: var(--icon-nav); color: var(--primary); }
+.identity-main { flex: 1; min-width: 0; }
+.identity-label {
+  font: var(--type-label-sm);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--on-surface-variant);
+}
+.identity-name {
+  font: var(--type-title);
+  color: var(--on-surface);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-list { display: grid; gap: 12px; }
+.result-card {
+  background: var(--surface-container-low);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+.result-card.leader { border-color: var(--primary); }
+.result-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.result-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  background: var(--surface-container-high);
+  color: var(--on-surface-variant);
+  font: var(--type-label-lg);
+  flex-shrink: 0;
+}
+.result-card.leader .result-rank { background: var(--primary); color: var(--on-primary); }
+.result-city { flex: 1; font: var(--type-title); color: var(--on-surface); min-width: 0; }
+.result-city .state { font: var(--type-label); color: var(--on-surface-variant); margin-left: 8px; }
+.result-count { font: var(--type-label-lg); color: var(--primary); white-space: nowrap; }
+
+.result-meter {
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: var(--surface-container-high);
+  margin-top: 12px;
+  overflow: hidden;
+}
+.result-meter-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: var(--primary);
+  transition: width 200ms ease;
+}
+
+.voter-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.voter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: var(--radius-xs);
+  background: var(--surface-container-high);
+  color: var(--on-surface-variant);
+  font: var(--type-label);
+}
+.voter-tag.me { background: var(--primary-container); color: var(--on-primary-container); }
+
+/* ════════════════════════════════════════════
+   AVAILABILITY CALENDAR
+   ════════════════════════════════════════════ */
+.cal-card {
+  background: var(--surface-container-low);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.cal-month {
+  font: var(--type-title);
+  color: var(--on-surface);
+  text-align: center;
+  flex: 1;
+}
+.cal-weekdays, .cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.cal-weekdays {
+  margin-bottom: 4px;
+}
+.cal-weekdays span {
+  font: var(--type-label-sm);
+  letter-spacing: 0.5px;
+  color: var(--on-surface-variant);
+  text-align: center;
+  text-transform: uppercase;
+  padding: 4px 0;
+}
+.cal-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  height: var(--control-h);
+  border: 1px solid transparent;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--on-surface);
+  font: var(--type-label-lg);
+  cursor: pointer;
+  position: relative;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+  font-variant-numeric: tabular-nums;
+}
+.cal-day:hover { background: var(--surface-container-high); }
+.cal-day.blank { visibility: hidden; pointer-events: none; }
+.cal-day.past { color: var(--outline); cursor: default; }
+.cal-day.past:hover { background: transparent; }
+.cal-day.today { border-color: var(--outline); }
+.cal-day.mine { background: var(--primary-container); color: var(--on-primary-container); }
+.cal-day.mine:hover { background: var(--primary-container); }
+.cal-day.selected { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
+.cal-day .num { line-height: 1.1; }
+.cal-day .cnt {
+  font: var(--type-label-sm);
+  line-height: 1.1;
+  color: var(--primary);
+  min-height: 12px;
+}
+.cal-day.mine .cnt { color: var(--on-primary-container); }
+
+.cal-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 12px;
+  padding: 0 4px;
+}
+.cal-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: var(--type-label);
+  color: var(--on-surface-variant);
+}
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-xs);
+  flex-shrink: 0;
+}
+.legend-dot.mine-dot { background: var(--primary-container); border: 1px solid var(--primary); }
+.legend-dot.today-dot { border: 1px solid var(--outline); }
+
+/* Day detail panel */
+.day-panel {
+  background: var(--surface-container-low);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-top: 12px;
+}
+.day-panel-title { font: var(--type-title); color: var(--on-surface); }
+.day-panel-sub { font: var(--type-body); color: var(--on-surface-variant); margin-top: 4px; }
+.day-people { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.person-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 12px 0 4px;
+  border-radius: var(--radius-full);
+  background: var(--surface-container-high);
+  color: var(--on-surface);
+  font: var(--type-label-lg);
+}
+.person-tag.me { background: var(--primary-container); color: var(--on-primary-container); }
+.person-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  background: var(--secondary-container);
+  color: var(--on-secondary-container);
+  font: var(--type-label-sm);
+  text-transform: uppercase;
+}
+.person-tag.me .person-avatar { background: var(--primary); color: var(--on-primary); }
+
+/* ════════════════════════════════════════════
+   FAB — vote tally
+   ════════════════════════════════════════════ */
+.fab {
+  position: fixed;
+  right: 16px;
+  bottom: calc(var(--nav-h) + 16px + env(safe-area-inset-bottom, 0px));
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--control-h);
+  padding: 0 20px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--primary-container);
+  color: var(--on-primary-container);
+  font: var(--type-label-lg);
+  cursor: pointer;
+  box-shadow: var(--shadow-2);
+  overflow: hidden;
+  transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease, opacity 160ms ease;
+}
+.fab .msym { font-size: var(--icon-btn); }
+.fab:hover { box-shadow: var(--shadow-3); }
+.fab:active { transform: scale(0.98); }
+.fab.hidden { opacity: 0; pointer-events: none; transform: translateY(8px); }
+
+/* ════════════════════════════════════════════
+   DIALOG
+   ════════════════════════════════════════════ */
+.dialog-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--scrim);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+}
+.dialog-scrim.open { opacity: 1; pointer-events: auto; }
+.dialog {
+  width: 100%;
+  max-width: 360px;
+  background: var(--surface-container-high);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-3);
+  transform: translateY(8px) scale(0.98);
+  transition: transform 200ms ease;
+}
+.dialog-scrim.open .dialog { transform: translateY(0) scale(1); }
+.dialog-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.dialog-icon .msym { font-size: var(--icon-nav); color: var(--primary); }
+.dialog h2 {
+  font: var(--type-title-lg);
+  color: var(--on-surface);
+  text-align: center;
+}
+.dialog p {
+  font: var(--type-body);
+  color: var(--on-surface-variant);
+  text-align: center;
+  margin-top: 8px;
+}
+.dialog .text-field { margin-top: 16px; }
+.dialog-error {
+  font: var(--type-label);
+  color: var(--error);
+  margin-top: 8px;
+  min-height: 16px;
+  text-align: center;
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* ════════════════════════════════════════════
+   EMPTY / LOADING STATES
+   ════════════════════════════════════════════ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 48px 24px;
+}
+.empty-state .msym {
+  font-size: var(--icon-hero);
+  color: var(--outline);
+  margin-bottom: 12px;
+}
+.empty-state h3 { font: var(--type-title); color: var(--on-surface); }
+.empty-state p { font: var(--type-body); color: var(--on-surface-variant); margin-top: 4px; max-width: 280px; }
+.empty-state .btn { margin-top: 16px; }
+
+.skeleton {
+  border-radius: var(--radius-md);
+  background: var(--surface-container-high);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+.skeleton-row { height: 96px; }
+
+/* Hours line inside food list rows */
+.list-row-main .hotel-row { margin-top: 4px; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+/* ════════════════════════════════════════════
+   DESKTOP — navigation rail + two-pane cities
+   ════════════════════════════════════════════ */
+.detail-panel { display: none; }
+
+@media (min-width: 840px) {
+  #app { padding-bottom: 0; padding-left: var(--rail-w); }
+
+  .nav-bar {
     top: 0;
-    z-index: 10;
-  }
-
-  tbody tr.tray-active td {
-    background: var(--surface2);
-  }
-
-  .tray-hidden {
-    display: none !important;
-  }
-
-  /* ─── STICKY TOAST ─── */
-  .tray-toast {
-    position: fixed;
     bottom: 0;
     left: 0;
-    right: 0;
-    background: var(--surface);
-    border-top: 2px solid var(--amber);
-    padding: 12px 24px;
-    display: flex;
-    justify-content: center;
-    z-index: 80;
-    transform: translateY(100%);
-    transition: transform 0.25s ease;
+    right: auto;
+    width: var(--rail-w);
+    height: auto;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 80px 8px 16px;
+    border-top: none;
+    border-right: 1px solid var(--outline-variant);
   }
+  .nav-item {
+    flex: none;
+    width: 100%;
+    max-width: none;
+    flex-direction: column;
+    gap: 4px;
+    height: var(--control-h);
+    border-radius: var(--radius-sm);
+    font: var(--type-label-sm);
+  }
+  .nav-item .msym { font-size: var(--icon-btn); }
 
-  .tray-toast.visible {
-    transform: translateY(0);
-  }
+  .top-bar { padding: 0 16px 0 24px; }
 
-  .tray-toast-btn {
-    background: var(--amber);
-    color: #000;
-    font-family: var(--font-body);
-    font-size: 12px;
-    font-weight: 800;
-    padding: 10px 28px;
-    border-radius: 4px;
-    border: none;
-    cursor: pointer;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    transition: background 0.15s;
-  }
+  .fab { bottom: 24px; right: 24px; }
 
-  .tray-toast-btn:hover { background: #ffb83f; }
+  .page { max-width: 720px; padding: 24px; }
 
-  [data-theme="light"] .tray-toast-btn {
-    background: #c27a1a;
-    color: #fff;
+  /* Two-pane cities view */
+  #view-cities .page {
+    max-width: 1200px;
+    display: grid;
+    grid-template-columns: 384px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
   }
-
-  @media (max-width: 600px) {
-    .tray-content { padding: 16px 16px 70px; }
-    .tray-stats { grid-template-columns: 1fr; gap: 6px; }
-    .tray-hotel-item { flex-direction: column; align-items: flex-start; gap: 4px; }
-    .tray-toast { padding: 10px 16px; }
-    .tray-toast-btn { width: 100%; }
-  }
-
-  /* ─── VOTE BUTTON ─── */
-  .vote-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 6px 14px;
-    border-radius: 4px;
-    border: 1px solid var(--border);
-    background: var(--surface2);
-    color: var(--text-dim);
-    font-family: var(--font-body);
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-  .vote-btn:hover {
-    border-color: var(--amber);
-    color: var(--amber);
-    background: rgba(228,154,74,0.08);
-  }
-  .vote-btn.voted {
-    background: var(--green);
-    color: #fff;
-    border-color: var(--green);
-    cursor: default;
-  }
-  .vote-btn.voted:hover {
-    background: var(--green);
-    color: #fff;
-    border-color: var(--green);
-  }
-  [data-theme="light"] .vote-btn.voted {
-    background: #1d8348;
-    border-color: #1d8348;
-  }
-
-  /* ─── FLOATING RESULTS FAB ─── */
-  .vote-fab {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: var(--amber);
-    color: #000;
-    border: none;
-    cursor: pointer;
-    font-size: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-    z-index: 90;
-    transition: transform 0.15s, box-shadow 0.15s;
-  }
-  .vote-fab:hover {
-    transform: scale(1.08);
-    box-shadow: 0 6px 28px rgba(0,0,0,0.5);
-  }
-  [data-theme="light"] .vote-fab {
-    background: #c27a1a;
-    color: #fff;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-  }
-  .vote-fab-badge {
-    position: absolute;
-    top: -4px;
-    right: -4px;
-    min-width: 20px;
-    height: 20px;
-    border-radius: 10px;
-    background: var(--green);
-    color: #fff;
-    font-size: 10px;
-    font-weight: 900;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 5px;
-    font-family: var(--font-body);
-  }
-
-  /* ─── VOTE RESULTS LIGHTBOX ─── */
-  .vote-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: var(--modal-overlay);
-    z-index: 300;
+  #view-cities .list-pane { min-width: 0; }
+  .detail-panel {
+    display: block;
+    position: sticky;
+    top: 88px;
+    min-width: 0;
+    background: var(--surface-container-lowest);
+    border: 1px solid var(--outline-variant);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    max-height: calc(100dvh - 112px);
     overflow-y: auto;
-    padding: 40px 20px;
   }
-  .vote-overlay.open { display: block; }
-  .vote-lightbox {
-    max-width: 560px;
-    margin: 0 auto;
-    background: var(--surface);
-    border: 1px solid var(--amber);
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  .vote-lb-header {
-    background: var(--surface2);
-    padding: 20px 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 2px solid var(--amber);
-    gap: 12px;
-  }
-  .vote-lb-title {
-    font-size: 18px;
-    font-weight: 900;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--amber);
-  }
-  .vote-lb-close {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    font-size: 20px;
-    width: 36px;
-    height: 36px;
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    padding: 0;
-  }
-  .vote-lb-close:hover { border-color: var(--red); color: var(--red); }
-  .vote-lb-body { padding: 20px 24px; }
-  .vote-lb-empty {
-    text-align: center;
-    padding: 30px 16px;
-    color: var(--text-muted);
-    font-size: 13px;
-    font-weight: 500;
-  }
-  .vote-lb-row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 12px 14px;
-    border-radius: 4px;
-    margin-bottom: 6px;
-    background: var(--surface2);
-    position: relative;
-    overflow: hidden;
-  }
-  .vote-lb-row.vr-leader {
-    border: 1px solid var(--amber);
-    background: rgba(228,154,74,0.08);
-  }
-  [data-theme="light"] .vote-lb-row.vr-leader {
-    background: rgba(194,122,26,0.06);
-    border-color: #c27a1a;
-  }
-  .vote-lb-rank {
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 900;
-    flex-shrink: 0;
-    background: var(--border);
-    color: var(--text-dim);
-  }
-  .vote-lb-row.vr-leader .vote-lb-rank {
-    background: var(--amber);
-    color: #000;
-  }
-  .vote-lb-info { flex: 1; min-width: 0; }
-  .vote-lb-city {
-    font-size: 14px;
-    font-weight: 800;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    color: var(--text);
-    line-height: 1.2;
-  }
-  .vote-lb-row.vr-leader .vote-lb-city { color: var(--amber); }
-  .vote-lb-voters {
-    font-size: 11px;
-    color: var(--text-dim);
-    margin-top: 2px;
-  }
-  .vote-lb-count {
-    font-size: 18px;
-    font-weight: 900;
-    color: var(--text);
-    font-family: var(--font-mono);
-    flex-shrink: 0;
-  }
-  .vote-lb-row.vr-leader .vote-lb-count { color: var(--amber); }
-  .vote-lb-bar-track {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    height: 3px;
-    background: var(--border);
-    width: 100%;
-  }
-  .vote-lb-bar-fill {
-    height: 100%;
-    background: var(--amber);
-    transition: width 0.4s ease;
-    border-radius: 0 2px 2px 0;
-  }
-  .vote-lb-your-vote {
-    margin-top: 16px;
-    padding: 12px 16px;
-    background: rgba(228,154,74,0.06);
-    border: 1px solid rgba(228,154,74,0.2);
-    border-radius: 4px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  .vote-lb-your-label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--text-muted);
-  }
-  .vote-lb-your-city {
-    font-size: 14px;
-    font-weight: 800;
-    color: var(--amber);
-  }
-  .vote-lb-clear-btn {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    font-family: var(--font-body);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    padding: 5px 12px;
-    border-radius: 3px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .vote-lb-clear-btn:hover { border-color: var(--red); color: var(--red); }
+  .detail-panel .detail-hero { padding-top: 0; }
 
-  /* ─── NAME PROMPT ─── */
-  .name-prompt-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: var(--modal-overlay);
-    z-index: 400;
-    padding: 40px 20px;
-    justify-content: center;
-    align-items: flex-start;
-  }
-  .name-prompt-overlay.open { display: flex; }
-  .name-prompt-box {
-    margin-top: 120px;
-    background: var(--surface);
-    border: 1px solid var(--amber);
-    border-radius: 8px;
-    padding: 28px 24px;
-    max-width: 360px;
-    width: 100%;
-  }
-  .name-prompt-title {
-    font-size: 16px;
-    font-weight: 900;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--amber);
-    margin-bottom: 6px;
-  }
-  .name-prompt-sub {
-    font-size: 12px;
-    color: var(--text-dim);
-    margin-bottom: 16px;
-    font-weight: 500;
-  }
-  .name-prompt-input {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: var(--font-body);
-    font-size: 16px;
-    font-weight: 600;
-    padding: 12px 14px;
-    border-radius: 4px;
-    margin-bottom: 12px;
-    outline: none;
-  }
-  .name-prompt-input:focus { border-color: var(--amber); }
-  .name-prompt-input::placeholder { color: var(--text-muted); }
-  .name-prompt-confirm {
-    width: 100%;
-    background: var(--amber);
-    color: #000;
-    font-family: var(--font-body);
-    font-size: 13px;
-    font-weight: 800;
-    padding: 10px 24px;
-    border-radius: 4px;
-    border: none;
-    cursor: pointer;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    transition: all 0.15s;
-  }
-  .name-prompt-confirm:hover { background: #ffb83f; }
-  .name-prompt-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
-  [data-theme="light"] .name-prompt-confirm { background: #c27a1a; color: #fff; }
+  /* Mobile-only detail screen never shows on desktop */
+  #view-detail { display: none !important; }
 
-  @media (max-width: 600px) {
-    .vote-fab { bottom: 16px; right: 16px; width: 48px; height: 48px; font-size: 18px; }
-    .vote-overlay { padding: 16px 8px; }
-    .vote-lb-header { padding: 14px 16px; }
-    .vote-lb-body { padding: 14px 16px; }
-    .vote-lb-title { font-size: 14px; }
-    .vote-lb-city { font-size: 12px; }
-    .vote-lb-count { font-size: 14px; }
-    .name-prompt-box { margin-top: 60px; }
-  }
+  .hotel-grid { grid-template-columns: 1fr 1fr; }
+  #view-results .page, #view-avail .page { max-width: 720px; }
+}
 
-  @media print {
-    .vote-fab, .vote-overlay, .name-prompt-overlay, .vote-btn { display: none !important; }
-  }
-
-  /* --- SKIP LINK --- */
-  .skip-link {
-    position: absolute;
-    top: -100px;
-    left: 16px;
-    background: var(--amber);
-    color: #000;
-    padding: 8px 16px;
-    border-radius: 4px;
-    font-weight: 700;
-    font-size: 13px;
-    z-index: 1000;
-    text-decoration: none;
-    transition: top 0.2s;
-  }
-  .skip-link:focus {
-    top: 8px;
-  }
-
-  /* --- THEME TOGGLE --- */
-  .theme-toggle {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text-dim);
-    font-family: var(--font-body);
-    font-size: 11px;
-    font-weight: 600;
-    padding: 7px 14px;
-    border-radius: 4px;
-    cursor: pointer;
-    letter-spacing: 0.5px;
-    transition: border-color 0.15s, color 0.15s;
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .theme-toggle:hover {
-    border-color: var(--amber);
-    color: var(--amber);
-  }
-
-  .theme-toggle-icon { font-size: 14px; }
-
-
-  /* --- LIGHT MODE ELEMENT OVERRIDES --- */
-  [data-theme="light"] .compare-trigger-btn,
-  [data-theme="light"] .compare-city-btn.selected {
-    background: #c27a1a;
-    color: #fff;
-    border-color: #c27a1a;
-  }
-
-  [data-theme="light"] .compare-trigger-btn:hover {
-    background: #cc8000;
-  }
-
-  [data-theme="light"] thead tr {
-    background: #eeeeec;
-    border-bottom: 2px solid #c27a1a;
-  }
-
-  [data-theme="light"] th { color: #9e6010; }
-
-  [data-theme="light"] .view-btn:hover {
-    background: #c27a1a;
-    color: #fff;
-    border-color: #c27a1a;
-  }
-
-  [data-theme="light"] .compare-cell.win { background: rgba(22,113,59,0.08); }
-  [data-theme="light"] .compare-cell.lose { background: rgba(168,34,34,0.05); }
-
-  [data-theme="light"] .compare-score-chip.winner-chip {
-    background: rgba(154,94,0,0.1);
-    border-color: #c27a1a;
-    color: #9e6010;
-  }
-
-  /* ─── RESPONSIVE ─── */
-
-  /* Tablet */
-  @media (max-width: 900px) {
-    .section-title {
-      padding: 24px 24px 0;
-      font-size: 22px;
-      letter-spacing: 2px;
-    }
-
-    header { padding: 14px 24px 12px; }
-    .logo { font-size: 26px; letter-spacing: 2px; }
-    .section-sub { padding: 4px 24px 12px; }
-    .table-wrap { padding: 0 24px 30px; }
-    footer { padding: 16px 24px; }
-
-    .compare-lightbox-header { padding: 16px 20px; }
-    .compare-lightbox-body { padding: 20px; }
-    .compare-lightbox-title { font-size: 18px; }
-  }
-
-  /* Mobile */
-  @media (max-width: 600px) {
-    .header-actions {
-      width: 100%;
-      gap: 6px;
-    }
-
-    .header-actions .compare-trigger-btn,
-    .header-actions .theme-toggle {
-      flex: 1;
-      text-align: center;
-      padding: 10px 8px;
-      font-size: 11px;
-    }
-
-    header {
-      padding: 16px;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 12px;
-    }
-
-    .logo { font-size: 26px; letter-spacing: 1.5px; }
-    .tagline { font-size: 10px; letter-spacing: 1px; padding-bottom: 0; }
-
-    header > div:last-child {
-      margin-left: 0 !important;
-      width: 100%;
-      justify-content: flex-start;
-    }
-
-    .compare-trigger-btn { font-size: 11px; padding: 7px 14px; }
-    .theme-toggle { padding: 7px 12px; }
-
-    .section-title { padding: 20px 16px 0; font-size: 20px; letter-spacing: 1.5px; }
-    .section-sub { padding: 4px 16px 10px; font-size: 10px; }
-
-    .table-wrap {
-      padding: 0 16px 24px;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    table { min-width: 0; }
-
-    th { padding: 10px 10px; font-size: 9px; }
-    td { padding: 10px 10px; font-size: 12px; }
-    .city-name-cell { font-size: 13px; }
-
-    /* Compare lightbox mobile */
-    .compare-overlay { padding: 12px 6px; }
-    .compare-lightbox-header { padding: 14px 16px; flex-wrap: wrap; }
-    .compare-lightbox-title { font-size: 16px; }
-    .compare-lightbox-sub { font-size: 11px; }
-    .compare-lightbox-body { padding: 14px 16px; }
-
-    .compare-city-picker { gap: 6px; }
-    .compare-city-btn { padding: 6px 10px; font-size: 11px; min-height: 36px; }
-
-    .compare-grid-2 { grid-template-columns: 1fr 40px 1fr; }
-    .compare-grid-3 { grid-template-columns: 1fr 30px 1fr 30px 1fr; }
-
-    .compare-col-name { font-size: 14px; }
-    .compare-col-sub { font-size: 10px; }
-    .compare-col-header { padding: 10px 10px; }
-    .compare-cell { padding: 8px 10px; }
-    .compare-cell-value { font-size: 12px; }
-    .compare-cell-note { font-size: 10px; }
-    .compare-middle-cell { padding: 8px 4px; font-size: 10px; }
-    .compare-middle-header { padding: 10px 4px; font-size: 8px; }
-
-    .compare-verdict { padding: 14px 16px; flex-direction: column; gap: 12px; }
-    .compare-verdict-winner { font-size: 20px; }
-    .compare-verdict-text { font-size: 12px; }
-    .compare-score-row { gap: 6px; }
-    .compare-score-chip { font-size: 10px; padding: 3px 8px; }
-
-    footer {
-      padding: 14px 16px;
-      flex-direction: column;
-      gap: 6px;
-      text-align: center;
-    }
-
-    footer p { font-size: 10px; }
-  }
-
-  /* Very small phones */
-  @media (max-width: 380px) {
-    .section-title {
-      padding: 16px 12px 0;
-      font-size: 16px;
-      letter-spacing: 1px;
-    }
-
-    .logo { font-size: 22px; }
-    .compare-grid-3 { grid-template-columns: 1fr; }
-    .compare-middle-cell,
-    .compare-middle-header { display: none; }
-    .compare-grid-3 .compare-col-header,
-    .compare-grid-3 .compare-cell { border-bottom: 1px solid var(--border); }
-  }
-
-
-  /* ─── PRINT ─── */
-  @media print {
-    * { color-adjust: exact; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-
-    body {
-      background: #fff;
-      color: #111;
-      font-size: 11px;
-    }
-
-    header {
-      background: #fff;
-      border-bottom: 2px solid #333;
-      padding: 12px 20px;
-    }
-
-    .logo { color: #333; font-size: 24px; }
-    .compare-trigger-btn,
-    .theme-toggle,
-    .view-btn,
-    .compare-overlay,
-    .skip-link { display: none !important; }
-
-    .table-wrap { padding: 0 20px; overflow: visible; }
-    table { min-width: 0; width: 100%; font-size: 10px; }
-    th { font-size: 8px; padding: 6px 8px; color: #333; border-bottom: 2px solid #333; }
-    td { padding: 6px 8px; border-bottom: 1px solid #d8d7d4; }
-
-    footer { border-top: 1px solid #ccc; padding: 10px 20px; }
-    footer p { color: #666; }
-
-    .section-title { color: #333; }
-  }
-
+@media (min-width: 1200px) {
+  #view-cities .page { grid-template-columns: 416px minmax(0, 1fr); }
+}
 </style>
 </head>
 <body>
-<a href="#compTable" class="skip-link">Skip to comparison table</a>
+<div id="app">
 
-<!-- HEADER -->
-<header>
-  <div class="header-brand">
-    <div class="logo">🍺 BAR HOPPERS</div>
-    <div class="tagline">OVERNIGHT TRIP GUIDE — FROM RALSTON, NE</div>
-  </div>
-  <div class="header-actions">
-    <button class="compare-trigger-btn" id="compareTriggerBtn">⚖ Compare Cities</button>
-    <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-icon">☀</span> Light Mode</button>
-  </div>
-</header>
+  <header class="top-bar">
+    <div class="brand">
+      <span class="brand-name">Bar Hoppers</span>
+      <span class="brand-tag">Weekend Trip Guide</span>
+    </div>
+    <button class="icon-btn" id="themeBtn" aria-label="Toggle light or dark theme">
+      <span class="msym" id="themeIcon">light_mode</span>
+    </button>
+  </header>
 
-<!-- MAIN CONTENT -->
-<main>
-<!-- COMPARISON TABLE -->
-<div class="section-title">COMPARE ALL DESTINATIONS</div>
-<div class="section-sub">TAP ANY ROW FOR DETAILS — TAP COLUMN HEADERS TO SORT</div>
+  <main>
 
-<div class="table-wrap">
-  <table id="compTable">
-    <thead>
-      <tr>
-        <th scope="col" class="sortable" data-col="name">City <span class="sort-arrow">↕</span></th>
-        <th scope="col" class="sortable sort-active" data-col="miles">Distance <span class="sort-arrow">▲</span></th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody id="tableBody"></tbody>
-  </table>
-</div>
-
-<!-- COMPARE LIGHTBOX -->
-<div class="compare-overlay" id="compareOverlay" role="dialog" aria-modal="true" aria-label="Compare cities">
-  <div class="compare-lightbox">
-    <div class="compare-lightbox-header">
-      <div>
-        <div class="compare-lightbox-title">⚖ Compare Cities</div>
-        <div class="compare-lightbox-sub">Select 2 or 3 cities to compare across 8 categories</div>
+    <!-- ── CITIES ── -->
+    <section class="view active" id="view-cities" aria-label="Cities">
+      <div class="page">
+        <div class="list-pane">
+          <h1 class="page-title">Where to next?</h1>
+          <p class="page-sub">Overnight bar-hop runs from Ralston. Pick a city, read the plan, cast your vote.</p>
+          <div class="list-toolbar">
+            <span class="list-count" id="cityCount"></span>
+            <div class="segmented" role="group" aria-label="Sort cities">
+              <button type="button" data-sort="distance" aria-pressed="true">
+                <span class="msym">route</span><span>Distance</span>
+              </button>
+              <button type="button" data-sort="alpha" aria-pressed="false">
+                <span class="msym">sort_by_alpha</span><span>A–Z</span>
+              </button>
+            </div>
+          </div>
+          <div class="city-grid" id="cityGrid"></div>
+        </div>
+        <aside class="detail-panel" id="detailPanel" aria-label="City details"></aside>
       </div>
-      <button class="modal-close" id="compareClose" aria-label="Close compare dialog">✕</button>
-    </div>
-    <div class="compare-lightbox-body">
-      <div class="compare-city-picker" id="compareCityPicker">
-        <!-- City toggle buttons injected by JS -->
+    </section>
+
+    <!-- ── CITY DETAIL (mobile full-screen) ── -->
+    <section class="view" id="view-detail" aria-label="City detail">
+      <div class="detail-top">
+        <button class="icon-btn" id="backBtn" aria-label="Back to city list">
+          <span class="msym">arrow_back</span>
+        </button>
+        <span class="detail-top-title" id="detailTopTitle"></span>
       </div>
-      <div class="compare-picker-hint" id="comparePickerHint">Select 2 or 3 cities above to compare</div>
-      <div id="compareLightboxResult"></div>
-    </div>
-  </div>
-</div>
+      <div class="page" id="detailBody"></div>
+    </section>
 
-<!-- STICKY TOAST — visible when a tray is open -->
-<div class="tray-toast" id="trayToast">
-  <button class="tray-toast-btn" id="trayToastBtn">▲ Back to List</button>
-</div>
-
-</main>
-
-<!-- FOOTER -->
-<footer>
-  <p>BAR HOPPERS GUIDE — ALL DISTANCES FROM RALSTON, NE</p>
-  <p>DRIVE TIMES ARE APPROXIMATE — VERIFY CURRENT BAR HOURS BEFORE BOOKING</p>
-</footer>
-
-<!-- FLOATING VOTE RESULTS FAB -->
-<button class="vote-fab" id="voteFab" aria-label="View vote results">
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-  <span class="vote-fab-badge" id="voteFabBadge" style="display:none;">0</span>
-</button>
-
-<!-- VOTE RESULTS LIGHTBOX -->
-<div class="vote-overlay" id="voteOverlay">
-  <div class="vote-lightbox">
-    <div class="vote-lb-header">
-      <div>
-        <div class="vote-lb-title">Vote Results</div>
+    <!-- ── VOTE RESULTS ── -->
+    <section class="view" id="view-results" aria-label="Vote results">
+      <div class="page">
+        <h1 class="page-title">Vote Results</h1>
+        <p class="page-sub">One vote per person. Voting for a different city moves your vote.</p>
+        <div class="identity-card" id="identityCard" hidden>
+          <span class="msym person">person</span>
+          <div class="identity-main">
+            <div class="identity-label">Voting as</div>
+            <div class="identity-name" id="identityName"></div>
+          </div>
+          <button class="icon-btn" id="editNameBtn" aria-label="Change your name">
+            <span class="msym">edit</span>
+          </button>
+        </div>
+        <div class="result-list" id="resultsBody"></div>
       </div>
-      <button class="vote-lb-close" id="voteClose">✕</button>
-    </div>
-    <div class="vote-lb-body" id="voteLbBody">
-      <div class="vote-lb-empty">No votes yet — tap "I'D GO HERE" on any city to cast yours</div>
+    </section>
+
+    <!-- ── AVAILABILITY ── -->
+    <section class="view" id="view-avail" aria-label="Availability calendar">
+      <div class="page">
+        <h1 class="page-title">Availability</h1>
+        <p class="page-sub">Tap a date to mark yourself available. Tap it again to clear it.</p>
+        <div class="cal-card">
+          <div class="cal-head">
+            <button class="icon-btn" id="calPrev" aria-label="Previous month">
+              <span class="msym">chevron_left</span>
+            </button>
+            <span class="cal-month" id="calMonth"></span>
+            <button class="icon-btn" id="calNext" aria-label="Next month">
+              <span class="msym">chevron_right</span>
+            </button>
+          </div>
+          <div class="cal-weekdays" aria-hidden="true">
+            <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+          <div class="cal-legend">
+            <span><span class="legend-dot mine-dot"></span>You're available</span>
+            <span><span class="legend-dot today-dot"></span>Today</span>
+          </div>
+        </div>
+        <div class="day-panel" id="dayPanel"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── BOTTOM NAV (mobile) / RAIL (desktop) ── -->
+  <nav class="nav-bar" aria-label="Main navigation">
+    <button class="nav-item" data-nav="cities" aria-current="page">
+      <span class="msym">location_city</span><span>Cities</span>
+    </button>
+    <button class="nav-item" data-nav="results">
+      <span class="msym">how_to_vote</span><span>Results</span>
+    </button>
+    <button class="nav-item" data-nav="avail">
+      <span class="msym">calendar_month</span><span>Dates</span>
+    </button>
+  </nav>
+
+  <!-- ── VOTE TALLY FAB ── -->
+  <button class="fab" id="fab" aria-label="View vote results">
+    <span class="msym">how_to_vote</span>
+    <span id="fabLabel">0 votes</span>
+  </button>
+
+</div>
+
+<!-- ── NAME DIALOG ── -->
+<div class="dialog-scrim" id="nameScrim" role="dialog" aria-modal="true" aria-labelledby="nameDialogTitle">
+  <div class="dialog">
+    <div class="dialog-icon"><span class="msym">badge</span></div>
+    <h2 id="nameDialogTitle">What's your name?</h2>
+    <p>Shown next to your vote and the dates you mark. Saved on this device — you won't be asked again.</p>
+    <input class="text-field" id="nameInput" type="text" maxlength="20" autocomplete="off" placeholder="First name">
+    <div class="dialog-error" id="nameError"></div>
+    <div class="dialog-actions">
+      <button class="btn btn-text" id="nameCancel">Cancel</button>
+      <button class="btn btn-filled" id="nameSave">Save</button>
     </div>
   </div>
 </div>
 
-<!-- NAME PROMPT -->
-<div class="name-prompt-overlay" id="namePromptOverlay">
-  <div class="name-prompt-box">
-    <div class="name-prompt-title">Who's Voting?</div>
-    <div class="name-prompt-sub">Enter your name or nickname — you only have to do this once</div>
-    <input type="text" class="name-prompt-input" id="namePromptInput" placeholder="Your name" maxlength="20" autocomplete="off">
-    <button class="name-prompt-confirm" id="namePromptConfirm" disabled>Lock It In</button>
-  </div>
-</div>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-// ─── VOTING SYSTEM ───
-(function() {
-  var VOTE_KEY = 'bh-vote';
-  var VOTER_KEY = 'bh-voter';
-  var ALL_VOTES_KEY = 'bh-all-votes';
+'use strict';
 
-  // Get current voter name (persisted)
-  function getVoterName() {
-    return localStorage.getItem(VOTER_KEY) || null;
-  }
+/* ════════════════════════════════════════════════════════════════
+   SUPABASE SCHEMA — run in the Supabase SQL editor
+   ════════════════════════════════════════════════════════════════
 
-  function setVoterName(name) {
-    localStorage.setItem(VOTER_KEY, name.trim());
-  }
+CREATE TABLE bh_votes (
+  trip_id    text not null default 'current',
+  voter_id   uuid not null,
+  name       text not null check (char_length(name) between 1 and 20),
+  city_id    text not null,
+  updated_at timestamptz not null default now(),
+  primary key (trip_id, voter_id)
+);
+ALTER TABLE bh_votes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY bh_votes_read   ON bh_votes FOR SELECT TO anon USING (true);
+CREATE POLICY bh_votes_write  ON bh_votes FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY bh_votes_update ON bh_votes FOR UPDATE TO anon USING (true);
+CREATE POLICY bh_votes_delete ON bh_votes FOR DELETE TO anon USING (true);
 
-  // Get this voter's pick
-  function getMyVote() {
-    return localStorage.getItem(VOTE_KEY) || null;
-  }
+CREATE TABLE bh_availability (
+  id         uuid default gen_random_uuid() primary key,
+  voter_id   uuid not null,
+  name       text not null check (char_length(name) between 1 and 20),
+  date       date not null,
+  created_at timestamptz not null default now(),
+  unique(voter_id, date)
+);
+ALTER TABLE bh_availability ENABLE ROW LEVEL SECURITY;
+CREATE POLICY bh_avail_read   ON bh_availability FOR SELECT TO anon USING (true);
+CREATE POLICY bh_avail_write  ON bh_availability FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY bh_avail_delete ON bh_availability FOR DELETE TO anon USING (true);
 
-  function setMyVote(cityId) {
-    localStorage.setItem(VOTE_KEY, cityId);
-    // Also store in shared votes object
-    var name = getVoterName();
-    if (name) {
-      var allVotes = getAllVotes();
-      allVotes[name] = cityId;
-      localStorage.setItem(ALL_VOTES_KEY, JSON.stringify(allVotes));
-    }
-  }
+   ════════════════════════════════════════════════════════════════ */
 
-  function clearMyVote() {
-    var name = getVoterName();
-    localStorage.removeItem(VOTE_KEY);
-    if (name) {
-      var allVotes = getAllVotes();
-      delete allVotes[name];
-      localStorage.setItem(ALL_VOTES_KEY, JSON.stringify(allVotes));
-    }
-  }
+const SUPABASE_URL = 'https://tszssadgsxjoymcttlwd.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzenNzYWRnc3hqb3ltY3R0bHdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NzY5NDcsImV4cCI6MjA2NTE1Mjk0N30.placeholder';
+const TRIP_ID = 'current';
 
-  // All votes: { "Nick": "sioux-city", "Booner": "norfolk", ... }
-  function getAllVotes() {
-    try {
-      return JSON.parse(localStorage.getItem(ALL_VOTES_KEY)) || {};
-    } catch(e) { return {}; }
-  }
+let sb = null;
+try {
+  if (window.supabase) sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+} catch (e) { sb = null; }
 
-  // Pending vote — city user clicked before entering name
-  var pendingVoteCityId = null;
+/* localStorage keys */
+const LS = {
+  theme: 'bh-theme',
+  voterId: 'bh-voter-id',
+  voterName: 'bh-voter-name',
+  voteCache: 'bh-cache-votes',
+  availCache: 'bh-cache-avail'
+};
 
-  // ─── NAME PROMPT ───
-  var nameOverlay = document.getElementById('namePromptOverlay');
-  var nameInput = document.getElementById('namePromptInput');
-  var nameConfirm = document.getElementById('namePromptConfirm');
-
-  nameInput.addEventListener('input', function() {
-    nameConfirm.disabled = nameInput.value.trim().length === 0;
-  });
-
-  nameInput.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && nameInput.value.trim().length > 0) {
-      confirmName();
-    }
-  });
-
-  nameConfirm.addEventListener('click', confirmName);
-
-  function showNamePrompt(cityId) {
-    pendingVoteCityId = cityId;
-    nameOverlay.classList.add('open');
-    document.body.style.overflow = 'hidden';
-    nameInput.value = '';
-    nameConfirm.disabled = true;
-    setTimeout(function() { nameInput.focus(); }, 100);
-  }
-
-  function confirmName() {
-    var name = nameInput.value.trim();
-    if (!name) return;
-    setVoterName(name);
-    nameOverlay.classList.remove('open');
-    document.body.style.overflow = '';
-    if (pendingVoteCityId) {
-      castVote(pendingVoteCityId);
-      pendingVoteCityId = null;
-    }
-  }
-
-  nameOverlay.addEventListener('click', function(e) {
-    if (e.target === nameOverlay) {
-      nameOverlay.classList.remove('open');
-      document.body.style.overflow = '';
-      pendingVoteCityId = null;
-    }
-  });
-
-  // ─── CAST VOTE ───
-  function castVote(cityId) {
-    setMyVote(cityId);
-    updateAllVoteButtons();
-    updateFabBadge();
-    updateResultsLightbox();
-  }
-
-  // ─── VOTE BUTTON HANDLER ───
-  // Called by vote buttons everywhere (cards, table, modal)
-  window._bhVote = function(cityId, e) {
-    if (e) { e.stopPropagation(); e.preventDefault(); }
-    var myVote = getMyVote();
-    if (myVote === cityId) return; // already voted for this
-
-    // If they haven't given a name yet, prompt
-    if (!getVoterName()) {
-      showNamePrompt(cityId);
-      return;
-    }
-
-    castVote(cityId);
-  };
-
-  // ─── CREATE VOTE BUTTON HTML ───
-  window._bhVoteBtn = function(cityId) {
-    var myVote = getMyVote();
-    var isVoted = myVote === cityId;
-    return '<button class="vote-btn' + (isVoted ? ' voted' : '') + '" data-vote-city="' + cityId + '" onclick="_bhVote(\'' + cityId + '\', event)">'
-      + (isVoted ? '✓ MY PICK' : 'I\'D GO HERE')
-      + '</button>';
-  };
-
-  // ─── UPDATE ALL VOTE BUTTONS ON PAGE ───
-  function updateAllVoteButtons() {
-    var myVote = getMyVote();
-    document.querySelectorAll('[data-vote-city]').forEach(function(btn) {
-      var cid = btn.dataset.voteCity;
-      if (cid === myVote) {
-        btn.className = 'vote-btn voted';
-        btn.innerHTML = '✓ MY PICK';
-      } else {
-        btn.className = 'vote-btn';
-        btn.innerHTML = 'I\'D GO HERE';
+/* ════════════════════════════════════════════════════════════════
+   CITY DATA — every future city follows this exact shape
+   ════════════════════════════════════════════════════════════════ */
+const cities = [
+  {
+    id: "sioux-city",
+    name: "Sioux City",
+    state: "IA",
+    miles: 97,
+    drive: "1 hr 37 min",
+    description: "The gold standard for this group. The Fourth Street Historic District is a tight cluster of bars, restaurants, and nightlife venues set inside late 1800s Romanesque brick buildings. Multiple hotels sit within steps of the district. Park once, walk all night, walk back to the hotel.",
+    hotels: [
+      {
+        name: "Courtyard by Marriott Sioux City",
+        stars: 3,
+        priceRange: "$104–$147/night",
+        distanceNote: "Steps away — closest hotel to the bar district",
+        onSite: "Bistro on 4th restaurant and bar",
+        website: "https://www.marriott.com/en-us/hotels/suxcy-courtyard-sioux-city-downtown-convention-center/overview/"
+      },
+      {
+        name: "Warrior Hotel, Autograph Collection",
+        stars: 5,
+        priceRange: "$104–$109/night",
+        distanceNote: "6 min walk to 4th Street",
+        onSite: "Crown Rooftop Bar, Woodbury's Steakhouse, War Eagle Lanes bowling",
+        website: "https://www.thewarriorhotel.com/"
+      },
+      {
+        name: "Stoney Creek Hotel Sioux City",
+        stars: 3,
+        priceRange: "$85–$124/night",
+        distanceNote: "6 min walk to 4th Street",
+        onSite: "Sioux Sip bar and lounge on-site",
+        website: "https://www.stoneycreekhotels.com/hotel/sioux-city/"
+      },
+      {
+        name: "Hard Rock Hotel and Casino Sioux City",
+        stars: 4,
+        priceRange: "$110–$313/night",
+        distanceNote: "10 min walk to 4th Street",
+        onSite: "Full casino, Main and Abbey restaurant, Fuel American Grill, 3 bars",
+        website: "https://www.hardrockcasinosiouxcity.com/"
+      },
+      {
+        name: "DoubleTree by Hilton Sioux City",
+        stars: 3,
+        priceRange: "$125–$149/night",
+        distanceNote: "10 min walk to 4th Street",
+        onSite: "1854 Grille restaurant and full bar",
+        website: "https://www.hilton.com/en/hotels/suxgodt-doubletree-sioux-city/"
       }
-    });
-  }
-
-  // ─── FAB BADGE ───
-  function updateFabBadge() {
-    var allVotes = getAllVotes();
-    var count = Object.keys(allVotes).length;
-    var badge = document.getElementById('voteFabBadge');
-    if (count > 0) {
-      badge.textContent = count;
-      badge.style.display = 'flex';
-    } else {
-      badge.style.display = 'none';
-    }
-  }
-
-  // ─── RESULTS LIGHTBOX ───
-  var voteOverlay = document.getElementById('voteOverlay');
-
-  document.getElementById('voteFab').addEventListener('click', function() {
-    updateResultsLightbox();
-    voteOverlay.classList.add('open');
-    document.body.style.overflow = 'hidden';
-  });
-
-  document.getElementById('voteClose').addEventListener('click', function() {
-    voteOverlay.classList.remove('open');
-    document.body.style.overflow = '';
-  });
-
-  voteOverlay.addEventListener('click', function(e) {
-    if (e.target === voteOverlay) {
-      voteOverlay.classList.remove('open');
-      document.body.style.overflow = '';
-    }
-  });
-
-  // Close vote lightbox on Escape too
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      if (voteOverlay.classList.contains('open')) {
-        voteOverlay.classList.remove('open');
-        document.body.style.overflow = '';
+    ],
+    bars: [
+      {
+        name: "Major's Sports Bar",
+        description: "High energy sports bar sitting at the heart of 4th Street.",
+        distance: "50 ft"
+      },
+      {
+        name: "Buffalo Alice",
+        description: "Pub and pizza bar open until 2AM — the late night anchor of the strip.",
+        distance: "80 ft"
+      },
+      {
+        name: "Soho Kitchen and Bar",
+        description: "American kitchen and taproom with a relaxed neighborhood feel.",
+        distance: "100 ft"
+      },
+      {
+        name: "Beer Can Alley",
+        description: "Country bar and nightclub with a lively Saturday crowd.",
+        distance: "150 ft"
+      },
+      {
+        name: "1008 Key Club",
+        description: "Bar and restaurant with a nightclub atmosphere on weekend nights.",
+        distance: "200 ft"
+      },
+      {
+        name: "Marto Brewing Co.",
+        description: "Local craft brewery with a wood-fired pizza kitchen open until 11PM.",
+        distance: "300 ft"
+      },
+      {
+        name: "Jackson Street Brewing",
+        description: "Craft brewery and taproom one block off the main strip.",
+        distance: "1,050 ft"
+      },
+      {
+        name: "The Warp Zone Bar and Arcade",
+        description: "Full bar combined with a retro arcade — open until 1AM Saturdays.",
+        distance: "1,050 ft"
+      },
+      {
+        name: "Crown Skybar",
+        description: "Rooftop cocktail bar at the Warrior Hotel with downtown views.",
+        distance: "1,580 ft"
+      },
+      {
+        name: "Mo Mo's Piano Bar",
+        description: "Live piano bar in a lounge setting — a good change of pace stop.",
+        distance: "2,110 ft"
+      },
+      {
+        name: "Work and Church Booze Parlor",
+        description: "Dive bar and tavern open until 2AM on the western end of downtown.",
+        distance: "2,370 ft"
+      },
+      {
+        name: "The Shack",
+        description: "Classic no-frills dive bar and tavern.",
+        distance: "2,370 ft"
+      },
+      {
+        name: "Sioux City Distilling Co.",
+        description: "Local distillery bar and lounge with house-made spirits.",
+        distance: "2,100 ft"
+      },
+      {
+        name: "The Boat House",
+        description: "Indoor recreation sports bar open until midnight Saturdays.",
+        distance: "2,370 ft"
+      },
+      {
+        name: "Main and Abbey",
+        description: "Gastropub and hotel bar inside the Hard Rock Hotel.",
+        distance: "2,640 ft"
       }
-      if (nameOverlay.classList.contains('open')) {
-        nameOverlay.classList.remove('open');
-        document.body.style.overflow = '';
-        pendingVoteCityId = null;
+    ],
+    food: [
+      {
+        name: "Buffalo Alice",
+        description: "Pizza and pub food served until 2AM — best late night option on the strip.",
+        hours: "11AM–2AM Saturday"
+      },
+      {
+        name: "Soho Kitchen and Bar",
+        description: "American comfort food and full bar menu.",
+        hours: "Open until 10PM Saturday"
+      },
+      {
+        name: "Marto Brewing Co.",
+        description: "Wood-fired pizza and brewpub fare.",
+        hours: "Kitchen open until 10PM Saturday"
+      },
+      {
+        name: "Bistro on 4th",
+        description: "Italian-American cuisine inside the Courtyard Marriott.",
+        hours: "Dinner 5PM–10PM Saturday"
+      },
+      {
+        name: "Fuel American Grill",
+        description: "Burgers, melts, and pizza slices inside the Hard Rock Hotel.",
+        hours: "Open until midnight Saturday"
+      },
+      {
+        name: "Woodbury's Steakhouse",
+        description: "Full-service American steakhouse inside the Warrior Hotel.",
+        hours: "Dinner service Saturday — call ahead"
       }
-    }
-  });
+    ],
+    parking: "Heritage Parking Ramp at 312 Jackson Street is the move — a covered 4-level facility with 344 spaces, one block from 4th Street. Weekend parking is completely free all day Saturday and Sunday. The ramp also offers jump-starts, tire inflation, and lockout assistance. Park here, forget about the car for the night."
+  }
+];
 
-  function updateResultsLightbox() {
-    var body = document.getElementById('voteLbBody');
-    var allVotes = getAllVotes();
-    var myVote = getMyVote();
-    var voterName = getVoterName();
-    var entries = Object.entries(allVotes);
+/* ════════════════════════════════════════════
+   HELPERS
+   ════════════════════════════════════════════ */
+const $ = (id) => document.getElementById(id);
 
-    if (entries.length === 0) {
-      body.innerHTML = '<div class="vote-lb-empty">No votes yet</div>';
-      return;
-    }
+/* Escape all user-provided strings before any innerHTML use */
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
 
-    // Tally: cityId -> { count, voters: [name, ...] }
-    var tally = {};
-    entries.forEach(function(pair) {
-      var name = pair[0], cid = pair[1];
-      if (!tally[cid]) tally[cid] = { count: 0, voters: [] };
-      tally[cid].count++;
-      tally[cid].voters.push(name);
-    });
+function lsGet(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw === null ? fallback : JSON.parse(raw);
+  } catch (e) { return fallback; }
+}
+function lsSet(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* ignore */ }
+}
 
-    // Sort by count desc
-    var sorted = Object.entries(tally).sort(function(a, b) {
-      return b[1].count - a[1].count;
-    });
-
-    var maxCount = sorted[0][1].count;
-    var html = '';
-
-    sorted.forEach(function(pair, idx) {
-      var cid = pair[0], data = pair[1];
-      var city = typeof cities !== 'undefined' ? cities.find(function(c) { return c.id === cid; }) : null;
-      var cityName = city ? city.name + ', ' + city.state : cid;
-      var isLeader = idx === 0;
-      var pct = maxCount > 0 ? (data.count / maxCount) * 100 : 0;
-
-      html += '<div class="vote-lb-row' + (isLeader ? ' vr-leader' : '') + '">'
-        + '<div class="vote-lb-rank">' + (idx + 1) + '</div>'
-        + '<div class="vote-lb-info">'
-        + '<div class="vote-lb-city">' + cityName + '</div>'
-        + '<div class="vote-lb-voters">' + data.voters.join(', ') + '</div>'
-        + '</div>'
-        + '<div class="vote-lb-count">' + data.count + '</div>'
-        + '<div class="vote-lb-bar-track"><div class="vote-lb-bar-fill" style="width:' + pct + '%"></div></div>'
-        + '</div>';
-    });
-
-    // Your vote section
-    if (myVote && voterName) {
-      var myCity = typeof cities !== 'undefined' ? cities.find(function(c) { return c.id === myVote; }) : null;
-      var myCityName = myCity ? myCity.name + ', ' + myCity.state : myVote;
-      html += '<div class="vote-lb-your-vote">'
-        + '<div>'
-        + '<div class="vote-lb-your-label">Your Vote (' + voterName + ')</div>'
-        + '<div class="vote-lb-your-city">' + myCityName + '</div>'
-        + '</div>'
-        + '<button class="vote-lb-clear-btn" id="voteLbClear">Change Vote</button>'
-        + '</div>';
-    }
-
-    body.innerHTML = html;
-
-    // Wire clear button
-    var clearBtn = document.getElementById('voteLbClear');
-    if (clearBtn) {
-      clearBtn.addEventListener('click', function() {
-        clearMyVote();
-        updateAllVoteButtons();
-        updateFabBadge();
-        updateResultsLightbox();
+/* Voter identity — one UUID per device */
+function voterId() {
+  let id = null;
+  try { id = localStorage.getItem(LS.voterId); } catch (e) { /* ignore */ }
+  if (!id) {
+    id = (crypto.randomUUID) ? crypto.randomUUID() :
+      'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
       });
-    }
+    try { localStorage.setItem(LS.voterId, id); } catch (e) { /* ignore */ }
   }
+  return id;
+}
+const VOTER_ID = voterId();
 
-  // ─── INIT ───
-  updateFabBadge();
-
-  // Make the vote button builder available globally so buildCards/buildTable/openModal can use it
-  // Already set above via window._bhVoteBtn
-
-})();
-</script>
-
-<script>
-const cities = [];
-
-function getProxClass(prox) {
-  if (prox === 'walk') return 'hotel-prox-walk';
-  if (prox === 'ride') return 'hotel-prox-ride';
-  return 'hotel-prox-far';
+function getName() {
+  try { return localStorage.getItem(LS.voterName) || null; } catch (e) { return null; }
+}
+function setName(name) {
+  try { localStorage.setItem(LS.voterName, name); } catch (e) { /* ignore */ }
 }
 
-// Build table
-function buildTable(data) {
-  const tbody = document.getElementById('tableBody');
-  tbody.innerHTML = '';
-  data.forEach((c, idx) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>
-        <div class="city-name-cell">${c.name}</div>
-        <div class="city-state">${c.state}</div>
-      </td>
-      <td>
-        <div style="font-weight:700;">${c.miles} mi</div>
-        <div style="font-size:11px;color:var(--text-dim);font-weight:500;">${c.drive}</div>
-      </td>
-      <td class="actions-cell">
-        <button class="view-btn" data-id="${c.id}">More Info</button>
-        ${typeof _bhVoteBtn === 'function' ? _bhVoteBtn(c.id) : ''}
-      </td>
-    `;
-    tr.addEventListener('click', (e) => {
-      if (e.target.classList.contains('view-btn') || e.target.classList.contains('vote-btn')) return;
-      toggleTray(c.id, tr);
-    });
-    tr.querySelector('.view-btn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleTray(c.id, tr);
-    });
-    tbody.appendChild(tr);
+/* Parse "1,050 ft" → 1050 for distance sorting */
+function feet(str) {
+  const n = parseInt(String(str).replace(/[^0-9]/g, ''), 10);
+  return isNaN(n) ? Number.MAX_SAFE_INTEGER : n;
+}
+
+/* ════════════════════════════════════════════
+   THEME — dark default, persisted to bh-theme
+   ════════════════════════════════════════════ */
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  $('themeIcon').textContent = theme === 'dark' ? 'light_mode' : 'dark_mode';
+  try { localStorage.setItem(LS.theme, theme); } catch (e) { /* ignore */ }
+}
+function initTheme() {
+  let theme = 'dark';
+  try { theme = localStorage.getItem(LS.theme) === 'light' ? 'light' : 'dark'; } catch (e) { /* ignore */ }
+  applyTheme(theme);
+  $('themeBtn').addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme');
+    applyTheme(cur === 'dark' ? 'light' : 'dark');
   });
 }
 
-// ─── EXPANDABLE TRAY ───
-var currentTrayId = null;
-var currentTrayRow = null;
+/* ════════════════════════════════════════════
+   STATE & NAVIGATION
+   ════════════════════════════════════════════ */
+const today = new Date();
+const state = {
+  view: 'cities',
+  sort: 'distance',
+  cityId: null,
+  votes: [],         // [{ voter_id, name, city_id }]
+  avail: [],         // [{ voter_id, name, date }]
+  votesLoaded: false,
+  cal: { y: today.getFullYear(), m: today.getMonth() },
+  selectedDate: null
+};
 
-function buildTrayContent(c) {
-  var barsHTML = c.bars_list.map(function(b) {
-    return '<div class="tray-bar-item"><strong>' + b.name + '</strong><span class="tray-bar-note">' + b.note + '</span></div>';
-  }).join('');
+const mqDesktop = window.matchMedia('(min-width: 840px)');
+const isDesktop = () => mqDesktop.matches;
 
-  var hotelsHTML = c.hotels.map(function(h) {
-    return '<div class="tray-hotel-item"><div><strong>' + h.name + '</strong>'
-      + '<span class="tray-hotel-stars">' + h.stars + '</span>'
-      + '<span class="tray-hotel-prox ' + getProxClass(h.prox) + '">' + h.proxLabel + '</span>'
-      + '</div><div class="tray-hotel-price">' + h.price + '</div></div>';
-  }).join('');
-
-  var caveatHTML = c.caveat
-    ? '<div class="tray-caveat caveat-' + c.caveat.type + '"><strong>' + c.caveat.title + '</strong>' + c.caveat.text + '</div>'
-    : '';
-
-  var poiHTML = c.poi
-    ? '<div class="tray-poi"><strong>POI:</strong> ' + c.poi + '</div>'
-    : '';
-
-  var eventHTML = c.event
-    ? '<div class="tray-event">' + c.event + '</div>'
-    : '';
-
-  return '<div class="tray-content">'
-    + '<div class="tray-desc">' + c.description + '</div>'
-    + '<div class="tray-stats">'
-    + '<div class="tray-stat"><span class="tray-stat-label">Last Call</span><span class="tray-stat-value">' + c.lastCall + '</span></div>'
-    + '<div class="tray-stat"><span class="tray-stat-label">Crowd</span><span class="tray-stat-value" style="font-size:11px;font-weight:500;">' + c.crowd + '</span></div>'
-    + '</div>'
-    + eventHTML
-    + '<div class="tray-section-label">Bars & Venues</div>'
-    + barsHTML
-    + '<div class="tray-section-label">Hotels</div>'
-    + hotelsHTML
-    + caveatHTML
-    + poiHTML
-    + '</div>';
+function go(view) {
+  state.view = view;
+  document.body.setAttribute('data-view', view);
+  document.querySelectorAll('.view').forEach((v) => {
+    v.classList.toggle('active', v.id === 'view-' + view);
+  });
+  const navTarget = view === 'detail' ? 'cities' : view;
+  document.querySelectorAll('.nav-item').forEach((b) => {
+    if (b.dataset.nav === navTarget) b.setAttribute('aria-current', 'page');
+    else b.removeAttribute('aria-current');
+  });
+  $('fab').classList.toggle('hidden', view === 'results');
+  window.scrollTo(0, 0);
+  if (view === 'results') { renderResults(); fetchVotes(); }
+  if (view === 'avail') { renderCalendar(); fetchAvail(); }
 }
 
-function toggleTray(id, sourceRow) {
-  var toast = document.getElementById('trayToast');
+function openCity(id) {
+  state.cityId = id;
+  renderDetail();
+  if (isDesktop()) {
+    if (state.view !== 'cities') go('cities');
+    renderCities();
+  } else {
+    go('detail');
+  }
+}
 
-  // If tapping the same row, close it
-  if (currentTrayId === id) {
-    closeTray();
+mqDesktop.addEventListener('change', () => {
+  if (isDesktop() && state.view === 'detail') go('cities');
+  renderDetail();
+});
+
+/* ════════════════════════════════════════════
+   VOTE HELPERS (shared by list, detail, results)
+   ════════════════════════════════════════════ */
+function myVote() {
+  const row = state.votes.find((v) => v.voter_id === VOTER_ID);
+  return row ? row.city_id : null;
+}
+function votesFor(cityId) {
+  return state.votes.filter((v) => v.city_id === cityId);
+}
+function voteBtnHTML(city, variant) {
+  const mine = myVote() === city.id;
+  const cls = mine ? 'btn-voted' : (variant === 'card' ? 'btn-tonal' : 'btn-filled');
+  const icon = mine ? 'check' : 'how_to_vote';
+  const label = mine
+    ? 'Your pick'
+    : (variant === 'card' ? 'Vote' : 'Vote for ' + esc(city.name));
+  const block = variant === 'card' ? '' : ' btn-block';
+  return '<button class="btn ' + cls + block + ' vote-btn" data-city="' + esc(city.id) + '"' +
+    ' aria-pressed="' + mine + '">' +
+    '<span class="msym">' + icon + '</span><span>' + label + '</span></button>';
+}
+
+/* ════════════════════════════════════════════
+   CITY LIST
+   ════════════════════════════════════════════ */
+function sortedCities() {
+  const arr = [...cities];
+  if (state.sort === 'alpha') arr.sort((a, b) => a.name.localeCompare(b.name));
+  else arr.sort((a, b) => a.miles - b.miles);
+  return arr;
+}
+
+function renderCities() {
+  const arr = sortedCities();
+  $('cityCount').textContent = arr.length + (arr.length === 1 ? ' destination' : ' destinations');
+
+  if (!arr.length) {
+    $('cityGrid').innerHTML =
+      '<div class="empty-state"><span class="msym">location_city</span>' +
+      '<h3>No cities yet</h3><p>Destinations will show up here once they\'re added.</p></div>';
     return;
   }
 
-  // Close any existing tray first
-  if (currentTrayRow) {
-    closeTrayImmediate();
-  }
-
-  var c = cities.find(function(x) { return x.id === id; });
-  if (!c) return;
-
-  // Mark source row
-  sourceRow.classList.add('tray-active');
-
-  // Create tray row
-  var trayRow = document.createElement('tr');
-  trayRow.className = 'tray-row';
-  trayRow.innerHTML = '<td colspan="3"><div class="tray-wrap"><div class="tray-inner">'
-    + buildTrayContent(c)
-    + '</div></div></td>';
-
-  // Insert after source row
-  sourceRow.after(trayRow);
-
-  // Hide all other rows and chrome
-  var tbody = document.getElementById('tableBody');
-  Array.from(tbody.children).forEach(function(row) {
-    if (row !== sourceRow && row !== trayRow) row.classList.add('tray-hidden');
-  });
-  var thead = document.querySelector('#compTable thead');
-  if (thead) thead.classList.add('tray-hidden');
-  document.querySelectorAll('.section-title, .section-sub').forEach(function(el) {
-    el.classList.add('tray-hidden');
-  });
-
-  // Trigger animation on next frame
-  requestAnimationFrame(function() {
-    requestAnimationFrame(function() {
-      trayRow.classList.add('open');
-    });
-  });
-
-  currentTrayId = id;
-  currentTrayRow = { source: sourceRow, tray: trayRow };
-
-  // Show toast
-  toast.classList.add('visible');
-
-  // Scroll the row into view
-  setTimeout(function() {
-    sourceRow.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 50);
-}
-
-function restoreRows() {
-  document.querySelectorAll('.tray-hidden').forEach(function(el) {
-    el.classList.remove('tray-hidden');
-  });
-}
-
-function closeTray() {
-  if (!currentTrayRow) return;
-  var toast = document.getElementById('trayToast');
-  var trayRow = currentTrayRow.tray;
-  var sourceRow = currentTrayRow.source;
-
-  trayRow.classList.remove('open');
-  sourceRow.classList.remove('tray-active');
-  toast.classList.remove('visible');
-  restoreRows();
-
-  // Remove tray row after animation
-  setTimeout(function() {
-    if (trayRow.parentNode) trayRow.parentNode.removeChild(trayRow);
-  }, 250);
-
-  currentTrayId = null;
-  currentTrayRow = null;
-}
-
-function closeTrayImmediate() {
-  if (!currentTrayRow) return;
-  var trayRow = currentTrayRow.tray;
-  var sourceRow = currentTrayRow.source;
-  sourceRow.classList.remove('tray-active');
-  restoreRows();
-  if (trayRow.parentNode) trayRow.parentNode.removeChild(trayRow);
-  currentTrayId = null;
-  currentTrayRow = null;
-}
-
-// Toast button
-document.getElementById('trayToastBtn').addEventListener('click', function() {
-  if (currentTrayRow) {
-    var sourceRow = currentTrayRow.source;
-    closeTray();
-    setTimeout(function() {
-      sourceRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 100);
-  }
-});
-
-// Sort
-let currentSort = 'miles';
-let currentSortDir = 'asc';
-
-function refresh() {
-  closeTrayImmediate();
-  const data = [...cities].sort((a,b) => a.miles - b.miles);
-  buildTable(data);
-}
-
-// Column header sorting
-document.querySelectorAll('th.sortable').forEach(th => {
-  th.addEventListener('click', () => {
-    const col = th.dataset.col;
-    if (currentSort === col) {
-      currentSortDir = currentSortDir === 'asc' ? 'desc' : 'asc';
-    } else {
-      currentSort = col;
-      currentSortDir = 'asc';
-    }
-    // Update header arrows
-    document.querySelectorAll('th.sortable').forEach(h => {
-      h.classList.remove('sort-active');
-      h.querySelector('.sort-arrow').textContent = '↕';
-    });
-    th.classList.add('sort-active');
-    th.querySelector('.sort-arrow').textContent = currentSortDir === 'asc' ? '▲' : '▼';
-    refresh();
-  });
-});
-
-
-// ─── COMPARE LIGHTBOX ───
-
-// Derive crowd fit score from city data instead of hardcoded ID lists
-function crowdScore(c) {
-  var cr = (c.crowd || '').toLowerCase();
-  if (/college|student|isu|usd|ksu|nwmsu|wayne state|unk/i.test(cr)) return 1;
-  if (/mix|faculty|multi/i.test(cr)) return 2;
-  return 3;
-}
-
-function logisticsScore(c) {
-  var s = 3;
-  if (c.hotelWalk !== 'yes') s--;
-  if (c.caveat && c.caveat.type === 'warning') s--;
-  if (/school year|calendar|semester|summer only|seasonal/i.test(c.crowd + ' ' + (c.caveat ? c.caveat.text : ''))) s--;
-  return Math.max(s, 0);
-}
-
-const compareCategories = [
-  {
-    key: 'drive', label: 'Drive Time',
-    getValue: c => c.drive,
-    getRaw: c => c.miles,
-    winner: (arr) => {
-      const min = Math.min(...arr.map(c => c.miles));
-      return arr.map(c => c.miles === min ? 'win' : 'lose');
-    },
-    getNote: c => `${c.miles} miles from Ralston`,
-  },
-  {
-    key: 'bars', label: 'Bar Count',
-    getValue: c => `${c.bars} bars`,
-    getRaw: c => c.bars,
-    winner: (arr) => {
-      const max = Math.max(...arr.map(c => c.bars));
-      return arr.map(c => c.bars === max ? 'win' : 'lose');
-    },
-    getNote: c => `${c.bars} walkable late-night spots`,
-  },
-  {
-    key: 'lastcall', label: 'Last Call',
-    getValue: c => c.lastCall,
-    getRaw: c => { const t = c.lastCall; if (t==='2:00 AM') return 2; if (t==='1:30 AM') return 1.5; return 1; },
-    winner: (arr) => {
-      const rawArr = arr.map(c => {const t=c.lastCall; if(t==='2:00 AM')return 2; if(t==='1:30 AM')return 1.5; return 1;});
-      const max = Math.max(...rawArr);
-      return rawArr.map(r => r === max ? 'win' : 'lose');
-    },
-    getNote: c => `Bars close at ${c.lastCall}`,
-  },
-  {
-    key: 'hotel', label: 'Hotel Walkability',
-    getValue: c => c.hotelWalk === 'yes' ? 'Walk back ✓' : c.hotelWalk === 'partial' ? 'Partial walk' : 'Rideshare needed',
-    getRaw: c => c.hotelWalk === 'yes' ? 3 : c.hotelWalk === 'partial' ? 2 : 1,
-    winner: (arr) => {
-      const rawArr = arr.map(c => c.hotelWalk === 'yes' ? 3 : c.hotelWalk === 'partial' ? 2 : 1);
-      const max = Math.max(...rawArr);
-      return rawArr.map(r => r === max ? 'win' : 'lose');
-    },
-    getNote: c => c.walkNote,
-  },
-  {
-    key: 'price', label: 'Drink Prices',
-    getValue: c => `From ${c.drinksFrom}`,
-    getRaw: c => parseFloat(c.drinksFrom.replace('$','')),
-    winner: (arr) => {
-      const rawArr = arr.map(c => parseFloat(c.drinksFrom.replace('$','')));
-      const min = Math.min(...rawArr);
-      return rawArr.map(r => r === min ? 'win' : 'lose');
-    },
-    getNote: c => `${c.drinksFrom} for domestics`,
-  },
-  {
-    key: 'crowd', label: 'Crowd Fit (40s group)',
-    getValue: c => {
-      const s = crowdScore(c);
-      if (s >= 3) return 'Local adults ✓';
-      if (s >= 2) return 'Mixed crowd';
-      return 'College-heavy';
-    },
-    getRaw: c => crowdScore(c),
-    winner: (arr) => {
-      const rawArr = arr.map(c => crowdScore(c));
-      const max = Math.max(...rawArr);
-      return rawArr.map(r => r === max ? 'win' : 'lose');
-    },
-    getNote: c => c.crowd,
-  },
-  {
-    key: 'logistics', label: 'Trip Logistics',
-    getValue: c => {
-      const issues = [];
-      if (c.hotelWalk !== 'yes') issues.push('Hotel not walkable');
-      if (c.caveat && c.caveat.type === 'warning') issues.push('Needs verification');
-      if (['maryville','vermillion','wayne'].includes(c.id)) issues.push('Calendar-dependent');
-      return issues.length === 0 ? 'Clean & simple ✓' : issues[0];
-    },
-    getRaw: c => logisticsScore(c),
-    winner: (arr) => {
-      const rawArr = arr.map(c => logisticsScore(c));
-      const max = Math.max(...rawArr);
-      return rawArr.map(r => r === max ? 'win' : 'lose');
-    },
-    getNote: c => c.hotelWalk === 'yes' ? 'No transportation needed' : 'Requires pre-arranged transport',
-  },
-  {
-    key: 'poi', label: 'Points of Interest',
-    getValue: c => c.poi ? 'Has nearby POI ✓' : 'Nothing notable',
-    getRaw: c => c.poi ? 1 : 0,
-    winner: (arr) => {
-      const rawArr = arr.map(c => c.poi ? 1 : 0);
-      const max = Math.max(...rawArr);
-      return rawArr.map(r => r === max ? 'win' : 'lose');
-    },
-    getNote: c => c.poi ? c.poi.substring(0,80) + (c.poi.length > 80 ? '…' : '') : 'Nothing notable nearby',
-  },
-];
-
-let selectedCities = [];
-
-function populateComparePicker() {
-  const picker = document.getElementById('compareCityPicker');
-  picker.innerHTML = '';
-  cities.forEach(c => {
-    const btn = document.createElement('button');
-    btn.className = 'compare-city-btn';
-    btn.dataset.id = c.id;
-    btn.textContent = `${c.name}, ${c.state}`;
-    btn.addEventListener('click', () => toggleCitySelect(c.id, btn));
-    picker.appendChild(btn);
-  });
-}
-
-function toggleCitySelect(id, btn) {
-  if (selectedCities.includes(id)) {
-    selectedCities = selectedCities.filter(x => x !== id);
-    btn.classList.remove('selected');
-  } else {
-    if (selectedCities.length >= 3) return;
-    selectedCities.push(id);
-    btn.classList.add('selected');
-  }
-  // Disable unselected buttons when at max
-  document.querySelectorAll('.compare-city-btn').forEach(b => {
-    if (!b.classList.contains('selected')) {
-      b.classList.toggle('disabled-pick', selectedCities.length >= 3);
-    }
-  });
-  updateCompareHint();
-  if (selectedCities.length >= 2) renderCompare();
-  else document.getElementById('compareLightboxResult').innerHTML = '';
-}
-
-function updateCompareHint() {
-  const hint = document.getElementById('comparePickerHint');
-  if (selectedCities.length === 0) hint.textContent = 'Select 2 or 3 cities above to compare';
-  else if (selectedCities.length === 1) hint.textContent = 'Select 1 or 2 more cities';
-  else if (selectedCities.length === 2) hint.textContent = 'Comparing 2 cities — or add a 3rd';
-  else hint.textContent = 'Comparing 3 cities — click any selected city to remove it';
-}
-
-function renderCompare() {
-  const selected = selectedCities.map(id => cities.find(c => c.id === id)).filter(Boolean);
-  const n = selected.length;
-  const result = document.getElementById('compareLightboxResult');
-
-  // Tally category wins per city
-  const winCounts = selected.map(() => 0);
-  const catResults = compareCategories.map(cat => {
-    const outcomes = cat.winner(selected); // array of 'win'/'lose' per city
-    // Handle ties — if all are 'win', it's a tie
-    const allWin = outcomes.every(o => o === 'win');
-    return outcomes.map((o, i) => {
-      if (allWin) return 'tie';
-      if (o === 'win') { winCounts[i]++; return 'win'; }
-      return 'lose';
-    });
-  });
-
-  // Determine overall winner
-  const maxWins = Math.max(...winCounts);
-  const winnersIdx = winCounts.map((w, i) => w === maxWins ? i : -1).filter(i => i >= 0);
-  const isTie = winnersIdx.length > 1;
-  const overallWinner = isTie ? null : selected[winnersIdx[0]];
-
-  // Build column headers
-  const gridCols = n === 2 ? 'compare-grid-2' : 'compare-grid-3';
-  let headersHTML = '';
-  selected.forEach((c, i) => {
-    const isWinner = overallWinner && overallWinner.id === c.id;
-    headersHTML += `
-      <div class="compare-col-header ${isWinner ? 'winner-col' : ''}">
-        <div class="compare-col-name">${c.name}</div>
-        <div class="compare-col-sub">${c.state} · ${c.miles} mi · ${c.drive}</div>
-        ${isWinner ? '<div class="compare-winner-crown">🏆 Winner</div>' : ''}
-      </div>
-    `;
-    if (i < n - 1) headersHTML += `<div class="compare-middle-header">VS</div>`;
-  });
-
-  // Build category rows
-  let rowsHTML = '';
-  compareCategories.forEach((cat, ci) => {
-
-    // Value row
-    let valueRow = '';
-    selected.forEach((c, i) => {
-      const outcome = catResults[ci][i];
-      const indicator = outcome === 'win'
-        ? `<span class="win-indicator green"></span>`
-        : outcome === 'lose'
-        ? `<span class="win-indicator red"></span>`
-        : `<span class="win-indicator tie-dot"></span>`;
-      valueRow += `
-        <div class="compare-cell ${outcome}">
-          <div class="compare-cell-value">${indicator}${cat.getValue(c)}</div>
-          <div class="compare-cell-note">${cat.getNote(c)}</div>
-        </div>
-      `;
-      if (i < n - 1) {
-        const arrow = n === 2
-          ? (catResults[ci][0] === 'win' ? '←' : catResults[ci][1] === 'win' ? '→' : '=')
-          : '·';
-        valueRow += `<div class="compare-middle-cell">${arrow}</div>`;
-      }
-    });
-
-    rowsHTML += valueRow;
-  });
-
-  // Verdict
-  let verdictText = '';
-  if (isTie) {
-    const tiedNames = winnersIdx.map(i => selected[i].name).join(' & ');
-    verdictText = `${tiedNames} are tied with ${maxWins} wins each. The tiebreaker is what matters most to your group — hotel walkability, bar count, or just the shortest drive.`;
-  } else {
-    const loserWins = winCounts.filter((_, i) => i !== winnersIdx[0]);
-    const margin = maxWins - Math.max(...loserWins);
-    const marginWord = margin <= 1 ? 'narrow edge' : margin <= 2 ? 'clear edge' : 'strong advantage';
-    verdictText = `<strong>${overallWinner.name}</strong> wins with ${maxWins} out of 8 categories, giving it a ${marginWord}. Still worth considering what categories matter most to your group before booking.`;
-  }
-
-  const scoreChips = selected.map((c, i) => {
-    const isWinner = overallWinner && overallWinner.id === c.id;
-    return `<div class="compare-score-chip ${isWinner ? 'winner-chip' : ''}">${c.name}: ${winCounts[i]} wins</div>`;
+  $('cityGrid').innerHTML = arr.map((c) => {
+    const n = votesFor(c.id).length;
+    const sel = isDesktop() && state.cityId === c.id ? ' selected' : '';
+    return '<div class="city-card' + sel + '" role="button" tabindex="0" data-open="' + esc(c.id) + '"' +
+      ' aria-label="View ' + esc(c.name) + ' details">' +
+      '<div class="city-card-head">' +
+        '<div><div class="city-card-name">' + esc(c.name) +
+          '<span class="state">' + esc(c.state) + '</span></div>' +
+          '<div class="meta-row">' +
+            '<span class="meta-item"><span class="msym">route</span>' + esc(c.miles) + ' mi</span>' +
+            '<span class="meta-item"><span class="msym">schedule</span>' + esc(c.drive) + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<span class="msym city-card-arrow">chevron_right</span>' +
+      '</div>' +
+      '<div class="city-card-foot">' +
+        '<span class="vote-tag' + (n ? ' has-votes' : '') + '">' +
+          '<span class="msym">how_to_vote</span>' + n + (n === 1 ? ' vote' : ' votes') + '</span>' +
+        voteBtnHTML(c, 'card') +
+      '</div>' +
+    '</div>';
   }).join('');
-
-  result.innerHTML = `
-    <div class="compare-grid ${gridCols}">
-      ${headersHTML}
-      ${rowsHTML}
-    </div>
-    <div class="compare-verdict">
-      <div>
-        <div class="compare-verdict-label">Overall Winner</div>
-        <div class="compare-verdict-winner">${overallWinner ? overallWinner.name : 'Tied'}</div>
-        <div class="compare-score-row">${scoreChips}</div>
-      </div>
-      <div class="compare-verdict-detail">
-        <div class="compare-verdict-label">The Call</div>
-        <div class="compare-verdict-text">${verdictText}</div>
-      </div>
-    </div>
-  `;
 }
 
-// Open / close compare lightbox
-document.getElementById('compareTriggerBtn').addEventListener('click', () => {
-  document.getElementById('compareOverlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
-});
+/* ════════════════════════════════════════════
+   CITY DETAIL
+   ════════════════════════════════════════════ */
+function starsHTML(n) {
+  let out = '<span class="stars" aria-label="' + n + ' star hotel">';
+  for (let i = 1; i <= 5; i++) {
+    out += '<span class="msym' + (i <= n ? ' fill' : ' off') + '">star</span>';
+  }
+  return out + '</span>';
+}
 
-document.getElementById('compareClose').addEventListener('click', () => {
-  document.getElementById('compareOverlay').classList.remove('open');
-  document.body.style.overflow = '';
-});
+function detailHTML(c) {
+  const hotels = c.hotels.map((h) =>
+    '<div class="hotel-card">' +
+      '<div class="hotel-head">' +
+        '<div><div class="hotel-name">' + esc(h.name) + '</div>' + starsHTML(h.stars) + '</div>' +
+        '<span class="hotel-price">' + esc(h.priceRange) + '</span>' +
+      '</div>' +
+      '<div class="hotel-rows">' +
+        '<div class="hotel-row walk"><span class="msym">directions_walk</span><span>' + esc(h.distanceNote) + '</span></div>' +
+        '<div class="hotel-row"><span class="msym">room_service</span><span>' + esc(h.onSite) + '</span></div>' +
+      '</div>' +
+      '<a class="btn btn-outlined btn-block" href="' + esc(h.website) + '" target="_blank" rel="noopener noreferrer">' +
+        '<span class="msym">open_in_new</span><span>Visit website</span></a>' +
+    '</div>'
+  ).join('');
 
-document.getElementById('compareOverlay').addEventListener('click', (e) => {
-  if (e.target === document.getElementById('compareOverlay')) {
-    document.getElementById('compareOverlay').classList.remove('open');
-  document.body.style.overflow = '';
+  const bars = [...c.bars].sort((a, b) => feet(a.distance) - feet(b.distance)).map((b) =>
+    '<div class="list-row">' +
+      '<div class="list-row-main">' +
+        '<div class="list-row-name">' + esc(b.name) + '</div>' +
+        '<div class="list-row-desc">' + esc(b.description) + '</div>' +
+      '</div>' +
+      '<span class="list-row-end"><span class="msym">directions_walk</span>' + esc(b.distance) + '</span>' +
+    '</div>'
+  ).join('');
+
+  const food = c.food.map((f) =>
+    '<div class="list-row">' +
+      '<div class="list-row-main">' +
+        '<div class="list-row-name">' + esc(f.name) + '</div>' +
+        '<div class="list-row-desc">' + esc(f.description) + '</div>' +
+        '<div class="hotel-row"><span class="msym">schedule</span><span>' + esc(f.hours) + '</span></div>' +
+      '</div>' +
+    '</div>'
+  ).join('');
+
+  return '<div class="detail-hero">' +
+      '<h1 class="detail-name">' + esc(c.name) + '<span class="state">' + esc(c.state) + '</span></h1>' +
+      '<div class="meta-row">' +
+        '<span class="meta-item"><span class="msym">route</span>' + esc(c.miles) + ' mi from Ralston</span>' +
+        '<span class="meta-item"><span class="msym">schedule</span>' + esc(c.drive) + '</span>' +
+      '</div>' +
+      '<p class="detail-desc">' + esc(c.description) + '</p>' +
+      '<div class="detail-vote">' + voteBtnHTML(c, 'detail') + '</div>' +
+    '</div>' +
+    '<div class="section-label"><span class="msym">hotel</span><h2>Hotels</h2>' +
+      '<span class="count">' + c.hotels.length + '</span></div>' +
+    '<div class="hotel-grid">' + hotels + '</div>' +
+    '<div class="section-label"><span class="msym">sports_bar</span><h2>Bars</h2>' +
+      '<span class="count">' + c.bars.length + '</span></div>' +
+    '<div class="list-card">' + bars + '</div>' +
+    '<div class="section-label"><span class="msym">restaurant</span><h2>Food</h2>' +
+      '<span class="count">' + c.food.length + '</span></div>' +
+    '<div class="list-card">' + food + '</div>' +
+    '<div class="section-label"><span class="msym">local_parking</span><h2>Parking</h2></div>' +
+    '<div class="parking-card"><span class="msym">local_parking</span><p>' + esc(c.parking) + '</p></div>';
+}
+
+function renderDetail() {
+  const c = cities.find((x) => x.id === state.cityId);
+  if (!c) {
+    $('detailPanel').innerHTML =
+      '<div class="empty-state"><span class="msym">location_city</span>' +
+      '<h3>Pick a city</h3><p>Select a destination from the list to see the full trip plan.</p></div>';
+    $('detailBody').innerHTML = '';
+    $('detailTopTitle').textContent = '';
+    return;
+  }
+  const html = detailHTML(c);
+  $('detailBody').innerHTML = html;
+  $('detailPanel').innerHTML = html;
+  $('detailTopTitle').textContent = c.name + ', ' + c.state;
+}
+
+/* ════════════════════════════════════════════
+   VOTING — Supabase with silent localStorage fallback
+   ════════════════════════════════════════════ */
+function cacheVotes() { lsSet(LS.voteCache, state.votes); }
+
+function refreshVoteUI() {
+  renderCities();
+  renderDetail();
+  updateFab();
+  updateIdentity();
+  if (state.view === 'results') renderResults();
+}
+
+async function fetchVotes() {
+  if (sb) {
+    try {
+      const { data, error } = await sb.from('bh_votes')
+        .select('voter_id,name,city_id')
+        .eq('trip_id', TRIP_ID);
+      if (error) throw error;
+      state.votes = data || [];
+      state.votesLoaded = true;
+      cacheVotes();
+      refreshVoteUI();
+      return;
+    } catch (e) { /* silent fallback below */ }
+  }
+  state.votes = lsGet(LS.voteCache, []);
+  state.votesLoaded = true;
+  refreshVoteUI();
+}
+
+function applyLocalVote(cityId, name) {
+  state.votes = state.votes.filter((v) => v.voter_id !== VOTER_ID);
+  state.votes.push({ voter_id: VOTER_ID, name: name, city_id: cityId });
+  cacheVotes();
+}
+
+async function castVote(cityId) {
+  const name = getName();
+  if (!name) { pending = { type: 'vote', cityId: cityId }; openNameDialog(); return; }
+  if (myVote() === cityId) return;
+  applyLocalVote(cityId, name);
+  refreshVoteUI();
+  if (sb) {
+    try {
+      const { error } = await sb.from('bh_votes').upsert(
+        { trip_id: TRIP_ID, voter_id: VOTER_ID, name: name, city_id: cityId },
+        { onConflict: 'trip_id,voter_id' }
+      );
+      if (error) throw error;
+      fetchVotes();
+    } catch (e) { /* local copy already applied */ }
+  }
+}
+
+function renderResults() {
+  updateIdentity();
+  const el = $('resultsBody');
+
+  if (!state.votesLoaded && !state.votes.length) {
+    el.innerHTML = '<div class="skeleton skeleton-row"></div>'.repeat(3);
+    return;
+  }
+  if (!state.votes.length) {
+    el.innerHTML =
+      '<div class="empty-state"><span class="msym">how_to_vote</span>' +
+      '<h3>No votes yet</h3><p>Be the first — open a city and tap its vote button.</p>' +
+      '<button class="btn btn-tonal" data-nav-go="cities">' +
+      '<span class="msym">location_city</span><span>Browse cities</span></button></div>';
+    return;
+  }
+
+  const ranked = sortedCities()
+    .map((c) => ({ city: c, voters: votesFor(c.id) }))
+    .sort((a, b) => b.voters.length - a.voters.length || a.city.miles - b.city.miles);
+  const max = Math.max(1, ...ranked.map((r) => r.voters.length));
+
+  el.innerHTML = ranked.map((r, i) => {
+    const n = r.voters.length;
+    const leader = i === 0 && n > 0;
+    const tags = r.voters.map((v) =>
+      '<span class="voter-tag' + (v.voter_id === VOTER_ID ? ' me' : '') + '">' +
+      esc(v.name) + (v.voter_id === VOTER_ID ? ' (you)' : '') + '</span>'
+    ).join('');
+    return '<div class="result-card' + (leader ? ' leader' : '') + '">' +
+      '<div class="result-head">' +
+        '<span class="result-rank">' + (i + 1) + '</span>' +
+        '<span class="result-city">' + esc(r.city.name) +
+          '<span class="state">' + esc(r.city.state) + '</span></span>' +
+        '<span class="result-count">' + n + (n === 1 ? ' vote' : ' votes') + '</span>' +
+      '</div>' +
+      '<div class="result-meter"><div class="result-meter-fill" style="width:' +
+        Math.round((n / max) * 100) + '%"></div></div>' +
+      (tags ? '<div class="voter-tags">' + tags + '</div>' : '') +
+    '</div>';
+  }).join('');
+}
+
+function updateFab() {
+  const n = state.votes.length;
+  $('fabLabel').textContent = n + (n === 1 ? ' vote' : ' votes');
+}
+
+function updateIdentity() {
+  const name = getName();
+  $('identityCard').hidden = !name;
+  if (name) $('identityName').textContent = name;
+}
+
+/* ════════════════════════════════════════════
+   NAME DIALOG — one identity per device
+   ════════════════════════════════════════════ */
+let pending = null; // {type:'vote',cityId} | {type:'avail',date} | {type:'rename'}
+
+function openNameDialog() {
+  $('nameInput').value = getName() || '';
+  $('nameError').textContent = '';
+  $('nameScrim').classList.add('open');
+  setTimeout(() => $('nameInput').focus(), 60);
+}
+function closeNameDialog() {
+  $('nameScrim').classList.remove('open');
+  pending = null;
+}
+async function saveNameFromDialog() {
+  const val = $('nameInput').value.trim();
+  if (!val) { $('nameError').textContent = 'Enter a name to continue.'; return; }
+  if (val.length > 20) { $('nameError').textContent = 'Keep it under 20 characters.'; return; }
+  const action = pending;
+  pending = null;
+  setName(val);
+  $('nameScrim').classList.remove('open');
+  updateIdentity();
+  if (action && action.type === 'vote') castVote(action.cityId);
+  else if (action && action.type === 'avail') toggleDate(action.date);
+  else renameEverywhere(val);
+}
+
+async function renameEverywhere(name) {
+  let hadVote = false;
+  state.votes.forEach((v) => { if (v.voter_id === VOTER_ID) { v.name = name; hadVote = true; } });
+  state.avail.forEach((a) => { if (a.voter_id === VOTER_ID) a.name = name; });
+  cacheVotes();
+  cacheAvail();
+  refreshVoteUI();
+  if (state.view === 'avail') renderCalendar();
+  if (sb) {
+    try {
+      if (hadVote) {
+        await sb.from('bh_votes').upsert(
+          { trip_id: TRIP_ID, voter_id: VOTER_ID, name: name, city_id: myVote() },
+          { onConflict: 'trip_id,voter_id' }
+        );
+      }
+      await sb.from('bh_availability').update({ name: name }).eq('voter_id', VOTER_ID);
+    } catch (e) { /* local copies already renamed */ }
+  }
+}
+
+/* ════════════════════════════════════════════
+   AVAILABILITY — Supabase with silent fallback
+   ════════════════════════════════════════════ */
+const MONTH_NAMES = ['January','February','March','April','May','June',
+  'July','August','September','October','November','December'];
+
+function cacheAvail() { lsSet(LS.availCache, state.avail); }
+
+function dateKey(y, m, d) {
+  return y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+}
+const TODAY_KEY = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+
+async function fetchAvail() {
+  if (sb) {
+    try {
+      const { data, error } = await sb.from('bh_availability').select('voter_id,name,date');
+      if (error) throw error;
+      state.avail = data || [];
+      cacheAvail();
+      if (state.view === 'avail') renderCalendar();
+      return;
+    } catch (e) { /* silent fallback below */ }
+  }
+  state.avail = lsGet(LS.availCache, []);
+  if (state.view === 'avail') renderCalendar();
+}
+
+async function toggleDate(dateStr) {
+  const name = getName();
+  if (!name) { pending = { type: 'avail', date: dateStr }; openNameDialog(); return; }
+  const idx = state.avail.findIndex((a) => a.voter_id === VOTER_ID && a.date === dateStr);
+  const removing = idx >= 0;
+  if (removing) state.avail.splice(idx, 1);
+  else state.avail.push({ voter_id: VOTER_ID, name: name, date: dateStr });
+  cacheAvail();
+  state.selectedDate = dateStr;
+  renderCalendar();
+  if (sb) {
+    try {
+      if (removing) {
+        const { error } = await sb.from('bh_availability')
+          .delete().eq('voter_id', VOTER_ID).eq('date', dateStr);
+        if (error) throw error;
+      } else {
+        const { error } = await sb.from('bh_availability')
+          .insert({ voter_id: VOTER_ID, name: name, date: dateStr });
+        if (error) throw error;
+      }
+      fetchAvail();
+    } catch (e) { /* local copy already applied */ }
+  }
+}
+
+function renderCalendar() {
+  const { y, m } = state.cal;
+  $('calMonth').textContent = MONTH_NAMES[m] + ' ' + y;
+
+  const byDate = {};
+  state.avail.forEach((a) => { (byDate[a.date] = byDate[a.date] || []).push(a); });
+
+  const firstDow = new Date(y, m, 1).getDay();
+  const daysIn = new Date(y, m + 1, 0).getDate();
+  let html = '';
+  for (let i = 0; i < firstDow; i++) html += '<div class="cal-day blank"></div>';
+  for (let d = 1; d <= daysIn; d++) {
+    const key = dateKey(y, m, d);
+    const people = byDate[key] || [];
+    const mine = people.some((p) => p.voter_id === VOTER_ID);
+    const isPast = key < TODAY_KEY;
+    const cls = ['cal-day'];
+    if (key === TODAY_KEY) cls.push('today');
+    if (mine) cls.push('mine');
+    if (key === state.selectedDate) cls.push('selected');
+    if (isPast) cls.push('past');
+    html += '<button type="button" class="' + cls.join(' ') + '" data-date="' + key + '"' +
+      (isPast ? ' disabled' : '') +
+      ' aria-label="' + MONTH_NAMES[m] + ' ' + d + ', ' + people.length + ' available">' +
+      '<span class="num">' + d + '</span>' +
+      '<span class="cnt">' + (people.length || '') + '</span></button>';
+  }
+  $('calGrid').innerHTML = html;
+  renderDayPanel(byDate);
+}
+
+function renderDayPanel(byDate) {
+  const el = $('dayPanel');
+  const key = state.selectedDate;
+  if (!key) {
+    el.innerHTML = '<div class="day-panel-title">Pick a date</div>' +
+      '<div class="day-panel-sub">Tap any date to mark yourself available and see who else is in.</div>';
+    return;
+  }
+  const parts = key.split('-').map(Number);
+  const dt = new Date(parts[0], parts[1] - 1, parts[2]);
+  const label = dt.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const people = (byDate[key] || []);
+  const mine = people.some((p) => p.voter_id === VOTER_ID);
+
+  let body;
+  if (!people.length) {
+    body = '<div class="day-panel-sub">No one has marked this date yet. Tap it on the calendar to be the first.</div>';
+  } else {
+    body = '<div class="day-panel-sub">' + people.length +
+      (people.length === 1 ? ' person is' : ' people are') + ' available' +
+      (mine ? ' — tap the date again to remove yourself.' : '.') + '</div>' +
+      '<div class="day-people">' + people.map((p) =>
+        '<span class="person-tag' + (p.voter_id === VOTER_ID ? ' me' : '') + '">' +
+        '<span class="person-avatar">' + esc(String(p.name).charAt(0)) + '</span>' +
+        esc(p.name) + (p.voter_id === VOTER_ID ? ' (you)' : '') + '</span>'
+      ).join('') + '</div>';
+  }
+  el.innerHTML = '<div class="day-panel-title">' + label + '</div>' + body;
+}
+
+/* ════════════════════════════════════════════
+   EVENT WIRING
+   ════════════════════════════════════════════ */
+document.addEventListener('click', (e) => {
+  const voteBtn = e.target.closest('.vote-btn');
+  if (voteBtn) { e.stopPropagation(); castVote(voteBtn.dataset.city); return; }
+
+  const websiteLink = e.target.closest('a[target="_blank"]');
+  if (websiteLink) { e.stopPropagation(); return; }
+
+  const navGo = e.target.closest('[data-nav-go]');
+  if (navGo) { go(navGo.dataset.navGo); return; }
+
+  const card = e.target.closest('[data-open]');
+  if (card) { openCity(card.dataset.open); return; }
+
+  const day = e.target.closest('.cal-day');
+  if (day && !day.disabled && !day.classList.contains('blank')) {
+    toggleDate(day.dataset.date);
   }
 });
 
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    closeTray();
-    document.getElementById('compareOverlay').classList.remove('open');
-    document.body.style.overflow = '';
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.city-card[data-open]')) {
+    e.preventDefault();
+    openCity(e.target.dataset.open);
   }
+  if (e.key === 'Escape' && $('nameScrim').classList.contains('open')) closeNameDialog();
 });
 
-populateComparePicker();
+document.querySelectorAll('.nav-item').forEach((b) => {
+  b.addEventListener('click', () => go(b.dataset.nav));
+});
+$('backBtn').addEventListener('click', () => go('cities'));
+$('fab').addEventListener('click', () => go('results'));
 
-// Initial build
-refresh();
-
-
-// --- THEME TOGGLE ---
-(function() {
-  var toggle = document.getElementById('themeToggle');
-  var root = document.documentElement;
-  var stored = localStorage.getItem('bh-theme');
-
-  function applyTheme(theme) {
-    if (theme === 'light') {
-      root.setAttribute('data-theme', 'light');
-      toggle.innerHTML = '<span class="theme-toggle-icon">\u263E</span> Dark Mode';
-    } else if (theme === 'dark') {
-      root.setAttribute('data-theme', 'dark');
-      toggle.innerHTML = '<span class="theme-toggle-icon">\u2600</span> Light Mode';
-    } else {
-      root.removeAttribute('data-theme');
-      var isDark = !window.matchMedia('(prefers-color-scheme: light)').matches;
-      toggle.innerHTML = isDark
-        ? '<span class="theme-toggle-icon">\u2600</span> Light Mode'
-        : '<span class="theme-toggle-icon">\u263E</span> Dark Mode';
-    }
-  }
-
-  if (stored) { applyTheme(stored); } else { applyTheme('auto'); }
-
-  toggle.addEventListener('click', function() {
-    var current = root.getAttribute('data-theme');
-    var osLight = window.matchMedia('(prefers-color-scheme: light)').matches;
-    if (current === 'light' || (!current && osLight)) {
-      localStorage.setItem('bh-theme', 'dark');
-      applyTheme('dark');
-    } else {
-      localStorage.setItem('bh-theme', 'light');
-      applyTheme('light');
-    }
+document.querySelectorAll('.segmented [data-sort]').forEach((b) => {
+  b.addEventListener('click', () => {
+    state.sort = b.dataset.sort;
+    document.querySelectorAll('.segmented [data-sort]').forEach((x) => {
+      x.setAttribute('aria-pressed', String(x === b));
+    });
+    renderCities();
   });
-})();
+});
 
+$('editNameBtn').addEventListener('click', () => { pending = { type: 'rename' }; openNameDialog(); });
+$('nameSave').addEventListener('click', saveNameFromDialog);
+$('nameCancel').addEventListener('click', closeNameDialog);
+$('nameScrim').addEventListener('click', (e) => { if (e.target === $('nameScrim')) closeNameDialog(); });
+$('nameInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') saveNameFromDialog(); });
+
+$('calPrev').addEventListener('click', () => {
+  state.cal.m--;
+  if (state.cal.m < 0) { state.cal.m = 11; state.cal.y--; }
+  renderCalendar();
+});
+$('calNext').addEventListener('click', () => {
+  state.cal.m++;
+  if (state.cal.m > 11) { state.cal.m = 0; state.cal.y++; }
+  renderCalendar();
+});
+
+/* ════════════════════════════════════════════
+   INIT
+   ════════════════════════════════════════════ */
+initTheme();
+updateIdentity();
+state.votes = lsGet(LS.voteCache, []);
+state.avail = lsGet(LS.availCache, []);
+state.selectedDate = TODAY_KEY;
+if (isDesktop()) state.cityId = (sortedCities()[0] || {}).id || null;
+renderCities();
+renderDetail();
+updateFab();
+go('cities');
+fetchVotes();
+fetchAvail();
 </script>
 </body>
 </html>
