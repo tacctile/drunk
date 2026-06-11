@@ -941,34 +941,6 @@ body[data-view="detail"] .top-bar { display: none; }
 .person-tag.me .person-avatar { background: var(--primary); color: var(--on-primary); }
 
 /* ════════════════════════════════════════════
-   FAB — vote tally
-   ════════════════════════════════════════════ */
-.fab {
-  position: fixed;
-  right: 16px;
-  bottom: calc(var(--nav-h) + 16px + env(safe-area-inset-bottom, 0px));
-  z-index: 20;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: var(--control-h);
-  padding: 0 20px;
-  border: none;
-  border-radius: var(--radius-full);
-  background: var(--primary-container);
-  color: var(--on-primary-container);
-  font: var(--type-label-lg);
-  cursor: pointer;
-  box-shadow: var(--shadow-2);
-  overflow: hidden;
-  transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease, opacity 160ms ease;
-}
-.fab .msym { font-size: var(--icon-btn); }
-.fab:hover { box-shadow: var(--shadow-3); }
-.fab:active { transform: scale(0.98); }
-.fab.hidden { opacity: 0; pointer-events: none; transform: translateY(8px); }
-
-/* ════════════════════════════════════════════
    DIALOG
    ════════════════════════════════════════════ */
 .dialog-scrim {
@@ -1093,8 +1065,6 @@ body[data-view="detail"] .top-bar { display: none; }
   .nav-item .msym { font-size: var(--icon-btn); }
 
   .top-bar { padding: 0 16px 0 24px; }
-
-  .fab { bottom: 24px; right: 24px; }
 
   .page { max-width: 720px; padding: 24px; }
 
@@ -1245,11 +1215,6 @@ body[data-view="detail"] .top-bar { display: none; }
     </button>
   </nav>
 
-  <!-- ── VOTE TALLY FAB ── -->
-  <button class="fab" id="fab" aria-label="View vote results">
-    <span class="msym">how_to_vote</span>
-    <span id="fabLabel">0 votes</span>
-  </button>
 
 </div>
 
@@ -1561,6 +1526,8 @@ function initTheme() {
 /* ════════════════════════════════════════════
    STATE & NAVIGATION
    ════════════════════════════════════════════ */
+let isPopState = false;
+
 const today = new Date();
 const state = {
   view: 'cities',
@@ -1577,6 +1544,12 @@ const mqDesktop = window.matchMedia('(min-width: 840px)');
 const isDesktop = () => mqDesktop.matches;
 
 function go(view) {
+  if (!isPopState) {
+    if (view === 'results') history.pushState({ view: 'results' }, '', '');
+    else if (view === 'avail') history.pushState({ view: 'availability' }, '', '');
+    else if (view === 'cities') history.replaceState({ view: 'list' }, '', '');
+    // 'detail' state is pushed in openCity()
+  }
   state.view = view;
   document.body.setAttribute('data-view', view);
   document.querySelectorAll('.view').forEach((v) => {
@@ -1587,7 +1560,6 @@ function go(view) {
     if (b.dataset.nav === navTarget) b.setAttribute('aria-current', 'page');
     else b.removeAttribute('aria-current');
   });
-  $('fab').classList.toggle('hidden', view === 'results');
   window.scrollTo(0, 0);
   if (view === 'results') { renderResults(); fetchVotes(); }
   if (view === 'avail') { renderCalendar(); fetchAvail(); }
@@ -1600,6 +1572,7 @@ function openCity(id) {
     if (state.view !== 'cities') go('cities');
     renderCities();
   } else {
+    if (!isPopState) history.pushState({ view: 'city', cityId: id }, '', '');
     go('detail');
   }
 }
@@ -1770,7 +1743,6 @@ function cacheVotes() { lsSet(LS.voteCache, state.votes); }
 function refreshVoteUI() {
   renderCities();
   renderDetail();
-  updateFab();
   updateIdentity();
   if (state.view === 'results') renderResults();
 }
@@ -1859,11 +1831,6 @@ function renderResults() {
       (tags ? '<div class="voter-tags">' + tags + '</div>' : '') +
     '</div>';
   }).join('');
-}
-
-function updateFab() {
-  const n = state.votes.length;
-  $('fabLabel').textContent = n + (n === 1 ? ' vote' : ' votes');
 }
 
 function updateIdentity() {
@@ -2071,7 +2038,23 @@ document.querySelectorAll('.nav-item').forEach((b) => {
   b.addEventListener('click', () => go(b.dataset.nav));
 });
 $('backBtn').addEventListener('click', () => go('cities'));
-$('fab').addEventListener('click', () => go('results'));
+
+window.addEventListener('popstate', (e) => {
+  isPopState = true;
+  const s = e.state;
+  if (!s || s.view === 'list') {
+    go('cities');
+  } else if (s.view === 'city') {
+    state.cityId = s.cityId;
+    renderDetail();
+    go('detail');
+  } else if (s.view === 'results') {
+    go('results');
+  } else if (s.view === 'availability') {
+    go('avail');
+  }
+  isPopState = false;
+});
 
 document.querySelectorAll('.segmented [data-sort]').forEach((b) => {
   b.addEventListener('click', () => {
@@ -2111,7 +2094,7 @@ state.selectedDate = TODAY_KEY;
 if (isDesktop()) state.cityId = (sortedCities()[0] || {}).id || null;
 renderCities();
 renderDetail();
-updateFab();
+history.replaceState({ view: 'list' }, '', '');
 go('cities');
 fetchVotes();
 fetchAvail();
