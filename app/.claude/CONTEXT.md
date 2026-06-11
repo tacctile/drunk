@@ -1,6 +1,6 @@
 # BAR HOPPERS /app — CONTEXT (single source of truth)
 
-Last updated: 2026-06-11 · Phase: initial build complete, pending first deploy
+Last updated: 2026-06-11 · Phase: dark-only redesign complete, pending first deploy
 
 ## What this app is
 
@@ -32,49 +32,63 @@ Bar Hoppers is a mobile-first Next.js webapp a small group of friends (~6–10 p
 app/
 ├ package.json               deps + scripts (dev/build/start/lint/typecheck)
 ├ next.config.mjs            default config
-├ tailwind.config.ts         semantic color tokens → CSS vars, type scale, radii
+├ .eslintrc.json             next/core-web-vitals (font-link rules off for App Router)
+├ tailwind.config.ts         dark-only tokens → CSS vars, 3-voice type scale, 16px radius
 ├ tsconfig.json              strict TS, @/* → src/*
 ├ .env.example               documented env vars (app has working fallbacks)
 ├ .claude/                   agent operating system (this folder)
 └ src/
   ├ app/
-  │ ├ layout.tsx             fonts, theme boot script, providers, AppShell
-  │ ├ globals.css            design tokens (light/dark), .ms icons, anims, .card/.btn/.chip
-  │ ├ page.tsx               DASHBOARD: leaders, best weekend, roster, quick actions, top 3
-  │ ├ cities/page.tsx        CITIES: sort (Distance/Score/A–Z/Votes) + vibe/tier filters
+  │ ├ layout.tsx             fonts, GroupDataProvider, AppShell (no theming)
+  │ ├ globals.css            dark-only tokens on :root, .ms icons, anims,
+  │ │                        .card/.btn/.chip/.input/.label
+  │ ├ page.tsx               TRIP: decision board — leader hero (the vote surface),
+  │ │                        standings, closest picks, roster, date nudge
+  │ ├ cities/page.tsx        CITIES: sort (Nearest/Best walk/Most votes/A–Z),
+  │ │                        state filter pills, sticky footer vote pill
   │ ├ city/[id]/page.tsx     server wrapper: generateStaticParams + notFound
-  │ ├ city/[id]/CityDetail.tsx  CITY DETAIL: hero, map, vote, hotels, bars, food
-  │ ├ vote/page.tsx          VOTE: my vote CTA, ranked results, hotel race, rename
-  │ ├ dates/page.tsx         DATES: My Dates / Group View tabs, shared month nav, responses
+  │ ├ city/[id]/CityDetail.tsx  CITY DETAIL: two-pane ≥840px, hero, constellation
+  │ │                        peek ↔ expanded live map, vote, hotels, bars, food
+  │ ├ vote/page.tsx          VOTE FLOW: full-screen three beats (city → hotel →
+  │ │                        confirm), no app chrome, ?city= enters at beat 2
+  │ ├ dates/page.tsx         DATES: I'm Free / I'm Busy mode toggle, My/Group tabs,
+  │ │                        heat map, responses
   │ └ not-found.tsx          404
   ├ components/
-  │ ├ AppShell.tsx           bottom nav (mobile) / left rail (≥840px), theme toggle
-  │ ├ ThemeProvider.tsx      theme context + THEME_BOOT_SCRIPT (dark default)
+  │ ├ AppShell.tsx           3 tabs (Trip/Cities/Dates): bottom nav mobile, 224px
+  │ │                        rail ≥840px; renders nothing around /vote
   │ ├ Icon.tsx               Material Symbol primitive
-  │ ├ Pills.tsx              TierPill, VibePill, ScoreBadge, UnverifiedFlag, Stars
-  │ ├ CityCard.tsx           cities-grid card
-  │ ├ VoteMeter.tsx          horizontal vote bar
+  │ ├ WalkStrip.tsx          THE signature element: fixed 0→1 mi SVG strip,
+  │ │                        bar dots + accent hotel square, city & per-hotel variants
+  │ ├ ConstellationMap.tsx   pure-SVG venue dot-field (city identity, map peek)
+  │ ├ VoterAvatars.tsx       overlapping first-name initials (max 5 + "+N", own in accent)
+  │ ├ Stars.tsx              hotel star rating (muted)
+  │ ├ CityCard.tsx           5 elements: name+state, tagline, walk strip, drive, initials
   │ ├ Dialog.tsx             centered modal (esc/backdrop close, scroll lock)
   │ ├ BottomSheet.tsx        slide-up sheet
   │ ├ NamePrompt.tsx         first-name identity dialog (max 20 chars)
-  │ ├ VoteFlow.tsx           city+hotel atomic vote dialog (name-gated)
-  │ ├ CityMap.tsx            Google map: theme styles, circle pins, filter chips,
-  │ │                        zoom≥15 labels via OverlayView, focus/pan, legend
-  │ ├ HotelCard.tsx          expandable hotel card w/ per-venue walk distances
-  │ ├ VenueRow.tsx           bar/food list row
-  │ ├ VenueSheet.tsx         venue bottom sheet (pin tap / list tap)
-  │ └ Calendar.tsx           MonthNav, MyCalendar (tri-state), GroupCalendar (heat map)
+  │ ├ CityMap.tsx            live Google map — mounted ONLY when expanded; dark style
+  │ │                        only; shape pins (accent square / white dot / outlined
+  │ │                        circle), zoom≥15 labels, filter chips, collapse button
+  │ ├ HotelCard.tsx          hotel card: stars/price/on-site, per-hotel walk strip,
+  │ │                        vote initials, website link, expandable distance list
+  │ ├ VenueRow.tsx           bar/food row (shape glyph) — tap expands map + pans
+  │ ├ VenueSheet.tsx         venue bottom sheet (pin tap)
+  │ └ Calendar.tsx           MonthNav, MyCalendar (mode-toggle set/clear),
+  │                          GroupCalendar (heat map), Fri/Sat emphasis
   ├ hooks/
   │ ├ useGroupData.tsx       THE data layer: fetch + realtime + optimistic mutations
   │ │                        + localStorage fallback. Provider wraps the whole app.
-  │ ├ useVotes.ts            derived: city ranking, hotel ranking, my vote, leader
+  │ ├ useVotes.ts            derived: city ranking, hotel ranking, my vote, leader,
+  │ │                        recentlyChangedCityIds (others-only diff → one-shot pulse)
   │ └ useAvailability.ts     derived: my calendar, heat map, best date, breakdowns
   ├ lib/
   │ ├ supabase.ts            lazy client, env w/ baked fallbacks, safeSelect
   │ ├ identity.ts            bh2-voter-id / bh2-voter-name helpers
   │ ├ geo.ts                 haversineMiles, centroid, formatWalkDistance (ft<1000, else mi)
-  │ ├ score.ts               cityMeta: cluster, tier, composite score (computed at load)
-  │ ├ maps.ts                Maps loader, dark/light styles, PIN_COLORS, base options
+  │ ├ score.ts               cityMeta: bar district centroid, nearest hotel, composite
+  │ │                        score — UI-invisible; score is only the "Best walk" sort key
+  │ ├ maps.ts                Maps loader, single dark style, PIN_COLORS (shape inks)
   │ └ format.ts              local-time date keys, month grid, labels
   └ data/
     ├ types.ts               City/Hotel/Venue/VibeTag/WalkabilityTier interfaces
@@ -141,32 +155,70 @@ ALTER PUBLICATION supabase_realtime ADD TABLE v2_voters, v2_city_votes, v2_hotel
 ## localStorage contract
 
 `bh2-voter-id` (uuid) · `bh2-voter-name` · `bh2-city-vote-cache` (CityVoteRow) ·
-`bh2-hotel-vote-cache` (HotelVoteRow) · `bh2-avail-cache` ({date: status}) · `bh2-theme` ("dark"|"light")
+`bh2-hotel-vote-cache` (HotelVoteRow) · `bh2-avail-cache` ({date: status})
 
-These six keys are the entire localStorage surface. Do not add keys without updating this list.
+These five keys are the entire localStorage surface. Do not add keys without updating this list.
 
 ## Design system
 
-- Font: Manrope. Type scale: 11/12/13/15/17/20/24/30 px (`2xs…3xl` in tailwind config).
-- Spacing: Tailwind default 4px grid. Every interactive element is exactly 44px tall (`h-11`; calendar cells, buttons, chips, nav items all comply).
-- Radii: 10px default, 14px cards (`rounded-lg`), 18px sheets (`rounded-xl`), pills full.
-- Transitions: 180ms ease default; `prefers-reduced-motion` collapses all animation.
-- Dark (default): bg #0E0C08, surface #16130D, surface-2 #1E1A12, surface-3 #282217,
-  line #2B2517, ink #F3EEE3, muted #A79D89, faint #7C7464, accent #E8A030 (ink-on-accent #201403).
-- Light: bg #F8F5EF, surface #FFF, surface-2 #F1ECE1, surface-3 #E8E1D1, line #E5DDCB,
-  ink #211B10, muted #6E6555, faint #99907D, accent #B26E0B (ink-on-accent #FFF).
-- Status: good #4CAF50/#3E8E47, bad #E5484D/#C73E44, food-blue #2196F3/#1F7FD1 (dark/light).
-- Map pins (theme-independent): hotels #E8A030, bars #4CAF50, food #2196F3, white 2px borders.
+Dark ONLY. No light mode, no theme toggle, no `prefers-color-scheme` handling, no theme
+persistence. All tokens live directly on `:root` in `globals.css` (`color-scheme: dark`).
+
+- Surfaces: bg `#0A0D14`, surface `#12161F`, raised `#1A1F2B` — three clearly separated
+  lifts. Depth = surface lift + hairline borders (line `#232A38`, line-strong `#2E3748`),
+  near-zero shadows (one `shadow-overlay` value for sheets/dialogs only).
+- Text: ink `#E8ECF4` (never pure white), muted `#8E99AC`, dim `#5C6678`. Body text is
+  15px minimum; nothing meaningful below 13px. Tabular numerals (`tabular-nums`) on every
+  number.
+- ONE accent: warm streetlight orange `#FF9433` (accent-ink `#1A0E00`, accent-soft 12%).
+  It appears ONLY on: the current vote leader, the user's own vote (initial/CTA states),
+  the walk strip's hotel square, primary action buttons, hotel pins/dots on the
+  constellation and live map, the active nav tab, and the today ring. Nowhere else.
+- Status colors exist only in the calendar: good `#34D399`, bad `#F87171` (+ softs).
+  Never elsewhere, never beside the accent.
+- Typography — exactly three voices (Manrope 400–800, Google Fonts CDN):
+  - Display: 32px / 800 / 36px line / −0.02em (`text-display`) — city names, hero lines.
+  - Body: 15px / 500 (`text-base`, body default) — everything readable.
+  - Label: 12px / 600 / uppercase / +0.06em (`.label`) — section markers, metadata.
+  Weight communicates importance; metadata/labels never render bold/extrabold.
+- Radius: 16px (`rounded`) on ALL cards/panels/buttons; `rounded-full` only on
+  avatar/initial circles and the sanctioned pills (chips, footer vote pill). No other
+  radius values in markup.
+- Spacing: 4px grid; 32px between sections (`gap-8`); 20px card padding (`p-5`); list
+  rows ≥56px (`min-h-14`); every tap target ≥44px (`h-11`) — sacred, no exceptions.
+- Signature element: `WalkStrip` — fixed shared 0→1 mi axis on EVERY strip (auto-scaling
+  per city is forbidden), ¼ mi tick, near-white bar dots, accent hotel square; hotel
+  past 1 mi snaps to the edge with "[X] mi — you'll need a ride"; no coords →
+  "Map data pending". It replaces ALL score/tier/vibe UI; the composite score number
+  never appears anywhere (it survives only as the invisible "Best walk" sort key).
+- City identity: `ConstellationMap` pure-SVG dot-field (accent squares / near-white
+  dots / outlined muted circles) — also the collapsed map peek.
+- Vote counts render as overlapping first-name initials (max 5 + "+N", own initial in
+  accent; colliding first letters get two). No vote bars, no badges, no tier/vibe pills,
+  no "unverified" flags, no `distanceNote`, and the word "cluster" never renders in UI
+  chrome (hand-written taglines are exempt).
+- Live pulse: when ANOTHER person's vote changes, the affected row/hero plays
+  `anim-pulse-once` (driven by `useVotes.recentlyChangedCityIds`); never on your own
+  optimistic writes; killed by `prefers-reduced-motion`.
+- Transitions: 200ms ease-out default (keyframes 180–220ms); `prefers-reduced-motion`
+  collapses all animation.
+- Governing principle: design for 0.08 BAC — one thumb, dim bar, ten seconds. Two taps
+  to any primary action; nothing that needs explanation.
 
 ## Google Maps setup
 
 - Loaded with `@googlemaps/js-api-loader` (`weekly` channel) in `lib/maps.ts`; key from
   `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` with baked public fallback.
-- `disableDefaultUI: true`, `gestureHandling: "cooperative"`, custom dark/light style arrays
-  synced to theme via `map.setOptions({styles})` on theme change.
-- Pins: classic `google.maps.Marker` with `SymbolPath.CIRCLE` (scale 8, focused 11), white stroke.
+- The live map mounts ONLY in the expanded state. Collapsed (~170px) renders the
+  pure-SVG `ConstellationMap` peek — the Google map is never mounted collapsed, and the
+  map element's size is never animated (the container's height/clip animates instead).
+- Single dark style array tuned to the blue-black surfaces. The light style is gone.
+- Pins differentiate by SHAPE, not color: hotel = filled accent `#FF9433` square
+  (custom Symbol path), bar = filled near-white `#E8ECF4` circle, food = outlined muted
+  `#8E99AC` circle.
 - Labels: custom `OverlayView` per venue, attached at zoom ≥ 15, detached below.
-- `fitBounds` with 48px padding on load; filter chips toggle marker visibility.
+- `fitBounds` with 48px padding on load; filter chips (expanded only) toggle marker
+  visibility; venue-list taps expand the map and pan to the pin.
 - Pin tap → in-app `VenueSheet`. There is intentionally no "Open in Maps" anywhere.
 
 ## Data model
@@ -217,8 +269,12 @@ See PROGRESS.md. Everything in the build spec is implemented; deploy + schema we
 
 ## Current state
 
-- Last change: initial full build of /app (dashboard, cities, city detail w/ map, vote, dates,
-  realtime, theming, .claude ecosystem). `npm run build` green, 34 static pages.
+- Last change: full dark-only UI/UX overhaul — blue-black token system, three-tab nav
+  (Trip / Cities / Dates), decision-board Trip screen, WalkStrip + ConstellationMap
+  signature elements, full-screen three-beat /vote flow, mode-toggle calendar,
+  expand-only live map with shape pins. ThemeProvider/Pills/VoteMeter/VoteFlow deleted;
+  Maryville's placeholder `downtown-loft-rentals` hotel removed from data. Data layer,
+  routing, and a11y patterns untouched. `npm run build` green, 34 static pages.
 - Supabase v2 schema: DEPLOYED (migration `bar_hoppers_v2_schema` incl. realtime publication).
 - What's next: deploy to Vercel (root dir `app/`), set the three NEXT_PUBLIC_ env vars
   (optional — fallbacks baked), restrict the Google Maps key to the deploy domain.
