@@ -105,7 +105,7 @@ Bars render sorted by parsed `distance` (feet). Food renders in array order.
 - [x] City list — card list with name, state, miles, drive time, live vote count; sort by distance (default) or A–Z
 - [x] City detail — hero (name/state/miles/drive/description), prominent vote button, HOTELS (cards: stars, price, distance note, on-site, website link), BARS (distance-sorted list), FOOD (list with hours), PARKING (paragraph); full-screen with back button on mobile, sticky side panel on desktop
 - [x] Voting — one vote per person per trip (`trip_id: 'current'`); first vote prompts for name once; vote stored to Supabase `bh_votes` with silent localStorage fallback; changing city moves the vote; ranked results view with voter names, leader highlight, meters; name changeable from results view (updates both tables + caches)
-- [x] Vote tally FAB — shows live total, opens results, hidden while on results
+- [x] ~~Vote tally FAB~~ — removed (redundant with Results nav tab)
 - [x] Availability calendar — month view, prev/next nav, tap a future date to toggle yourself, per-date counts, day panel listing who's available; Supabase `bh_availability` with silent fallback; past dates disabled
 - [x] Theme toggle — dark default / light, persisted to `bh-theme`, pre-paint application
 - [x] Empty states (no cities, no votes, no city selected on desktop), skeleton loading on results, dialog validation
@@ -120,5 +120,5 @@ Bars render sorted by parsed `distance` (feet). Food renders in array order.
 
 ## Current State
 Last updated: 2026-06-11
-Last change: Complete ground-up rebuild. New Material 3 design system (Manrope, Material Symbols, amber tonal palette, dark/light schemes, tight radius scale, 44px controls, 4px grid). New data model with Sioux City as the first entry (5 hotels, 15 bars, 6 food spots, parking). New features: city list/detail views with mobile full-screen + desktop two-pane layouts, Supabase-backed voting with name identity and ranked results, availability calendar with per-date counts and names, vote tally FAB, theme toggle. All Supabase access falls back to localStorage silently. Verified with jsdom smoke tests (57 assertions: rendering, sorting, vote flow, escaping, calendar toggling, month nav, theme persistence, rename flow, desktop panel mode).
+Last change: Removed floating vote tally FAB (HTML, CSS, JS). Added History API back button support: `history.replaceState({ view: 'list' })` on load as base state; `go('results')` and `go('avail')` push history states; `openCity()` pushes `{ view: 'city', cityId }` on mobile; `window.addEventListener('popstate')` handler navigates the app from Android/iOS back button. `isPopState` flag prevents double-pushing on popstate-driven navigation.
 Next up: paste real anon key, run schema SQL in Supabase, then add city #2
