@@ -69,6 +69,6 @@ Personal project — built solid and well-structured, not overcomplicated.
 ---
 
 ## Current State
-Last updated: 2026-06-10
-Last change: Initial governance files created
-Next up: Supabase voting migration
+Last updated: 2026-06-11
+Last change: Dead code purged. `const cities = []` is now empty — all old city objects removed, awaiting the new data model. Removed all dead CSS (card system, details modal, controls/filters/slider, intro strip, progressive disclosure, benchmark system, vote roster chips, dot scores, walk pills, caveat tags, utility classes, duplicate light-mode @media element-overrides block, conflicting mobile rules) and dead JS (renderDots, getTagHTML, getWalkPill, getFilteredSorted). Table, tray, compare lightbox, vote system, and theme toggle are all intact and verified working — they render an empty state until new city data lands.
+Next up: New city data model, then Supabase voting migration
