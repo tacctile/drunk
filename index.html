@@ -617,12 +617,86 @@ body[data-view="detail"] .top-bar { display: none; }
   color: var(--on-surface-variant);
   letter-spacing: 1px;
 }
-.detail-desc {
-  font: var(--type-body-lg);
-  color: var(--on-surface-variant);
-  margin-top: 12px;
-}
 .detail-vote { margin-top: 16px; }
+
+/* ── City map — chips, canvas, touch hint ── */
+.map-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0 12px;
+}
+.map-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--control-h);
+  padding: 0 16px;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--on-surface-variant);
+  font: var(--type-label-lg);
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+.map-chip[data-map-filter="hotel"] { --chip-c: #E8A030; }
+.map-chip[data-map-filter="bar"]   { --chip-c: #4CAF50; }
+.map-chip[data-map-filter="food"]  { --chip-c: #2196F3; }
+.map-chip .chip-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-full);
+  background: var(--outline-variant);
+  flex-shrink: 0;
+  transition: background-color 160ms ease;
+}
+.map-chip[aria-pressed="true"] {
+  border-color: var(--chip-c);
+  background: color-mix(in srgb, var(--chip-c) 16%, transparent);
+  color: var(--on-surface);
+}
+.map-chip[aria-pressed="true"] .chip-dot { background: var(--chip-c); }
+
+.map-wrap {
+  position: relative;
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.city-map {
+  width: 100%;
+  height: 320px;
+  background: var(--surface-container-low);
+}
+@media (min-width: 600px) {
+  .city-map { height: 420px; }
+}
+.map-touch-hint {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  color: var(--on-surface);
+  font: var(--type-title);
+  text-align: center;
+  padding: 16px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+}
+.map-touch-hint.show { opacity: 1; }
+.map-touch-hint .msym { font-size: var(--icon-hero); color: var(--primary); }
+/* Suppress Google's built-in cooperative-gesture overlay — we render our own */
+.gm-style-moc { display: none !important; }
+
+/* Tappable list items pan the map to their pin */
+[data-poi] { cursor: pointer; }
 
 /* Section labels */
 .section-label {
@@ -708,18 +782,6 @@ body[data-view="detail"] .top-bar { display: none; }
   font-variant-numeric: tabular-nums;
 }
 .list-row-end .msym { font-size: var(--icon-meta); color: var(--tertiary); }
-
-/* Parking */
-.parking-card {
-  display: flex;
-  gap: 12px;
-  background: var(--surface-container-low);
-  border: 1px solid var(--outline-variant);
-  border-radius: var(--radius-md);
-  padding: 16px;
-}
-.parking-card .msym { font-size: var(--icon-nav); color: var(--tertiary); }
-.parking-card p { font: var(--type-body-lg); color: var(--on-surface-variant); }
 
 /* ════════════════════════════════════════════
    VOTE RESULTS
@@ -1001,6 +1063,56 @@ body[data-view="detail"] .top-bar { display: none; }
 }
 
 /* ════════════════════════════════════════════
+   MAP POI BOTTOM SHEET
+   ════════════════════════════════════════════ */
+.sheet-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: var(--scrim);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+}
+.sheet-scrim.open { opacity: 1; pointer-events: auto; }
+.poi-sheet {
+  width: 100%;
+  max-width: 640px;
+  max-height: 40dvh;
+  overflow-y: auto;
+  background: var(--surface-container-high);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  box-shadow: var(--shadow-3);
+  transform: translateY(100%);
+  transition: transform 200ms ease;
+}
+.sheet-scrim.open .poi-sheet { transform: translateY(0); }
+.poi-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.poi-cat {
+  font: var(--type-label);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+.poi-cat-hotel { color: #E8A030; }
+.poi-cat-bar   { color: #4CAF50; }
+.poi-cat-food  { color: #2196F3; }
+.poi-name { font: var(--type-headline); color: var(--on-surface); margin-top: 4px; }
+.poi-sheet .stars { margin-top: 8px; }
+.poi-desc { font: var(--type-body-lg); color: var(--on-surface-variant); margin-top: 8px; }
+.poi-sheet .hotel-rows { margin-top: 12px; }
+.poi-sheet .hotel-row { margin-top: 8px; }
+.poi-sheet .btn { margin-top: 16px; }
+
+/* ════════════════════════════════════════════
    EMPTY / LOADING STATES
    ════════════════════════════════════════════ */
 .empty-state {
@@ -1233,6 +1345,11 @@ body[data-view="detail"] .top-bar { display: none; }
   </div>
 </div>
 
+<!-- ── MAP POI BOTTOM SHEET ── -->
+<div class="sheet-scrim" id="poiScrim" role="dialog" aria-modal="true" aria-label="Location details">
+  <div class="poi-sheet" id="poiSheet"></div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 'use strict';
@@ -1298,7 +1415,8 @@ const cities = [
     state: "IA",
     miles: 97,
     drive: "1 hr 37 min",
-    description: "The gold standard for this group. The Fourth Street Historic District is a tight cluster of bars, restaurants, and nightlife venues set inside late 1800s Romanesque brick buildings. Multiple hotels sit within steps of the district. Park once, walk all night, walk back to the hotel.",
+    mapCenter: { lat: 42.4941, lng: -96.3961 },
+    mapZoom: 15,
     hotels: [
       {
         name: "Courtyard by Marriott Sioux City",
@@ -1306,7 +1424,8 @@ const cities = [
         priceRange: "$104–$147/night",
         distanceNote: "Steps away — closest hotel to the bar district",
         onSite: "Bistro on 4th restaurant and bar",
-        website: "https://www.marriott.com/en-us/hotels/suxcy-courtyard-sioux-city-downtown-convention-center/overview/"
+        website: "https://www.marriott.com/en-us/hotels/suxcy-courtyard-sioux-city-downtown-convention-center/overview/",
+        coords: { lat: 42.4944, lng: -96.3987 }
       },
       {
         name: "Warrior Hotel, Autograph Collection",
@@ -1314,7 +1433,8 @@ const cities = [
         priceRange: "$104–$109/night",
         distanceNote: "6 min walk to 4th Street",
         onSite: "Crown Rooftop Bar, Woodbury's Steakhouse, War Eagle Lanes bowling",
-        website: "https://www.thewarriorhotel.com/"
+        website: "https://www.thewarriorhotel.com/",
+        coords: { lat: 42.4965, lng: -96.4029 }
       },
       {
         name: "Stoney Creek Hotel Sioux City",
@@ -1322,7 +1442,8 @@ const cities = [
         priceRange: "$85–$124/night",
         distanceNote: "6 min walk to 4th Street",
         onSite: "Sioux Sip bar and lounge on-site",
-        website: "https://www.stoneycreekhotels.com/hotel/sioux-city/"
+        website: "https://www.stoneycreekhotels.com/hotel/sioux-city/",
+        coords: { lat: 42.4928, lng: -96.3908 }
       },
       {
         name: "Hard Rock Hotel and Casino Sioux City",
@@ -1330,7 +1451,8 @@ const cities = [
         priceRange: "$110–$313/night",
         distanceNote: "10 min walk to 4th Street",
         onSite: "Full casino, Main and Abbey restaurant, Fuel American Grill, 3 bars",
-        website: "https://www.hardrockcasinosiouxcity.com/"
+        website: "https://www.hardrockcasinosiouxcity.com/",
+        coords: { lat: 42.4921, lng: -96.4063 }
       },
       {
         name: "DoubleTree by Hilton Sioux City",
@@ -1338,119 +1460,140 @@ const cities = [
         priceRange: "$125–$149/night",
         distanceNote: "10 min walk to 4th Street",
         onSite: "1854 Grille restaurant and full bar",
-        website: "https://www.hilton.com/en/hotels/suxgodt-doubletree-sioux-city/"
+        website: "https://www.hilton.com/en/hotels/suxgodt-doubletree-sioux-city/",
+        coords: { lat: 42.4907, lng: -96.4013 }
       }
     ],
     bars: [
       {
         name: "Major's Sports Bar",
         description: "High energy sports bar sitting at the heart of 4th Street.",
-        distance: "50 ft"
+        distance: "50 ft",
+        coords: { lat: 42.4940, lng: -96.3955 }
       },
       {
         name: "Buffalo Alice",
         description: "Pub and pizza bar open until 2AM — the late night anchor of the strip.",
-        distance: "80 ft"
+        distance: "80 ft",
+        coords: { lat: 42.4942, lng: -96.3963 }
       },
       {
         name: "Soho Kitchen and Bar",
         description: "American kitchen and taproom with a relaxed neighborhood feel.",
-        distance: "100 ft"
+        distance: "100 ft",
+        coords: { lat: 42.4942, lng: -96.3965 }
       },
       {
         name: "Beer Can Alley",
         description: "Country bar and nightclub with a lively Saturday crowd.",
-        distance: "150 ft"
+        distance: "150 ft",
+        coords: { lat: 42.4938, lng: -96.3953 }
       },
       {
         name: "1008 Key Club",
         description: "Bar and restaurant with a nightclub atmosphere on weekend nights.",
-        distance: "200 ft"
+        distance: "200 ft",
+        coords: { lat: 42.4942, lng: -96.3967 }
       },
       {
         name: "Marto Brewing Co.",
         description: "Local craft brewery with a wood-fired pizza kitchen open until 11PM.",
-        distance: "300 ft"
+        distance: "300 ft",
+        coords: { lat: 42.4944, lng: -96.3976 }
       },
       {
         name: "Jackson Street Brewing",
         description: "Craft brewery and taproom one block off the main strip.",
-        distance: "1,050 ft"
+        distance: "1,050 ft",
+        coords: { lat: 42.4952, lng: -96.3996 }
       },
       {
         name: "The Warp Zone Bar and Arcade",
         description: "Full bar combined with a retro arcade — open until 1AM Saturdays.",
-        distance: "1,050 ft"
+        distance: "1,050 ft",
+        coords: { lat: 42.4950, lng: -96.3955 }
       },
       {
         name: "Crown Skybar",
         description: "Rooftop cocktail bar at the Warrior Hotel with downtown views.",
-        distance: "1,580 ft"
+        distance: "1,580 ft",
+        coords: { lat: 42.4965, lng: -96.4029 }
       },
       {
         name: "Mo Mo's Piano Bar",
         description: "Live piano bar in a lounge setting — a good change of pace stop.",
-        distance: "2,110 ft"
+        distance: "2,110 ft",
+        coords: { lat: 42.4946, lng: -96.4015 }
       },
       {
         name: "Work and Church Booze Parlor",
         description: "Dive bar and tavern open until 2AM on the western end of downtown.",
-        distance: "2,370 ft"
+        distance: "2,370 ft",
+        coords: { lat: 42.4937, lng: -96.4022 }
       },
       {
         name: "The Shack",
         description: "Classic no-frills dive bar and tavern.",
-        distance: "2,370 ft"
+        distance: "2,370 ft",
+        coords: { lat: 42.4948, lng: -96.4030 }
       },
       {
         name: "Sioux City Distilling Co.",
         description: "Local distillery bar and lounge with house-made spirits.",
-        distance: "2,100 ft"
+        distance: "2,100 ft",
+        coords: { lat: 42.4950, lng: -96.4020 }
       },
       {
         name: "The Boat House",
         description: "Indoor recreation sports bar open until midnight Saturdays.",
-        distance: "2,370 ft"
+        distance: "2,370 ft",
+        coords: { lat: 42.4905, lng: -96.3955 }
       },
       {
         name: "Main and Abbey",
         description: "Gastropub and hotel bar inside the Hard Rock Hotel.",
-        distance: "2,640 ft"
+        distance: "2,640 ft",
+        coords: { lat: 42.4921, lng: -96.4063 }
       }
     ],
     food: [
       {
         name: "Buffalo Alice",
         description: "Pizza and pub food served until 2AM — best late night option on the strip.",
-        hours: "11AM–2AM Saturday"
+        hours: "11AM–2AM Saturday",
+        coords: { lat: 42.4942, lng: -96.3963 }
       },
       {
         name: "Soho Kitchen and Bar",
         description: "American comfort food and full bar menu.",
-        hours: "Open until 10PM Saturday"
+        hours: "Open until 10PM Saturday",
+        coords: { lat: 42.4942, lng: -96.3965 }
       },
       {
         name: "Marto Brewing Co.",
         description: "Wood-fired pizza and brewpub fare.",
-        hours: "Kitchen open until 10PM Saturday"
+        hours: "Kitchen open until 10PM Saturday",
+        coords: { lat: 42.4944, lng: -96.3976 }
       },
       {
         name: "Bistro on 4th",
         description: "Italian-American cuisine inside the Courtyard Marriott.",
-        hours: "Dinner 5PM–10PM Saturday"
+        hours: "Dinner 5PM–10PM Saturday",
+        coords: { lat: 42.4944, lng: -96.3987 }
       },
       {
         name: "Fuel American Grill",
         description: "Burgers, melts, and pizza slices inside the Hard Rock Hotel.",
-        hours: "Open until midnight Saturday"
+        hours: "Open until midnight Saturday",
+        coords: { lat: 42.4921, lng: -96.4063 }
       },
       {
         name: "Woodbury's Steakhouse",
         description: "Full-service American steakhouse inside the Warrior Hotel.",
-        hours: "Dinner service Saturday — call ahead"
+        hours: "Dinner service Saturday — call ahead",
+        coords: { lat: 42.4965, lng: -96.4029 }
       }
-    ],
-    parking: "Heritage Parking Ramp at 312 Jackson Street is the move — a covered 4-level facility with 344 spaces, one block from 4th Street. Weekend parking is completely free all day Saturday and Sunday. The ramp also offers jump-starts, tire inflation, and lockout assistance. Park here, forget about the car for the night."
+    ]
   }
 ];
 
@@ -1512,6 +1655,9 @@ function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   $('themeIcon').textContent = theme === 'dark' ? 'light_mode' : 'dark_mode';
   try { localStorage.setItem(LS.theme, theme); } catch (e) { /* ignore */ }
+  if (mapState && mapState.map && mapsReady()) {
+    mapState.map.setOptions({ styles: theme === 'light' ? MAP_STYLE_LIGHT : MAP_STYLE_DARK });
+  }
 }
 function initTheme() {
   let theme = 'dark';
@@ -1563,6 +1709,12 @@ function go(view) {
   window.scrollTo(0, 0);
   if (view === 'results') { renderResults(); fetchVotes(); }
   if (view === 'avail') { renderCalendar(); fetchAvail(); }
+  /* Maps initialized while their container was hidden need a resize nudge */
+  if ((view === 'cities' || view === 'detail') && mapState && mapState.map && mapsReady()) {
+    const center = mapState.map.getCenter();
+    google.maps.event.trigger(mapState.map, 'resize');
+    if (center) mapState.map.setCenter(center);
+  }
 }
 
 function openCity(id) {
@@ -1662,8 +1814,8 @@ function starsHTML(n) {
 }
 
 function detailHTML(c) {
-  const hotels = c.hotels.map((h) =>
-    '<div class="hotel-card">' +
+  const hotels = c.hotels.map((h, i) =>
+    '<div class="hotel-card" data-poi="hotel-' + i + '">' +
       '<div class="hotel-head">' +
         '<div><div class="hotel-name">' + esc(h.name) + '</div>' + starsHTML(h.stars) + '</div>' +
         '<span class="hotel-price">' + esc(h.priceRange) + '</span>' +
@@ -1677,18 +1829,19 @@ function detailHTML(c) {
     '</div>'
   ).join('');
 
-  const bars = [...c.bars].sort((a, b) => feet(a.distance) - feet(b.distance)).map((b) =>
-    '<div class="list-row">' +
+  const bars = c.bars.map((b, i) => ({ b: b, i: i }))
+    .sort((x, y) => feet(x.b.distance) - feet(y.b.distance)).map((x) =>
+    '<div class="list-row" data-poi="bar-' + x.i + '">' +
       '<div class="list-row-main">' +
-        '<div class="list-row-name">' + esc(b.name) + '</div>' +
-        '<div class="list-row-desc">' + esc(b.description) + '</div>' +
+        '<div class="list-row-name">' + esc(x.b.name) + '</div>' +
+        '<div class="list-row-desc">' + esc(x.b.description) + '</div>' +
       '</div>' +
-      '<span class="list-row-end"><span class="msym">directions_walk</span>' + esc(b.distance) + '</span>' +
+      '<span class="list-row-end"><span class="msym">directions_walk</span>' + esc(x.b.distance) + '</span>' +
     '</div>'
   ).join('');
 
-  const food = c.food.map((f) =>
-    '<div class="list-row">' +
+  const food = c.food.map((f, i) =>
+    '<div class="list-row" data-poi="food-' + i + '">' +
       '<div class="list-row-main">' +
         '<div class="list-row-name">' + esc(f.name) + '</div>' +
         '<div class="list-row-desc">' + esc(f.description) + '</div>' +
@@ -1697,15 +1850,26 @@ function detailHTML(c) {
     '</div>'
   ).join('');
 
+  const chip = (cat, label) =>
+    '<button type="button" class="map-chip" data-map-filter="' + cat + '" aria-pressed="true">' +
+      '<span class="chip-dot"></span><span>' + label + '</span></button>';
+
   return '<div class="detail-hero">' +
       '<h1 class="detail-name">' + esc(c.name) + '<span class="state">' + esc(c.state) + '</span></h1>' +
       '<div class="meta-row">' +
         '<span class="meta-item"><span class="msym">route</span>' + esc(c.miles) + ' mi from Ralston</span>' +
         '<span class="meta-item"><span class="msym">schedule</span>' + esc(c.drive) + '</span>' +
       '</div>' +
-      '<p class="detail-desc">' + esc(c.description) + '</p>' +
-      '<div class="detail-vote">' + voteBtnHTML(c, 'detail') + '</div>' +
     '</div>' +
+    '<div class="map-chips" role="group" aria-label="Filter map pins">' +
+      chip('hotel', 'Hotels') + chip('bar', 'Bars') + chip('food', 'Food') +
+    '</div>' +
+    '<div class="map-wrap">' +
+      '<div class="city-map" aria-label="Map of ' + esc(c.name) + ' hotels, bars, and food"></div>' +
+      '<div class="map-touch-hint" aria-hidden="true">' +
+        '<span class="msym">touch_app</span><span>Use two fingers to move the map</span></div>' +
+    '</div>' +
+    '<div class="detail-vote">' + voteBtnHTML(c, 'detail') + '</div>' +
     '<div class="section-label"><span class="msym">hotel</span><h2>Hotels</h2>' +
       '<span class="count">' + c.hotels.length + '</span></div>' +
     '<div class="hotel-grid">' + hotels + '</div>' +
@@ -1714,9 +1878,7 @@ function detailHTML(c) {
     '<div class="list-card">' + bars + '</div>' +
     '<div class="section-label"><span class="msym">restaurant</span><h2>Food</h2>' +
       '<span class="count">' + c.food.length + '</span></div>' +
-    '<div class="list-card">' + food + '</div>' +
-    '<div class="section-label"><span class="msym">local_parking</span><h2>Parking</h2></div>' +
-    '<div class="parking-card"><span class="msym">local_parking</span><p>' + esc(c.parking) + '</p></div>';
+    '<div class="list-card">' + food + '</div>';
 }
 
 function renderDetail() {
@@ -1733,6 +1895,201 @@ function renderDetail() {
   $('detailBody').innerHTML = html;
   $('detailPanel').innerHTML = html;
   $('detailTopTitle').textContent = c.name + ', ' + c.state;
+  initCityMap(c);
+}
+
+/* ════════════════════════════════════════════
+   CITY MAP — Google Maps, colored pins, filters
+   ════════════════════════════════════════════ */
+const POI_COLORS = { hotel: '#E8A030', bar: '#4CAF50', food: '#2196F3' };
+const POI_LABELS = { hotel: 'Hotel', bar: 'Bar', food: 'Food' };
+
+/* Dark map style — deep charcoal land, dark grey roads, muted labels (matches M3 dark theme) */
+const MAP_STYLE_DARK = [
+  { elementType: 'geometry', stylers: [{ color: '#1d1b14' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#989080' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#15130e' }] },
+  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+  { featureType: 'administrative', elementType: 'geometry', stylers: [{ visibility: 'off' }] },
+  { featureType: 'landscape.man_made', elementType: 'geometry', stylers: [{ color: '#211f17' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#37332a' }] },
+  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ visibility: 'off' }] },
+  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#cfc6b4' }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#4c4639' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#100e09' }] },
+  { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#4c4639' }] }
+];
+
+/* Light map style — clean warm off-whites, muted labels (matches M3 light theme) */
+const MAP_STYLE_LIGHT = [
+  { elementType: 'geometry', stylers: [{ color: '#f5eedf' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#7d7567' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#faf3e5' }] },
+  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+  { featureType: 'administrative', elementType: 'geometry', stylers: [{ visibility: 'off' }] },
+  { featureType: 'landscape.man_made', elementType: 'geometry', stylers: [{ color: '#efe8da' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
+  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ visibility: 'off' }] },
+  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#6c5d3f' }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#e9e2d4' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#cfe0e6' }] },
+  { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#7d7567' }] }
+];
+
+/* { cityId, map, markers: [{cat, idx, marker, data}], filters } — rebuilt per render */
+let mapState = null;
+
+function mapsReady() {
+  return !!(window.google && window.google.maps && window.google.maps.Map);
+}
+
+function currentMapStyle() {
+  const theme = document.documentElement.getAttribute('data-theme');
+  return theme === 'light' ? MAP_STYLE_LIGHT : MAP_STYLE_DARK;
+}
+
+function markerIcon(cat) {
+  return {
+    path: google.maps.SymbolPath.CIRCLE,
+    scale: 9,
+    fillColor: POI_COLORS[cat],
+    fillOpacity: 1,
+    strokeColor: '#ffffff',
+    strokeWeight: 2
+  };
+}
+
+function initCityMap(c) {
+  if (!c.mapCenter) return;
+  /* Only the visible container gets a live map: panel on desktop, body on mobile */
+  const host = isDesktop() ? $('detailPanel') : $('detailBody');
+  const el = host.querySelector('.city-map');
+  if (!el) return;
+
+  /* The Maps script is async — retry until it's available (or this render is stale) */
+  if (!mapsReady()) {
+    setTimeout(() => {
+      if (state.cityId === c.id && document.contains(el)) initCityMap(c);
+    }, 150);
+    return;
+  }
+
+  /* Re-renders of the same city (vote refresh) keep the current view and filters */
+  let center = c.mapCenter;
+  let zoom = c.mapZoom || 15;
+  let filters = { hotel: true, bar: true, food: true };
+  if (mapState && mapState.cityId === c.id && mapState.map) {
+    const cc = mapState.map.getCenter();
+    if (cc) { center = { lat: cc.lat(), lng: cc.lng() }; zoom = mapState.map.getZoom(); }
+    filters = mapState.filters;
+  }
+
+  const map = new google.maps.Map(el, {
+    center: center,
+    zoom: zoom,
+    disableDefaultUI: true,
+    gestureHandling: 'cooperative',
+    clickableIcons: false,
+    styles: currentMapStyle()
+  });
+
+  mapState = { cityId: c.id, map: map, markers: [], filters: filters };
+
+  const add = (cat, arr) => arr.forEach((item, idx) => {
+    if (!item.coords) return;
+    const marker = new google.maps.Marker({
+      map: map,
+      position: item.coords,
+      icon: markerIcon(cat),
+      title: item.name,
+      visible: mapState.filters[cat]
+    });
+    marker.addListener('click', () => openPoiSheet(cat, item));
+    mapState.markers.push({ cat: cat, idx: idx, marker: marker, data: item });
+  });
+  add('hotel', c.hotels);
+  add('bar', c.bars);
+  add('food', c.food);
+
+  syncMapChips();
+  wireTouchHint(host);
+}
+
+function syncMapChips() {
+  if (!mapState) return;
+  document.querySelectorAll('.map-chip').forEach((b) => {
+    b.setAttribute('aria-pressed', String(!!mapState.filters[b.dataset.mapFilter]));
+  });
+}
+
+function toggleMapFilter(cat) {
+  if (!mapState) return;
+  mapState.filters[cat] = !mapState.filters[cat];
+  mapState.markers.forEach((m) => {
+    if (m.cat === cat) m.marker.setVisible(mapState.filters[cat]);
+  });
+  syncMapChips();
+}
+
+/* Single-finger drag hint — cooperative gestures need two fingers on touch devices */
+function wireTouchHint(host) {
+  const wrap = host.querySelector('.map-wrap');
+  const hint = host.querySelector('.map-touch-hint');
+  if (!wrap || !hint) return;
+  let hideTimer = null;
+  wrap.addEventListener('touchmove', (e) => {
+    if (e.touches.length !== 1) { hint.classList.remove('show'); return; }
+    hint.classList.add('show');
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => hint.classList.remove('show'), 1500);
+  }, { passive: true });
+}
+
+/* List item tap → pan/zoom the map to the pin and open its sheet. Page never scrolls. */
+function focusPoi(key) {
+  if (!mapState || !mapState.map) return;
+  const sep = key.indexOf('-');
+  const cat = key.slice(0, sep);
+  const idx = Number(key.slice(sep + 1));
+  const entry = mapState.markers.find((m) => m.cat === cat && m.idx === idx);
+  if (!entry) return;
+  if (!mapState.filters[cat]) toggleMapFilter(cat);
+  mapState.map.panTo(entry.marker.getPosition());
+  if (mapState.map.getZoom() < 16) mapState.map.setZoom(16);
+  openPoiSheet(cat, entry.data);
+}
+
+function openPoiSheet(cat, item) {
+  let rows = '';
+  if (cat === 'hotel') {
+    rows = starsHTML(item.stars) +
+      '<div class="hotel-rows">' +
+        '<div class="hotel-row"><span class="msym">payments</span><span>' + esc(item.priceRange) + '</span></div>' +
+        '<div class="hotel-row walk"><span class="msym">directions_walk</span><span>' + esc(item.distanceNote) + '</span></div>' +
+        '<div class="hotel-row"><span class="msym">room_service</span><span>' + esc(item.onSite) + '</span></div>' +
+      '</div>' +
+      '<a class="btn btn-outlined btn-block" href="' + esc(item.website) + '" target="_blank" rel="noopener noreferrer">' +
+        '<span class="msym">open_in_new</span><span>Visit website</span></a>';
+  } else if (cat === 'bar') {
+    rows = '<p class="poi-desc">' + esc(item.description) + '</p>';
+  } else {
+    rows = '<p class="poi-desc">' + esc(item.description) + '</p>' +
+      '<div class="hotel-row"><span class="msym">schedule</span><span>' + esc(item.hours) + '</span></div>';
+  }
+  $('poiSheet').innerHTML =
+    '<div class="poi-head">' +
+      '<span class="poi-cat poi-cat-' + cat + '">' + POI_LABELS[cat] + '</span>' +
+      '<button type="button" class="icon-btn" data-sheet-close aria-label="Close">' +
+        '<span class="msym">close</span></button>' +
+    '</div>' +
+    '<h2 class="poi-name">' + esc(item.name) + '</h2>' + rows;
+  $('poiScrim').classList.add('open');
+}
+
+function closePoiSheet() {
+  $('poiScrim').classList.remove('open');
 }
 
 /* ════════════════════════════════════════════
@@ -2014,6 +2371,15 @@ document.addEventListener('click', (e) => {
   const websiteLink = e.target.closest('a[target="_blank"]');
   if (websiteLink) { e.stopPropagation(); return; }
 
+  const chip = e.target.closest('.map-chip');
+  if (chip) { toggleMapFilter(chip.dataset.mapFilter); return; }
+
+  const sheetClose = e.target.closest('[data-sheet-close]');
+  if (sheetClose) { closePoiSheet(); return; }
+
+  const poi = e.target.closest('[data-poi]');
+  if (poi) { focusPoi(poi.dataset.poi); return; }
+
   const navGo = e.target.closest('[data-nav-go]');
   if (navGo) { go(navGo.dataset.navGo); return; }
 
@@ -2032,6 +2398,7 @@ document.addEventListener('keydown', (e) => {
     openCity(e.target.dataset.open);
   }
   if (e.key === 'Escape' && $('nameScrim').classList.contains('open')) closeNameDialog();
+  if (e.key === 'Escape' && $('poiScrim').classList.contains('open')) closePoiSheet();
 });
 
 document.querySelectorAll('.nav-item').forEach((b) => {
@@ -2071,6 +2438,7 @@ $('nameSave').addEventListener('click', saveNameFromDialog);
 $('nameCancel').addEventListener('click', closeNameDialog);
 $('nameScrim').addEventListener('click', (e) => { if (e.target === $('nameScrim')) closeNameDialog(); });
 $('nameInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') saveNameFromDialog(); });
+$('poiScrim').addEventListener('click', (e) => { if (e.target === $('poiScrim')) closePoiSheet(); });
 
 $('calPrev').addEventListener('click', () => {
   state.cal.m--;
