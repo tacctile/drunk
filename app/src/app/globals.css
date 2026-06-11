@@ -1,0 +1,161 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------------------
+   Bar Hoppers design tokens.
+   Dark is the default theme; .dark/.light classes are set on <html> before
+   first paint (see ThemeScript in layout.tsx). Everything sits on a 4px grid;
+   every interactive element is exactly 44px tall.
+--------------------------------------------------------------------------- */
+
+:root {
+  --bg: #f8f5ef;
+  --surface: #ffffff;
+  --surface-2: #f1ece1;
+  --surface-3: #e8e1d1;
+  --line: #e5ddcb;
+  --line-strong: #d3c9b1;
+  --ink: #211b10;
+  --muted: #6e6555;
+  --faint: #99907d;
+  --accent: #b26e0b;
+  --accent-ink: #ffffff;
+  --accent-soft: rgba(178, 110, 11, 0.1);
+  --good: #3e8e47;
+  --good-soft: rgba(62, 142, 71, 0.12);
+  --bad: #c73e44;
+  --bad-soft: rgba(199, 62, 68, 0.12);
+  --food: #1f7fd1;
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #0e0c08;
+  --surface: #16130d;
+  --surface-2: #1e1a12;
+  --surface-3: #282217;
+  --line: #2b2517;
+  --line-strong: #3c3522;
+  --ink: #f3eee3;
+  --muted: #a79d89;
+  --faint: #7c7464;
+  --accent: #e8a030;
+  --accent-ink: #201403;
+  --accent-soft: rgba(232, 160, 48, 0.13);
+  --good: #4caf50;
+  --good-soft: rgba(76, 175, 80, 0.16);
+  --bad: #e5484d;
+  --bad-soft: rgba(229, 72, 77, 0.16);
+  --food: #2196f3;
+  color-scheme: dark;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  min-height: 100%;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Material Symbols Outlined — the only icon system in the app */
+.ms {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-variation-settings: "FILL" 0, "wght" 500, "GRAD" 0, "opsz" 24;
+  user-select: none;
+  flex: none;
+}
+.ms-fill {
+  font-variation-settings: "FILL" 1, "wght" 500, "GRAD" 0, "opsz" 24;
+}
+
+@layer components {
+  .card {
+    @apply rounded-lg border border-line bg-surface;
+  }
+  .btn {
+    @apply inline-flex h-11 items-center justify-center gap-2 rounded px-4 text-sm font-bold transition;
+  }
+  .btn-accent {
+    @apply btn bg-accent text-accent-ink hover:brightness-110 active:brightness-95;
+  }
+  .btn-ghost {
+    @apply btn border border-line bg-surface text-ink hover:bg-surface-2;
+  }
+  .chip {
+    @apply inline-flex h-11 items-center gap-1 whitespace-nowrap rounded-full border border-line bg-surface px-4 text-sm font-semibold text-muted transition;
+  }
+  .chip-on {
+    @apply border-transparent bg-accent text-accent-ink;
+  }
+  .input {
+    @apply h-11 w-full rounded border border-line-strong bg-surface px-3 text-base text-ink outline-none transition placeholder:text-faint focus:border-accent;
+  }
+}
+
+/* Focus visibility */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Subtle scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+@keyframes bh-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes bh-rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes bh-sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@keyframes bh-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.8); }
+}
+.anim-fade { animation: bh-fade-in 180ms ease both; }
+.anim-rise { animation: bh-rise 200ms ease both; }
+.anim-sheet { animation: bh-sheet-up 200ms ease both; }
+.anim-pulse { animation: bh-pulse 1.6s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
