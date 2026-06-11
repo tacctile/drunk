@@ -5137,4 +5137,491 @@ async function fetchVotes() {
         .eq('trip_id', TRIP_ID);
       if (error) throw error;
       state.votes = data || [];
-      state.vot
+      state.votesLoaded = true;
+      cacheVotes();
+      refreshVoteUI();
+      return;
+    } catch (e) { /* silent fallback below */ }
+  }
+  state.votes = lsGet(LS.voteCache, []);
+  state.votesLoaded = true;
+  refreshVoteUI();
+}
+
+function applyLocalVote(cityId, name) {
+  state.votes = state.votes.filter((v) => v.voter_id !== VOTER_ID);
+  state.votes.push({ voter_id: VOTER_ID, name: name, city_id: cityId });
+  cacheVotes();
+}
+
+async function castVote(cityId) {
+  const name = getName();
+  if (!name) { pending = { type: 'vote', cityId: cityId }; openNameDialog(); return; }
+  if (myVote() === cityId) return;
+  applyLocalVote(cityId, name);
+  refreshVoteUI();
+  if (sb) {
+    try {
+      const { error } = await sb.from('bh_votes').upsert(
+        { trip_id: TRIP_ID, voter_id: VOTER_ID, name: name, city_id: cityId },
+        { onConflict: 'trip_id,voter_id' }
+      );
+      if (error) throw error;
+      fetchVotes();
+    } catch (e) { /* local copy already applied */ }
+  }
+}
+
+function renderResults() {
+  updateIdentity();
+  const el = $('resultsBody');
+
+  if (!state.votesLoaded && !state.votes.length) {
+    el.innerHTML = '<div class="skeleton skeleton-row"></div>'.repeat(3);
+    return;
+  }
+  if (!state.votes.length) {
+    el.innerHTML =
+      '<div class="empty-state"><span class="msym">how_to_vote</span>' +
+      '<h3>No votes yet</h3><p>Be the first — open a city and tap its vote button.</p>' +
+      '<button class="btn btn-tonal" data-nav-go="cities">' +
+      '<span class="msym">location_city</span><span>Browse cities</span></button></div>';
+    return;
+  }
+
+  const ranked = sortedCities()
+    .map((c) => ({ city: c, voters: votesFor(c.id) }))
+    .sort((a, b) => b.voters.length - a.voters.length || a.city.miles - b.city.miles);
+  const max = Math.max(1, ...ranked.map((r) => r.voters.length));
+
+  el.innerHTML = ranked.map((r, i) => {
+    const n = r.voters.length;
+    const leader = i === 0 && n > 0;
+    const tags = r.voters.map((v) =>
+      '<span class="voter-tag' + (v.voter_id === VOTER_ID ? ' me' : '') + '">' +
+      esc(v.name) + (v.voter_id === VOTER_ID ? ' (you)' : '') + '</span>'
+    ).join('');
+    return '<div class="result-card' + (leader ? ' leader' : '') + '">' +
+      '<div class="result-head">' +
+        '<span class="result-rank">' + (i + 1) + '</span>' +
+        '<span class="result-city">' + esc(r.city.name) +
+          '<span class="state">' + esc(r.city.state) + '</span></span>' +
+        '<span class="result-count">' + n + (n === 1 ? ' vote' : ' votes') + '</span>' +
+      '</div>' +
+      '<div class="result-meter"><div class="result-meter-fill" style="width:' +
+        Math.round((n / max) * 100) + '%"></div></div>' +
+      (tags ? '<div class="voter-tags">' + tags + '</div>' : '') +
+    '</div>';
+  }).join('');
+}
+
+function updateIdentity() {
+  const name = getName();
+  $('identityCard').hidden = !name;
+  if (name) $('identityName').textContent = name;
+}
+
+/* ════════════════════════════════════════════
+   NAME DIALOG — one identity per device
+   ════════════════════════════════════════════ */
+let pending = null; // {type:'vote',cityId} | {type:'avail',date} | {type:'rename'}
+
+function openNameDialog() {
+  $('nameInput').value = getName() || '';
+  $('nameError').textContent = '';
+  $('nameScrim').classList.add('open');
+  setTimeout(() => $('nameInput').focus(), 60);
+}
+function closeNameDialog() {
+  $('nameScrim').classList.remove('open');
+  pending = null;
+}
+async function saveNameFromDialog() {
+  const val = $('nameInput').value.trim();
+  if (!val) { $('nameError').textContent = 'Enter a name to continue.'; return; }
+  if (val.length > 20) { $('nameError').textContent = 'Keep it under 20 characters.'; return; }
+  const action = pending;
+  pending = null;
+  setName(val);
+  $('nameScrim').classList.remove('open');
+  updateIdentity();
+  if (action && action.type === 'vote') castVote(action.cityId);
+  else if (action && action.type === 'avail') cycleDate(action.date);
+  else renameEverywhere(val);
+}
+
+async function renameEverywhere(name) {
+  let hadVote = false;
+  state.votes.forEach((v) => { if (v.voter_id === VOTER_ID) { v.name = name; hadVote = true; } });
+  state.avail.forEach((a) => { if (a.voter_id === VOTER_ID) a.name = name; });
+  cacheVotes();
+  cacheAvail();
+  refreshVoteUI();
+  if (state.view === 'avail') renderAvail();
+  if (sb) {
+    try {
+      if (hadVote) {
+        await sb.from('bh_votes').upsert(
+          { trip_id: TRIP_ID, voter_id: VOTER_ID, name: name, city_id: myVote() },
+          { onConflict: 'trip_id,voter_id' }
+        );
+      }
+      await sb.from('bh_availability').update({ name: name }).eq('voter_id', VOTER_ID);
+    } catch (e) { /* local copies already renamed */ }
+  }
+}
+
+/* ════════════════════════════════════════════
+   AVAILABILITY — two tabs (My Dates / Group View)
+   Supabase bh_availability with silent fallback
+   ════════════════════════════════════════════ */
+const MONTH_NAMES = ['January','February','March','April','May','June',
+  'July','August','September','October','November','December'];
+
+function cacheAvail() { lsSet(LS.availCache, state.avail); }
+
+/* Rows written before the status column existed count as 'available' */
+function normAvail(rows) {
+  return (rows || []).map((r) => ({
+    voter_id: r.voter_id,
+    name: r.name,
+    date: r.date,
+    status: r.status === 'unavailable' ? 'unavailable' : 'available'
+  }));
+}
+
+/* bh-avail-cache is the fallback store; bh-cache-avail is its pre-rename ancestor */
+function readAvailCache() {
+  return normAvail(lsGet(LS.availCache, null) || lsGet('bh-cache-avail', []));
+}
+
+function dateKey(y, m, d) {
+  return y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+}
+const TODAY_KEY = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+
+async function fetchAvail() {
+  if (sb) {
+    try {
+      const { data, error } = await sb.from('bh_availability').select('*');
+      if (error) throw error;
+      state.avail = normAvail(data);
+      cacheAvail();
+      if (state.view === 'avail') renderAvail();
+      return;
+    } catch (e) { /* silent fallback below */ }
+  }
+  state.avail = readAvailCache();
+  if (state.view === 'avail') renderAvail();
+}
+
+function myStatus(dateStr) {
+  const row = state.avail.find((a) => a.voter_id === VOTER_ID && a.date === dateStr);
+  return row ? row.status : null;
+}
+
+/* Tap cycle: neutral → available → unavailable → neutral */
+async function cycleDate(dateStr) {
+  const name = getName();
+  if (!name) { pending = { type: 'avail', date: dateStr }; openNameDialog(); return; }
+  const cur = myStatus(dateStr);
+  const next = cur === null ? 'available' : (cur === 'available' ? 'unavailable' : null);
+  state.avail = state.avail.filter((a) => !(a.voter_id === VOTER_ID && a.date === dateStr));
+  if (next) state.avail.push({ voter_id: VOTER_ID, name: name, date: dateStr, status: next });
+  cacheAvail();
+  renderAvail();
+  if (sb) {
+    try {
+      if (next === null) {
+        const { error } = await sb.from('bh_availability')
+          .delete().eq('voter_id', VOTER_ID).eq('date', dateStr);
+        if (error) throw error;
+      } else {
+        const { error } = await sb.from('bh_availability').upsert(
+          { voter_id: VOTER_ID, name: name, date: dateStr, status: next },
+          { onConflict: 'voter_id,date' }
+        );
+        if (error) throw error;
+      }
+      fetchAvail();
+    } catch (e) { /* local copy already applied */ }
+  }
+}
+
+function setAvailTab(tab) {
+  state.availTab = tab;
+  document.querySelectorAll('.avail-tab').forEach((b) => {
+    b.setAttribute('aria-selected', String(b.dataset.availTab === tab));
+  });
+  $('availPaneMine').hidden = tab !== 'mine';
+  $('availPaneGroup').hidden = tab !== 'group';
+  renderAvail();
+  if (tab === 'group') fetchAvail();
+}
+
+function availByDate() {
+  const byDate = {};
+  state.avail.forEach((a) => { (byDate[a.date] = byDate[a.date] || []).push(a); });
+  return byDate;
+}
+
+function heatClass(yes, total) {
+  if (!total) return '';
+  const pct = Math.round((yes / total) * 100);
+  if (pct >= 90) return 'heat-4';
+  if (pct >= 67) return 'heat-3';
+  if (pct >= 34) return 'heat-2';
+  return 'heat-1';
+}
+
+function calCellsHTML(cellFn) {
+  const { y, m } = state.cal;
+  const firstDow = new Date(y, m, 1).getDay();
+  const daysIn = new Date(y, m + 1, 0).getDate();
+  let html = '';
+  for (let i = 0; i < firstDow; i++) html += '<div class="cal-day blank"></div>';
+  for (let d = 1; d <= daysIn; d++) html += cellFn(d, dateKey(y, m, d));
+  return html;
+}
+
+function prettyDate(key, opts) {
+  const p = key.split('-').map(Number);
+  return new Date(p[0], p[1] - 1, p[2]).toLocaleDateString('en-US', opts);
+}
+
+function personLabel(p) {
+  return esc(p.name) + (p.voter_id === VOTER_ID ? ' (you)' : '');
+}
+
+/* Renders both tabs — they share the month in state.cal, so one render keeps them synced */
+function renderAvail() {
+  const { y, m } = state.cal;
+  document.querySelectorAll('.cal-month').forEach((el) => {
+    el.textContent = MONTH_NAMES[m] + ' ' + y;
+  });
+  const byDate = availByDate();
+  renderMineGrid(m);
+  renderGroupGrid(byDate, m);
+  renderAvailList(byDate);
+}
+
+function renderMineGrid(m) {
+  $('calGridMine').innerHTML = calCellsHTML((d, key) => {
+    const status = myStatus(key);
+    const isPast = key < TODAY_KEY;
+    const cls = ['cal-day'];
+    if (key === TODAY_KEY) cls.push('today');
+    if (isPast) cls.push('past');
+    if (status === 'available') cls.push('avail-yes');
+    if (status === 'unavailable') cls.push('avail-no');
+    const icon = status === 'available' ? 'check' : (status === 'unavailable' ? 'close' : '');
+    const stateLabel = status || 'not set';
+    return '<button type="button" class="' + cls.join(' ') + '" data-my-date="' + key + '"' +
+      (isPast ? ' disabled' : '') +
+      ' aria-label="' + MONTH_NAMES[m] + ' ' + d + ' — ' + stateLabel + '">' +
+      '<span class="num">' + d + '</span>' +
+      '<span class="day-state">' + (icon ? '<span class="msym">' + icon + '</span>' : '') + '</span>' +
+    '</button>';
+  });
+}
+
+function renderGroupGrid(byDate, m) {
+  $('calGridGroup').innerHTML = calCellsHTML((d, key) => {
+    const people = byDate[key] || [];
+    const yes = people.filter((p) => p.status === 'available').length;
+    const total = people.length;
+    const cls = ['cal-day'];
+    if (key === TODAY_KEY) cls.push('today');
+    const heat = heatClass(yes, total);
+    if (heat) cls.push(heat);
+    const aria = total
+      ? MONTH_NAMES[m] + ' ' + d + ' — ' + yes + ' of ' + total + ' available, view details'
+      : MONTH_NAMES[m] + ' ' + d + ' — no responses';
+    return '<button type="button" class="' + cls.join(' ') + '" data-day-sheet="' + key + '"' +
+      (total ? '' : ' disabled') +
+      ' aria-label="' + aria + '">' +
+      '<span class="num">' + d + '</span>' +
+      '<span class="cnt">' + (total ? yes + '/' + total : '') + '</span>' +
+    '</button>';
+  });
+}
+
+/* Chronological list of every date with at least one response, oldest first */
+function renderAvailList(byDate) {
+  const keys = Object.keys(byDate).sort();
+  $('availListCount').textContent = keys.length
+    ? keys.length + (keys.length === 1 ? ' date' : ' dates') : '';
+  if (!keys.length) {
+    $('availList').innerHTML =
+      '<div class="empty-state"><span class="msym">event_busy</span>' +
+      '<h3>No responses yet</h3><p>Once someone marks a date on their calendar it shows up here.</p></div>';
+    return;
+  }
+  $('availList').innerHTML = keys.map((key) => {
+    const people = byDate[key];
+    const yes = people.filter((p) => p.status === 'available');
+    const no = people.filter((p) => p.status === 'unavailable');
+    const rows = yes.map((p) =>
+      '<div class="avail-person yes"><span class="msym">check</span><span>' + personLabel(p) + '</span></div>'
+    ).join('') + no.map((p) =>
+      '<div class="avail-person no"><span class="msym">close</span><span>' + personLabel(p) + '</span></div>'
+    ).join('');
+    return '<div class="avail-entry">' +
+      '<div class="avail-entry-head">' +
+        '<span class="avail-entry-date">' +
+          prettyDate(key, { weekday: 'short', month: 'short', day: 'numeric' }) + '</span>' +
+        '<span class="avail-entry-pct">' + yes.length + '/' + people.length + ' available</span>' +
+      '</div>' +
+      '<div class="avail-entry-rows">' + rows + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function openDaySheet(key) {
+  const people = state.avail.filter((a) => a.date === key);
+  if (!people.length) return;
+  const yes = people.filter((p) => p.status === 'available');
+  const no = people.filter((p) => p.status === 'unavailable');
+  const respondents = new Set(state.avail.map((a) => a.voter_id)).size;
+  const lines =
+    (yes.length ? '<p class="day-sheet-line">Available: <span class="names-yes">' +
+      yes.map(personLabel).join(', ') + '</span></p>' : '') +
+    (no.length ? '<p class="day-sheet-line">Unavailable: <span class="names-no">' +
+      no.map(personLabel).join(', ') + '</span></p>' : '');
+  $('daySheet').innerHTML =
+    '<div class="poi-head">' +
+      '<span class="poi-cat poi-cat-day">Group availability</span>' +
+      '<button type="button" class="icon-btn" data-day-close aria-label="Close">' +
+        '<span class="msym">close</span></button>' +
+    '</div>' +
+    '<h2 class="poi-name">' +
+      prettyDate(key, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) + '</h2>' +
+    lines +
+    '<p class="day-sheet-meta">Response rate: ' + people.length + ' of ' + respondents +
+      ' people who have used the calendar have responded for this date.</p>';
+  document.body.style.overflow = 'hidden';
+  $('dayScrim').classList.add('open');
+}
+
+function closeDaySheet() {
+  $('dayScrim').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ════════════════════════════════════════════
+   EVENT WIRING
+   ════════════════════════════════════════════ */
+document.addEventListener('click', (e) => {
+  const voteBtn = e.target.closest('.vote-btn');
+  if (voteBtn) { e.stopPropagation(); castVote(voteBtn.dataset.city); return; }
+
+  const websiteLink = e.target.closest('a[target="_blank"]');
+  if (websiteLink) { e.stopPropagation(); return; }
+
+  const chip = e.target.closest('.map-chip');
+  if (chip) { toggleMapFilter(chip.dataset.mapFilter); return; }
+
+  const showAll = e.target.closest('[data-map-show-all]');
+  if (showAll) { showAllPins(); return; }
+
+  const sheetClose = e.target.closest('[data-sheet-close]');
+  if (sheetClose) { closePoiSheet(); return; }
+
+  const poi = e.target.closest('[data-poi]');
+  if (poi) { focusPoi(poi.dataset.poi); return; }
+
+  const navGo = e.target.closest('[data-nav-go]');
+  if (navGo) { go(navGo.dataset.navGo); return; }
+
+  const card = e.target.closest('[data-open]');
+  if (card) { openCity(card.dataset.open); return; }
+
+  const dayClose = e.target.closest('[data-day-close]');
+  if (dayClose) { closeDaySheet(); return; }
+
+  const myDay = e.target.closest('[data-my-date]');
+  if (myDay && !myDay.disabled) { cycleDate(myDay.dataset.myDate); return; }
+
+  const groupDay = e.target.closest('[data-day-sheet]');
+  if (groupDay && !groupDay.disabled) { openDaySheet(groupDay.dataset.daySheet); }
+});
+
+document.addEventListener('keydown', (e) => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.city-card[data-open]')) {
+    e.preventDefault();
+    openCity(e.target.dataset.open);
+  }
+  if (e.key === 'Escape' && $('nameScrim').classList.contains('open')) closeNameDialog();
+});
+
+document.querySelectorAll('.nav-item').forEach((b) => {
+  b.addEventListener('click', () => go(b.dataset.nav));
+});
+$('backBtn').addEventListener('click', () => go('cities'));
+
+window.addEventListener('popstate', (e) => {
+  isPopState = true;
+  const s = e.state;
+  if (!s || s.view === 'list') {
+    go('cities');
+  } else if (s.view === 'city') {
+    state.cityId = s.cityId;
+    renderDetail(true);
+    go('detail');
+  } else if (s.view === 'results') {
+    go('results');
+  } else if (s.view === 'availability') {
+    go('avail');
+  }
+  isPopState = false;
+});
+
+document.querySelectorAll('.segmented [data-sort]').forEach((b) => {
+  b.addEventListener('click', () => {
+    state.sort = b.dataset.sort;
+    document.querySelectorAll('.segmented [data-sort]').forEach((x) => {
+      x.setAttribute('aria-pressed', String(x === b));
+    });
+    renderCities();
+  });
+});
+
+$('editNameBtn').addEventListener('click', () => { pending = { type: 'rename' }; openNameDialog(); });
+$('nameSave').addEventListener('click', saveNameFromDialog);
+$('nameCancel').addEventListener('click', closeNameDialog);
+$('nameScrim').addEventListener('click', (e) => { if (e.target === $('nameScrim')) closeNameDialog(); });
+$('nameInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') saveNameFromDialog(); });
+$('poiScrim').addEventListener('click', (e) => { if (e.target === $('poiScrim')) closePoiSheet(); });
+$('dayScrim').addEventListener('click', (e) => { if (e.target === $('dayScrim')) closeDaySheet(); });
+
+document.querySelectorAll('.avail-tab').forEach((b) => {
+  b.addEventListener('click', () => setAvailTab(b.dataset.availTab));
+});
+
+/* Month navigation — both tabs share state.cal, so either pane's arrows move both */
+document.querySelectorAll('[data-cal-nav]').forEach((b) => {
+  b.addEventListener('click', () => {
+    state.cal.m += b.dataset.calNav === 'prev' ? -1 : 1;
+    if (state.cal.m < 0) { state.cal.m = 11; state.cal.y--; }
+    if (state.cal.m > 11) { state.cal.m = 0; state.cal.y++; }
+    renderAvail();
+  });
+});
+
+/* ════════════════════════════════════════════
+   INIT
+   ════════════════════════════════════════════ */
+initTheme();
+updateIdentity();
+state.votes = lsGet(LS.voteCache, []);
+state.avail = readAvailCache();
+if (isDesktop()) state.cityId = (sortedCities()[0] || {}).id || null;
+renderCities();
+renderDetail();
+history.replaceState({ view: 'list' }, '', '');
+go('cities');
+fetchVotes();
+fetchAvail();
+</script>
+</body>
+</html>
