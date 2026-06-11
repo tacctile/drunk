@@ -94,10 +94,11 @@ CREATE POLICY bh_avail_delete ON bh_availability FOR DELETE TO anon USING (true)
 
 ## Data Model
 Each entry in `const cities = [...]` follows this exact shape (Sioux City is the reference implementation):
-`{ id, name, state, miles, drive, mapCenter: { lat, lng }, mapZoom, hotels: [{ name, stars, priceRange, distanceNote, onSite, website, coords: { lat, lng } }], bars: [{ name, description, distance, coords }], food: [{ name, description, hours, coords }] }`
+`{ id, name, state, miles, drive, mapCenter: { lat, lng }, mapZoom, hotels: [{ name, address, stars, priceRange, distanceNote, onSite, website, coords: { lat, lng } }], bars: [{ name, address, description, distance, coords }], food: [{ name, address, description, hours, coords }] }`
 Bars render sorted by parsed `distance` (feet). Food renders in array order.
 - The city-level `description` and `parking` fields have been REMOVED from the model and all rendering code. Do not add them back.
 - `coords` were added to every hotel/bar/food entry (used for Google Maps pins). `mapCenter`/`mapZoom` set the initial map view (Sioux City: Fourth Street Historic District, zoom 15).
+- `address` field added to every hotel/bar/food entry. Currently all set to `''`. Displayed under the name (smaller, muted, `--on-surface-variant`) when non-empty; renders nothing when empty. Awaiting population in a future session.
 
 ---
 
@@ -123,6 +124,6 @@ Bars render sorted by parsed `distance` (feet). Food renders in array order.
 
 ## Current State
 Last updated: 2026-06-11
-Last change: Clickable Google Maps search links on bar and food entries — (1) Added `buildMapsSearchUrl(name, cityName, cityState)` helper that joins the three tokens with spaces, replaces spaces with `+`, and returns a `https://maps.google.com/?q=` URL; (2) Bar and food list rows below the map now render names as `<a class="bar-food-link">` anchors — amber (`--primary`) color, no underline by default, underline on hover/focus, `min-height: 44px` via flex for touch target compliance; (3) Bar and food pin popup bottom sheets now render the name as an `<a class="bar-food-link">` inside the `<h2 class="poi-name">` — linked name + description only, no buttons; (4) Hotel list cards and hotel pin popups are unchanged; (5) The existing `a[target="_blank"]` click-handler guard ensures link clicks don't also trigger `focusPoi`.
-Note: `distanceNote` and `hours` fields retained in data objects — just not rendered anywhere.
-Next up: paste real anon key, run schema SQL in Supabase, then add city #2 (must include coords/mapCenter/mapZoom)
+Last change: Open in Maps button for bars and food + address field added to data model — (1) Bar and food entry names are now plain bold text (not links) everywhere — list below map and pin popup bottom sheet; (2) Every bar and food entry now shows an `Open in Maps` button (same `btn btn-outlined btn-block` style as hotels, 44px, `open_in_new` icon) built via `buildMapsSearchUrl` in both the list and the popup; (3) `address` field added to every hotel/bar/food data entry — currently all `''`; (4) Address displays under the name (`.entry-address`: `--type-body`, `--on-surface-variant`, `margin-top: 2px`) in both list and popup when non-empty; renders nothing when empty; (5) Hotel list cards and hotel pin popup unchanged except address display was wired in (renders nothing since all addresses are empty).
+Note: `distanceNote` and `hours` fields retained in data objects — just not rendered anywhere. Address fields awaiting population.
+Next up: populate address fields, paste real anon key, run schema SQL in Supabase, then add city #2 (must include coords/mapCenter/mapZoom)
