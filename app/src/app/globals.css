@@ -3,51 +3,28 @@
 @tailwind utilities;
 
 /* ---------------------------------------------------------------------------
-   Bar Hoppers design tokens.
-   Dark is the default theme; .dark/.light classes are set on <html> before
-   first paint (see ThemeScript in layout.tsx). Everything sits on a 4px grid;
-   every interactive element is exactly 44px tall.
+   Bar Hoppers design tokens — dark only.
+   Blue-black surfaces with a single warm streetlight-orange accent. Depth is
+   surface lift + hairline borders, never heavy shadows. Everything sits on a
+   4px grid; every interactive element is at least 44px tall.
 --------------------------------------------------------------------------- */
 
 :root {
-  --bg: #f8f5ef;
-  --surface: #ffffff;
-  --surface-2: #f1ece1;
-  --surface-3: #e8e1d1;
-  --line: #e5ddcb;
-  --line-strong: #d3c9b1;
-  --ink: #211b10;
-  --muted: #6e6555;
-  --faint: #99907d;
-  --accent: #b26e0b;
-  --accent-ink: #ffffff;
-  --accent-soft: rgba(178, 110, 11, 0.1);
-  --good: #3e8e47;
-  --good-soft: rgba(62, 142, 71, 0.12);
-  --bad: #c73e44;
-  --bad-soft: rgba(199, 62, 68, 0.12);
-  --food: #1f7fd1;
-  color-scheme: light;
-}
-
-.dark {
-  --bg: #0e0c08;
-  --surface: #16130d;
-  --surface-2: #1e1a12;
-  --surface-3: #282217;
-  --line: #2b2517;
-  --line-strong: #3c3522;
-  --ink: #f3eee3;
-  --muted: #a79d89;
-  --faint: #7c7464;
-  --accent: #e8a030;
-  --accent-ink: #201403;
-  --accent-soft: rgba(232, 160, 48, 0.13);
-  --good: #4caf50;
-  --good-soft: rgba(76, 175, 80, 0.16);
-  --bad: #e5484d;
-  --bad-soft: rgba(229, 72, 77, 0.16);
-  --food: #2196f3;
+  --bg: #0a0d14;
+  --surface: #12161f;
+  --raised: #1a1f2b;
+  --line: #232a38;
+  --line-strong: #2e3748;
+  --ink: #e8ecf4;
+  --muted: #8e99ac;
+  --dim: #5c6678;
+  --accent: #ff9433;
+  --accent-ink: #1a0e00;
+  --accent-soft: rgba(255, 148, 51, 0.12);
+  --good: #34d399;
+  --good-soft: rgba(52, 211, 153, 0.14);
+  --bad: #f87171;
+  --bad-soft: rgba(248, 113, 113, 0.14);
   color-scheme: dark;
 }
 
@@ -60,6 +37,7 @@ body {
   color: var(--ink);
   font-family: Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
   font-size: 15px;
+  font-weight: 500;
   line-height: 1.5;
   min-height: 100%;
   -webkit-font-smoothing: antialiased;
@@ -88,25 +66,29 @@ body {
 
 @layer components {
   .card {
-    @apply rounded-lg border border-line bg-surface;
+    @apply rounded border border-line bg-surface;
   }
   .btn {
-    @apply inline-flex h-11 items-center justify-center gap-2 rounded px-4 text-sm font-bold transition;
+    @apply inline-flex h-11 items-center justify-center gap-2 rounded px-5 text-base font-semibold transition disabled:opacity-50;
   }
   .btn-accent {
     @apply btn bg-accent text-accent-ink hover:brightness-110 active:brightness-95;
   }
   .btn-ghost {
-    @apply btn border border-line bg-surface text-ink hover:bg-surface-2;
+    @apply btn border border-line bg-surface text-ink hover:bg-raised;
   }
   .chip {
-    @apply inline-flex h-11 items-center gap-1 whitespace-nowrap rounded-full border border-line bg-surface px-4 text-sm font-semibold text-muted transition;
+    @apply inline-flex h-11 items-center gap-1.5 whitespace-nowrap rounded-full border border-line bg-surface px-4 text-sm font-semibold text-muted transition;
   }
   .chip-on {
-    @apply border-transparent bg-accent text-accent-ink;
+    @apply border-line-strong bg-raised text-ink;
   }
   .input {
-    @apply h-11 w-full rounded border border-line-strong bg-surface px-3 text-base text-ink outline-none transition placeholder:text-faint focus:border-accent;
+    @apply h-11 w-full rounded border border-line-strong bg-raised px-4 text-base text-ink outline-none transition placeholder:text-dim focus:border-accent;
+  }
+  /* Label voice: 12px / 600 / uppercase / +0.06em. Never bold, never bigger. */
+  .label {
+    @apply text-xs font-semibold uppercase tracking-label text-dim;
   }
 }
 
@@ -133,7 +115,7 @@ body {
   to { opacity: 1; }
 }
 @keyframes bh-rise {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
 @keyframes bh-sheet-up {
@@ -142,12 +124,19 @@ body {
 }
 @keyframes bh-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.45; transform: scale(0.8); }
+  50% { opacity: 0.45; transform: scale(0.85); }
 }
-.anim-fade { animation: bh-fade-in 180ms ease both; }
-.anim-rise { animation: bh-rise 200ms ease both; }
-.anim-sheet { animation: bh-sheet-up 200ms ease both; }
-.anim-pulse { animation: bh-pulse 1.6s ease-in-out infinite; }
+/* One subtle beat when someone ELSE's vote moves a row/hero. Never looped. */
+@keyframes bh-pulse-once {
+  0% { opacity: 1; }
+  35% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+.anim-fade { animation: bh-fade-in 200ms ease-out both; }
+.anim-rise { animation: bh-rise 220ms ease-out both; }
+.anim-sheet { animation: bh-sheet-up 220ms ease-out both; }
+.anim-pulse { animation: bh-pulse 1.8s ease-in-out infinite; }
+.anim-pulse-once { animation: bh-pulse-once 700ms ease-out 1 both; }
 
 @media (prefers-reduced-motion: reduce) {
   *,

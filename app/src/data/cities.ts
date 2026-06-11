@@ -152,7 +152,6 @@ export const cities: City[] = [
     vibes: ["College Town", "Small Town", "Dive Bars"],
     hotels: [
       { id: "holiday-inn-express-and-suites-maryville", name: "Holiday Inn Express & Suites Maryville", address: "2929 S Main St, Maryville, MO 64468", stars: 2, priceRange: "$90–$130/night", distanceNote: "5 min drive to downtown bar district", website: "https://www.ihg.com", coords: { lat: 40.3386, lng: -94.871 }, verified: true },
-      { id: "downtown-loft-rentals", name: "Downtown Loft Rentals", address: "", stars: 2, priceRange: "$80–$120/night", distanceNote: "Walking distance to downtown bar district", website: "", verified: false },
     ],
     bars: [
       { id: "the-pub", name: "The Pub", address: "414 N Main St, Maryville, MO 64468", description: "", coords: { lat: 40.3472, lng: -94.8722 }, verified: true },

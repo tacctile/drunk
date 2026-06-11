@@ -10,10 +10,12 @@
 | Refetch-on-change realtime (not row patching) | Tables are tiny (≤ a few hundred rows). On any postgres_changes event we refetch the four tables (debounced 250ms). Zero cache-invalidation bugs by construction. |
 | Optimistic writes + write-through caches | Taps must feel instant on a phone. State updates synchronously, caches mirror the write, Supabase follows; a later refetch converges everyone. |
 | Static data in a TS module (`data/cities.ts`) | The city list changes by commit, not at runtime. Type-checked, tree-shaken, zero loading state. |
-| Derived metrics computed at module load (`lib/score.ts`) | Scores/tiers are pure functions of coords; computing once beats memo bookkeeping in 27 places. |
-| Classic `google.maps.Marker` + `SymbolPath.CIRCLE` | The spec wants flat colored circle pins. AdvancedMarker requires a cloud mapId which conflicts with local JSON styling. |
-| CSS-variable design tokens + Tailwind `darkMode: "class"` | Theme flip = one class on `<html>`; both themes share every component. Boot script sets the class pre-paint (no flash). |
-| No UI libraries | Spec mandate; also keeps every interactive element exactly 44px tall without fighting a kit. |
+| Derived metrics computed at module load (`lib/score.ts`) | Centroid/nearest-hotel/score are pure functions of coords; computing once beats memo bookkeeping in 27 places. The score itself never renders — it is only the "Best walk" sort key. |
+| Classic `google.maps.Marker` + custom `Symbol` paths | Pins differentiate by shape (accent square / near-white circle / outlined muted circle), not color. AdvancedMarker requires a cloud mapId which conflicts with local JSON styling. |
+| Expand-only live map; SVG constellation as the collapsed peek | The Google map never mounts collapsed — zero map cost until asked for. The container's height/clip animates; the map element's size never does (no resize thrash). |
+| Dark only — tokens directly on `:root` | One palette, no theme state, no boot script, no flash. `color-scheme: dark` and a single `themeColor`. |
+| Hand-built SVG (`WalkStrip`, `ConstellationMap`) | The signature visuals are a fixed-scale strip and a dot-field — trivially expressed as inline SVG; a chart lib would fight the fixed 0→1 mi axis mandate. |
+| No UI libraries | Spec mandate; also keeps every interactive element ≥44px tall without fighting a kit. |
 
 ## Data flow
 
@@ -30,35 +32,38 @@
             │  hotelVotes · availability      │  + fallback └─────────────────┘
             │  saveName · castVote · setAvail │
             └───────┬─────────────────┬───────┘
-             useVotes (memo)   useAvailability (memo)
+             useVotes (memo +    useAvailability (memo)
+             others-vote diff)        │
                     │                 │
         ┌───────────┼─────────────────┼──────────────┐
         ▼           ▼                 ▼              ▼
-    Dashboard     Vote             Dates        CityDetail ──► VoteFlow
+      Trip      VoteFlow (/vote)   Dates        CityDetail
         │                                            │
-        └────────► Cities ──► CityCard               ├─► CityMap (pins/labels)
-                                                     ├─► HotelCard (walk distances)
+        └────────► Cities ──► CityCard               ├─► ConstellationMap (collapsed peek)
+                                                     ├─► CityMap (mounted on expand only)
+                                                     ├─► HotelCard ─► WalkStrip (per hotel)
                                                      └─► VenueRow ──► VenueSheet
 
-    data/cities.ts ──► lib/score.ts (cityMeta, computed once) ──► all city UI
+    data/cities.ts ──► lib/score.ts (cityMeta, computed once) ──► WalkStrip everywhere
 ```
 
 ## Component hierarchy
 
 ```
 RootLayout
-└ ThemeProvider
-  └ GroupDataProvider
-    └ AppShell (header / bottom nav / desktop rail / theme toggle)
-      ├ DashboardPage
-      ├ CitiesPage ─ CityCard*
-      ├ CityPage ─ CityDetail
-      │   ├ CityMap
-      │   ├ VoteFlow ─ (NamePrompt | Dialog)
-      │   ├ HotelCard*
-      │   ├ VenueRow* ─ VenueSheet (BottomSheet)
-      ├ VotePage ─ ResultRow* · Dialog (city picker) · VoteFlow · NamePrompt
-      └ DatesPage ─ MonthNav · MyCalendar | GroupCalendar · BottomSheet · NamePrompt
+└ GroupDataProvider
+  └ AppShell (wordmark header + bottom nav mobile / 224px rail ≥840px;
+    │         renders children bare on /vote — the flow owns the screen)
+    ├ TripPage ─ hero (WalkStrip · VoterAvatars) · standings rows ·
+    │            closest-picks scroller · roster · date nudge
+    ├ CitiesPage ─ CityCard* (WalkStrip · VoterAvatars) · sticky vote pill
+    ├ CityPage ─ CityDetail (two-pane ≥840px)
+    │   ├ ConstellationMap (collapsed map peek) ⇄ CityMap (expanded live map)
+    │   ├ HotelCard* (Stars · WalkStrip · VoterAvatars)
+    │   ├ VenueRow* ─ (expands map + pans); pin tap ─ VenueSheet (BottomSheet)
+    ├ VotePage ─ three beats: city list ─ hotel stack ─ confirm (+ inline name)
+    └ DatesPage ─ mode toggle · MonthNav · MyCalendar | GroupCalendar ·
+                  BottomSheet · NamePrompt
 ```
 
 ## Hook responsibilities
@@ -66,11 +71,13 @@ RootLayout
 - **useGroupData** (the only stateful hook): identity bootstrap, four-table fetch,
   realtime channel, focus refetch, optimistic mutations, cache mirroring/fallback.
   Throws if used outside the provider.
-- **useVotes**: pure projection → city ranking, per-city hotel ranking, leader,
-  runner-up, my vote. No IO.
-- **useAvailability**: pure projection → my tri-state map, per-date breakdowns,
+- **useVotes**: projection → city ranking, per-city hotel ranking (skips hotel ids
+  missing from city data), leader, runner-up, my vote — plus
+  `recentlyChangedCityIds`: a diff of OTHER voters' city votes between renders,
+  cleared after ~1.6s, which drives the one-shot row/hero pulse. Own optimistic
+  writes never pulse.
+- **useAvailability**: pure projection → my date map, per-date breakdowns,
   heat ratio (available / roster size), best upcoming date. No IO.
-- **useTheme**: theme value + toggle; persistence in `bh2-theme`.
 
 ## File naming conventions
 

@@ -42,15 +42,15 @@ export function Dialog({ open, onClose, title, children }: DialogProps) {
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="anim-rise w-full max-w-md rounded-xl border border-line bg-surface p-5 shadow-pop"
+        className="anim-rise w-full max-w-md rounded border border-line bg-surface p-5 shadow-overlay"
       >
         <div className="mb-4 flex items-center justify-between gap-4">
-          <h2 className="text-lg font-extrabold">{title}</h2>
+          <h2 className="text-lg font-bold">{title}</h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="flex h-11 w-11 items-center justify-center rounded-full text-muted transition hover:bg-surface-2 hover:text-ink"
+            className="flex h-11 w-11 items-center justify-center rounded text-muted transition hover:bg-raised hover:text-ink"
           >
             <Icon name="close" size={22} />
           </button>
