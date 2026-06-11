@@ -84,11 +84,18 @@ ALTER TABLE bh_availability ENABLE ROW LEVEL SECURITY;
 CREATE POLICY bh_avail_read   ON bh_availability FOR SELECT TO anon USING (true);
 CREATE POLICY bh_avail_write  ON bh_availability FOR INSERT TO anon WITH CHECK (true);
 CREATE POLICY bh_avail_delete ON bh_availability FOR DELETE TO anon USING (true);
+
+-- Availability status (2026-06): tri-state calendar — no row means no answer.
+-- The update policy is required so the status upsert can flip available ↔ unavailable.
+ALTER TABLE bh_availability ADD COLUMN IF NOT EXISTS
+  status text not null default 'available'
+  check (status in ('available', 'unavailable'));
+CREATE POLICY bh_avail_update ON bh_availability FOR UPDATE TO anon USING (true);
 ```
 
 **Identity model:** `crypto.randomUUID()` generated on first visit → localStorage `bh-voter-id` (used as `voter_id` in both tables). Display name → localStorage `bh-voter-name` (asked once via dialog, changeable from the results view).
 
-**localStorage keys:** `bh-theme`, `bh-voter-id`, `bh-voter-name`, `bh-cache-votes`, `bh-cache-avail` (the two caches double as the silent offline fallback store).
+**localStorage keys:** `bh-theme`, `bh-voter-id`, `bh-voter-name`, `bh-cache-votes`, `bh-avail-cache` (the two caches double as the silent offline fallback store). `bh-avail-cache` replaced the old `bh-cache-avail` key; the old key is still read once as a migration fallback when the new one is empty. Availability cache rows carry `status` ('available'/'unavailable'); rows without it are normalized to 'available'.
 
 ---
 
@@ -108,22 +115,23 @@ Bars render sorted by parsed `distance` (feet). Food renders in array order.
 - [x] City list — card list with name, state, miles, drive time, live vote count; sort by distance (default) or A–Z
 - [x] City detail — hero (name/state/miles/drive only — no description/parking), HOTELS (cards: stars, price, distance note, on-site, website link), BARS (distance-sorted list), FOOD (list with hours); full-screen with back button on mobile, sticky side panel on desktop
 - [x] Google Maps integration — map below the hero (320px mobile / 420px ≥600px), custom dark + light map style JSON synced to the theme toggle, `gestureHandling: 'cooperative'` (no custom gesture overlay), default UI disabled, colored circle pins (hotels #E8A030 / bars #4CAF50 / food #2196F3) with white borders, three 44px filter chips above the map + Show All button, pin tap → M3 bottom sheet (`#poiScrim`/`#poiSheet`) with per-category content + hotel Visit Website button + Open in Maps button (all categories), list item tap (`data-poi="cat-idx"`) → map pans/zooms to pin + opens sheet without page scroll. Map only initializes in the visible container (panel on desktop, body on mobile); re-renders of the same city preserve center/zoom/filters; async Maps script handled by retry polling in `initCityMap`. On load: `fitBounds` auto-zooms to all pins with a `bounds_changed` listener that reduces zoom by 0.5 once for padding. Pin tap: shows dark semi-transparent overlay (`.map-dim-overlay`), selected pin scales up (scale 12), others dimmed (opacity 0.25); overlay and pin states reset on sheet close. `isFractionalZoomEnabled: true` on map instance.
+- [x] Map pin name labels — at zoom ≥ 15 every visible pin shows its location name in a small pill (`.map-pin-label`: 11px white text on rgba(0,0,0,0.65), 4px radius, 2px 6px padding) drawn by a custom `OverlayView` (`mapState.labelOverlay`, labels in `floatPane`, pointer-events none). Hidden below zoom 15 via a `zoom_changed` listener. Labels sit right of the pin, flip left when they'd leave the map; colliding labels resolve in favor of the most recently tapped/hovered pin (`stamp` per marker, bumped on click/mouseover/`focusPoi`). Filter chips hide labels with their pins (`refreshPinLabels()` on toggle/show-all).
 - [x] Voting — one vote per person per trip (`trip_id: 'current'`); first vote prompts for name once; vote stored to Supabase `bh_votes` with silent localStorage fallback; changing city moves the vote; ranked results view with voter names, leader highlight, meters; name changeable from results view (updates both tables + caches)
 - [x] ~~Vote tally FAB~~ — removed (redundant with Results nav tab)
-- [x] Availability calendar — month view, prev/next nav, tap a future date to toggle yourself, per-date counts, day panel listing who's available; Supabase `bh_availability` with silent fallback; past dates disabled
+- [x] Availability calendar (rebuilt 2026-06) — two-tab Dates screen, M3 tab bar (44px tabs, amber indicator) sticky below the header. Tab 1 "My Dates" (`calendar_today`): personal month calendar, tap cycles neutral → available (green tertiary fill + check) → unavailable (red error fill + X) → neutral; past dates disabled + dimmed (opacity .45); today has an amber border. Tab 2 "Group View" (`groups`): heat-map calendar colored by % of respondents available (none = neutral, ≤33% error-container, 34–66% primary-container, 67–89% tertiary-container, 90%+ tertiary), cells show `yes/total`; tapping a date with responses opens a bottom sheet (`#dayScrim`/`#daySheet`, same pattern as the POI sheet — covers nav, locks scroll, X/outside dismiss) with the full date, green Available names, red Unavailable names, and a response-rate line; below the calendar a chronological "All Responses" list (oldest first, only dates with ≥1 response) with bold "Sat, Jun 14" dates, a green/red row per person, and a `yes/total available` indicator. Month state (`state.cal`) is shared so both tabs stay in sync. Writes: upsert `{voter_id,name,date,status}` on `onConflict: 'voter_id,date'`, clear = row delete; reads fetch fresh on view open and on switching to Group View; silent fallback to `bh-avail-cache`. Name prompt reuses the voting flow dialog.
 - [x] Theme toggle — dark default / light, persisted to `bh-theme`, pre-paint application
 - [x] Empty states (no cities, no votes, no city selected on desktop), skeleton loading on results, dialog validation
 - [x] Mobile bottom nav (Cities / Results / Dates) → desktop left rail at 840px; two-pane cities view on desktop with auto-selected first city
 
 ### Backlog
 - [ ] Replace placeholder Supabase anon key with the real key (current key's signature is `.placeholder` — all remote calls 401 and the app runs on localStorage fallback until then)
-- [ ] Run the schema SQL above in the Supabase dashboard
+- [ ] Run the schema SQL above in the Supabase dashboard (now includes the `bh_availability.status` ALTER + `bh_avail_update` policy — required for the two-tab calendar's remote writes)
 - [ ] Add more cities to the `cities` array
 
 ---
 
 ## Current State
 Last updated: 2026-06-11
-Last change: Open in Maps button for bars and food + address field added to data model — (1) Bar and food entry names are now plain bold text (not links) everywhere — list below map and pin popup bottom sheet; (2) Every bar and food entry now shows an `Open in Maps` button (same `btn btn-outlined btn-block` style as hotels, 44px, `open_in_new` icon) built via `buildMapsSearchUrl` in both the list and the popup; (3) `address` field added to every hotel/bar/food data entry — currently all `''`; (4) Address displays under the name (`.entry-address`: `--type-body`, `--on-surface-variant`, `margin-top: 2px`) in both list and popup when non-empty; renders nothing when empty; (5) Hotel list cards and hotel pin popup unchanged except address display was wired in (renders nothing since all addresses are empty).
+Last change: Dates screen rebuilt as a two-tab experience + zoom-based map pin labels — (1) Old single availability calendar + day panel replaced by "My Dates" (personal tri-state calendar: tap cycles available → unavailable → clear, stored as `bh_availability.status`, row delete on clear) and "Group View" (heat-map calendar by % available, tap-for-detail bottom sheet `#dayScrim`/`#daySheet`, chronological All Responses list); month nav synced across tabs via shared `state.cal`; removed `state.selectedDate`, `renderCalendar`, `renderDayPanel`, `.day-panel`/`.person-tag` CSS. (2) Schema comment in index.html gained the `status` ALTER + `bh_avail_update` policy (NOT yet run in Supabase). (3) Availability cache key renamed `bh-cache-avail` → `bh-avail-cache` (old key read once as fallback). (4) City detail map: pin name labels at zoom ≥ 15 via custom OverlayView — dark pill, right of pin with left flip at the map edge, collision resolved by most recent interaction, synced to filter chips, hidden below zoom 15.
 Note: `distanceNote` and `hours` fields retained in data objects — just not rendered anywhere. Address fields awaiting population.
-Next up: populate address fields, paste real anon key, run schema SQL in Supabase, then add city #2 (must include coords/mapCenter/mapZoom)
+Next up: run the updated schema SQL (status ALTER + update policy) in Supabase, populate address fields, paste real anon key, then add city #2 (must include coords/mapCenter/mapZoom)

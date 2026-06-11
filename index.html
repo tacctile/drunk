@@ -692,6 +692,20 @@ body[data-view="detail"] .top-bar { display: none; }
 }
 .map-dim-overlay.active { display: block; }
 
+/* Pin name labels — visible at zoom ≥ 15, drawn by a custom OverlayView */
+.map-label-layer { position: absolute; top: 0; left: 0; pointer-events: none; }
+.map-pin-label {
+  position: absolute;
+  font: var(--type-label-sm);
+  letter-spacing: 0.2px;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.65);
+  border-radius: var(--radius-xs);
+  padding: 2px 6px; /* spec-mandated exception to the 4px grid */
+  white-space: nowrap;
+  pointer-events: none;
+}
+
 /* Tappable list items pan the map to their pin */
 [data-poi] { cursor: pointer; }
 
@@ -889,8 +903,63 @@ body[data-view="detail"] .top-bar { display: none; }
 .voter-tag.me { background: var(--primary-container); color: var(--on-primary-container); }
 
 /* ════════════════════════════════════════════
-   AVAILABILITY CALENDAR
+   DATES — tabs, my calendar, group heat map
    ════════════════════════════════════════════ */
+.avail-tabs {
+  position: sticky;
+  top: 64px;
+  z-index: 9;
+  display: flex;
+  justify-content: center;
+  background: var(--surface-container);
+  border-bottom: 1px solid var(--outline-variant);
+}
+.avail-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1;
+  max-width: 360px;
+  height: var(--control-h);
+  padding: 0 16px;
+  border: none;
+  background: transparent;
+  color: var(--on-surface-variant);
+  font: var(--type-label-lg);
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: color 160ms ease;
+}
+.avail-tab .msym { font-size: var(--icon-btn); }
+.avail-tab::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity 160ms ease;
+  pointer-events: none;
+}
+.avail-tab:hover::after { opacity: 0.08; }
+.avail-tab:active::after { opacity: 0.12; }
+.avail-tab::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  border-radius: var(--radius-full) var(--radius-full) 0 0;
+  background: var(--primary);
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+.avail-tab[aria-selected="true"] { color: var(--primary); }
+.avail-tab[aria-selected="true"]::before { opacity: 1; }
+
 .cal-card {
   background: var(--surface-container-low);
   border: 1px solid var(--outline-variant);
@@ -945,20 +1014,32 @@ body[data-view="detail"] .top-bar { display: none; }
 }
 .cal-day:hover { background: var(--surface-container-high); }
 .cal-day.blank { visibility: hidden; pointer-events: none; }
-.cal-day.past { color: var(--outline); cursor: default; }
-.cal-day.past:hover { background: transparent; }
-.cal-day.today { border-color: var(--outline); }
-.cal-day.mine { background: var(--primary-container); color: var(--on-primary-container); }
-.cal-day.mine:hover { background: var(--primary-container); }
-.cal-day.selected { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
+.cal-day:disabled { cursor: default; }
+.cal-day:disabled:hover, .cal-day.past:hover { background: transparent; }
+.cal-day.past { opacity: 0.45; }
+.cal-day.today { border-color: var(--primary); }
+/* My-calendar states: available (green) / unavailable (red) */
+.cal-day.avail-yes, .cal-day.avail-yes:hover { background: var(--tertiary-container); color: var(--on-tertiary-container); }
+.cal-day.avail-no, .cal-day.avail-no:hover { background: var(--error-container); color: var(--on-error-container); }
+/* Heat-map tiers: % of respondents available (1: ≤33, 2: 34–66, 3: 67–89, 4: 90+) */
+.cal-day.heat-1, .cal-day.heat-1:hover { background: var(--error-container); color: var(--on-error-container); }
+.cal-day.heat-2, .cal-day.heat-2:hover { background: var(--primary-container); color: var(--on-primary-container); }
+.cal-day.heat-3, .cal-day.heat-3:hover { background: var(--tertiary-container); color: var(--on-tertiary-container); }
+.cal-day.heat-4, .cal-day.heat-4:hover { background: var(--tertiary); color: var(--on-tertiary); }
 .cal-day .num { line-height: 1.1; }
+.cal-day .day-state {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 16px;
+}
+.cal-day .day-state .msym { font-size: var(--icon-meta); }
 .cal-day .cnt {
   font: var(--type-label-sm);
   line-height: 1.1;
-  color: var(--primary);
   min-height: 12px;
+  opacity: 0.85;
 }
-.cal-day.mine .cnt { color: var(--on-primary-container); }
 
 .cal-legend {
   display: flex;
@@ -980,45 +1061,55 @@ body[data-view="detail"] .top-bar { display: none; }
   border-radius: var(--radius-xs);
   flex-shrink: 0;
 }
-.legend-dot.mine-dot { background: var(--primary-container); border: 1px solid var(--primary); }
-.legend-dot.today-dot { border: 1px solid var(--outline); }
+.legend-dot.yes-dot { background: var(--tertiary-container); border: 1px solid var(--tertiary); }
+.legend-dot.no-dot { background: var(--error-container); border: 1px solid var(--error); }
+.legend-dot.today-dot { border: 1px solid var(--primary); }
+.legend-dot.heat0-dot { background: var(--surface-container-high); }
+.legend-dot.heat1-dot { background: var(--error-container); }
+.legend-dot.heat2-dot { background: var(--primary-container); }
+.legend-dot.heat3-dot { background: var(--tertiary-container); }
+.legend-dot.heat4-dot { background: var(--tertiary); }
 
-/* Day detail panel */
-.day-panel {
+/* Group responses list (below the heat map) */
+#availList { display: grid; gap: 12px; }
+.avail-entry {
   background: var(--surface-container-low);
   border: 1px solid var(--outline-variant);
   border-radius: var(--radius-md);
-  padding: 16px;
-  margin-top: 12px;
+  padding: 12px 16px;
 }
-.day-panel-title { font: var(--type-title); color: var(--on-surface); }
-.day-panel-sub { font: var(--type-body); color: var(--on-surface-variant); margin-top: 4px; }
-.day-people { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.person-tag {
-  display: inline-flex;
+.avail-entry-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.avail-entry-date { font: var(--type-title); color: var(--on-surface); }
+.avail-entry-pct {
+  font: var(--type-label);
+  color: var(--on-surface-variant);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.avail-entry-rows { display: grid; gap: 4px; margin-top: 8px; }
+.avail-person {
+  display: flex;
   align-items: center;
   gap: 8px;
-  height: 32px;
-  padding: 0 12px 0 4px;
-  border-radius: var(--radius-full);
-  background: var(--surface-container-high);
-  color: var(--on-surface);
+  min-height: 28px;
+  padding: 0 8px;
+  border-radius: var(--radius-xs);
   font: var(--type-label-lg);
 }
-.person-tag.me { background: var(--primary-container); color: var(--on-primary-container); }
-.person-avatar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: var(--radius-full);
-  background: var(--secondary-container);
-  color: var(--on-secondary-container);
-  font: var(--type-label-sm);
-  text-transform: uppercase;
-}
-.person-tag.me .person-avatar { background: var(--primary); color: var(--on-primary); }
+.avail-person .msym { font-size: var(--icon-meta); }
+.avail-person.yes { background: color-mix(in srgb, var(--tertiary) 16%, transparent); color: var(--tertiary); }
+.avail-person.no { background: color-mix(in srgb, var(--error) 16%, transparent); color: var(--error); }
+
+/* Day summary bottom sheet content */
+.day-sheet-line { font: var(--type-body-lg); color: var(--on-surface); margin-top: 12px; }
+.day-sheet-line .names-yes { color: var(--tertiary); font-weight: 700; }
+.day-sheet-line .names-no { color: var(--error); font-weight: 700; }
+.day-sheet-meta { font: var(--type-body); color: var(--on-surface-variant); margin-top: 12px; }
 
 /* ════════════════════════════════════════════
    DIALOG
@@ -1123,6 +1214,7 @@ body[data-view="detail"] .top-bar { display: none; }
 .poi-cat-hotel { color: #E8A030; }
 .poi-cat-bar   { color: #4CAF50; }
 .poi-cat-food  { color: #2196F3; }
+.poi-cat-day   { color: var(--on-surface-variant); }
 .poi-name { font: var(--type-headline); color: var(--on-surface); margin-top: 4px; }
 .poi-name .bar-food-link { font: var(--type-headline); min-height: auto; }
 .poi-sheet .stars { margin-top: 8px; }
@@ -1304,31 +1396,73 @@ body[data-view="detail"] .top-bar { display: none; }
       </div>
     </section>
 
-    <!-- ── AVAILABILITY ── -->
-    <section class="view" id="view-avail" aria-label="Availability calendar">
+    <!-- ── AVAILABILITY — two tabs: my calendar + group summary ── -->
+    <section class="view" id="view-avail" aria-label="Dates">
+      <div class="avail-tabs" role="tablist" aria-label="Dates views">
+        <button type="button" class="avail-tab" id="availTabMine" role="tab" data-avail-tab="mine"
+          aria-selected="true" aria-controls="availPaneMine">
+          <span class="msym">calendar_today</span><span>My Dates</span>
+        </button>
+        <button type="button" class="avail-tab" id="availTabGroup" role="tab" data-avail-tab="group"
+          aria-selected="false" aria-controls="availPaneGroup">
+          <span class="msym">groups</span><span>Group View</span>
+        </button>
+      </div>
       <div class="page">
-        <h1 class="page-title">Availability</h1>
-        <p class="page-sub">Tap a date to mark yourself available. Tap it again to clear it.</p>
-        <div class="cal-card">
-          <div class="cal-head">
-            <button class="icon-btn" id="calPrev" aria-label="Previous month">
-              <span class="msym">chevron_left</span>
-            </button>
-            <span class="cal-month" id="calMonth"></span>
-            <button class="icon-btn" id="calNext" aria-label="Next month">
-              <span class="msym">chevron_right</span>
-            </button>
-          </div>
-          <div class="cal-weekdays" aria-hidden="true">
-            <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
-          </div>
-          <div class="cal-grid" id="calGrid"></div>
-          <div class="cal-legend">
-            <span><span class="legend-dot mine-dot"></span>You're available</span>
-            <span><span class="legend-dot today-dot"></span>Today</span>
+
+        <div id="availPaneMine" role="tabpanel" aria-labelledby="availTabMine">
+          <p class="page-sub">Tap a date to cycle it — available, unavailable, clear.</p>
+          <div class="cal-card">
+            <div class="cal-head">
+              <button class="icon-btn" data-cal-nav="prev" aria-label="Previous month">
+                <span class="msym">chevron_left</span>
+              </button>
+              <span class="cal-month"></span>
+              <button class="icon-btn" data-cal-nav="next" aria-label="Next month">
+                <span class="msym">chevron_right</span>
+              </button>
+            </div>
+            <div class="cal-weekdays" aria-hidden="true">
+              <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+            </div>
+            <div class="cal-grid" id="calGridMine"></div>
+            <div class="cal-legend">
+              <span><span class="legend-dot yes-dot"></span>Available</span>
+              <span><span class="legend-dot no-dot"></span>Unavailable</span>
+              <span><span class="legend-dot today-dot"></span>Today</span>
+            </div>
           </div>
         </div>
-        <div class="day-panel" id="dayPanel"></div>
+
+        <div id="availPaneGroup" role="tabpanel" aria-labelledby="availTabGroup" hidden>
+          <p class="page-sub">How the group shakes out. Tap a date with responses for the full breakdown.</p>
+          <div class="cal-card">
+            <div class="cal-head">
+              <button class="icon-btn" data-cal-nav="prev" aria-label="Previous month">
+                <span class="msym">chevron_left</span>
+              </button>
+              <span class="cal-month"></span>
+              <button class="icon-btn" data-cal-nav="next" aria-label="Next month">
+                <span class="msym">chevron_right</span>
+              </button>
+            </div>
+            <div class="cal-weekdays" aria-hidden="true">
+              <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+            </div>
+            <div class="cal-grid" id="calGridGroup"></div>
+            <div class="cal-legend">
+              <span><span class="legend-dot heat0-dot"></span>No responses</span>
+              <span><span class="legend-dot heat1-dot"></span>0–33%</span>
+              <span><span class="legend-dot heat2-dot"></span>34–66%</span>
+              <span><span class="legend-dot heat3-dot"></span>67–89%</span>
+              <span><span class="legend-dot heat4-dot"></span>90%+</span>
+            </div>
+          </div>
+          <div class="section-label"><span class="msym">event_note</span><h2>All Responses</h2>
+            <span class="count" id="availListCount"></span></div>
+          <div id="availList"></div>
+        </div>
+
       </div>
     </section>
 
@@ -1370,6 +1504,11 @@ body[data-view="detail"] .top-bar { display: none; }
   <div class="poi-sheet" id="poiSheet"></div>
 </div>
 
+<!-- ── DAY SUMMARY BOTTOM SHEET ── -->
+<div class="sheet-scrim" id="dayScrim" role="dialog" aria-modal="true" aria-label="Date availability details">
+  <div class="poi-sheet" id="daySheet"></div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 'use strict';
@@ -1405,6 +1544,13 @@ CREATE POLICY bh_avail_read   ON bh_availability FOR SELECT TO anon USING (true)
 CREATE POLICY bh_avail_write  ON bh_availability FOR INSERT TO anon WITH CHECK (true);
 CREATE POLICY bh_avail_delete ON bh_availability FOR DELETE TO anon USING (true);
 
+-- Availability status (2026-06): tri-state calendar — no row means no answer.
+-- The update policy is required so the status upsert can flip available ↔ unavailable.
+ALTER TABLE bh_availability ADD COLUMN IF NOT EXISTS
+  status text not null default 'available'
+  check (status in ('available', 'unavailable'));
+CREATE POLICY bh_avail_update ON bh_availability FOR UPDATE TO anon USING (true);
+
    ════════════════════════════════════════════════════════════════ */
 
 const SUPABASE_URL = 'https://tszssadgsxjoymcttlwd.supabase.co';
@@ -1422,7 +1568,7 @@ const LS = {
   voterId: 'bh-voter-id',
   voterName: 'bh-voter-name',
   voteCache: 'bh-cache-votes',
-  availCache: 'bh-cache-avail'
+  availCache: 'bh-avail-cache'
 };
 
 /* ════════════════════════════════════════════════════════════════
@@ -1731,10 +1877,10 @@ const state = {
   sort: 'distance',
   cityId: null,
   votes: [],         // [{ voter_id, name, city_id }]
-  avail: [],         // [{ voter_id, name, date }]
+  avail: [],         // [{ voter_id, name, date, status }] — status: 'available' | 'unavailable'
   votesLoaded: false,
   cal: { y: today.getFullYear(), m: today.getMonth() },
-  selectedDate: null
+  availTab: 'mine'   // 'mine' | 'group' — shared month state lives in cal
 };
 
 const mqDesktop = window.matchMedia('(min-width: 840px)');
@@ -1759,7 +1905,7 @@ function go(view) {
   });
   window.scrollTo(0, 0);
   if (view === 'results') { renderResults(); fetchVotes(); }
-  if (view === 'avail') { renderCalendar(); fetchAvail(); }
+  if (view === 'avail') { renderAvail(); fetchAvail(); }
   /* Maps initialized while their container was hidden need a resize nudge */
   if ((view === 'cities' || view === 'detail') && mapState && mapState.map && mapsReady()) {
     const center = mapState.map.getCenter();
@@ -2081,9 +2227,52 @@ function showAllPins() {
   mapState.filters = { hotel: true, bar: true, food: true };
   mapState.markers.forEach((m) => m.marker.setVisible(true));
   syncMapChips();
+  refreshPinLabels();
   if (mapState.map && mapState.bounds) {
     mapState.map.fitBounds(mapState.bounds);
   }
+}
+
+/* ── Pin name labels — shown at zoom ≥ 15, hidden with their pin's filter ──
+   Placed right of the pin; flipped left when they'd leave the map. When two
+   labels would collide, the most recently tapped/hovered pin wins. */
+function bumpPinStamp(marker) {
+  if (!mapState) return;
+  const entry = mapState.markers.find((m) => m.marker === marker);
+  if (!entry) return;
+  entry.stamp = ++mapState.stampSeq;
+  refreshPinLabels();
+}
+
+function refreshPinLabels() {
+  if (!mapState || !mapState.labelOverlay) return;
+  const proj = mapState.labelOverlay.getProjection();
+  if (!proj) return;
+  const mapW = mapState.map.getDiv().offsetWidth;
+  const GAP = 16; /* pin center → label edge */
+  const placed = [];
+  const ordered = [...mapState.markers].sort((a, b) => (b.stamp || 0) - (a.stamp || 0));
+  ordered.forEach((m) => {
+    const el = m.labelEl;
+    if (!el) return;
+    if (!mapState.labelsOn || !m.marker.getVisible()) { el.style.display = 'none'; return; }
+    el.style.display = 'block';
+    const pos = m.marker.getPosition();
+    const cpt = proj.fromLatLngToContainerPixel(pos);
+    const dpt = proj.fromLatLngToDivPixel(pos);
+    if (!cpt || !dpt) { el.style.display = 'none'; return; }
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+    const flip = cpt.x + GAP + w > mapW;
+    const x = flip ? cpt.x - GAP - w : cpt.x + GAP;
+    const y = cpt.y - h / 2;
+    const hit = placed.some((r) =>
+      x < r.x + r.w && r.x < x + w && y < r.y + r.h && r.y < y + h);
+    if (hit) { el.style.display = 'none'; return; }
+    placed.push({ x: x, y: y, w: w, h: h });
+    el.style.left = (flip ? dpt.x - GAP - w : dpt.x + GAP) + 'px';
+    el.style.top = (dpt.y - h / 2) + 'px';
+  });
 }
 
 function initCityMap(c, forceReset) {
@@ -2123,7 +2312,8 @@ function initCityMap(c, forceReset) {
     styles: currentMapStyle()
   });
 
-  mapState = { cityId: c.id, map: map, markers: [], filters: filters, bounds: null, selectedMarker: null };
+  mapState = { cityId: c.id, map: map, markers: [], filters: filters, bounds: null,
+    selectedMarker: null, labelOverlay: null, labelsOn: zoom >= 15, stampSeq: 0 };
 
   const bounds = new google.maps.LatLngBounds();
   const add = (cat, arr) => arr.forEach((item, idx) => {
@@ -2137,16 +2327,52 @@ function initCityMap(c, forceReset) {
       visible: mapState.filters[cat]
     });
     marker.addListener('click', () => {
+      bumpPinStamp(marker);
       selectMapPin(marker, cat);
       openPoiSheet(cat, item);
     });
-    mapState.markers.push({ cat: cat, idx: idx, marker: marker, data: item });
+    marker.addListener('mouseover', () => { bumpPinStamp(marker); });
+    mapState.markers.push({ cat: cat, idx: idx, marker: marker, data: item, stamp: 0, labelEl: null });
   });
   add('hotel', c.hotels);
   add('bar', c.bars);
   add('food', c.food);
 
   mapState.bounds = bounds;
+
+  /* Pin name labels live in a custom overlay so they can carry the pill style,
+     flip sides at the map edge, and resolve collisions. onAdd/draw fire async,
+     so bind to this render's mapState in case a re-render swapped it out. */
+  const ms = mapState;
+  const labelOverlay = new google.maps.OverlayView();
+  labelOverlay.onAdd = function () {
+    const layer = document.createElement('div');
+    layer.className = 'map-label-layer';
+    this.layerEl = layer;
+    ms.markers.forEach((m) => {
+      const lab = document.createElement('div');
+      lab.className = 'map-pin-label';
+      lab.textContent = m.data.name;
+      lab.style.display = 'none';
+      m.labelEl = lab;
+      layer.appendChild(lab);
+    });
+    this.getPanes().floatPane.appendChild(layer);
+  };
+  labelOverlay.draw = function () { if (mapState === ms) refreshPinLabels(); };
+  labelOverlay.onRemove = function () {
+    if (this.layerEl && this.layerEl.parentNode) this.layerEl.parentNode.removeChild(this.layerEl);
+  };
+  labelOverlay.setMap(map);
+  mapState.labelOverlay = labelOverlay;
+
+  map.addListener('zoom_changed', function () {
+    const showLabels = map.getZoom() >= 15;
+    if (mapState && mapState.map === map) {
+      mapState.labelsOn = showLabels;
+      refreshPinLabels();
+    }
+  });
 
   if (isFirstLoad) {
     map.fitBounds(bounds);
@@ -2176,6 +2402,7 @@ function toggleMapFilter(cat) {
     if (m.cat === cat) m.marker.setVisible(mapState.filters[cat]);
   });
   syncMapChips();
+  refreshPinLabels();
 }
 
 /* List item tap → pan/zoom the map to the pin and open its sheet. Page never scrolls. */
@@ -2189,6 +2416,7 @@ function focusPoi(key) {
   if (!mapState.filters[cat]) toggleMapFilter(cat);
   mapState.map.panTo(entry.marker.getPosition());
   if (mapState.map.getZoom() < 16) mapState.map.setZoom(16);
+  bumpPinStamp(entry.marker);
   selectMapPin(entry.marker, cat);
   openPoiSheet(cat, entry.data);
 }
@@ -2370,7 +2598,7 @@ async function saveNameFromDialog() {
   $('nameScrim').classList.remove('open');
   updateIdentity();
   if (action && action.type === 'vote') castVote(action.cityId);
-  else if (action && action.type === 'avail') toggleDate(action.date);
+  else if (action && action.type === 'avail') cycleDate(action.date);
   else renameEverywhere(val);
 }
 
@@ -2381,7 +2609,7 @@ async function renameEverywhere(name) {
   cacheVotes();
   cacheAvail();
   refreshVoteUI();
-  if (state.view === 'avail') renderCalendar();
+  if (state.view === 'avail') renderAvail();
   if (sb) {
     try {
       if (hadVote) {
@@ -2396,12 +2624,28 @@ async function renameEverywhere(name) {
 }
 
 /* ════════════════════════════════════════════
-   AVAILABILITY — Supabase with silent fallback
+   AVAILABILITY — two tabs (My Dates / Group View)
+   Supabase bh_availability with silent fallback
    ════════════════════════════════════════════ */
 const MONTH_NAMES = ['January','February','March','April','May','June',
   'July','August','September','October','November','December'];
 
 function cacheAvail() { lsSet(LS.availCache, state.avail); }
+
+/* Rows written before the status column existed count as 'available' */
+function normAvail(rows) {
+  return (rows || []).map((r) => ({
+    voter_id: r.voter_id,
+    name: r.name,
+    date: r.date,
+    status: r.status === 'unavailable' ? 'unavailable' : 'available'
+  }));
+}
+
+/* bh-avail-cache is the fallback store; bh-cache-avail is its pre-rename ancestor */
+function readAvailCache() {
+  return normAvail(lsGet(LS.availCache, null) || lsGet('bh-cache-avail', []));
+}
 
 function dateKey(y, m, d) {
   return y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
@@ -2411,37 +2655,44 @@ const TODAY_KEY = dateKey(today.getFullYear(), today.getMonth(), today.getDate()
 async function fetchAvail() {
   if (sb) {
     try {
-      const { data, error } = await sb.from('bh_availability').select('voter_id,name,date');
+      const { data, error } = await sb.from('bh_availability').select('*');
       if (error) throw error;
-      state.avail = data || [];
+      state.avail = normAvail(data);
       cacheAvail();
-      if (state.view === 'avail') renderCalendar();
+      if (state.view === 'avail') renderAvail();
       return;
     } catch (e) { /* silent fallback below */ }
   }
-  state.avail = lsGet(LS.availCache, []);
-  if (state.view === 'avail') renderCalendar();
+  state.avail = readAvailCache();
+  if (state.view === 'avail') renderAvail();
 }
 
-async function toggleDate(dateStr) {
+function myStatus(dateStr) {
+  const row = state.avail.find((a) => a.voter_id === VOTER_ID && a.date === dateStr);
+  return row ? row.status : null;
+}
+
+/* Tap cycle: neutral → available → unavailable → neutral */
+async function cycleDate(dateStr) {
   const name = getName();
   if (!name) { pending = { type: 'avail', date: dateStr }; openNameDialog(); return; }
-  const idx = state.avail.findIndex((a) => a.voter_id === VOTER_ID && a.date === dateStr);
-  const removing = idx >= 0;
-  if (removing) state.avail.splice(idx, 1);
-  else state.avail.push({ voter_id: VOTER_ID, name: name, date: dateStr });
+  const cur = myStatus(dateStr);
+  const next = cur === null ? 'available' : (cur === 'available' ? 'unavailable' : null);
+  state.avail = state.avail.filter((a) => !(a.voter_id === VOTER_ID && a.date === dateStr));
+  if (next) state.avail.push({ voter_id: VOTER_ID, name: name, date: dateStr, status: next });
   cacheAvail();
-  state.selectedDate = dateStr;
-  renderCalendar();
+  renderAvail();
   if (sb) {
     try {
-      if (removing) {
+      if (next === null) {
         const { error } = await sb.from('bh_availability')
           .delete().eq('voter_id', VOTER_ID).eq('date', dateStr);
         if (error) throw error;
       } else {
-        const { error } = await sb.from('bh_availability')
-          .insert({ voter_id: VOTER_ID, name: name, date: dateStr });
+        const { error } = await sb.from('bh_availability').upsert(
+          { voter_id: VOTER_ID, name: name, date: dateStr, status: next },
+          { onConflict: 'voter_id,date' }
+        );
         if (error) throw error;
       }
       fetchAvail();
@@ -2449,65 +2700,164 @@ async function toggleDate(dateStr) {
   }
 }
 
-function renderCalendar() {
-  const { y, m } = state.cal;
-  $('calMonth').textContent = MONTH_NAMES[m] + ' ' + y;
+function setAvailTab(tab) {
+  state.availTab = tab;
+  document.querySelectorAll('.avail-tab').forEach((b) => {
+    b.setAttribute('aria-selected', String(b.dataset.availTab === tab));
+  });
+  $('availPaneMine').hidden = tab !== 'mine';
+  $('availPaneGroup').hidden = tab !== 'group';
+  renderAvail();
+  if (tab === 'group') fetchAvail();
+}
 
+function availByDate() {
   const byDate = {};
   state.avail.forEach((a) => { (byDate[a.date] = byDate[a.date] || []).push(a); });
+  return byDate;
+}
 
+function heatClass(yes, total) {
+  if (!total) return '';
+  const pct = Math.round((yes / total) * 100);
+  if (pct >= 90) return 'heat-4';
+  if (pct >= 67) return 'heat-3';
+  if (pct >= 34) return 'heat-2';
+  return 'heat-1';
+}
+
+function calCellsHTML(cellFn) {
+  const { y, m } = state.cal;
   const firstDow = new Date(y, m, 1).getDay();
   const daysIn = new Date(y, m + 1, 0).getDate();
   let html = '';
   for (let i = 0; i < firstDow; i++) html += '<div class="cal-day blank"></div>';
-  for (let d = 1; d <= daysIn; d++) {
-    const key = dateKey(y, m, d);
-    const people = byDate[key] || [];
-    const mine = people.some((p) => p.voter_id === VOTER_ID);
+  for (let d = 1; d <= daysIn; d++) html += cellFn(d, dateKey(y, m, d));
+  return html;
+}
+
+function prettyDate(key, opts) {
+  const p = key.split('-').map(Number);
+  return new Date(p[0], p[1] - 1, p[2]).toLocaleDateString('en-US', opts);
+}
+
+function personLabel(p) {
+  return esc(p.name) + (p.voter_id === VOTER_ID ? ' (you)' : '');
+}
+
+/* Renders both tabs — they share the month in state.cal, so one render keeps them synced */
+function renderAvail() {
+  const { y, m } = state.cal;
+  document.querySelectorAll('.cal-month').forEach((el) => {
+    el.textContent = MONTH_NAMES[m] + ' ' + y;
+  });
+  const byDate = availByDate();
+  renderMineGrid(m);
+  renderGroupGrid(byDate, m);
+  renderAvailList(byDate);
+}
+
+function renderMineGrid(m) {
+  $('calGridMine').innerHTML = calCellsHTML((d, key) => {
+    const status = myStatus(key);
     const isPast = key < TODAY_KEY;
     const cls = ['cal-day'];
     if (key === TODAY_KEY) cls.push('today');
-    if (mine) cls.push('mine');
-    if (key === state.selectedDate) cls.push('selected');
     if (isPast) cls.push('past');
-    html += '<button type="button" class="' + cls.join(' ') + '" data-date="' + key + '"' +
+    if (status === 'available') cls.push('avail-yes');
+    if (status === 'unavailable') cls.push('avail-no');
+    const icon = status === 'available' ? 'check' : (status === 'unavailable' ? 'close' : '');
+    const stateLabel = status || 'not set';
+    return '<button type="button" class="' + cls.join(' ') + '" data-my-date="' + key + '"' +
       (isPast ? ' disabled' : '') +
-      ' aria-label="' + MONTH_NAMES[m] + ' ' + d + ', ' + people.length + ' available">' +
+      ' aria-label="' + MONTH_NAMES[m] + ' ' + d + ' — ' + stateLabel + '">' +
       '<span class="num">' + d + '</span>' +
-      '<span class="cnt">' + (people.length || '') + '</span></button>';
-  }
-  $('calGrid').innerHTML = html;
-  renderDayPanel(byDate);
+      '<span class="day-state">' + (icon ? '<span class="msym">' + icon + '</span>' : '') + '</span>' +
+    '</button>';
+  });
 }
 
-function renderDayPanel(byDate) {
-  const el = $('dayPanel');
-  const key = state.selectedDate;
-  if (!key) {
-    el.innerHTML = '<div class="day-panel-title">Pick a date</div>' +
-      '<div class="day-panel-sub">Tap any date to mark yourself available and see who else is in.</div>';
+function renderGroupGrid(byDate, m) {
+  $('calGridGroup').innerHTML = calCellsHTML((d, key) => {
+    const people = byDate[key] || [];
+    const yes = people.filter((p) => p.status === 'available').length;
+    const total = people.length;
+    const cls = ['cal-day'];
+    if (key === TODAY_KEY) cls.push('today');
+    const heat = heatClass(yes, total);
+    if (heat) cls.push(heat);
+    const aria = total
+      ? MONTH_NAMES[m] + ' ' + d + ' — ' + yes + ' of ' + total + ' available, view details'
+      : MONTH_NAMES[m] + ' ' + d + ' — no responses';
+    return '<button type="button" class="' + cls.join(' ') + '" data-day-sheet="' + key + '"' +
+      (total ? '' : ' disabled') +
+      ' aria-label="' + aria + '">' +
+      '<span class="num">' + d + '</span>' +
+      '<span class="cnt">' + (total ? yes + '/' + total : '') + '</span>' +
+    '</button>';
+  });
+}
+
+/* Chronological list of every date with at least one response, oldest first */
+function renderAvailList(byDate) {
+  const keys = Object.keys(byDate).sort();
+  $('availListCount').textContent = keys.length
+    ? keys.length + (keys.length === 1 ? ' date' : ' dates') : '';
+  if (!keys.length) {
+    $('availList').innerHTML =
+      '<div class="empty-state"><span class="msym">event_busy</span>' +
+      '<h3>No responses yet</h3><p>Once someone marks a date on their calendar it shows up here.</p></div>';
     return;
   }
-  const parts = key.split('-').map(Number);
-  const dt = new Date(parts[0], parts[1] - 1, parts[2]);
-  const label = dt.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-  const people = (byDate[key] || []);
-  const mine = people.some((p) => p.voter_id === VOTER_ID);
+  $('availList').innerHTML = keys.map((key) => {
+    const people = byDate[key];
+    const yes = people.filter((p) => p.status === 'available');
+    const no = people.filter((p) => p.status === 'unavailable');
+    const rows = yes.map((p) =>
+      '<div class="avail-person yes"><span class="msym">check</span><span>' + personLabel(p) + '</span></div>'
+    ).join('') + no.map((p) =>
+      '<div class="avail-person no"><span class="msym">close</span><span>' + personLabel(p) + '</span></div>'
+    ).join('');
+    return '<div class="avail-entry">' +
+      '<div class="avail-entry-head">' +
+        '<span class="avail-entry-date">' +
+          prettyDate(key, { weekday: 'short', month: 'short', day: 'numeric' }) + '</span>' +
+        '<span class="avail-entry-pct">' + yes.length + '/' + people.length + ' available</span>' +
+      '</div>' +
+      '<div class="avail-entry-rows">' + rows + '</div>' +
+    '</div>';
+  }).join('');
+}
 
-  let body;
-  if (!people.length) {
-    body = '<div class="day-panel-sub">No one has marked this date yet. Tap it on the calendar to be the first.</div>';
-  } else {
-    body = '<div class="day-panel-sub">' + people.length +
-      (people.length === 1 ? ' person is' : ' people are') + ' available' +
-      (mine ? ' — tap the date again to remove yourself.' : '.') + '</div>' +
-      '<div class="day-people">' + people.map((p) =>
-        '<span class="person-tag' + (p.voter_id === VOTER_ID ? ' me' : '') + '">' +
-        '<span class="person-avatar">' + esc(String(p.name).charAt(0)) + '</span>' +
-        esc(p.name) + (p.voter_id === VOTER_ID ? ' (you)' : '') + '</span>'
-      ).join('') + '</div>';
-  }
-  el.innerHTML = '<div class="day-panel-title">' + label + '</div>' + body;
+function openDaySheet(key) {
+  const people = state.avail.filter((a) => a.date === key);
+  if (!people.length) return;
+  const yes = people.filter((p) => p.status === 'available');
+  const no = people.filter((p) => p.status === 'unavailable');
+  const respondents = new Set(state.avail.map((a) => a.voter_id)).size;
+  const lines =
+    (yes.length ? '<p class="day-sheet-line">Available: <span class="names-yes">' +
+      yes.map(personLabel).join(', ') + '</span></p>' : '') +
+    (no.length ? '<p class="day-sheet-line">Unavailable: <span class="names-no">' +
+      no.map(personLabel).join(', ') + '</span></p>' : '');
+  $('daySheet').innerHTML =
+    '<div class="poi-head">' +
+      '<span class="poi-cat poi-cat-day">Group availability</span>' +
+      '<button type="button" class="icon-btn" data-day-close aria-label="Close">' +
+        '<span class="msym">close</span></button>' +
+    '</div>' +
+    '<h2 class="poi-name">' +
+      prettyDate(key, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) + '</h2>' +
+    lines +
+    '<p class="day-sheet-meta">Response rate: ' + people.length + ' of ' + respondents +
+      ' people who have used the calendar have responded for this date.</p>';
+  document.body.style.overflow = 'hidden';
+  $('dayScrim').classList.add('open');
+}
+
+function closeDaySheet() {
+  $('dayScrim').classList.remove('open');
+  document.body.style.overflow = '';
 }
 
 /* ════════════════════════════════════════════
@@ -2538,10 +2888,14 @@ document.addEventListener('click', (e) => {
   const card = e.target.closest('[data-open]');
   if (card) { openCity(card.dataset.open); return; }
 
-  const day = e.target.closest('.cal-day');
-  if (day && !day.disabled && !day.classList.contains('blank')) {
-    toggleDate(day.dataset.date);
-  }
+  const dayClose = e.target.closest('[data-day-close]');
+  if (dayClose) { closeDaySheet(); return; }
+
+  const myDay = e.target.closest('[data-my-date]');
+  if (myDay && !myDay.disabled) { cycleDate(myDay.dataset.myDate); return; }
+
+  const groupDay = e.target.closest('[data-day-sheet]');
+  if (groupDay && !groupDay.disabled) { openDaySheet(groupDay.dataset.daySheet); }
 });
 
 document.addEventListener('keydown', (e) => {
@@ -2590,16 +2944,20 @@ $('nameCancel').addEventListener('click', closeNameDialog);
 $('nameScrim').addEventListener('click', (e) => { if (e.target === $('nameScrim')) closeNameDialog(); });
 $('nameInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') saveNameFromDialog(); });
 $('poiScrim').addEventListener('click', (e) => { if (e.target === $('poiScrim')) closePoiSheet(); });
+$('dayScrim').addEventListener('click', (e) => { if (e.target === $('dayScrim')) closeDaySheet(); });
 
-$('calPrev').addEventListener('click', () => {
-  state.cal.m--;
-  if (state.cal.m < 0) { state.cal.m = 11; state.cal.y--; }
-  renderCalendar();
+document.querySelectorAll('.avail-tab').forEach((b) => {
+  b.addEventListener('click', () => setAvailTab(b.dataset.availTab));
 });
-$('calNext').addEventListener('click', () => {
-  state.cal.m++;
-  if (state.cal.m > 11) { state.cal.m = 0; state.cal.y++; }
-  renderCalendar();
+
+/* Month navigation — both tabs share state.cal, so either pane's arrows move both */
+document.querySelectorAll('[data-cal-nav]').forEach((b) => {
+  b.addEventListener('click', () => {
+    state.cal.m += b.dataset.calNav === 'prev' ? -1 : 1;
+    if (state.cal.m < 0) { state.cal.m = 11; state.cal.y--; }
+    if (state.cal.m > 11) { state.cal.m = 0; state.cal.y++; }
+    renderAvail();
+  });
 });
 
 /* ════════════════════════════════════════════
@@ -2608,8 +2966,7 @@ $('calNext').addEventListener('click', () => {
 initTheme();
 updateIdentity();
 state.votes = lsGet(LS.voteCache, []);
-state.avail = lsGet(LS.availCache, []);
-state.selectedDate = TODAY_KEY;
+state.avail = readAvailCache();
 if (isDesktop()) state.cityId = (sortedCities()[0] || {}).id || null;
 renderCities();
 renderDetail();
