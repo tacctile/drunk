@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/AppShell";
-import { ThemeProvider, THEME_BOOT_SCRIPT } from "@/components/ThemeProvider";
 import { GroupDataProvider } from "@/hooks/useGroupData";
 import "./globals.css";
 
@@ -15,17 +14,13 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#0e0c08" },
-    { media: "(prefers-color-scheme: light)", color: "#f8f5ef" },
-  ],
+  themeColor: "#0A0D14",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -38,11 +33,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body>
-        <ThemeProvider>
-          <GroupDataProvider>
-            <AppShell>{children}</AppShell>
-          </GroupDataProvider>
-        </ThemeProvider>
+        <GroupDataProvider>
+          <AppShell>{children}</AppShell>
+        </GroupDataProvider>
       </body>
     </html>
   );

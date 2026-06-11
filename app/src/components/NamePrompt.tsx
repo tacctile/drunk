@@ -28,7 +28,7 @@ export function NamePrompt({ open, onClose, onSave, initial = "", title = "What'
 
   return (
     <Dialog open={open} onClose={onClose} title={title}>
-      <p className="mb-4 text-sm text-muted">
+      <p className="mb-4 text-base text-muted">
         First name only — it shows up next to your votes and dates so the crew knows who&apos;s in.
       </p>
       <form

@@ -34,7 +34,7 @@ export function BottomSheet({ open, onClose, children, label }: BottomSheetProps
         role="dialog"
         aria-modal="true"
         aria-label={label}
-        className="anim-sheet w-full max-w-2xl rounded-t-xl border-t border-line bg-surface px-5 pb-[calc(20px+env(safe-area-inset-bottom))] pt-2 shadow-sheet"
+        className="anim-sheet w-full max-w-2xl rounded-t border-t border-line bg-surface px-5 pb-[calc(20px+env(safe-area-inset-bottom))] pt-2 shadow-overlay"
       >
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-line-strong" />
         <div className="flex justify-end">
@@ -42,7 +42,7 @@ export function BottomSheet({ open, onClose, children, label }: BottomSheetProps
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="-mr-2 flex h-11 w-11 items-center justify-center rounded-full text-muted transition hover:bg-surface-2 hover:text-ink"
+            className="-mr-2 flex h-11 w-11 items-center justify-center rounded text-muted transition hover:bg-raised hover:text-ink"
           >
             <Icon name="close" size={22} />
           </button>
