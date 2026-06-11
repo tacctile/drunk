@@ -6,8 +6,12 @@
 
 ## What This Is
 A single-page HTML app for planning overnight bar-hop trips from Ralston, NE.
-A group of friends use it to browse destinations, compare cities, vote on where to go, and view trip details.
+A group of friends use it to browse destinations, read trip details, vote on where to go, and mark the dates they're available.
 Personal project — built solid and well-structured, not overcomplicated.
+
+The perfect trip: drive to a city, check into a hotel steps from the bar district, walk to dinner, bar hop on foot, walk back to the hotel. Never touch the car. Every city is measured against that standard.
+
+90%+ of usage is on a mobile phone. Desktop is a power-user upgrade — same data, more breathing room.
 
 ---
 
@@ -20,55 +24,101 @@ Personal project — built solid and well-structured, not overcomplicated.
 
 ## Architecture — Non-Negotiable Rules
 1. ONE FILE — index.html contains all HTML, CSS, and JS. Never split into separate files.
-2. No frameworks, no npm, no build step. Plain HTML/CSS/JS only. External resources via CDN only.
+2. No frameworks, no npm, no build step. Plain HTML/CSS/JS only. External resources via CDN only (Manrope, Material Symbols, Supabase JS client).
 3. City data lives in the `const cities = [...]` array in index.html. The number of cities is variable — never hardcode counts or assume a fixed number.
-4. Supabase is used for shared real-time data only (voting, any future shared state). All other state is localStorage.
+4. Supabase is used for shared data only (votes, availability). All other state is localStorage. Supabase failures fall back to localStorage silently — never show errors for it.
 5. Never break existing features — every session ends with all prior functionality still working.
 6. Mobile-first. Think at 375px before finalizing any layout decision.
+7. All user-provided strings (names) are escaped via `esc()` before any innerHTML use.
 
 ---
 
-## Design System
-- Font: Inter (Google Fonts CDN, weights 400–900)
-- Monospace: SF Mono / Fira Code / Consolas
-- Primary accent dark: #e49a4a | Primary accent light: #c27a1a
-- Background dark: #1b1b1f | Surface dark: #27272b | Surface2 dark: #323237
-- Background light: #f7f7f5 | Surface light: #ffffff
-- Border dark: #3e3e45 | Border light: #d8d7d4
-- Text dark: #e6e4e1 | Text light: #1d1d1f
-- Green: #4fbe7a | Red: #e25c5c | Yellow: #e0c846
-- Dark mode default. Light mode toggle persisted via localStorage key bh-theme.
-- 8px spacing grid. Border radius 4px standard, 6–8px for cards and modals.
-- 150–200ms transitions on interactive elements.
-- No pure black or pure white anywhere.
+## Design System — Material 3
+- **Font:** Manrope (Google Fonts CDN, weights 400/500/600/700/800)
+- **Icons:** Material Symbols Outlined (Google Fonts CDN) — the ONLY icon system. No emoji, no SVG icons.
+- **Color:** Full M3 color role set as CSS custom properties (`--primary`, `--on-primary`, `--primary-container`, `--secondary`, `--tertiary`, `--surface` + container ladder, `--on-surface`, `--surface-variant`, `--outline`, `--outline-variant`, `--error`, `--background`, etc.), amber/gold seed.
+  - Dark (default): deep warm charcoal surfaces (`#15130e` family), amber primary `#f6c453`.
+  - Light: warm off-whites (`#faf3e5` family), darker amber primary `#7a5900`.
+  - `color-scheme: dark/light` set on `:root` per theme.
+- **Theme:** dark default; light via header toggle; persisted to localStorage key `bh-theme` (raw string `dark`/`light`, applied pre-paint by an inline head script).
+- **Radius scale (tighter than M3 defaults — the ONLY radii allowed):**
+  `--radius-xs: 4px` (inputs, chips, calendar cells) · `--radius-sm: 6px` (buttons, text fields) · `--radius-md: 10px` (cards) · `--radius-lg: 14px` (dialogs, desktop detail panel) · `--radius-full: 9999px` (pills/circles only).
+- **Pixel-perfect rules:**
+  - Every interactive element (buttons, icon buttons, segmented buttons, nav items, text field, calendar day cells, FAB) is exactly `--control-h: 44px` tall.
+  - 4px spacing grid — every padding/margin/gap is a multiple of 4px.
+  - Type scale defined once as `font:` shorthand custom props (`--type-display/headline/title-lg/title/body-lg/body/label-lg/label/label-sm`). No inline font sizes.
+  - Icon sizes via tokens: `--icon-nav: 24px`, `--icon-btn: 20px`, `--icon-meta: 16px`, `--icon-hero: 40px`.
+- M3 state layers on buttons (hover 8% / press 12% overlays), elevation via `--shadow-1/2/3`.
+- 160–200ms transitions; `prefers-reduced-motion` respected.
+- Breakpoint: 840px — bottom nav bar becomes a left nav rail, cities view becomes two-pane (list + sticky detail panel).
 
 ---
 
 ## Supabase Schema
-> Updated here whenever a table is created or modified.
+> Updated here whenever a table is created or modified. Also kept as a comment block at the top of the JS in index.html.
 
-*No tables yet — will be added as schema is built.*
+```sql
+CREATE TABLE bh_votes (
+  trip_id    text not null default 'current',
+  voter_id   uuid not null,
+  name       text not null check (char_length(name) between 1 and 20),
+  city_id    text not null,
+  updated_at timestamptz not null default now(),
+  primary key (trip_id, voter_id)
+);
+ALTER TABLE bh_votes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY bh_votes_read   ON bh_votes FOR SELECT TO anon USING (true);
+CREATE POLICY bh_votes_write  ON bh_votes FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY bh_votes_update ON bh_votes FOR UPDATE TO anon USING (true);
+CREATE POLICY bh_votes_delete ON bh_votes FOR DELETE TO anon USING (true);
+
+CREATE TABLE bh_availability (
+  id         uuid default gen_random_uuid() primary key,
+  voter_id   uuid not null,
+  name       text not null check (char_length(name) between 1 and 20),
+  date       date not null,
+  created_at timestamptz not null default now(),
+  unique(voter_id, date)
+);
+ALTER TABLE bh_availability ENABLE ROW LEVEL SECURITY;
+CREATE POLICY bh_avail_read   ON bh_availability FOR SELECT TO anon USING (true);
+CREATE POLICY bh_avail_write  ON bh_availability FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY bh_avail_delete ON bh_availability FOR DELETE TO anon USING (true);
+```
+
+**Identity model:** `crypto.randomUUID()` generated on first visit → localStorage `bh-voter-id` (used as `voter_id` in both tables). Display name → localStorage `bh-voter-name` (asked once via dialog, changeable from the results view).
+
+**localStorage keys:** `bh-theme`, `bh-voter-id`, `bh-voter-name`, `bh-cache-votes`, `bh-cache-avail` (the two caches double as the silent offline fallback store).
+
+---
+
+## Data Model
+Each entry in `const cities = [...]` follows this exact shape (Sioux City is the reference implementation):
+`{ id, name, state, miles, drive, description, hotels: [{ name, stars, priceRange, distanceNote, onSite, website }], bars: [{ name, description, distance }], food: [{ name, description, hours }], parking }`
+Bars render sorted by parsed `distance` (feet). Food renders in array order.
 
 ---
 
 ## Features — Current State
 
 ### Built
-- [x] City data array — variable number of cities, each with full detail object
-- [x] Comparison table — sortable by city name and distance
-- [x] Expandable tray rows — full city detail inline in table
-- [x] Compare lightbox — select 2 or 3 cities, scored across 8 categories with verdict
-- [x] Vote system — name prompt, localStorage vote storage, results lightbox, FAB badge
-- [x] Theme toggle — dark/light, persisted to localStorage
-- [x] Sticky toast — Back to List button when tray is open
-- [x] Mobile responsive — progressive disclosure on cards, controls collapse, table column hiding
+- [x] City list — card list with name, state, miles, drive time, live vote count; sort by distance (default) or A–Z
+- [x] City detail — hero (name/state/miles/drive/description), prominent vote button, HOTELS (cards: stars, price, distance note, on-site, website link), BARS (distance-sorted list), FOOD (list with hours), PARKING (paragraph); full-screen with back button on mobile, sticky side panel on desktop
+- [x] Voting — one vote per person per trip (`trip_id: 'current'`); first vote prompts for name once; vote stored to Supabase `bh_votes` with silent localStorage fallback; changing city moves the vote; ranked results view with voter names, leader highlight, meters; name changeable from results view (updates both tables + caches)
+- [x] Vote tally FAB — shows live total, opens results, hidden while on results
+- [x] Availability calendar — month view, prev/next nav, tap a future date to toggle yourself, per-date counts, day panel listing who's available; Supabase `bh_availability` with silent fallback; past dates disabled
+- [x] Theme toggle — dark default / light, persisted to `bh-theme`, pre-paint application
+- [x] Empty states (no cities, no votes, no city selected on desktop), skeleton loading on results, dialog validation
+- [x] Mobile bottom nav (Cities / Results / Dates) → desktop left rail at 840px; two-pane cities view on desktop with auto-selected first city
 
 ### Backlog
-- [ ] Supabase voting — replace localStorage votes with real shared votes across devices
+- [ ] Replace placeholder Supabase anon key with the real key (current key's signature is `.placeholder` — all remote calls 401 and the app runs on localStorage fallback until then)
+- [ ] Run the schema SQL above in the Supabase dashboard
+- [ ] Add more cities to the `cities` array
 
 ---
 
 ## Current State
 Last updated: 2026-06-11
-Last change: Dead code purged. `const cities = []` is now empty — all old city objects removed, awaiting the new data model. Removed all dead CSS (card system, details modal, controls/filters/slider, intro strip, progressive disclosure, benchmark system, vote roster chips, dot scores, walk pills, caveat tags, utility classes, duplicate light-mode @media element-overrides block, conflicting mobile rules) and dead JS (renderDots, getTagHTML, getWalkPill, getFilteredSorted). Table, tray, compare lightbox, vote system, and theme toggle are all intact and verified working — they render an empty state until new city data lands.
-Next up: New city data model, then Supabase voting migration
+Last change: Complete ground-up rebuild. New Material 3 design system (Manrope, Material Symbols, amber tonal palette, dark/light schemes, tight radius scale, 44px controls, 4px grid). New data model with Sioux City as the first entry (5 hotels, 15 bars, 6 food spots, parking). New features: city list/detail views with mobile full-screen + desktop two-pane layouts, Supabase-backed voting with name identity and ranked results, availability calendar with per-date counts and names, vote tally FAB, theme toggle. All Supabase access falls back to localStorage silently. Verified with jsdom smoke tests (57 assertions: rendering, sorting, vote flow, escaping, calendar toggling, month nav, theme persistence, rename flow, desktop panel mode).
+Next up: paste real anon key, run schema SQL in Supabase, then add city #2
