@@ -2,9 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { City, Coords, VenueKind } from "@/data/types";
-import { BASE_MAP_OPTIONS, DARK_MAP_STYLE, LIGHT_MAP_STYLE, PIN_COLORS, loadGoogleMaps } from "@/lib/maps";
+import { BASE_MAP_OPTIONS, DARK_MAP_STYLE, PIN_COLORS, loadGoogleMaps } from "@/lib/maps";
 import { Icon } from "./Icon";
-import { useTheme } from "./ThemeProvider";
 
 export interface MapVenue {
   id: string;
@@ -20,16 +19,18 @@ interface CityMapProps {
   /** Venue to spotlight (pan + enlarge pin); set by list taps and pin taps. */
   focusId: string | null;
   onPinTap: (venueId: string) => void;
+  onCollapse: () => void;
 }
 
-const FILTERS: { id: MapFilter; label: string; icon: string }[] = [
-  { id: "all", label: "All", icon: "stacks" },
-  { id: "hotel", label: "Hotels", icon: "hotel" },
-  { id: "bar", label: "Bars", icon: "sports_bar" },
-  { id: "food", label: "Food", icon: "restaurant" },
+const FILTERS: { id: MapFilter; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "hotel", label: "Hotels" },
+  { id: "bar", label: "Bars" },
+  { id: "food", label: "Food" },
 ];
 
 const LABEL_MIN_ZOOM = 15;
+const SQUARE_PATH = "M -1 -1 L 1 -1 L 1 1 L -1 1 Z";
 
 export function mapVenues(city: City): MapVenue[] {
   return [
@@ -40,16 +41,19 @@ export function mapVenues(city: City): MapVenue[] {
 }
 
 /**
- * In-app Google Map. No external navigation anywhere — pins open the in-app
- * venue sheet. Pin labels render through a custom OverlayView at zoom >= 15.
+ * The live Google map — only ever mounted in the EXPANDED state; the
+ * collapsed peek is the pure-SVG constellation. Dark style only. Pins share
+ * the constellation's shape language and open the in-app venue sheet; there
+ * is no external navigation anywhere.
  */
-export function CityMap({ city, focusId, onPinTap }: CityMapProps) {
-  const { theme } = useTheme();
+export function CityMap({ city, focusId, onPinTap, onCollapse }: CityMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef(new Map<string, google.maps.Marker>());
   const labelsRef = useRef(new Map<string, { setMap: (m: google.maps.Map | null) => void }>());
   const labelsOnRef = useRef(false);
+  const focusRef = useRef<string | null>(focusId);
+  focusRef.current = focusId;
   const [filter, setFilter] = useState<MapFilter>("all");
   const [failed, setFailed] = useState(false);
   const venues = mapVenues(city);
@@ -63,12 +67,11 @@ export function CityMap({ city, focusId, onPinTap }: CityMapProps) {
     loadGoogleMaps()
       .then((g) => {
         if (cancelled || !containerRef.current) return;
-        const isDark = document.documentElement.classList.contains("dark");
         const map = new g.maps.Map(containerRef.current, {
           ...BASE_MAP_OPTIONS,
           center: city.mapCenter,
           zoom: city.mapZoom,
-          styles: isDark ? DARK_MAP_STYLE : LIGHT_MAP_STYLE,
+          styles: DARK_MAP_STYLE,
         });
         mapRef.current = map;
 
@@ -85,11 +88,9 @@ export function CityMap({ city, focusId, onPinTap }: CityMapProps) {
             this.el = document.createElement("div");
             this.el.textContent = this.text;
             this.el.style.cssText =
-              "position:absolute;transform:translate(-50%,9px);pointer-events:none;" +
-              "font:700 11px Manrope,sans-serif;letter-spacing:0.01em;white-space:nowrap;" +
-              (document.documentElement.classList.contains("dark")
-                ? "color:#f3eee3;text-shadow:0 1px 3px rgba(0,0,0,0.9);"
-                : "color:#211b10;text-shadow:0 1px 3px rgba(255,255,255,0.95);");
+              "position:absolute;transform:translate(-50%,10px);pointer-events:none;" +
+              "font:600 12px Manrope,sans-serif;letter-spacing:0.01em;white-space:nowrap;" +
+              "color:#e8ecf4;text-shadow:0 1px 3px rgba(0,0,0,0.9);";
             this.getPanes()?.overlayLayer.appendChild(this.el);
           }
           draw() {
@@ -114,7 +115,7 @@ export function CityMap({ city, focusId, onPinTap }: CityMapProps) {
             map,
             position: v.coords,
             title: v.name,
-            icon: pinIcon(g, v.kind, false),
+            icon: pinIcon(g, v.kind, v.id === focusRef.current),
           });
           marker.addListener("click", () => onPinTap(v.id));
           markers.set(v.id, marker);
@@ -125,6 +126,15 @@ export function CityMap({ city, focusId, onPinTap }: CityMapProps) {
           map.fitBounds(bounds, { top: 48, right: 48, bottom: 48, left: 48 });
         }
 
+        // If a list row opened the map with a venue in mind, go straight there.
+        const initialFocus = focusRef.current
+          ? venues.find((v) => v.id === focusRef.current)
+          : null;
+        if (initialFocus?.coords) {
+          map.setCenter(initialFocus.coords);
+          map.setZoom(LABEL_MIN_ZOOM);
+        }
+
         const syncLabels = () => {
           const show = (map.getZoom() ?? 0) >= LABEL_MIN_ZOOM;
           if (show === labelsOnRef.current) return;
@@ -133,6 +143,7 @@ export function CityMap({ city, focusId, onPinTap }: CityMapProps) {
         };
         map.addListener("zoom_changed", syncLabels);
         map.addListener("idle", syncLabels);
+        syncLabels();
       })
       .catch(() => {
         if (!cancelled) setFailed(true);
@@ -150,11 +161,6 @@ export function CityMap({ city, focusId, onPinTap }: CityMapProps) {
     // venues derive from city; rebuilding per city id is exactly what we want
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [city.id, onPinTap]);
-
-  // Theme flips restyle in place.
-  useEffect(() => {
-    mapRef.current?.setOptions({ styles: theme === "dark" ? DARK_MAP_STYLE : LIGHT_MAP_STYLE });
-  }, [theme]);
 
   // Category filter toggles pin visibility.
   useEffect(() => {
@@ -185,59 +191,90 @@ export function CityMap({ city, focusId, onPinTap }: CityMapProps) {
 
   return (
     <div>
-      <div className="-mx-1 mb-2 flex gap-2 overflow-x-auto px-1 pb-1">
-        {FILTERS.map((f) => {
-          const on = filter === f.id;
-          return (
-            <button
-              key={f.id}
-              type="button"
-              onClick={() => setFilter(f.id)}
-              aria-pressed={on}
-              className={`chip ${on ? "chip-on" : ""}`}
-            >
-              <Icon name={f.icon} size={17} />
-              {f.label}
-            </button>
-          );
-        })}
+      <div className="mb-2 flex items-center gap-2">
+        <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto">
+          {FILTERS.map((f) => {
+            const on = filter === f.id;
+            return (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => setFilter(f.id)}
+                aria-pressed={on}
+                className={`chip ${on ? "chip-on" : ""}`}
+              >
+                {f.label}
+              </button>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          onClick={onCollapse}
+          aria-label="Collapse map"
+          className="flex h-11 w-11 flex-none items-center justify-center rounded text-muted transition hover:bg-raised hover:text-ink"
+        >
+          <Icon name="close_fullscreen" size={20} />
+        </button>
       </div>
       <div className="card relative h-80 overflow-hidden min-[840px]:h-[420px]">
         <div ref={containerRef} className="h-full w-full" />
         {failed && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-surface-2 text-muted">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-raised text-muted">
             <Icon name="map" size={32} />
-            <p className="text-sm font-semibold">Map couldn&apos;t load — venue lists below still work.</p>
+            <p className="text-sm font-semibold">Map couldn&apos;t load — the lists below still work.</p>
           </div>
         )}
       </div>
-      <div className="mt-2 flex items-center gap-4 text-2xs font-bold text-muted">
-        <LegendDot color={PIN_COLORS.hotel} label="Hotels" />
-        <LegendDot color={PIN_COLORS.bar} label="Bars" />
-        <LegendDot color={PIN_COLORS.food} label="Food" />
+      <div className="mt-2 flex h-5 items-center gap-4">
+        <LegendGlyph kind="hotel" label="Hotels" />
+        <LegendGlyph kind="bar" label="Bars" />
+        <LegendGlyph kind="food" label="Food" />
       </div>
     </div>
   );
 }
 
+/** Shape-coded pins: accent square, near-white dot, outlined muted circle. */
 function pinIcon(g: typeof google, kind: VenueKind, focused: boolean): google.maps.Symbol {
+  if (kind === "hotel") {
+    return {
+      path: SQUARE_PATH,
+      fillColor: PIN_COLORS.hotel,
+      fillOpacity: 1,
+      strokeColor: "#0A0D14",
+      strokeWeight: 1.5,
+      scale: focused ? 7 : 5,
+    };
+  }
+  if (kind === "bar") {
+    return {
+      path: g.maps.SymbolPath.CIRCLE,
+      fillColor: PIN_COLORS.bar,
+      fillOpacity: 1,
+      strokeColor: "#0A0D14",
+      strokeWeight: 1.5,
+      scale: focused ? 9 : 6,
+    };
+  }
   return {
     path: g.maps.SymbolPath.CIRCLE,
-    fillColor: PIN_COLORS[kind],
-    fillOpacity: 1,
-    strokeColor: "#FFFFFF",
+    fillColor: PIN_COLORS.food,
+    fillOpacity: 0,
+    strokeColor: PIN_COLORS.food,
     strokeWeight: 2,
-    scale: focused ? 11 : 8,
+    scale: focused ? 8 : 5.5,
   };
 }
 
-function LegendDot({ color, label }: { color: string; label: string }) {
+function LegendGlyph({ kind, label }: { kind: VenueKind; label: string }) {
   return (
-    <span className="inline-flex items-center gap-1.5">
-      <span
-        className="inline-block h-2.5 w-2.5 rounded-full border border-white/80"
-        style={{ background: color }}
-      />
+    <span className="label inline-flex items-center gap-1.5">
+      {kind === "hotel" && <span className="inline-block h-2 w-2 bg-accent" aria-hidden />}
+      {kind === "bar" && <span className="inline-block h-2 w-2 rounded-full bg-ink" aria-hidden />}
+      {kind === "food" && (
+        <span className="inline-block h-2 w-2 rounded-full border-2 border-muted" aria-hidden />
+      )}
       {label}
     </span>
   );

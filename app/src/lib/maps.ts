@@ -5,11 +5,13 @@ import { Loader } from "@googlemaps/js-api-loader";
 const MAPS_API_KEY =
   process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "AIzaSyAKzTDijoSvxp9Gb2oEqYXW4kmnEzkbMWQ";
 
-// Fixed pin palette per spec — identical in both themes.
+// Pins differentiate by SHAPE, not color: hotel = filled accent square,
+// bar = filled near-white circle, food = outlined muted circle. These inks
+// match the constellation and the walk strip.
 export const PIN_COLORS = {
-  hotel: "#E8A030",
-  bar: "#4CAF50",
-  food: "#2196F3",
+  hotel: "#FF9433",
+  bar: "#E8ECF4",
+  food: "#8E99AC",
 } as const;
 
 let loaderPromise: Promise<typeof google> | null = null;
@@ -22,39 +24,22 @@ export function loadGoogleMaps(): Promise<typeof google> {
   return loaderPromise;
 }
 
-// Map styles tuned to the app surfaces: deep warm blacks in dark mode,
-// warm paper whites in light mode. POI clutter off in both.
+// Single dark style tuned to the app's blue-black surfaces. POI clutter off.
 export const DARK_MAP_STYLE: google.maps.MapTypeStyle[] = [
-  { elementType: "geometry", stylers: [{ color: "#16130d" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#a79d89" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#0e0c08" }] },
+  { elementType: "geometry", stylers: [{ color: "#12161f" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#8e99ac" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#0a0d14" }] },
   { featureType: "poi", stylers: [{ visibility: "off" }] },
   { featureType: "transit", stylers: [{ visibility: "off" }] },
-  { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#2b2517" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#241f15" }] },
+  { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#232a38" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#1a2130" }] },
   { featureType: "road", elementType: "geometry.stroke", stylers: [{ visibility: "off" }] },
-  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#8a8170" }] },
-  { featureType: "road.arterial", elementType: "geometry", stylers: [{ color: "#2c2618" }] },
-  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#3c3522" }] },
-  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#13100b" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#1a2026" }] },
-  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#5d6a75" }] },
-];
-
-export const LIGHT_MAP_STYLE: google.maps.MapTypeStyle[] = [
-  { elementType: "geometry", stylers: [{ color: "#f4f0e6" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#6e6555" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#f8f5ef" }] },
-  { featureType: "poi", stylers: [{ visibility: "off" }] },
-  { featureType: "transit", stylers: [{ visibility: "off" }] },
-  { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#d3c9b1" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#e5ddcb" }] },
-  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#99907d" }] },
-  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#f0e6cf" }] },
-  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#f1ece1" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#cfdde6" }] },
-  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#7b8e9a" }] },
+  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#5c6678" }] },
+  { featureType: "road.arterial", elementType: "geometry", stylers: [{ color: "#1e2636" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#2a3447" }] },
+  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#0d1119" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#14202e" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#46566b" }] },
 ];
 
 export const BASE_MAP_OPTIONS: google.maps.MapOptions = {
