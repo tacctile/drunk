@@ -2157,9 +2157,9 @@ function openPoiSheet(cat, item) {
       '<a class="btn btn-outlined btn-block" href="' + esc(item.website) + '" target="_blank" rel="noopener noreferrer">' +
         '<span class="msym">open_in_new</span><span>Visit website</span></a>';
   } else if (cat === 'bar') {
-    rows = '<p class="poi-desc">' + esc(item.description) + '</p>' + mapsBtn;
+    rows = '<p class="poi-desc">' + esc(item.description) + '</p>';
   } else {
-    rows = '<p class="poi-desc">' + esc(item.description) + '</p>' + mapsBtn;
+    rows = '<p class="poi-desc">' + esc(item.description) + '</p>';
   }
   $('poiSheet').innerHTML =
     '<div class="poi-head">' +
@@ -2168,11 +2168,13 @@ function openPoiSheet(cat, item) {
         '<span class="msym">close</span></button>' +
     '</div>' +
     '<h2 class="poi-name">' + esc(item.name) + '</h2>' + rows;
+  document.body.style.overflow = 'hidden';
   $('poiScrim').classList.add('open');
 }
 
 function closePoiSheet() {
   $('poiScrim').classList.remove('open');
+  document.body.style.overflow = '';
   deselectMapPin();
 }
 
@@ -2485,7 +2487,6 @@ document.addEventListener('keydown', (e) => {
     openCity(e.target.dataset.open);
   }
   if (e.key === 'Escape' && $('nameScrim').classList.contains('open')) closeNameDialog();
-  if (e.key === 'Escape' && $('poiScrim').classList.contains('open')) closePoiSheet();
 });
 
 document.querySelectorAll('.nav-item').forEach((b) => {
