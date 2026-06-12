@@ -8,24 +8,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGroupData } from "@/hooks/useGroupData";
+import { PIN_COLORS } from "@/lib/colors";
+import { getStoredPinColor } from "@/lib/identity";
 import { getSupabase, safeSelect, type LocationRow } from "@/lib/supabase";
 
-/** Preset pin palette — the user picks once and it persists (bh2-pin-color). */
-export const PIN_PALETTE = [
-  "#FF8C42", // amber-orange (default)
-  "#34D399", // green
-  "#60A5FA", // blue
-  "#F472B6", // pink
-  "#A78BFA", // purple
-  "#FBBF24", // yellow
-  "#F87171", // red
-  "#22D3EE", // cyan
-  "#FB923C", // orange
-  "#E2E8F0", // near-white
-] as const;
-export const DEFAULT_PIN_COLOR: string = PIN_PALETTE[0];
-
-const PIN_COLOR_KEY = "bh2-pin-color";
 const MUTED_IDS_KEY = "bh2-muted-ids";
 const LOCATION_COLUMNS =
   "voter_id,display_name,lat,lng,pin_color,sharing_since,expires_at,updated_at,muted_ids";
@@ -81,12 +67,10 @@ export interface LocationsValue {
   /** Your own unexpired row, when sharing. */
   myLocation: LocationRow | null;
   isSharing: boolean;
-  pinColor: string;
   mutedIds: string[];
   /** Re-render clock (ms) — keeps "X min ago" and expiry honest. */
   now: number;
   toggleSharing: () => Promise<ToggleSharingResult>;
-  updatePinColor: (color: string) => Promise<void>;
   muteUser: (voterId: string) => Promise<void>;
   unmuteUser: (voterId: string) => Promise<void>;
 }
@@ -95,7 +79,6 @@ export function useLocations(): LocationsValue {
   const { voterId, name } = useGroupData();
   const [rows, setRows] = useState<LocationRow[]>([]);
   const [now, setNow] = useState(() => Date.now());
-  const [pinColor, setPinColor] = useState<string>(DEFAULT_PIN_COLOR);
   const [mutedIds, setMutedIds] = useState<string[]>([]);
 
   const rowsRef = useRef(rows);
@@ -104,8 +87,6 @@ export function useLocations(): LocationsValue {
   voterIdRef.current = voterId;
   const nameRef = useRef(name);
   nameRef.current = name;
-  const pinColorRef = useRef(pinColor);
-  pinColorRef.current = pinColor;
   const mutedRef = useRef(mutedIds);
   mutedRef.current = mutedIds;
   // Local intent while a write is in flight (true = just enabled, false =
@@ -114,10 +95,8 @@ export function useLocations(): LocationsValue {
   const desiredRef = useRef<boolean | null>(null);
   const syncedFromServerRef = useRef(false);
 
-  // Seed prefs from localStorage so the picker pre-selects next time.
+  // Seed the mute prefs from localStorage so they apply when sharing starts.
   useEffect(() => {
-    const stored = readStorage(PIN_COLOR_KEY);
-    if (stored && (PIN_PALETTE as readonly string[]).includes(stored)) setPinColor(stored);
     setMutedIds(readStoredMutedIds());
   }, []);
 
@@ -136,13 +115,9 @@ export function useLocations(): LocationsValue {
       desiredRef.current = null; // server caught up with local intent
     }
     setRows(next);
-    // The first server copy of my row wins over localStorage prefs.
+    // The first server copy of my row wins over localStorage mute prefs.
     if (serverMine && !syncedFromServerRef.current) {
       syncedFromServerRef.current = true;
-      if ((PIN_PALETTE as readonly string[]).includes(serverMine.pin_color)) {
-        setPinColor(serverMine.pin_color);
-        writeStorage(PIN_COLOR_KEY, serverMine.pin_color);
-      }
       const muted = Array.isArray(serverMine.muted_ids) ? serverMine.muted_ids : [];
       setMutedIds(muted);
       writeStorage(MUTED_IDS_KEY, JSON.stringify(muted));
@@ -299,7 +274,9 @@ export function useLocations(): LocationsValue {
       display_name: nameRef.current || "Someone",
       lat: pos.lat,
       lng: pos.lng,
-      pin_color: pinColorRef.current,
+      // Auto-assigned at registration (v2_voters.pin_color), cached by the
+      // identity layer — never picked here.
+      pin_color: getStoredPinColor() ?? PIN_COLORS[0],
       sharing_since: nowIso,
       expires_at: new Date(Date.now() + EXPIRY_MS).toISOString(),
       updated_at: nowIso,
@@ -315,25 +292,6 @@ export function useLocations(): LocationsValue {
     }
     return "on";
   }, [ensureVoter]);
-
-  const updatePinColor = useCallback(async (color: string) => {
-    setPinColor(color);
-    writeStorage(PIN_COLOR_KEY, color);
-    if (!isSharingRef.current) return;
-    const me = voterIdRef.current;
-    const nowIso = new Date().toISOString();
-    setRows((prev) =>
-      prev.map((r) => (r.voter_id === me ? { ...r, pin_color: color, updated_at: nowIso } : r)),
-    );
-    try {
-      await getSupabase()
-        ?.from("v2_locations")
-        .update({ pin_color: color, updated_at: nowIso })
-        .eq("voter_id", me);
-    } catch {
-      // offline — the color is saved locally either way
-    }
-  }, []);
 
   const setMuted = useCallback(async (targetId: string, muted: boolean) => {
     const current = mutedRef.current;
@@ -368,14 +326,12 @@ export function useLocations(): LocationsValue {
       activeLocations,
       myLocation,
       isSharing,
-      pinColor,
       mutedIds,
       now,
       toggleSharing,
-      updatePinColor,
       muteUser,
       unmuteUser,
     }),
-    [activeLocations, myLocation, isSharing, pinColor, mutedIds, now, toggleSharing, updatePinColor, muteUser, unmuteUser],
+    [activeLocations, myLocation, isSharing, mutedIds, now, toggleSharing, muteUser, unmuteUser],
   );
 }

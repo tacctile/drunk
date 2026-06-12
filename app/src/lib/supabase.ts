@@ -36,6 +36,8 @@ export interface VoterRow {
   name: string;
   /** "Nick B"; null on legacy rows created before the PIN system. */
   display_name: string | null;
+  /** Auto-assigned from the 25-color pool at registration — never user-set. */
+  pin_color: string;
 }
 
 export interface CityVoteRow {

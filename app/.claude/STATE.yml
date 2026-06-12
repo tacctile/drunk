@@ -1,38 +1,32 @@
 last_updated: 2026-06-12
 last_session: >-
-  Locate tab + hidden Admin screen. Nav has FOUR tabs (Locate rightmost,
-  person_pin, /locate); a 3-second long-press on the Locate item — mobile
-  bar or desktop rail — opens /admin (the ONLY entry point) with an
-  opacity 1→0.5→1 pulse across the hold; normal taps still go to /locate
-  and the post-hold release click is swallowed. /locate gates on a
-  registered identity (stored voter id verified against the roster;
-  otherwise "Identity required" card → NamePrompt), then renders a
-  full-screen dark map (Ralston 41.172/-96.1358, zoom 8, greedy) fed by a
-  v2_locations realtime subscription with expired rows and rows muting the
-  viewer filtered out; other people are 14px pins + name pills, own pin is
-  18px + 22px amber ring + "You (name)". Controls: opt-in "Share my
-  location" toggle (OFF by default, disclaimer "This only affects Bar
-  Hoppers. Your device location settings are unchanged.", denied permission
-  → inline error + toggle stays off, ON → upsert with expires_at now()+72h
-  and a 60s coord updater that only auto-resumes when permission is already
-  granted, OFF → row deleted), 10-swatch pin color picker (persists to
-  bh2-pin-color), one-directional mute list under "Manage visibility"
-  (muted_ids on my row, mirrored to bh2-muted-ids while not sharing).
-  People panel: draggable bottom sheet 80px ↔ 50% viewport, 56px rows
-  (dot/name/"Last updated X min ago", self first "(you)"), pin tap
-  highlights the row, row tap pans+zooms (14) and pulses the pin. /admin:
-  registered-user cards (eye reveals hashed-PIN status — never a PIN; edit
-  modal renames, optionally resets PIN with confirm, cascade-deletes the
-  user across votes/availability/locations), Reset All Votes + Reset All
-  Availability behind red confirm modals, active-location list with Force
-  expire, and a data-health count grid with refresh. Supabase: v2_locations
-  created live via MCP (anon read only while expires_at > now(), anon
-  write/update/delete, in supabase_realtime; idempotent SQL safe to
-  re-run). New files: locate/page.tsx, admin/page.tsx, useLocations.ts.
-  localStorage grew to eight bh2-* keys. No voting, availability, city,
-  or board logic touched. Build green (36 static pages), lint + strict
-  typecheck clean.
-current_phase: locate_tab_and_admin
+  Auto-assigned pin color system (identity foundation). New lib/colors.ts:
+  25-color PIN_COLORS pool, assignColor(n) = PIN_COLORS[n % 25] (Nth
+  registered voter gets the Nth color, cycling past 24), contrastColor(hex)
+  for avatar initials (consumed in Prompt 2). Schema applied live via MCP
+  (add_pin_color_to_v2_voters, idempotent): v2_voters.pin_color text NOT
+  NULL DEFAULT '#FF8C42'; the 4 pre-existing voters were backfilled with
+  pool colors in created_at order so registration-order assignment holds
+  for everyone. createIdentity now COUNTs v2_voters and upserts pin_color =
+  assignColor(count) with the bcrypt hash, then caches the color to
+  bh2-pin-color; signIn selects pin_color and caches it after PIN
+  verification; refetch re-syncs the cache from my server row (server truth
+  wins — stale picker-era colors retire themselves). VoterRow gained
+  pin_color: string and the roster select includes it — useGroupData
+  consumers can render colored circles next to names. Color picker DELETED
+  everywhere: PIN_PALETTE, DEFAULT_PIN_COLOR, updatePinColor, and all
+  bh2-pin-color writes removed from useLocations.ts; the swatch radiogroup
+  removed from locate/page.tsx (only change there); toggleSharing writes
+  v2_locations.pin_color from the bh2-pin-color cache ?? '#FF8C42'.
+  bh2-pin-color stays in the localStorage contract as an identity-layer
+  cache of the server-assigned color — never a user pick. ensureVoter
+  intentionally omits pin_color (insert takes the default, conflict update
+  preserves the assignment). The task spec's example upsert listed a
+  pin_plain field — intentionally NOT implemented (no such column; plain
+  PINs are forbidden by the architecture). AppShell, voting, availability,
+  city data, admin, root index.html untouched. Build green (36 static
+  pages), lint + strict typecheck clean.
+current_phase: pin_color_foundation
 build_complete: true
 supabase_schema_deployed: true
 vercel_deployed: false
@@ -49,14 +43,22 @@ known_issues:
     groups hotel votes by hotel_name)
   - Board hotel rows join v2_hotels by exact hotel_name match — renamed or
     sub-3-star hotels show no stars and sort last on the price tie-breaker
-  - The 32px "See Votes"/"See Who" buttons and the 32px pin-color swatches
-    are below the app's 44px tap floor — explicit spec exceptions
+  - The 32px "See Votes"/"See Who" buttons are below the app's 44px tap
+    floor — explicit spec exceptions
+  - Two devices registering at the same instant can read the same COUNT(*)
+    and receive the same pin color (no server-side sequence; acceptable for
+    ~10 friends, and colors repeat past 25 by design anyway)
+  - Devices already signed in keep a stale bh2-pin-color until their first
+    roster refetch after this deploy overwrites it with the server-assigned
+    color (self-healing, no action needed)
   - Location coords only refresh while a Bar Hoppers tab is open (60s
     foreground interval — no background tracking, by design); a row from a
     closed session keeps its last coords until expiry or toggle-off
   - Anyone can long-press into /admin — it is hidden, not authenticated
     (acceptable for a ~10-friend app, per spec)
 next_up:
+  - Prompt 2 — avatar in AppShell + colored roster circles on /locate
+    (pin_color + contrastColor are ready and exposed via useGroupData)
   - Backfill lat/lng for the 206 venue rows in the Supabase SQL editor
   - Create Vercel project with root directory app/ and deploy
   - Set NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY /
