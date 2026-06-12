@@ -13,6 +13,7 @@ import { getStoredPinColor } from "@/lib/identity";
 import { getSupabase, safeSelect, type LocationRow } from "@/lib/supabase";
 
 const MUTED_IDS_KEY = "bh2-muted-ids";
+const SHARING_PREF_KEY = "bh2-sharing-preference";
 // Each hook instance subscribes under its own channel topic. Two mounts can
 // coexist (the locate page + the profile overlay) — a shared topic would make
 // the second join close the first and silently kill its realtime feed.
@@ -74,6 +75,8 @@ export interface LocationsValue {
   mutedIds: string[];
   /** Re-render clock (ms) — keeps "X min ago" and expiry honest. */
   now: number;
+  /** voter_id → pin_color for all registered users, from v2_voters. */
+  voterColors: Record<string, string>;
   toggleSharing: () => Promise<ToggleSharingResult>;
   muteUser: (voterId: string) => Promise<void>;
   unmuteUser: (voterId: string) => Promise<void>;
@@ -84,6 +87,9 @@ export function useLocations(): LocationsValue {
   const [rows, setRows] = useState<LocationRow[]>([]);
   const [now, setNow] = useState(() => Date.now());
   const [mutedIds, setMutedIds] = useState<string[]>([]);
+  const [voterColors, setVoterColors] = useState<Record<string, string>>({});
+  const [initialFetchDone, setInitialFetchDone] = useState(false);
+  const autoShareRef = useRef(false);
 
   const rowsRef = useRef(rows);
   rowsRef.current = rows;
@@ -104,6 +110,23 @@ export function useLocations(): LocationsValue {
     setMutedIds(readStoredMutedIds());
   }, []);
 
+  // Fetch pin_colors for all registered voters once on mount.
+  useEffect(() => {
+    const sb = getSupabase();
+    if (!sb) return;
+    void sb
+      .from("v2_voters")
+      .select("voter_id,pin_color")
+      .then((res: { data: Array<{ voter_id: string; pin_color: string | null }> | null }) => {
+        if (!res.data) return;
+        const map: Record<string, string> = {};
+        for (const row of res.data) {
+          if (row.voter_id && row.pin_color) map[row.voter_id] = row.pin_color;
+        }
+        setVoterColors(map);
+      });
+  }, []);
+
   const refetch = useCallback(async () => {
     const data = await safeSelect<LocationRow>("v2_locations", LOCATION_COLUMNS);
     if (!data) return; // offline — keep what we have
@@ -119,6 +142,7 @@ export function useLocations(): LocationsValue {
       desiredRef.current = null; // server caught up with local intent
     }
     setRows(next);
+    setInitialFetchDone(true);
     // The first server copy of my row wins over localStorage mute prefs.
     if (serverMine && !syncedFromServerRef.current) {
       syncedFromServerRef.current = true;
@@ -259,6 +283,7 @@ export function useLocations(): LocationsValue {
     if (isSharingRef.current) {
       // Stop sharing within Bar Hoppers only — delete the row, touch nothing
       // on the device.
+      writeStorage(SHARING_PREF_KEY, "false");
       desiredRef.current = false;
       setRows((prev) => prev.filter((r) => r.voter_id !== me));
       try {
@@ -271,6 +296,7 @@ export function useLocations(): LocationsValue {
 
     const pos = await getPosition();
     if (pos === "denied" || pos === "error") return pos;
+    writeStorage(SHARING_PREF_KEY, "true");
 
     const nowIso = new Date().toISOString();
     const row: LocationRow = {
@@ -296,6 +322,18 @@ export function useLocations(): LocationsValue {
     }
     return "on";
   }, [ensureVoter]);
+
+  // Auto-start sharing for first-time visitors (no stored preference).
+  useEffect(() => {
+    if (!initialFetchDone || autoShareRef.current) return;
+    autoShareRef.current = true;
+    if (readStorage(SHARING_PREF_KEY) !== null) return;
+    if (isSharingRef.current) {
+      writeStorage(SHARING_PREF_KEY, "true");
+      return;
+    }
+    void toggleSharing();
+  }, [initialFetchDone, toggleSharing]);
 
   const setMuted = useCallback(async (targetId: string, muted: boolean) => {
     const current = mutedRef.current;
@@ -332,10 +370,11 @@ export function useLocations(): LocationsValue {
       isSharing,
       mutedIds,
       now,
+      voterColors,
       toggleSharing,
       muteUser,
       unmuteUser,
     }),
-    [activeLocations, myLocation, isSharing, mutedIds, now, toggleSharing, muteUser, unmuteUser],
+    [activeLocations, myLocation, isSharing, mutedIds, now, voterColors, toggleSharing, muteUser, unmuteUser],
   );
 }

@@ -430,9 +430,13 @@ function LocationOptionsModal({ onClose, locations, voters, myId }: LocationOpti
     () =>
       voters
         .filter((v) => v.voter_id !== myId)
-        .map((v) => ({ id: v.voter_id, label: v.display_name ?? v.name, color: v.pin_color }))
+        .map((v) => ({
+          id: v.voter_id,
+          label: v.display_name ?? v.name,
+          color: locations.voterColors[v.voter_id] ?? v.pin_color ?? "#666666",
+        }))
         .sort((a, b) => a.label.localeCompare(b.label)),
-    [voters, myId],
+    [voters, myId, locations.voterColors],
   );
 
   const handleCancel = () => {
@@ -503,21 +507,21 @@ function LocationOptionsModal({ onClose, locations, voters, myId }: LocationOpti
                   <div key={person.id} className="flex min-h-11 items-center gap-3">
                     <span
                       aria-hidden="true"
-                      className="h-4 w-4 flex-none rounded-full"
-                      style={{ background: person.color }}
+                      className="flex-none rounded-full"
+                      style={{ width: 20, height: 20, background: person.color }}
                     />
                     <span className="min-w-0 flex-1 truncate text-base text-ink">
                       {person.label}
                     </span>
                     <Switch
-                      checked={hidden}
+                      checked={!hidden}
                       disabled={busy}
                       onToggle={() =>
                         setPendingMuted((prev) =>
                           hidden ? prev.filter((id) => id !== person.id) : [...prev, person.id],
                         )
                       }
-                      ariaLabel={`Hide from ${person.label}`}
+                      ariaLabel={`${person.label} can see me`}
                     />
                   </div>
                 );
