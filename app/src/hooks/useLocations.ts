@@ -1,10 +1,13 @@
 "use client";
 
-// Live location sharing (v2_locations). Sharing is opt-in and off by default,
-// always. Toggling on writes a row that dies 72 hours later; toggling off
-// deletes it. Only the Bar Hoppers row is ever touched — device location
-// settings never are. Muting is one-directional: your muted_ids hides YOUR
-// pin from those people, and they are never told.
+// Live location sharing (v2_locations). Sharing is ON by default for
+// registered users: the first time a registered device mounts this hook with
+// no stored preference, sharing starts automatically — turning it off is
+// always an explicit act, persisted in bh2-sharing-preference. Toggling on
+// writes a row that dies 72 hours later; toggling off deletes it. Only the
+// Bar Hoppers row is ever touched — device location settings never are.
+// Muting is one-directional and EMPTY by default (everyone can see you):
+// your muted_ids hides YOUR pin from those people, and they are never told.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGroupData } from "@/hooks/useGroupData";
@@ -66,6 +69,46 @@ function getPosition(): Promise<{ lat: number; lng: number } | "denied" | "error
   });
 }
 
+// ---------------------------------------------------------------------------
+// Shared state. The locate screen and the profile overlay mount this hook at
+// the same time, and their sharing toggles must be ONE source of truth. Rows,
+// the mute list, and the in-flight intent live at module scope and broadcast
+// to every live instance, so flipping the toggle anywhere reflects everywhere
+// in the same frame — no waiting on the realtime round trip.
+
+function createShared<T>(initial: T) {
+  let value = initial;
+  const listeners = new Set<(next: T) => void>();
+  return {
+    get: () => value,
+    set(next: T | ((prev: T) => T)) {
+      value = typeof next === "function" ? (next as (prev: T) => T)(value) : next;
+      for (const notify of listeners) notify(value);
+    },
+    subscribe(notify: (next: T) => void) {
+      listeners.add(notify);
+      return () => {
+        listeners.delete(notify);
+      };
+    },
+  };
+}
+
+const sharedRows = createShared<LocationRow[]>([]);
+/** null until the first instance seeds it from localStorage. */
+const sharedMutedIds = createShared<string[] | null>(null);
+// Local intent while a write is in flight (true = just enabled, false = just
+// disabled, null = follow the server) so a racing refetch in ANY instance
+// can't flicker the toggle.
+let desiredSharing: boolean | null = null;
+// One-shot guards keyed by voter id so an identity switch re-runs them.
+let mutedSyncedFromServerFor: string | null = null;
+let autoStartAttemptedFor: string | null = null;
+
+function currentMutedIds(): string[] {
+  return sharedMutedIds.get() ?? [];
+}
+
 export interface LocationsValue {
   /** Everyone visible to this user — unexpired, not hiding from you, you first. */
   activeLocations: LocationRow[];
@@ -83,31 +126,31 @@ export interface LocationsValue {
 }
 
 export function useLocations(): LocationsValue {
-  const { voterId, name } = useGroupData();
-  const [rows, setRows] = useState<LocationRow[]>([]);
+  const { voterId, name, identityInvalid } = useGroupData();
+  const [rows, setRows] = useState<LocationRow[]>(sharedRows.get);
   const [now, setNow] = useState(() => Date.now());
-  const [mutedIds, setMutedIds] = useState<string[]>([]);
+  const [mutedIds, setMutedIds] = useState<string[]>(currentMutedIds);
   const [voterColors, setVoterColors] = useState<Record<string, string>>({});
   const [initialFetchDone, setInitialFetchDone] = useState(false);
-  const autoStartedRef = useRef(false);
 
-  const rowsRef = useRef(rows);
-  rowsRef.current = rows;
   const voterIdRef = useRef(voterId);
   voterIdRef.current = voterId;
   const nameRef = useRef(name);
   nameRef.current = name;
-  const mutedRef = useRef(mutedIds);
-  mutedRef.current = mutedIds;
-  // Local intent while a write is in flight (true = just enabled, false =
-  // just disabled, null = follow the server) so a racing refetch can't
-  // flicker the toggle.
-  const desiredRef = useRef<boolean | null>(null);
-  const syncedFromServerRef = useRef(false);
 
-  // Seed the mute prefs from localStorage so they apply when sharing starts.
+  // Mirror the module-scoped stores into this instance's render state. The
+  // first instance up seeds the mute prefs from localStorage so they apply
+  // when sharing starts.
   useEffect(() => {
-    setMutedIds(readStoredMutedIds());
+    const unsubRows = sharedRows.subscribe(setRows);
+    const unsubMuted = sharedMutedIds.subscribe((next) => setMutedIds(next ?? []));
+    setRows(sharedRows.get());
+    if (sharedMutedIds.get() === null) sharedMutedIds.set(readStoredMutedIds());
+    else setMutedIds(currentMutedIds());
+    return () => {
+      unsubRows();
+      unsubMuted();
+    };
   }, []);
 
   // Fetch pin_colors for all voters once so the mute list can show colored dots
@@ -131,20 +174,20 @@ export function useLocations(): LocationsValue {
     const me = voterIdRef.current;
     const serverMine = data.find((r) => r.voter_id === me);
     let next = data;
-    if (desiredRef.current === true && !serverMine) {
-      const localMine = rowsRef.current.find((r) => r.voter_id === me);
+    if (desiredSharing === true && !serverMine) {
+      const localMine = sharedRows.get().find((r) => r.voter_id === me);
       if (localMine) next = [...data, localMine];
-    } else if (desiredRef.current === false && serverMine) {
+    } else if (desiredSharing === false && serverMine) {
       next = data.filter((r) => r.voter_id !== me);
     } else {
-      desiredRef.current = null; // server caught up with local intent
+      desiredSharing = null; // server caught up with local intent
     }
-    setRows(next);
+    sharedRows.set(next);
     // The first server copy of my row wins over localStorage mute prefs.
-    if (serverMine && !syncedFromServerRef.current) {
-      syncedFromServerRef.current = true;
+    if (serverMine && mutedSyncedFromServerFor !== me) {
+      mutedSyncedFromServerFor = me;
       const muted = Array.isArray(serverMine.muted_ids) ? serverMine.muted_ids : [];
-      setMutedIds(muted);
+      sharedMutedIds.set(muted);
       writeStorage(MUTED_IDS_KEY, JSON.stringify(muted));
     }
     setInitialFetchDone(true);
@@ -198,23 +241,9 @@ export function useLocations(): LocationsValue {
   const isSharingRef = useRef(isSharing);
   isSharingRef.current = isSharing;
 
-  // Auto-start sharing for new users (no stored preference). Runs once after
-  // the first server fetch confirms the user isn't already sharing. If
-  // geolocation is denied we save false so we don't prompt again.
-  useEffect(() => {
-    if (!initialFetchDone || autoStartedRef.current || isSharing) return;
-    if (readStorage(SHARING_PREF_KEY) !== null) return;
-    autoStartedRef.current = true;
-    void toggleSharing().then((result: ToggleSharingResult) => {
-      if (result === "denied" || result === "error") {
-        writeStorage(SHARING_PREF_KEY, "false");
-      }
-    });
-    // toggleSharing is stable (useCallback with no deps that change)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialFetchDone, isSharing]);
-
-  // Expired rows and rows hiding from this user never leave the hook.
+  // Expired rows and rows hiding from this user never leave the hook. An
+  // absent or empty muted_ids means visible to everyone — nothing is ever
+  // hidden by default.
   const activeLocations = useMemo(() => {
     return rows
       .filter(
@@ -242,7 +271,7 @@ export function useLocations(): LocationsValue {
   const pushCoords = useCallback(async (lat: number, lng: number) => {
     const me = voterIdRef.current;
     const nowIso = new Date().toISOString();
-    setRows((prev) =>
+    sharedRows.set((prev) =>
       prev.map((r) => (r.voter_id === me ? { ...r, lat, lng, updated_at: nowIso } : r)),
     );
     try {
@@ -297,8 +326,8 @@ export function useLocations(): LocationsValue {
     if (isSharingRef.current) {
       // Stop sharing within Bar Hoppers only — delete the row, touch nothing
       // on the device.
-      desiredRef.current = false;
-      setRows((prev) => prev.filter((r) => r.voter_id !== me));
+      desiredSharing = false;
+      sharedRows.set((prev) => prev.filter((r) => r.voter_id !== me));
       try {
         await sb?.from("v2_locations").delete().eq("voter_id", me);
       } catch {
@@ -323,10 +352,10 @@ export function useLocations(): LocationsValue {
       sharing_since: nowIso,
       expires_at: new Date(Date.now() + EXPIRY_MS).toISOString(),
       updated_at: nowIso,
-      muted_ids: mutedRef.current,
+      muted_ids: currentMutedIds(),
     };
-    desiredRef.current = true;
-    setRows((prev) => [...prev.filter((r) => r.voter_id !== me), row]);
+    desiredSharing = true;
+    sharedRows.set((prev) => [...prev.filter((r) => r.voter_id !== me), row]);
     try {
       await ensureVoter(nowIso);
       await sb?.from("v2_locations").upsert(row);
@@ -337,19 +366,41 @@ export function useLocations(): LocationsValue {
     return "on";
   }, [ensureVoter]);
 
+  // Sharing is ON by default. The first time a REGISTERED identity reaches
+  // this hook with no stored bh2-sharing-preference, start sharing
+  // automatically (one attempt per identity per session, shared across every
+  // mounted instance). Success records "true" inside toggleSharing; a denied
+  // prompt or failed fix records "false" so the person is never re-prompted —
+  // from then on only the explicit toggles move the preference. Unregistered
+  // visitors never auto-start and never burn the key: getVoterId() mints an
+  // id for every device, so "registered" here means a verified name — the
+  // same gate the locate screen uses.
+  useEffect(() => {
+    if (!voterId || !name || identityInvalid) return;
+    if (!initialFetchDone || isSharing) return;
+    if (autoStartAttemptedFor === voterId) return;
+    if (readStorage(SHARING_PREF_KEY) !== null) return;
+    autoStartAttemptedFor = voterId;
+    void toggleSharing().then((result) => {
+      if (result === "denied" || result === "error") {
+        writeStorage(SHARING_PREF_KEY, "false");
+      }
+    });
+  }, [voterId, name, identityInvalid, initialFetchDone, isSharing, toggleSharing]);
+
   const setMuted = useCallback(async (targetId: string, muted: boolean) => {
-    const current = mutedRef.current;
+    const current = currentMutedIds();
     const next = muted
       ? current.includes(targetId)
         ? current
         : [...current, targetId]
       : current.filter((id) => id !== targetId);
-    setMutedIds(next);
+    sharedMutedIds.set(next);
     writeStorage(MUTED_IDS_KEY, JSON.stringify(next));
     if (!isSharingRef.current) return; // applies when sharing starts
     const me = voterIdRef.current;
     const nowIso = new Date().toISOString();
-    setRows((prev) =>
+    sharedRows.set((prev) =>
       prev.map((r) => (r.voter_id === me ? { ...r, muted_ids: next, updated_at: nowIso } : r)),
     );
     try {

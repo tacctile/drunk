@@ -1,6 +1,6 @@
 # BAR HOPPERS /app — CONTEXT (single source of truth)
 
-Last updated: 2026-06-12 · Phase: locate polish (options modal, panel collapse, shared avatar), pending first deploy
+Last updated: 2026-06-12 · Phase: city-map tap-to-focus + your-location dot + sharing default ON, pending first deploy
 
 ## What this app is
 
@@ -128,9 +128,13 @@ app/
   │ │                        ProfileOverlay mount), live map w/ pins,
   │ │                        Hotels/Bars/Food tabs (Supabase-fed,
   │ │                        plain-text addresses, wrapping descriptors),
-  │ │                        hotel preference star toggles ("Prefer" label
-  │ │                        when unselected), vote CTA in ActionBar; ≥840px
-  │ │                        push layout keeps CityList visible left
+  │ │                        venue rows are tap targets (coords → 300ms
+  │ │                        --surface-raised flash + CityMapHandle
+  │ │                        .focusVenue; no coords → inert), hotel
+  │ │                        preference star toggles ("Prefer" label
+  │ │                        when unselected) as row-button siblings,
+  │ │                        vote CTA in ActionBar; ≥840px push layout
+  │ │                        keeps CityList visible left
   │ ├ calendar/page.tsx      AVAILABILITY tab: personal tri-state calendar only
   │ ├ board/page.tsx         RESULTS tab (The Board): two card columns, side
   │ │                        by side at EVERY width (never stack) — TOP
@@ -194,10 +198,23 @@ app/
   │ │                        sort logic + persistence, by-state grouping
   │ ├ Calendar.tsx           useMonthNav (hydration-safe), MonthHeader,
   │ │                        PersonalCalendar (tap-cycle), HeatCalendar (board)
-  │ ├ CityMap.tsx            live dark Google Map, 10px circle pins w/ white
-  │ │                        stroke (hotel accent / bar green / food blue),
-  │ │                        diffed by venue id + zoom-gated OverlayView
-  │ │                        name labels (zoom ≥ 15)
+  │ ├ CityMap.tsx            live dark Google Map, 18px circle pins (scale 9,
+  │ │                        zIndex 10) w/ white stroke (hotel accent / bar
+  │ │                        green / food blue), diffed by venue id +
+  │ │                        zoom-gated OverlayView name labels (zoom ≥ 15);
+  │ │                        forwardRef CityMapHandle.focusVenue (panTo +
+  │ │                        zoom 16 + focused pin scale 13/stroke 3/z 11,
+  │ │                        others reset; scrollIntoView block:nearest w/
+  │ │                        57px scroll-margin); floating 44px Show All
+  │ │                        button top-right (zoom_out_map, raised/border,
+  │ │                        rendered once the map loads) → fitBounds all
+  │ │                        venue pins 60px pad (1 pin → pan/zoom 16, 0 →
+  │ │                        no-op) + reset focus; same fit runs once on
+  │ │                        first pin placement (no pins → city center/
+  │ │                        zoom); your own dot via watchPosition on map
+  │ │                        mount (22px scale 11, bh2-pin-color fill,
+  │ │                        contrast initials label, "You" title, z 20,
+  │ │                        never in Show All bounds, denied = silent)
   │ ├ VenueSheet.tsx         pin-tap sheet: name, address (plain), descriptor
   │ ├ NamePrompt.tsx         single-screen identity modal ("Who are you?"):
   │ │                        first name + initial + 2-digit PIN + Save, with
@@ -239,13 +256,24 @@ app/
   │ │                        row.
   │ ├ useLocations.ts        v2_locations realtime (unique channel topic
   │ │                        per mount so locate page + profile overlay
-  │ │                        can subscribe at once) + 30s clock:
+  │ │                        can subscribe at once) + 30s clock; rows +
+  │ │                        mute list + in-flight intent live in a
+  │ │                        MODULE-SCOPED shared store broadcast to every
+  │ │                        mounted instance — the sharing toggle is one
+  │ │                        source of truth across Locate and the Profile
+  │ │                        overlay (same frame, no realtime round trip):
   │ │                        activeLocations (expired + muted-from-you rows
-  │ │                        filtered, self first), isSharing, toggleSharing
+  │ │                        filtered, self first; absent/empty muted_ids =
+  │ │                        visible to everyone), isSharing, toggleSharing
   │ │                        (geolocation prompt → upsert w/ 72h expiry +
   │ │                        cached auto pin_color, 60s coord updates while
   │ │                        granted, delete on off), muteUser/unmuteUser;
-  │ │                        bh2-muted-ids persistence
+  │ │                        sharing defaults ON: first registered mount
+  │ │                        with no bh2-sharing-preference auto-runs
+  │ │                        toggleSharing (once per identity per session;
+  │ │                        denied/error writes "false" — never re-prompts;
+  │ │                        unregistered visitors never attempt or burn
+  │ │                        the key); bh2-muted-ids persistence
   │ ├ useVotes.ts            derived: city ranking + per-city hotel-preference
   │ │                        tallies (grouped by place_id), myCityId,
   │ │                        myHotelPrefFor(cityId)
@@ -336,8 +364,11 @@ CREATE TABLE v2_locations (
   muted_ids    uuid[] not null default '{}'   -- voters this sharer hides from
 );
 -- RLS: anon SELECT only where expires_at > now(); anon INSERT/UPDATE/DELETE
--- Sharing is opt-in, expires 72h after enable; app also filters expiry +
--- mutes client-side. Created 2026-06-12 via MCP migration create_v2_locations.
+-- Sharing is ON by default for registered users (useLocations auto-starts it
+-- once; the explicit choice persists in bh2-sharing-preference) and expires
+-- 72h after enable; muted_ids defaults empty = visible to everyone. App also
+-- filters expiry + mutes client-side. Created 2026-06-12 via MCP migration
+-- create_v2_locations.
 ```
 
 Curated venue tables — the CANONICAL venue source (read-only to the app, anon
@@ -410,9 +441,11 @@ CREATE POLICY v2_voters_delete ON public.v2_voters FOR DELETE TO anon USING (tru
 `bh2-hotel-vote-cache` (Record<cityId, HotelVoteRow>) · `bh2-avail-cache` ({date: status}) ·
 `bh2-city-sort` ("distance" | "walk" | "name" | "state") · `bh2-pin-color` (cache of the
 auto-assigned `v2_voters.pin_color` — written ONLY by the identity layer, never a user pick) ·
-`bh2-muted-ids` (JSON uuid[] — applies to the location row when sharing starts)
+`bh2-muted-ids` (JSON uuid[] — applies to the location row when sharing starts) ·
+`bh2-sharing-preference` ("true" | "false" — the explicit location-sharing choice; absent =
+never decided, so the next registered useLocations mount auto-starts sharing)
 
-These eight keys are the entire localStorage surface. Do not add keys without updating this list.
+These nine keys are the entire localStorage surface. Do not add keys without updating this list.
 
 ## Design system
 
@@ -469,8 +502,21 @@ Colors:
   Null lat/lng = no pin, silently skipped — the map stays sparse until
   coordinates are backfilled, and that is expected and correct. No geocoding,
   ever. Markers are diffed by venue id, never torn down on re-render.
-- Pins: filled 10px circles (Symbol CIRCLE scale 5), white 2px stroke —
-  hotel #FF8C42 / bar #34D399 / food #60A5FA. Pin tap → `VenueSheet`.
+- Pins: filled 18px circles (Symbol CIRCLE scale 9, zIndex 10), white 2px
+  stroke — hotel #FF8C42 / bar #34D399 / food #60A5FA. Pin tap → `VenueSheet`.
+  The focused pin (tapped venue row) grows to scale 13, stroke 3, zIndex 11;
+  focusing another row or tapping Show All resets it.
+- Once pins first land, the map fitBounds them all with 60px padding (exactly
+  one pin pans + zoom 16 instead — fitBounds over-zooms a single point); zero
+  pins keeps the city's hardcoded mapCenter/mapZoom. The floating 44px
+  Show All button (top-right inside the map, zoom_out_map on --surface-raised
+  with --border, shown once the map loads) re-runs that fit and clears focus.
+- Your own dot: `watchPosition` starts when the city detail map mounts — the
+  only permission request outside the sharing toggles — and tracks you while
+  the page is open (cleared on unmount). 22px circle (scale 11, zIndex 20),
+  bh2-pin-color fill (fallback #FF8C42), white 2.5px stroke, contrast
+  initials label, "You" title. Never part of the Show All bounds. Denied or
+  unavailable = silent: no pin, no error UI, no re-prompt.
 - Pin labels: custom `OverlayView` pill per pin (rgba(10,13,20,.85) bg,
   --ink text, 11px, 4px radius, 2px/6px padding, pointer-events: none),
   sits right of the pin and flips left at the map edge; hidden below zoom 15.
@@ -507,7 +553,51 @@ See PROGRESS.md.
 
 ## Current state
 
-- Last change (2026-06-12, locate-polish + shared-avatar session): six
+- Last change (2026-06-12, city-map-focus + sharing-default session): four
+  city-detail map features + the sharing default, nothing else. (1) Venue
+  pins (already Supabase-coord-fed, diffed by id) grew from scale 5 to
+  scale 9 (18px) with zIndex 10; on the first placement the map fitBounds
+  every pin with 60px padding (exactly 1 pin → panTo + zoom 16; 0 pins →
+  the city's hardcoded center/zoom stands). (2) Venue rows in all three
+  tabs are tap targets: the info block became a real <button> (the hotel
+  star toggle is its sibling — never nested), tapping a row with coords
+  flashes it --surface-raised for 300ms, pans the map to that pin, zooms
+  to 16, grows the pin to scale 13 / stroke 3 / zIndex 11 and resets every
+  other pin; rows without coords are inert (no flash). The page only
+  scrolls if the map is off-screen (scrollIntoView block:nearest with a
+  57px scroll-margin so it lands under the sticky header, never beneath
+  it); CityMap is now forwardRef exposing CityMapHandle.focusVenue. (3) A
+  floating 44px Show All button (zoom_out_map, --surface-raised, --border,
+  rounded-btn) sits top-right inside the map once it loads: fitBounds all
+  venue pins 60px + clears the focused pin. (4) Your own location dot:
+  watchPosition starts on map mount (the only permission request outside
+  the sharing toggles), first fix creates a 22px scale-11 marker filled
+  with bh2-pin-color (?? #FF8C42), white 2.5px stroke, contrastColor
+  initials label, "You" title, zIndex 20, later fixes just move it; watch
+  cleared + marker removed on unmount; denied = silent, never in Show All
+  bounds. getInitials moved to lib/colors.ts (ProfileAvatar +
+  ProfileOverlay now import it — duplicates deleted). (5) Sharing default:
+  useLocations' auto-start (added last session) is now gated to REGISTERED
+  identities (name + !identityInvalid — getVoterId() mints an id for every
+  device, so the bare id proves nothing); unregistered mounts (e.g. the
+  profile overlay's gate screen) no longer attempt toggleSharing and no
+  longer burn bh2-sharing-preference="false", which used to permanently
+  kill the default-on for whoever registered later on that device. The
+  attempt guard is keyed per voter id at module scope (one attempt per
+  identity per session across both mounts). (6) Sharing state is ONE
+  source of truth: rows, mute list, and in-flight intent moved to a
+  module-scoped shared store inside useLocations.ts — every mounted
+  instance (Locate screen + Profile overlay) renders from and writes to
+  the same data, so a toggle anywhere reflects everywhere in the same
+  frame even with realtime down; per-instance channels/clocks unchanged.
+  muted_ids stays empty by default — absent/empty = visible to everyone
+  (verified, no defensive filtering). bh2-sharing-preference added to the
+  localStorage contract (nine keys — it was shipped last session but never
+  documented). Locate screen map/UI, admin, Results, calendar, walkability
+  index, voting, and the root index.html untouched (locate/page.tsx got a
+  comment-only correction about the new default). Build green — 36 static
+  pages; lint + strict typecheck clean.
+- Earlier (2026-06-12, locate-polish + shared-avatar session): six
   surgical fixes on the Locate screen and the city detail header — no
   rebuilds. (1) The "Location Options" BottomSheet is GONE — the pill now
   opens the centered Dialog modal with DRAFTED edits: pendingSharing +
