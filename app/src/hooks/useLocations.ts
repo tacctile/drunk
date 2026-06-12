@@ -13,6 +13,7 @@ import { getStoredPinColor } from "@/lib/identity";
 import { getSupabase, safeSelect, type LocationRow } from "@/lib/supabase";
 
 const MUTED_IDS_KEY = "bh2-muted-ids";
+const SHARING_PREF_KEY = "bh2-sharing-preference";
 // Each hook instance subscribes under its own channel topic. Two mounts can
 // coexist (the locate page + the profile overlay) — a shared topic would make
 // the second join close the first and silently kill its realtime feed.
@@ -74,6 +75,8 @@ export interface LocationsValue {
   mutedIds: string[];
   /** Re-render clock (ms) — keeps "X min ago" and expiry honest. */
   now: number;
+  /** voter_id → pin_color for all registered voters (used for mute-list circles). */
+  voterColors: Record<string, string>;
   toggleSharing: () => Promise<ToggleSharingResult>;
   muteUser: (voterId: string) => Promise<void>;
   unmuteUser: (voterId: string) => Promise<void>;
@@ -84,6 +87,9 @@ export function useLocations(): LocationsValue {
   const [rows, setRows] = useState<LocationRow[]>([]);
   const [now, setNow] = useState(() => Date.now());
   const [mutedIds, setMutedIds] = useState<string[]>([]);
+  const [voterColors, setVoterColors] = useState<Record<string, string>>({});
+  const [initialFetchDone, setInitialFetchDone] = useState(false);
+  const autoStartedRef = useRef(false);
 
   const rowsRef = useRef(rows);
   rowsRef.current = rows;
@@ -102,6 +108,21 @@ export function useLocations(): LocationsValue {
   // Seed the mute prefs from localStorage so they apply when sharing starts.
   useEffect(() => {
     setMutedIds(readStoredMutedIds());
+  }, []);
+
+  // Fetch pin_colors for all voters once so the mute list can show colored dots
+  // even for people who are not currently sharing.
+  useEffect(() => {
+    void (async () => {
+      const data = await safeSelect<{ voter_id: string; pin_color: string | null }>(
+        "v2_voters",
+        "voter_id,pin_color",
+      );
+      if (!data) return;
+      const map: Record<string, string> = {};
+      for (const v of data) if (v.pin_color) map[v.voter_id] = v.pin_color;
+      setVoterColors(map);
+    })();
   }, []);
 
   const refetch = useCallback(async () => {
@@ -126,6 +147,7 @@ export function useLocations(): LocationsValue {
       setMutedIds(muted);
       writeStorage(MUTED_IDS_KEY, JSON.stringify(muted));
     }
+    setInitialFetchDone(true);
   }, []);
 
   // First fetch, realtime subscription, label clock, refresh on focus.
@@ -175,6 +197,22 @@ export function useLocations(): LocationsValue {
   const isSharing = myLocation !== null;
   const isSharingRef = useRef(isSharing);
   isSharingRef.current = isSharing;
+
+  // Auto-start sharing for new users (no stored preference). Runs once after
+  // the first server fetch confirms the user isn't already sharing. If
+  // geolocation is denied we save false so we don't prompt again.
+  useEffect(() => {
+    if (!initialFetchDone || autoStartedRef.current || isSharing) return;
+    if (readStorage(SHARING_PREF_KEY) !== null) return;
+    autoStartedRef.current = true;
+    void toggleSharing().then((result: ToggleSharingResult) => {
+      if (result === "denied" || result === "error") {
+        writeStorage(SHARING_PREF_KEY, "false");
+      }
+    });
+    // toggleSharing is stable (useCallback with no deps that change)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialFetchDone, isSharing]);
 
   // Expired rows and rows hiding from this user never leave the hook.
   const activeLocations = useMemo(() => {
@@ -266,6 +304,7 @@ export function useLocations(): LocationsValue {
       } catch {
         // offline — the row dies on its own at expires_at
       }
+      writeStorage(SHARING_PREF_KEY, "false");
       return "off";
     }
 
@@ -294,6 +333,7 @@ export function useLocations(): LocationsValue {
     } catch {
       // offline — sharing shows locally; converges when we're back
     }
+    writeStorage(SHARING_PREF_KEY, "true");
     return "on";
   }, [ensureVoter]);
 
@@ -332,10 +372,11 @@ export function useLocations(): LocationsValue {
       isSharing,
       mutedIds,
       now,
+      voterColors,
       toggleSharing,
       muteUser,
       unmuteUser,
     }),
-    [activeLocations, myLocation, isSharing, mutedIds, now, toggleSharing, muteUser, unmuteUser],
+    [activeLocations, myLocation, isSharing, mutedIds, now, voterColors, toggleSharing, muteUser, unmuteUser],
   );
 }
