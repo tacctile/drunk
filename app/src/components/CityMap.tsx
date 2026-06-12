@@ -98,14 +98,15 @@ export function CityMap({ city, venues, onPinTap }: CityMapProps) {
     };
   }, [city]);
 
-  // Diffed pins: venues gain coords one by one as geocoding resolves, so new
-  // pins are added without tearing down the ones already on the map.
+  // Diffed pins, keyed by venue id. A venue with null lat/lng simply has no
+  // pin — its coordinates come from the curated lat/lng columns, never from
+  // geocoding. A sparse map until coords are backfilled is expected.
   useEffect(() => {
     if (!map) return;
     const overlays = overlaysRef.current;
     const wanted = new Map<string, Venue>();
     for (const venue of [...venues.hotel, ...venues.bar, ...venues.food]) {
-      if (venue.coords) wanted.set(venue.id, venue);
+      if (venue.lat != null && venue.lng != null) wanted.set(venue.id, venue);
     }
     for (const [id, pin] of overlays) {
       if (wanted.has(id)) continue;
@@ -114,10 +115,11 @@ export function CityMap({ city, venues, onPinTap }: CityMapProps) {
       overlays.delete(id);
     }
     for (const venue of wanted.values()) {
-      if (overlays.has(venue.id) || !venue.coords) continue;
+      if (overlays.has(venue.id) || venue.lat == null || venue.lng == null) continue;
+      const coords: Coords = { lat: venue.lat, lng: venue.lng };
       const marker = new google.maps.Marker({
         map,
-        position: venue.coords,
+        position: coords,
         title: venue.name,
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
@@ -129,7 +131,7 @@ export function CityMap({ city, venues, onPinTap }: CityMapProps) {
         },
       });
       marker.addListener("click", () => tapRef.current(venue));
-      const label = createPinLabel(venue.name, venue.coords);
+      const label = createPinLabel(venue.name, coords);
       label.setMap(map);
       overlays.set(venue.id, { marker, label });
     }

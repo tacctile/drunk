@@ -20,14 +20,22 @@ Bar Hoppers is a mobile-first Next.js webapp a small group of friends (~6–10 p
 - NO UI component libraries (no shadcn/radix/chakra/MUI). Everything hand-built.
 - Supabase JS v2 (`@supabase/supabase-js`) — client components + hooks only
 - Google Maps JS API via `@googlemaps/js-api-loader` (`weekly`, no extra
-  libraries) — map display + Geocoder only. The Places API is NOT used.
+  libraries) — map display ONLY. The Geocoding and Places APIs are NOT used.
 - Venue lists (hotels/bars/food) come ONLY from the curated
   `v2_hotels`/`v2_bars`/`v2_food` Supabase tables (empty state if the query
-  fails — never an error UI). Map pin coordinates are resolved in the
-  background by the Geocoding API (venue name + address, session-cached,
-  3 concurrent, silent skip on failure) — lists never wait on pins. Venue
-  lists are never hardcoded in the bundle (the legacy arrays still sitting
-  in `cities.ts` are reference data only — the UI never reads them).
+  fails — never an error UI). Hotels filter to `stars >= 3`; all queries
+  return every row for the city — no LIMIT, no ORDER BY (insertion order is
+  already proximity/rating order). Map pin coordinates come straight from
+  the curated `lat`/`lng` columns — null lat/lng = no pin for that venue,
+  silently skipped; lists always render regardless. Venue lists are never
+  hardcoded in the bundle (the legacy arrays still sitting in `cities.ts`
+  are reference data only — the UI never reads them).
+- Identity: first name + last initial ("Nick B") + a 2-digit PIN chosen on
+  first visit, stored in `v2_voters` (`display_name`, `pin_hash` — bcryptjs,
+  10 salt rounds, NEVER plain text). Returning users pick their name from a
+  roster dropdown and verify the PIN to load their voter_id onto the device.
+  No lockout, no complexity — wrong PIN just says "That PIN doesn't match.
+  Try again."
 - Icons: Material Symbols Outlined (Google Fonts CDN) — the only icon system
 - Font: Manrope 400/500/600/700/800 (Google Fonts CDN)
 - All user-rendered strings go through React JSX escaping (no `dangerouslySetInnerHTML` anywhere)
@@ -73,7 +81,7 @@ app/
 ├ .claude/                   agent operating system (this folder)
 └ src/
   ├ app/
-  │ ├ layout.tsx             fonts, GroupDataProvider, AppShell
+  │ ├ layout.tsx             fonts, GroupDataProvider, AppShell, IdentityWatcher
   │ ├ globals.css            dark-only tokens on :root, .ms icons, anims,
   │ │                        .card/.btn/.input/.label, tabular-nums on body
   │ ├ page.tsx               redirect fallback → /cities
@@ -82,12 +90,15 @@ app/
   │ ├ city/[id]/page.tsx     server wrapper: generateStaticParams + notFound
   │ ├ city/[id]/CityDetail.tsx  CITY DETAIL: opaque sticky header, live map
   │ │                        w/ pins, Hotels/Bars/Food tabs (Supabase-fed,
-  │ │                        plain-text addresses), hotel preference radios,
-  │ │                        vote CTA in ActionBar; ≥840px push layout keeps
-  │ │                        CityList visible left
+  │ │                        plain-text addresses, wrapping descriptors),
+  │ │                        hotel preference star toggles ("Prefer" label
+  │ │                        when unselected), vote CTA in ActionBar; ≥840px
+  │ │                        push layout keeps CityList visible left
   │ ├ calendar/page.tsx      CALENDAR: personal tri-state calendar only
-  │ ├ board/page.tsx         THE BOARD: hot-dates heat map + vote standings
-  │ │                        (+ hotel preference sub-rows) + day breakdown sheet
+  │ ├ board/page.tsx         THE BOARD: read-only two-column layout (stacks
+  │ │                        <480px) — STANDINGS (city votes + hotel
+  │ │                        sub-rows) left, HOT DATES (dates by available
+  │ │                        count) right + "Not you?" identity switch
   │ └ not-found.tsx          404
   ├ components/
   │ ├ AppShell.tsx           3 tabs (Cities/Calendar/The Board), wordmark bar,
@@ -105,29 +116,35 @@ app/
   │ │                        diffed by venue id + zoom-gated OverlayView
   │ │                        name labels (zoom ≥ 15)
   │ ├ VenueSheet.tsx         pin-tap sheet: name, address (plain), descriptor
-  │ ├ NamePrompt.tsx         "What's your name?" dialog + useNameGate() hook —
-  │ │                        every identifying write funnels through it
+  │ ├ NamePrompt.tsx         identity dialogs: new user (name + last initial
+  │ │                        → 2-digit PIN + confirm) and return user (roster
+  │ │                        dropdown → PIN check); useNameGate() — every
+  │ │                        identifying write funnels through it;
+  │ │                        IdentityWatcher (auto return flow on unverified
+  │ │                        localStorage id); NotYouLink ("Not you?" switch)
   │ ├ Dialog.tsx             centered modal over scrim (esc/backdrop, scroll lock)
   │ ├ BottomSheet.tsx        slide-up sheet (sort options, venues, breakdowns)
   │ └ Icon.tsx               Material Symbol primitive
   ├ hooks/
   │ ├ useGroupData.tsx       THE data layer: fetch + realtime + optimistic
   │ │                        mutations + localStorage fallback. setCityVote /
-  │ │                        setHotelPref / setAvailability / saveName.
+  │ │                        setHotelPref / setAvailability / createIdentity
+  │ │                        (bcrypt PIN hash) / signIn (PIN verify + adopt)
+  │ │                        / identityInvalid.
   │ ├ useVotes.ts            derived: city ranking + per-city hotel-preference
   │ │                        tallies (grouped by place_id), myCityId,
   │ │                        myHotelPrefFor(cityId)
   │ ├ useAvailability.ts     derived: my calendar, per-date breakdowns, heat
-  │ └ useVenues.ts           v2_hotels/v2_bars/v2_food per city (the ONLY
-  │                          venue-list source, session-cached) + background
-  │                          Geocoding of pin coords (name+address, 3
-  │                          concurrent, cached, silent skip) → empty on fail
+  │ └ useVenues.ts           v2_hotels (stars >= 3) / v2_bars / v2_food per
+  │                          city (the ONLY venue-list source, session-
+  │                          cached, no LIMIT/ORDER BY) → empty on fail
   ├ lib/
   │ ├ supabase.ts            lazy client, env w/ baked fallbacks, safeSelect,
   │ │                        row types (HotelVoteRow = v2_hotels uuid + name)
-  │ ├ identity.ts            bh2-voter-id / bh2-voter-name helpers
-  │ ├ venues.ts              Venue UI model (curated v2 row fields + geocoded
-  │ │                        coords), CityVenues, EMPTY_VENUES
+  │ ├ identity.ts            bh2-voter-id / bh2-voter-name helpers +
+  │ │                        buildDisplayName ("Nick B") + isValidPin (00–99)
+  │ ├ venues.ts              Venue UI model (curated v2 row fields incl.
+  │ │                        nullable lat/lng), CityVenues, EMPTY_VENUES
   │ ├ maps.ts                Maps loader (no extra libs), single dark style,
   │ │                        PIN_COLORS, BASE_MAP_OPTIONS
   │ └ format.ts              local-time date keys, month grid, labels
@@ -145,10 +162,12 @@ User data (all four in the `supabase_realtime` publication):
 
 ```sql
 CREATE TABLE v2_voters (
-  voter_id   uuid not null primary key,
-  name       text not null check (char_length(name) between 1 and 20),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  voter_id     uuid not null primary key,
+  name         text not null check (char_length(name) between 1 and 20),
+  display_name text,        -- "Nick B"; null on legacy rows (fall back to name)
+  pin_hash     text,        -- bcrypt hash of the 2-digit PIN; NEVER plain text
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
 );
 -- RLS: anon SELECT/INSERT/UPDATE
 
@@ -183,9 +202,30 @@ CREATE TABLE v2_availability (
 
 Curated venue tables — the CANONICAL venue source (read-only to the app, anon
 SELECT only, NOT in the realtime publication): `v2_hotels` (id uuid PK,
-city_id, name, address, descriptor, stars, price_range, distance_note),
-`v2_bars` / `v2_food` (id uuid PK, city_id, name, address, descriptor,
-has_food/has_bar). 56 + 75 + 75 = 206 curated rows (verified live 2026-06-12).
+city_id, name, address, descriptor, stars, price_range, distance_note, lat,
+lng), `v2_bars` / `v2_food` (id uuid PK, city_id, name, address, descriptor,
+has_food/has_bar, lat, lng). `lat`/`lng` are nullable float8 used solely for
+map pins — null = no pin, the list row renders regardless. 56 + 75 + 75 =
+206 curated rows (verified live 2026-06-12).
+
+2026-06-12 foundation migration (applied live via MCP; idempotent — safe to
+re-run in the Supabase SQL editor):
+
+```sql
+-- Add PIN authentication to v2_voters
+ALTER TABLE v2_voters ADD COLUMN IF NOT EXISTS pin_hash text;
+ALTER TABLE v2_voters ADD COLUMN IF NOT EXISTS display_name text;
+
+-- Add coordinates to venue tables
+ALTER TABLE v2_hotels ADD COLUMN IF NOT EXISTS lat float8;
+ALTER TABLE v2_hotels ADD COLUMN IF NOT EXISTS lng float8;
+
+ALTER TABLE v2_bars ADD COLUMN IF NOT EXISTS lat float8;
+ALTER TABLE v2_bars ADD COLUMN IF NOT EXISTS lng float8;
+
+ALTER TABLE v2_food ADD COLUMN IF NOT EXISTS lat float8;
+ALTER TABLE v2_food ADD COLUMN IF NOT EXISTS lng float8;
+```
 
 ## localStorage contract
 
@@ -235,19 +275,19 @@ Colors:
 - Governing principle: design for 0.08 BAC — one thumb, dim bar, ten seconds.
   Nothing that requires explanation.
 
-## Google Maps & Geocoding setup
+## Google Maps setup
 
 - Loaded with `@googlemaps/js-api-loader` (`weekly`, no extra libraries) in
   `lib/maps.ts`; key from `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` with baked public
-  fallback. The key needs Maps JavaScript API + Geocoding API enabled —
-  the Places API is no longer used anywhere.
+  fallback. The key needs the Maps JavaScript API only — the Geocoding and
+  Places APIs are no longer used anywhere.
 - The detail map always mounts: 280px tall mobile, 380px ≥600px wide.
   `gestureHandling: 'cooperative'`, `disableDefaultUI`, `clickableIcons: false`.
 - Single dark style: land #0A0D14, roads #1A1F2B, labels --ink-dim, no POI/transit.
-- Pin coords via `google.maps.Geocoder` in `useVenues` (query = venue name +
-  address, 3 concurrent, one retry on OVER_QUERY_LIMIT, session-cached per
-  venue id, silent skip on failure). Lists render immediately; pins stream
-  in as geocodes resolve (markers diffed by venue id, never torn down).
+- Pin coords come from the curated `lat`/`lng` columns on the venue rows.
+  Null lat/lng = no pin, silently skipped — the map stays sparse until
+  coordinates are backfilled, and that is expected and correct. No geocoding,
+  ever. Markers are diffed by venue id, never torn down on re-render.
 - Pins: filled 10px circles (Symbol CIRCLE scale 5), white 2px stroke —
   hotel #FF8C42 / bar #34D399 / food #60A5FA. Pin tap → `VenueSheet`.
 - Pin labels: custom `OverlayView` pill per pin (rgba(10,13,20,.85) bg,
@@ -268,12 +308,12 @@ interface City {
 }
 type VenueKind = "hotel" | "bar" | "food";
 // UI venue shape (lib/venues.ts) — id is the v2_* row uuid (it is what
-// v2_hotel_votes.hotel_place_id stores); coords geocoded for pins only:
+// v2_hotel_votes.hotel_place_id stores); lat/lng for map pins only:
 interface Venue { id; kind; city_id; name; address; descriptor;
   stars?; price_range?; distance_note?;   // hotels
   has_food?;                              // bars
   has_bar?;                               // food
-  coords: Coords | null }
+  lat: number | null; lng: number | null }
 ```
 
 Hardcoded walkability research (do not recalculate, do not "fix"): Lincoln 96
@@ -286,7 +326,33 @@ See PROGRESS.md.
 
 ## Current state
 
-- Last change (2026-06-12, later session): venue data layer flipped to
+- Last change (2026-06-12, foundation-fixes session): identity system is now
+  name + last initial + 2-digit PIN. New users enter first name (1–15 chars)
+  + last initial (1 letter), then choose/confirm a 2-digit PIN — a fresh
+  uuid is generated, the PIN is bcrypt-hashed (bcryptjs, 10 rounds) and the
+  row upserted to v2_voters (name = display_name e.g. "Nick B"). Returning
+  users ("I have an account", or auto-shown when the stored voter_id can't
+  be verified against the live roster) pick their name from an A–Z dropdown
+  and enter their PIN — verified with bcrypt.compare; wrong PIN shows "That
+  PIN doesn't match. Try again." (no lockout); legacy rows without a
+  pin_hash adopt the first PIN entered for them. Identity switching clears
+  this device's vote/availability caches; The Board gained a "You're X ·
+  Not you?" switcher. Schema migration applied live: v2_voters +pin_hash
+  +display_name; v2_hotels/v2_bars/v2_food +lat +lng (nullable float8).
+  Venue queries: hotels now `gte(stars, 3)` (was unfiltered), no ORDER BY
+  anywhere (insertion order is canonical), still no LIMIT. ALL geocoding
+  deleted — map pins read venue lat/lng, null = silently no pin (sparse map
+  until coords are backfilled — expected). City detail: descriptor/address
+  text wraps (`break-words`, no truncate); hotel preference is now a star
+  toggle (FILL 0 outline + "PREFER" label when unselected → FILL 1 accent
+  star alone when selected, 44px target). The Board rebuilt as read-only
+  two-column grid (stacks <480px): STANDINGS left (rank/name/count/meter/
+  voter pills/hotel sub-rows), HOT DATES right (dates sorted by available
+  count desc, "X available", available/roster meter, name pills) — heat
+  calendar + day breakdown sheet removed from the board (HeatCalendar
+  component remains in Calendar.tsx, unused). bcryptjs added. Build green —
+  34 static pages; lint + strict typecheck clean.
+- Earlier (2026-06-12, later session): venue data layer flipped to
   Supabase-primary. `v2_hotels`/`v2_bars`/`v2_food` are now the ONLY source
   for venue lists (`usePlaces.ts` deleted → `useVenues.ts`; Places Nearby
   Search, the chain filter, and the types→descriptor formatter removed; the
@@ -322,7 +388,8 @@ See PROGRESS.md.
   RLS); v2_hotels/v2_bars/v2_food curated fallback tables present (~206 rows,
   anon read). No SQL changes were needed this session. All four user tables
   in the realtime publication.
-- What's next: deploy to Vercel (root dir `app/`), set the three NEXT_PUBLIC_
-  env vars (optional — fallbacks baked), restrict the Google Maps key to the
-  deploy domain, and confirm the key has Maps JavaScript API + Geocoding API
-  enabled with billing (Places API is no longer needed).
+- What's next: backfill venue lat/lng in the Supabase SQL editor (map pins
+  are sparse until then), deploy to Vercel (root dir `app/`), set the three
+  NEXT_PUBLIC_ env vars (optional — fallbacks baked), restrict the Google
+  Maps key to the deploy domain, and confirm the key has the Maps JavaScript
+  API enabled with billing (Geocoding and Places APIs are no longer needed).

@@ -32,7 +32,10 @@ export function getSupabase(): SupabaseClient | null {
 
 export interface VoterRow {
   voter_id: string;
+  /** Kept for backward compat — same value as display_name for new rows. */
   name: string;
+  /** "Nick B"; null on legacy rows created before the PIN system. */
+  display_name: string | null;
 }
 
 export interface CityVoteRow {
@@ -61,6 +64,8 @@ export interface DbVenueRow {
   distance_note?: string | null; // v2_hotels only
   has_food?: boolean | null; // v2_bars only
   has_bar?: boolean | null; // v2_food only
+  lat?: number | null; // map pin coordinate; null/absent = no pin
+  lng?: number | null;
 }
 
 export interface AvailabilityRow {

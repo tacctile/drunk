@@ -1,40 +1,56 @@
 last_updated: 2026-06-12
 last_session: >-
-  Venue data layer flipped to Supabase-primary. v2_hotels/v2_bars/v2_food
-  are now the ONLY source for venue lists (usePlaces.ts deleted, new
-  useVenues.ts; Places Nearby Search + chain filter removed; the Maps JS
-  loader no longer loads the places library). Google APIs now serve only
-  the map display and background Geocoding of pin coordinates (venue name +
-  address, 3 concurrent, one OVER_QUERY_LIMIT retry, session-cached, silent
-  skip on failure — lists never wait on pins). ALL external links removed:
-  venue addresses are plain text in rows and the pin sheet; mapsUrl /
-  priceSymbols / formatTypes / isChain deleted; zero target="_blank" in the
-  app. Hotel rows render filled accent star icons (stars) + price_range;
-  bar/food rows render the curated descriptor + "Also serves food" /
-  "Full bar" pills (has_food/has_bar). City detail sticky header is now
-  fully opaque (bg-bg — no /90 opacity, no backdrop-blur). /cities gained a
-  36px sticky column header (CITY/WALKABILITY/DISTANCE/VOTE) below the
-  wordmark bar, aligned to a fixed 96px walkability column in the rows.
-  Map pins diff by venue id (stream in as geocodes resolve) and carry
-  zoom-gated OverlayView name labels (zoom >= 15, edge-flipping pills,
-  pointer-events none). Hotel preference voting logic untouched — ids are
-  now v2_hotels uuids. Build green (34 static pages), lint + strict
+  Foundation fixes. Identity is now name + last initial + 2-digit PIN:
+  NamePrompt fully replaced with a four-step flow — new user (first name
+  1–15 chars + single-letter last initial → choose/confirm 2-digit PIN) and
+  return user ("I have an account" link, or auto-shown via IdentityWatcher
+  when the stored voter_id can't be verified against the live roster) with
+  an A–Z roster dropdown + PIN check. PINs are bcrypt-hashed (bcryptjs,
+  10 salt rounds) into v2_voters.pin_hash — never plain text; display_name
+  ("Nick B") added alongside name (kept equal for backward compat). Wrong
+  PIN → "That PIN doesn't match. Try again." — no lockout. Legacy rows
+  without a pin_hash adopt the first PIN entered for them on sign-in.
+  Identity switch (sign-in or new account via "Not you?" on The Board)
+  generates/loads a voter_id into bh2-voter-id, clears this device's
+  vote/availability caches, and refetches. saveName and the bootstrap
+  roster upsert are gone (createIdentity / signIn / identityInvalid on
+  useGroupData instead); ensureVoter never touches pin_hash. Schema
+  migration applied live via Supabase MCP (idempotent SQL also recorded in
+  CONTEXT.md): v2_voters +pin_hash +display_name, v2_hotels/v2_bars/v2_food
+  +lat +lng (nullable float8). Venue queries: hotels now gte(stars,3) (all
+  56 live rows qualify), ORDER BY removed everywhere, still no LIMIT —
+  insertion order is canonical. ALL geocoding deleted from useVenues/maps —
+  CityMap reads venue.lat/venue.lng, null = silently no pin (map sparse
+  until coords backfilled — expected). City detail: venue address +
+  descriptor wrap (break-words, truncate removed); hotel preference radios
+  replaced by a 44px star toggle (outline FILL 0 + "PREFER" label →
+  filled FILL 1 accent star alone). The Board rebuilt read-only two-column
+  (stacks below 480px): STANDINGS left (rank / city / count / 4px accent
+  meter / voter pills / hotel sub-rows), HOT DATES right (dates by
+  available count desc, "X available", available/roster meter, name pills);
+  heat calendar + day breakdown sheet removed from the board (HeatCalendar
+  stays exported from Calendar.tsx, now unused; calendar tab untouched).
+  bcryptjs ^3.0.3 added. Build green (34 static pages), lint + strict
   typecheck clean.
-current_phase: supabase_primary_venues
+current_phase: pin_identity_foundation
 build_complete: true
 supabase_schema_deployed: true
 vercel_deployed: false
 known_issues:
-  - Hotels sort by the distance_note text column (lexicographic, per spec) —
-    not a numeric proximity sort
+  - Venue lat/lng are all NULL until backfilled — the city map renders zero
+    pins until then (expected and correct per spec)
+  - Venue list order relies on physical insertion order (no ORDER BY per
+    spec); Postgres doesn't guarantee it — UPDATEs (e.g. the lat/lng
+    backfill) may visibly reorder lists
+  - Legacy v2_voters rows have no pin_hash — the first PIN entered for that
+    name in the return flow silently becomes their PIN
   - Pre-existing v2_hotel_votes rows keyed by Google place_ids no longer
-    match the uuid-keyed hotel radios (they still display on The Board via
+    match the uuid-keyed hotel toggles (they still display on The Board via
     the stored hotel_name)
-  - Heat-map fraction text renders at 11px per spec (below the 13px floor)
 next_up:
+  - Backfill lat/lng for the 206 venue rows in the Supabase SQL editor
   - Create Vercel project with root directory app/ and deploy
   - Set NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY /
-    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in Vercel (optional — fallbacks baked in)
-  - Restrict the Google Maps API key to the production domain and confirm it
-    has Maps JavaScript API + Geocoding API enabled with billing (the Places
-    API is no longer used and can be disabled for the key)
+    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in Vercel (optional — fallbacks baked)
+  - Restrict the Google Maps key to the production domain; only the Maps
+    JavaScript API is needed now (Geocoding + Places can be disabled)

@@ -42,8 +42,10 @@ export function useVotes(): VotesView {
   const { cityVotes, hotelVotes, voters, voterId, name } = useGroupData();
 
   return useMemo(() => {
-    const nameOf = (id: string) =>
-      voters.find((v) => v.voter_id === id)?.name ?? "Someone";
+    const nameOf = (id: string) => {
+      const voter = voters.find((v) => v.voter_id === id);
+      return voter ? voter.display_name ?? voter.name : "Someone";
+    };
     const tag = (id: string): VoterTag => ({
       voterId: id,
       name: nameOf(id),

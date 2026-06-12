@@ -127,13 +127,13 @@ export function CityDetail({ cityId }: { cityId: string }) {
             Nothing found near {city.district}.
           </p>
         ) : (
-          <ul className="mx-auto max-w-2xl" role={tab === "hotel" ? "radiogroup" : undefined} aria-label={tab === "hotel" ? "Preferred hotel" : undefined}>
+          <ul className="mx-auto max-w-2xl">
             {list.map((venue) => (
               <li key={venue.id} className="flex min-h-14 items-center gap-2 border-b py-3 pl-4 pr-2">
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-title font-bold text-ink">{venue.name}</p>
                   {venue.address && (
-                    <p className="truncate text-meta font-normal text-ink-muted">{venue.address}</p>
+                    <p className="break-words text-meta font-normal text-ink-muted">{venue.address}</p>
                   )}
                   {tab === "hotel" ? (
                     (venue.stars != null || venue.price_range) && (
@@ -145,7 +145,7 @@ export function CityDetail({ cityId }: { cityId: string }) {
                   ) : (
                     <>
                       {venue.descriptor && (
-                        <p className="truncate pt-0.5 text-meta font-normal text-ink-dim">
+                        <p className="break-words pt-0.5 text-meta font-normal text-ink-dim">
                           {venue.descriptor}
                         </p>
                       )}
@@ -160,18 +160,24 @@ export function CityDetail({ cityId }: { cityId: string }) {
                 {tab === "hotel" && (
                   <button
                     type="button"
-                    role="radio"
-                    aria-checked={myHotel === venue.id}
-                    aria-label={`Prefer ${venue.name}`}
                     onClick={() => toggleHotel(venue)}
-                    className={`flex h-11 w-11 flex-none items-center justify-center rounded-btn transition ${
-                      myHotel === venue.id ? "text-accent" : "text-ink-dim hover:text-ink-muted"
-                    }`}
+                    className="flex h-11 w-11 flex-none flex-col items-center justify-center gap-1"
+                    aria-label={myHotel === venue.id ? "Remove hotel preference" : "Prefer this hotel"}
                   >
-                    <Icon
-                      name={myHotel === venue.id ? "radio_button_checked" : "radio_button_unchecked"}
-                      size={22}
-                    />
+                    <span
+                      className="ms text-xl"
+                      style={{
+                        fontVariationSettings: myHotel === venue.id ? "'FILL' 1" : "'FILL' 0",
+                        color: myHotel === venue.id ? "var(--accent)" : "var(--ink-dim)",
+                      }}
+                    >
+                      star
+                    </span>
+                    {myHotel !== venue.id && (
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-dim">
+                        Prefer
+                      </span>
+                    )}
                   </button>
                 )}
               </li>
