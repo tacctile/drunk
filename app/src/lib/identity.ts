@@ -30,6 +30,14 @@ function safeSet(key: string, value: string) {
   }
 }
 
+function safeRemove(key: string) {
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+    // storage unavailable — nothing to forget
+  }
+}
+
 export function newVoterId(): string {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
@@ -54,6 +62,13 @@ export function getStoredName(): string {
 export function storeIdentity(voterId: string, displayName: string) {
   safeSet(ID_KEY, voterId);
   safeSet(NAME_KEY, displayName);
+}
+
+/** Sign out: forget this device's identity. The v2_voters row remains. */
+export function clearIdentity() {
+  safeRemove(ID_KEY);
+  safeRemove(NAME_KEY);
+  safeRemove(PIN_COLOR_KEY);
 }
 
 /** Cached copy of this voter's auto-assigned v2_voters.pin_color. */

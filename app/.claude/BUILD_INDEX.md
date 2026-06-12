@@ -38,6 +38,12 @@ DO NOT READ: components, data files
 READ: src/lib/identity.ts, src/components/NamePrompt.tsx, src/hooks/useGroupData.tsx
 DO NOT READ: data files, map components
 
+## Task: Profile overlay (avatar tap — summaries, identity edit, sign out)
+READ: src/components/ProfileOverlay.tsx, src/components/AppShell.tsx (the
+avatar trigger), src/hooks/useGroupData.tsx (updateProfile/signOut),
+src/lib/identity.ts, CONTEXT.md (v2_voters schema incl. pin_plain)
+DO NOT READ: map components, venue hooks, city data
+
 ## Task: Cities list / sort / index rows
 READ: src/app/cities/page.tsx, src/components/CityList.tsx,
 src/components/ActionBar.tsx

@@ -7,6 +7,7 @@ import { useGroupData } from "@/hooks/useGroupData";
 import { contrastColor } from "@/lib/colors";
 import { getStoredName, getStoredPinColor } from "@/lib/identity";
 import { Icon } from "./Icon";
+import { ProfileOverlay } from "./ProfileOverlay";
 
 const NAV = [
   { href: "/cities", icon: "location_city", label: "Cities" },
@@ -92,11 +93,11 @@ function getInitials(displayName: string): string {
 /**
  * The avatar in the wordmark bar: initials on the auto-assigned pin color
  * once registered, a quiet person icon before that. localStorage is re-read
- * whenever the identity layer moves (registration, sign-in, roster re-sync)
- * so it updates without a reload; the storage listener covers other tabs.
- * Tapping it is a no-op until the profile screen lands (Prompt 3).
+ * whenever the identity layer moves (registration, sign-in, roster re-sync,
+ * profile rename, sign-out) so it updates without a reload; the storage
+ * listener covers other tabs. Tapping it opens the profile overlay.
  */
-function ProfileAvatar() {
+function ProfileAvatar({ onClick }: { onClick: () => void }) {
   const { name, voters } = useGroupData();
   const [profile, setProfile] = useState<{ name: string; color: string | null }>({
     name: "",
@@ -122,6 +123,7 @@ function ProfileAvatar() {
     <button
       type="button"
       aria-label="Your profile"
+      onClick={onClick}
       className="-mr-1 flex h-11 w-11 flex-none items-center justify-center"
     >
       <span
@@ -151,6 +153,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const hasOwnHeader = pathname.startsWith("/city/") || pathname.startsWith("/admin");
   const adminHold = useAdminHold();
+  const [profileOpen, setProfileOpen] = useState(false);
 
   return (
     <div className="min-h-dvh min-[840px]:flex">
@@ -185,7 +188,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link href="/cities" className="flex h-11 items-center text-title font-extrabold tracking-tight">
                 Bar Hoppers
               </Link>
-              <ProfileAvatar />
+              <ProfileAvatar onClick={() => setProfileOpen(true)} />
             </div>
           </header>
         )}
@@ -193,6 +196,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         <main className="pb-[calc(140px+env(safe-area-inset-bottom))] min-[840px]:pb-10">
           {children}
         </main>
+
+        <ProfileOverlay open={profileOpen} onClose={() => setProfileOpen(false)} />
       </div>
 
       {/* Mobile bottom nav — 64px + safe area */}

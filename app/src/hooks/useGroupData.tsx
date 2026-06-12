@@ -22,6 +22,7 @@ import { compare as comparePin, hash as hashPin } from "bcryptjs";
 import { assignColor, PIN_COLORS } from "@/lib/colors";
 import {
   buildDisplayName,
+  clearIdentity,
   getStoredName,
   getStoredPinColor,
   getVoterId,
@@ -86,6 +87,10 @@ interface GroupDataValue {
   createIdentity: (first: string, lastInitial: string, pin: string) => Promise<boolean>;
   /** Cross-device sign-in: verify PIN against the stored hash, adopt the identity. */
   signIn: (targetVoterId: string, pin: string) => Promise<SignInResult>;
+  /** Profile edits — rename and/or re-PIN the current voter in place. */
+  updateProfile: (changes: { displayName?: string; pin?: string }) => Promise<void>;
+  /** Forget this device's identity. The voter row and their group data remain. */
+  signOut: () => void;
   /** One city vote per person; null clears it. */
   setCityVote: (cityId: string | null) => Promise<void>;
   /** One preferred hotel per person per city; null clears that city's pick. */
@@ -348,6 +353,68 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
     [adoptIdentity, refetch],
   );
 
+  const updateProfile = useCallback(
+    async (changes: { displayName?: string; pin?: string }) => {
+      const me = voterIdRef.current;
+      if (!me) return;
+      const dn = changes.displayName;
+      if (dn) {
+        // Same person, same voter_id — the identity caches just rename, and
+        // the optimistic roster row keeps every avatar/name in sync at once.
+        nameRef.current = dn;
+        setName(dn);
+        storeIdentity(me, dn);
+        setVoters((prev) =>
+          prev.map((v) => (v.voter_id === me ? { ...v, name: dn, display_name: dn } : v)),
+        );
+      }
+      const sb = getSupabase();
+      if (!sb) return;
+      try {
+        const payload: {
+          voter_id: string;
+          name: string;
+          display_name: string | null;
+          updated_at: string;
+          pin_hash?: string;
+          pin_plain?: string;
+        } = {
+          voter_id: me,
+          name: nameRef.current || "Someone",
+          display_name: nameRef.current || null,
+          updated_at: new Date().toISOString(),
+        };
+        if (changes.pin && isValidPin(changes.pin)) {
+          payload.pin_hash = await hashPin(changes.pin, 10);
+          // Stored alongside the hash per the profile spec so an admin can
+          // recover a forgotten PIN. Never read for verification.
+          payload.pin_plain = changes.pin;
+        }
+        // Upsert (not update) so a row created offline still lands whole.
+        // pin_color is omitted on purpose — the assigned color is preserved.
+        await sb.from("v2_voters").upsert(payload);
+      } catch {
+        // offline — the rename converges via ensureVoter on the next write;
+        // a PIN change is dropped (the old PIN keeps working)
+      }
+      void refetch();
+    },
+    [refetch],
+  );
+
+  const signOut = useCallback(() => {
+    // Forget who this device is — bh2-voter-id / -name / -pin-color go, and
+    // the cached writes belong to the departing identity. Server rows stay.
+    clearIdentity();
+    clearWriteCaches();
+    adoptedRef.current = false;
+    voterIdRef.current = "";
+    nameRef.current = "";
+    setVoterId("");
+    setName("");
+    setIdentityInvalid(false);
+  }, []);
+
   /** Voter row must exist before any FK write lands. Never touches pin_hash
    *  or pin_color (an insert takes the column default; an update keeps the
    *  assigned color). */
@@ -473,11 +540,13 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
       identityInvalid,
       createIdentity,
       signIn,
+      updateProfile,
+      signOut,
       setCityVote,
       setHotelPref,
       setAvailability: setAvailabilityFor,
     }),
-    [ready, voterId, name, voters, cityVotes, hotelVotes, availability, identityInvalid, createIdentity, signIn, setCityVote, setHotelPref, setAvailabilityFor],
+    [ready, voterId, name, voters, cityVotes, hotelVotes, availability, identityInvalid, createIdentity, signIn, updateProfile, signOut, setCityVote, setHotelPref, setAvailabilityFor],
   );
 
   return <GroupDataContext.Provider value={value}>{children}</GroupDataContext.Provider>;
