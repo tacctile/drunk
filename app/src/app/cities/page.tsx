@@ -33,7 +33,7 @@ export default function CitiesPage() {
         <button
           type="button"
           onClick={() => setSheetOpen(true)}
-          className="flex h-11 w-full items-center justify-center gap-2 rounded-full border bg-raised text-base font-semibold text-ink shadow-overlay transition hover:border-border-strong"
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-btn border bg-raised text-base font-semibold text-ink shadow-overlay transition hover:border-border-strong"
         >
           <Icon name="swap_vert" size={20} className="text-ink-muted" />
           Sorted by {current.pillLabel}

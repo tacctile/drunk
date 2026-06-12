@@ -13,6 +13,8 @@ import { CityList, loadSort, type CitySort } from "@/components/CityList";
 import { CityMap } from "@/components/CityMap";
 import { Icon } from "@/components/Icon";
 import { useNameGate } from "@/components/NamePrompt";
+import { ProfileAvatar } from "@/components/ProfileAvatar";
+import { ProfileOverlay } from "@/components/ProfileOverlay";
 import { VenueSheet } from "@/components/VenueSheet";
 
 const TABS: { kind: VenueKind; label: string }[] = [
@@ -44,6 +46,7 @@ export function CityDetail({ cityId }: { cityId: string }) {
 
   const [tab, setTab] = useState<VenueKind>("hotel");
   const [pinned, setPinned] = useState<Venue | null>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [listSort, setListSort] = useState<CitySort>("distance");
   useEffect(() => {
     setListSort(loadSort());
@@ -71,7 +74,8 @@ export function CityDetail({ cityId }: { cityId: string }) {
       </aside>
 
       <div className="min-w-0">
-        {/* Sticky header — back, city + state, vote. Fully opaque, always. */}
+        {/* Sticky header — back, city + state, profile avatar. Fully opaque,
+            always. Voting lives in the ActionBar CTA below. */}
         <header className="sticky top-0 z-30 grid h-14 grid-cols-[44px_1fr_44px] items-center border-b bg-bg px-2">
           <Link
             href="/cities"
@@ -84,17 +88,7 @@ export function CityDetail({ cityId }: { cityId: string }) {
             <span className="truncate text-title font-bold text-ink">{city.name}</span>
             <span className="label flex-none">{city.state}</span>
           </div>
-          <button
-            type="button"
-            onClick={toggleVote}
-            aria-label={voted ? `Remove your vote for ${city.name}` : `Vote for ${city.name}`}
-            aria-pressed={voted}
-            className={`flex h-11 w-11 items-center justify-center rounded-btn transition ${
-              voted ? "text-accent" : "text-ink-dim hover:text-ink-muted"
-            }`}
-          >
-            <Icon name="how_to_vote" filled={voted} size={22} />
-          </button>
+          <ProfileAvatar onClick={() => setProfileOpen(true)} />
         </header>
 
         <CityMap city={city} venues={venues} onPinTap={setPinned} />
@@ -207,6 +201,7 @@ export function CityDetail({ cityId }: { cityId: string }) {
         </ActionBar>
 
         <VenueSheet venue={pinned} onClose={() => setPinned(null)} />
+        <ProfileOverlay open={profileOpen} onClose={() => setProfileOpen(false)} />
         {prompt}
       </div>
     </div>
