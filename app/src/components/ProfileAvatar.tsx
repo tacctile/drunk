@@ -2,16 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useGroupData } from "@/hooks/useGroupData";
-import { contrastColor } from "@/lib/colors";
+import { contrastColor, getInitials } from "@/lib/colors";
 import { getStoredName, getStoredPinColor } from "@/lib/identity";
 import { Icon } from "./Icon";
-
-/** "Nick B" → "NB"; a single word gives its first letter. */
-function getInitials(displayName: string): string {
-  const parts = displayName.trim().split(/\s+/);
-  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  return (parts[0]?.[0] ?? "").toUpperCase();
-}
 
 /**
  * The profile avatar: initials on the auto-assigned pin color once

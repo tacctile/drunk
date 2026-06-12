@@ -4,9 +4,10 @@
 // identity gate. Full-bleed dark map with a collapsible right-side people
 // strip ("Show All" sticky on top, sharers A–Z below in their pin colors)
 // and a single "Location Options" pill between the map and the bottom nav
-// that opens a centered modal (drafted edits, Save/Cancel). Sharing is
-// opt-in (off by default), expires after 72 hours, and only ever touches
-// the v2_locations row — never device settings.
+// that opens a centered modal (drafted edits, Save/Cancel). Sharing is ON
+// by default for registered users (useLocations auto-starts it once; off is
+// an explicit, persisted choice), expires after 72 hours, and only ever
+// touches the v2_locations row — never device settings.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Dialog } from "@/components/Dialog";

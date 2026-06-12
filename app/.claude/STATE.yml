@@ -1,40 +1,67 @@
 last_updated: 2026-06-12
 last_session: >-
-  Six surgical fixes on the Locate screen + city detail header. (1) The
-  "Location Options" BottomSheet replaced by a centered Dialog modal with
-  DRAFTED edits — pendingSharing/pendingMuted copy live values on open
-  (modal mounts fresh per open), the mute list follows the draft toggle,
-  nothing writes until Save (mutes first, then toggleSharing if moved);
-  Cancel/Esc/scrim discards; denied/error keeps the modal open with the
-  inline error and reverts the draft toggle; mute rows scroll past 35vh.
-  (2) People-panel rows keep per-person pin_color fill + contrastColor
-  text; own row now appends " (you)" and wears a 1.5px
-  rgba(255,255,255,.4) inset outline instead of the --ink border. (3)
-  "Show All" is position:sticky top-0 inside the scrollable list
-  (bg-raised, border-b) — never scrolls away. (4) Strip is collapsible: a
-  44px "Hide" bar (chevron_right + label, --ink-dim, bg-raised, border-t)
-  collapses width to 0 (200ms ease, aria-hidden, pointer-events-none); a
-  28x56px floating chevron_left handle (raised @90%, --border, radius
-  6px 0 0 6px) vertically centered on the map's right edge re-expands.
-  (5) Floating pills unified at 8px — /cities sort pill rounded-full →
-  rounded-btn (vote CTA + options pill already 8px). (6) ProfileAvatar
-  extracted to components/ProfileAvatar.tsx (optional className prop;
-  AppShell passes -mr-1) and the city-detail header's vote icon REPLACED
-  by it with its own ProfileOverlay mount — avatar persists everywhere
-  except /admin; voting on city detail is ActionBar-only now. (7) Own map
-  pin's outer ring: scale 13 (26px) stroked in YOUR pin_color (was
-  hardcoded amber, 22px), icon re-set in place on realtime ticks — zero
-  hardcoded locate pin colors. useLocations, voting, availability, city
-  list walkability, Results, admin, map options/dark style, root
-  index.html untouched. Build green (36 static pages), lint + strict
-  typecheck clean.
-current_phase: locate_polish_shared_avatar
+  City detail map: tap-to-focus, Show All, your-location dot; sharing
+  default ON synced across Locate + Profile. (1) Venue pins grew to scale
+  9 / 18px (zIndex 10); first pin placement fitBounds all pins w/ 60px
+  padding (1 pin → panTo + zoom 16, 0 pins → city center/zoom stands).
+  (2) Venue rows (all three tabs) are tap targets — the info block is now
+  a real button, sibling of the hotel star toggle; a row with coords
+  flashes --surface-raised 300ms, pans the map to its pin, zooms 16,
+  grows the pin to scale 13 / stroke 3 / zIndex 11 and resets all others;
+  no coords = inert. Page scrolls only if the map is off-screen
+  (scrollIntoView block:nearest, 57px scroll-margin under the sticky
+  header). CityMap is forwardRef w/ CityMapHandle.focusVenue. (3)
+  Floating 44px Show All button top-right inside the map (zoom_out_map,
+  raised + border, rounded-btn, rendered once the map loads): fitBounds
+  all venue pins + clears focus. (4) Your own dot via watchPosition on
+  map mount — 22px scale 11, bh2-pin-color fill (?? #FF8C42), white 2.5px
+  stroke, contrastColor initials label, "You" title, zIndex 20, moves
+  with you, cleared on unmount, denied = silent, never in Show All
+  bounds. getInitials centralized in lib/colors.ts (ProfileAvatar +
+  ProfileOverlay dupes deleted). (5) useLocations auto-start (sharing ON
+  by default) now gated to registered identities (name +
+  !identityInvalid) — unregistered mounts no longer attempt toggleSharing
+  or burn bh2-sharing-preference="false"; attempt guard keyed per voter
+  id at module scope. (6) Sharing state is one source of truth: rows +
+  mute list + in-flight intent moved to a module-scoped shared store in
+  useLocations.ts — Locate screen and Profile overlay render the same
+  data and a toggle anywhere reflects everywhere in the same frame, even
+  with realtime down. muted_ids stays empty-by-default (visible to
+  everyone; verified no defensive filtering). bh2-sharing-preference
+  added to the localStorage contract (nine keys). Locate map/UI, admin,
+  Results, calendar, walkability, voting, root index.html untouched.
+  Build green (36 static pages), lint + strict typecheck clean.
+current_phase: city_map_focus_sharing_default
 build_complete: true
 supabase_schema_deployed: true
 vercel_deployed: false
 known_issues:
   - Venue lat/lng are all NULL until backfilled — the city map renders zero
-    pins until then (expected and correct per spec)
+    pins until then (expected and correct per spec; tap-to-focus and Show
+    All are silently inert without coords, and the map keeps the city's
+    hardcoded center/zoom)
+  - The city detail map starts a geolocation watch on every mount (per
+    spec), so the FIRST city-detail visit shows the browser permission
+    prompt even before any sharing toggle; denial is silent and remembered
+    by the browser, not the app — each later mount retries quietly against
+    the remembered denial (no visible re-prompt)
+  - The "You" dot renders for unregistered visitors too (spec fallbacks:
+    #FF8C42 fill, no initials label); it reads bh2-pin-color / bh2-voter-name
+    once per map mount, so a mid-visit color re-sync applies next mount
+  - The sharing toggle reflects the live v2_locations row, so the 72h expiry
+    (or admin Force expire) flips it off WITHOUT changing
+    bh2-sharing-preference — sharing never auto-renews, re-enabling is manual
+  - Auto-start sharing fires its geolocation prompt the first time a
+    registered identity mounts /locate or the profile overlay with no stored
+    preference (never on app load); denied/error writes "false" and is never
+    re-attempted — the person must flip the toggle to opt back in
+  - Devices that opened /locate or the profile overlay while UNREGISTERED
+    before this session may already have bh2-sharing-preference="false"
+    burned by the old ungated auto-start — whoever registers on those
+    devices won't auto-start sharing (the manual toggle works fine)
+  - With the locate page and profile overlay both mounted while sharing,
+    each hook instance runs its own 60s coord-refresh interval (duplicate,
+    idempotent updates; pre-existing behavior)
   - Venue list order relies on physical insertion order (no ORDER BY per
     spec); Postgres doesn't guarantee it — UPDATEs (e.g. the lat/lng
     backfill) may visibly reorder lists

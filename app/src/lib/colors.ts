@@ -34,6 +34,14 @@ export function assignColor(registeredCount: number): string {
   return PIN_COLORS[registeredCount % PIN_COLORS.length]
 }
 
+// "Nick B" → "NB"; a single word gives its first letter.
+// Shared by the avatar circles and the city-map "You" pin label.
+export function getInitials(displayName: string): string {
+  const parts = displayName.trim().split(/\s+/)
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+  return (parts[0]?.[0] ?? '').toUpperCase()
+}
+
 // Returns contrast text color (black or white) for
 // a given background hex — used for avatar initials
 export function contrastColor(hex: string): string {

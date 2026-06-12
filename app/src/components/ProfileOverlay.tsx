@@ -15,7 +15,7 @@ import { useAvailability } from "@/hooks/useAvailability";
 import { useGroupData } from "@/hooks/useGroupData";
 import { useLocations, type LocationsValue } from "@/hooks/useLocations";
 import { useVotes } from "@/hooks/useVotes";
-import { contrastColor, PIN_COLORS } from "@/lib/colors";
+import { contrastColor, getInitials, PIN_COLORS } from "@/lib/colors";
 import { buildDisplayName, getStoredPinColor, isValidPin } from "@/lib/identity";
 import { formatMonthTitle, plural } from "@/lib/format";
 import { lockBodyScroll, unlockBodyScroll } from "@/lib/scrollLock";
@@ -26,13 +26,6 @@ import { NamePrompt } from "./NamePrompt";
 
 const SWIPE_CLOSE_PX = 70; // drag the header down this far to dismiss
 const SAVED_FLASH_MS = 1200; // green checkmark dwell on the save button
-
-/** "Nick B" → "NB"; a single word gives its first letter. */
-function getInitials(displayName: string): string {
-  const parts = displayName.trim().split(/\s+/);
-  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  return (parts[0]?.[0] ?? "").toUpperCase();
-}
 
 /** Identity fields compare case-insensitively, whitespace trimmed. */
 function norm(s: string): string {
