@@ -1,14 +1,15 @@
 "use client";
 
 // LOCATE — live group map. Registered users only; everyone else gets the
-// identity gate. Full-bleed dark map with a fixed right-side people strip
-// ("Show All" pinned on top, sharers A–Z below in their pin colors) and a
-// single "Location Options" pill between the map and the bottom nav. Sharing
-// is opt-in (off by default), expires after 72 hours, and only ever touches
+// identity gate. Full-bleed dark map with a collapsible right-side people
+// strip ("Show All" sticky on top, sharers A–Z below in their pin colors)
+// and a single "Location Options" pill between the map and the bottom nav
+// that opens a centered modal (drafted edits, Save/Cancel). Sharing is
+// opt-in (off by default), expires after 72 hours, and only ever touches
 // the v2_locations row — never device settings.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { BottomSheet } from "@/components/BottomSheet";
+import { Dialog } from "@/components/Dialog";
 import { Icon } from "@/components/Icon";
 import { NamePrompt } from "@/components/NamePrompt";
 import type { Coords } from "@/data/types";
@@ -24,10 +25,11 @@ const FOCUS_ZOOM = 15; // a tapped person
 const SHOW_ALL_ZOOM = 14; // Show All when exactly one person is sharing
 const FIT_PADDING = 40; // px kept around the fitted bounds on Show All
 
-// Circle scale is the radius in px: others 14px, you 18px + a 22px accent ring.
+// Circle scale is the radius in px: others 14px, you 18px + a 26px outer
+// ring drawn in your own assigned pin color.
 const PIN_SCALE = 7;
 const ME_PIN_SCALE = 9;
-const RING_SCALE = 11;
+const RING_SCALE = 13;
 const PULSE_BUMP = 3; // +6px diameter while pulsing: a 14px pin grows to 20px
 const PULSE_MS = 400;
 const LABEL_LIFT = 14; // px between the pin center and the name pill
@@ -43,14 +45,14 @@ function pinIcon(color: string, scale: number): google.maps.Symbol {
   };
 }
 
-/** The amber ring around the current user's own pin. */
-function ringIcon(): google.maps.Symbol {
+/** The outer ring around the current user's own pin — their assigned color. */
+function ringIcon(color: string): google.maps.Symbol {
   return {
     path: google.maps.SymbolPath.CIRCLE,
     scale: RING_SCALE,
     fillColor: "#000000",
     fillOpacity: 0,
-    strokeColor: "#FF8C42",
+    strokeColor: color,
     strokeWeight: 2,
   };
 }
@@ -117,9 +119,10 @@ interface LocateMapProps {
 
 /**
  * Full-bleed group map. Dark style, greedy gestures, person pins diffed by
- * voter id (updated in place, never recreated). The current user's pin is
- * larger with an amber ring; everyone else is a 14px dot in their color.
- * If Maps can't load, the container stays a quiet surface — never an error.
+ * voter id (updated in place, never recreated). Every pin fills with that
+ * person's assigned pin_color; the current user's is larger with an outer
+ * ring in the same color. If Maps can't load, the container stays a quiet
+ * surface — never an error.
  */
 function LocateMap({ locations, myId, command }: LocateMapProps) {
   const elRef = useRef<HTMLDivElement>(null);
@@ -173,6 +176,7 @@ function LocateMap({ locations, myId, command }: LocateMapProps) {
         existing.marker.setPosition(coords);
         existing.marker.setIcon(pinIcon(loc.pin_color, scale));
         existing.ring?.setPosition(coords);
+        existing.ring?.setIcon(ringIcon(loc.pin_color));
         existing.label.set(labelText, coords);
         continue;
       }
@@ -184,7 +188,12 @@ function LocateMap({ locations, myId, command }: LocateMapProps) {
         icon: pinIcon(loc.pin_color, scale),
       });
       const ring = isMe
-        ? new google.maps.Marker({ map, position: coords, clickable: false, icon: ringIcon() })
+        ? new google.maps.Marker({
+            map,
+            position: coords,
+            clickable: false,
+            icon: ringIcon(loc.pin_color),
+          })
         : undefined;
       const label = createNameLabel(labelText, coords);
       label.overlay.setMap(map);
@@ -293,65 +302,106 @@ interface PeoplePanelProps {
 }
 
 /**
- * Fixed right-side strip over the map: a pinned "Show All" row on top, then
- * every active sharer A–Z. Each name row is filled with that person's
- * auto-assigned pin color (contrast text); your own row wears a thin ink
- * border. Tapping a name flies the map to that person.
+ * Collapsible right-side strip over the map: a sticky "Show All" row on top
+ * of the scrollable list (it never scrolls away), then every active sharer
+ * A–Z. Each name row is filled with that person's auto-assigned pin color
+ * (contrast text); your own row says "(you)" and wears a soft white outline.
+ * Tapping a name flies the map to that person. A "Hide" bar at the bottom
+ * collapses the strip to nothing; a small floating chevron on the map's
+ * right edge brings it back.
  */
 function PeoplePanel({ locations, myId, onShowAll, onRowTap }: PeoplePanelProps) {
+  const [panelCollapsed, setPanelCollapsed] = useState(false);
   const sorted = useMemo(
     () => [...locations].sort((a, b) => a.display_name.localeCompare(b.display_name)),
     [locations],
   );
 
   return (
-    <section
-      aria-label="People sharing their location"
-      className="absolute inset-y-0 right-0 z-10 flex w-[120px] flex-col border-l sm:w-[160px]"
-      style={{ background: "rgba(10, 13, 20, 0.85)" }}
-    >
-      <button
-        type="button"
-        onClick={onShowAll}
-        className="flex h-11 flex-none items-center justify-center gap-1.5 border-b bg-raised"
+    <>
+      <section
+        aria-label="People sharing their location"
+        aria-hidden={panelCollapsed}
+        className={`absolute inset-y-0 right-0 z-10 flex flex-col overflow-hidden ${
+          panelCollapsed ? "pointer-events-none w-0" : "w-[120px] border-l sm:w-[160px]"
+        }`}
+        style={{ background: "rgba(10, 13, 20, 0.85)", transition: "width 200ms ease" }}
       >
-        <Icon name="zoom_out_map" size={16} className="text-accent" />
-        <span className="text-label text-accent">Show All</span>
-      </button>
+        <div className="relative min-h-0 flex-1 overflow-y-auto">
+          {/* Show All — sticky so it never scrolls away */}
+          <button
+            type="button"
+            onClick={onShowAll}
+            className="sticky top-0 z-10 flex h-11 w-full items-center justify-center gap-1.5 border-b bg-raised"
+          >
+            <Icon name="zoom_out_map" size={16} className="text-accent" />
+            <span className="text-label text-accent">Show All</span>
+          </button>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        {sorted.length === 0 ? (
-          <p className="flex h-11 items-center justify-center px-2 text-center text-label text-ink-dim">
-            No one sharing
-          </p>
-        ) : (
-          sorted.map((loc) => {
-            const isMe = loc.voter_id === myId;
-            return (
-              <button
-                key={loc.voter_id}
-                type="button"
-                onClick={() => onRowTap(loc.voter_id)}
-                className="flex min-h-11 w-full items-center px-2"
-                style={{
-                  background: loc.pin_color,
-                  color: contrastColor(loc.pin_color),
-                  // Your own row wears a thin ink border to stand out.
-                  ...(isMe ? { border: "1.5px solid var(--ink)" } : undefined),
-                }}
-              >
-                <span className="w-full truncate text-left text-label">{loc.display_name}</span>
-              </button>
-            );
-          })
-        )}
-      </div>
-    </section>
+          {sorted.length === 0 ? (
+            <p className="flex h-11 items-center justify-center px-2 text-center text-label text-ink-dim">
+              No one sharing
+            </p>
+          ) : (
+            sorted.map((loc) => {
+              const isMe = loc.voter_id === myId;
+              return (
+                <button
+                  key={loc.voter_id}
+                  type="button"
+                  onClick={() => onRowTap(loc.voter_id)}
+                  className="flex min-h-11 w-full items-center px-2"
+                  style={{
+                    background: loc.pin_color,
+                    color: contrastColor(loc.pin_color),
+                    // Your own row wears a soft white outline to stand out
+                    // (inset so the scroll container can't clip it).
+                    ...(isMe
+                      ? {
+                          outline: "1.5px solid rgba(255,255,255,0.4)",
+                          outlineOffset: "-1.5px",
+                        }
+                      : undefined),
+                  }}
+                >
+                  <span className="w-full truncate text-left text-label">
+                    {loc.display_name}
+                    {isMe ? " (you)" : ""}
+                  </span>
+                </button>
+              );
+            })
+          )}
+        </div>
+
+        {/* Collapse — tuck the whole strip away */}
+        <button
+          type="button"
+          onClick={() => setPanelCollapsed(true)}
+          className="flex h-11 w-full flex-none items-center justify-center gap-1 border-t bg-raised"
+        >
+          <Icon name="chevron_right" size={20} className="text-ink-dim" />
+          <span className="text-label text-ink-dim">Hide</span>
+        </button>
+      </section>
+
+      {/* Floating expand handle — flush against the map's right edge */}
+      {panelCollapsed && (
+        <button
+          type="button"
+          onClick={() => setPanelCollapsed(false)}
+          aria-label="Show people panel"
+          className="absolute right-0 top-1/2 z-10 flex h-14 w-7 -translate-y-1/2 items-center justify-center border"
+          style={{ background: "rgba(26, 31, 43, 0.9)", borderRadius: "6px 0 0 6px" }}
+        >
+          <Icon name="chevron_left" size={20} className="text-ink-dim" />
+        </button>
+      )}
+    </>
   );
 }
 
-interface LocationOptionsSheetProps {
-  open: boolean;
+interface LocationOptionsModalProps {
   onClose: () => void;
   locations: LocationsValue;
   voters: VoterRow[];
@@ -359,20 +409,20 @@ interface LocationOptionsSheetProps {
 }
 
 /**
- * The "Location Options" sheet: SHARING (toggle + disclaimer) and, while
- * sharing is on, "Who can see me" — every other registered user with a
- * hide toggle that adds/removes them from muted_ids. Changes are immediate
- * and optimistic — no Save/Cancel. Pin colors are auto-assigned — there is
- * no picker here.
+ * The "Location Options" centered modal (replaced the old bottom sheet,
+ * which kept getting stuck). Edits are drafted: the sharing toggle and the
+ * "Who can see me" mute list copy the live values on open and nothing is
+ * written until Save — toggleSharing if the switch moved, muteUser/
+ * unmuteUser per changed row. Cancel, Escape, or tapping the scrim discards
+ * the draft. If enabling sharing fails (permission denied / no fix), the
+ * modal stays open with the inline error so the person sees why. Pin colors
+ * are auto-assigned — there is no picker here.
  */
-function LocationOptionsSheet({
-  open,
-  onClose,
-  locations,
-  voters,
-  myId,
-}: LocationOptionsSheetProps) {
+function LocationOptionsModal({ onClose, locations, voters, myId }: LocationOptionsModalProps) {
   const { isSharing, mutedIds, toggleSharing, muteUser, unmuteUser } = locations;
+  // Drafts seeded from the live values — the modal mounts fresh per open.
+  const [pendingSharing, setPendingSharing] = useState(isSharing);
+  const [pendingMuted, setPendingMuted] = useState<string[]>(mutedIds);
   const [busy, setBusy] = useState(false);
   const [shareError, setShareError] = useState("");
 
@@ -385,84 +435,117 @@ function LocationOptionsSheet({
     [voters, myId],
   );
 
-  const handleToggle = async () => {
+  const handleCancel = () => {
+    if (busy) return;
+    onClose();
+  };
+
+  const handleSave = async () => {
     if (busy) return;
     setBusy(true);
     setShareError("");
-    const result = await toggleSharing();
-    if (result === "denied") {
-      setShareError("Location permission denied. Enable it in your browser settings.");
-    } else if (result === "error") {
-      setShareError("Couldn't get your location. Try again.");
+    // Mutes first so a share enabled in the same Save carries them.
+    for (const id of pendingMuted) {
+      if (!mutedIds.includes(id)) await muteUser(id);
+    }
+    for (const id of mutedIds) {
+      if (!pendingMuted.includes(id)) await unmuteUser(id);
+    }
+    if (pendingSharing !== isSharing) {
+      const result = await toggleSharing();
+      if (result === "denied" || result === "error") {
+        setShareError(
+          result === "denied"
+            ? "Location permission denied. Enable it in your browser settings."
+            : "Couldn't get your location. Try again.",
+        );
+        setPendingSharing(false); // sharing didn't start — reflect reality
+        setBusy(false);
+        return;
+      }
     }
     setBusy(false);
+    onClose();
   };
 
   return (
-    <BottomSheet open={open} onClose={onClose} label="Location options">
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="min-w-0 flex-1 truncate text-title font-bold text-ink">Location Options</h2>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close"
-          className="flex h-11 w-11 flex-none items-center justify-center text-ink-muted transition hover:text-ink"
-        >
-          <Icon name="close" size={22} />
-        </button>
-      </div>
-
-      <h3 className="label mt-1">Sharing</h3>
-      <div className="mt-1 flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-base text-ink">Share my location</p>
-          <p className="mt-0.5 text-meta font-normal text-ink-dim">
-            This only affects Bar Hoppers. Your device location settings are unchanged.
-          </p>
-        </div>
+    <Dialog open onClose={handleCancel} title="Location Options">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-base text-ink">Share my location</p>
         <Switch
-          checked={isSharing}
+          checked={pendingSharing}
           disabled={busy}
-          onToggle={() => void handleToggle()}
+          onToggle={() => setPendingSharing((v) => !v)}
           ariaLabel="Share my location"
         />
       </div>
+      <p className="text-meta font-normal text-ink-dim">
+        This only affects Bar Hoppers. Your device location settings are unchanged.
+      </p>
       {shareError && (
         <p className="mt-2 text-meta font-medium text-red" role="alert">
           {shareError}
         </p>
       )}
 
-      {isSharing && (
-        <>
-          <h3 className="label mt-5">Who can see me</h3>
+      {pendingSharing && (
+        <div className="mt-5">
+          <h3 className="label">Who can see me</h3>
           {others.length === 0 ? (
             <p className="py-2 text-meta font-normal text-ink-dim">
               No one else is registered yet.
             </p>
           ) : (
-            others.map((person) => {
-              const hidden = mutedIds.includes(person.id);
-              return (
-                <div key={person.id} className="flex min-h-11 items-center gap-3">
-                  <span
-                    aria-hidden="true"
-                    className="h-4 w-4 flex-none rounded-full"
-                    style={{ background: person.color }}
-                  />
-                  <span className="min-w-0 flex-1 truncate text-base text-ink">{person.label}</span>
-                  <Switch
-                    checked={hidden}
-                    onToggle={() => void (hidden ? unmuteUser(person.id) : muteUser(person.id))}
-                    ariaLabel={`Hide from ${person.label}`}
-                  />
-                </div>
-              );
-            })
+            <div className="max-h-[35vh] overflow-y-auto">
+              {others.map((person) => {
+                const hidden = pendingMuted.includes(person.id);
+                return (
+                  <div key={person.id} className="flex min-h-11 items-center gap-3">
+                    <span
+                      aria-hidden="true"
+                      className="h-4 w-4 flex-none rounded-full"
+                      style={{ background: person.color }}
+                    />
+                    <span className="min-w-0 flex-1 truncate text-base text-ink">
+                      {person.label}
+                    </span>
+                    <Switch
+                      checked={hidden}
+                      disabled={busy}
+                      onToggle={() =>
+                        setPendingMuted((prev) =>
+                          hidden ? prev.filter((id) => id !== person.id) : [...prev, person.id],
+                        )
+                      }
+                      ariaLabel={`Hide from ${person.label}`}
+                    />
+                  </div>
+                );
+              })}
+            </div>
           )}
-        </>
+        </div>
       )}
-    </BottomSheet>
+
+      <div className="mt-4 flex flex-col gap-2">
+        <button
+          type="button"
+          className="btn-accent w-full"
+          disabled={busy}
+          onClick={() => void handleSave()}
+        >
+          Save
+        </button>
+        <button
+          type="button"
+          className="flex h-11 w-full items-center justify-center text-base font-medium text-ink-muted transition hover:text-ink disabled:opacity-50"
+          disabled={busy}
+          onClick={handleCancel}
+        >
+          Cancel
+        </button>
+      </div>
+    </Dialog>
   );
 }
 
@@ -532,13 +615,15 @@ function LocateScreen() {
         </div>
       </div>
 
-      <LocationOptionsSheet
-        open={optionsOpen}
-        onClose={() => setOptionsOpen(false)}
-        locations={locations}
-        voters={voters}
-        myId={voterId}
-      />
+      {/* Mounted only while open so the drafts copy fresh values each time. */}
+      {optionsOpen && (
+        <LocationOptionsModal
+          onClose={() => setOptionsOpen(false)}
+          locations={locations}
+          voters={voters}
+          myId={voterId}
+        />
+      )}
     </div>
   );
 }

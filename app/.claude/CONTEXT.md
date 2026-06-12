@@ -1,6 +1,6 @@
 # BAR HOPPERS /app — CONTEXT (single source of truth)
 
-Last updated: 2026-06-12 · Phase: locate layout rebuild (right-side people strip), pending first deploy
+Last updated: 2026-06-12 · Phase: locate polish (options modal, panel collapse, shared avatar), pending first deploy
 
 ## What this app is
 
@@ -75,7 +75,9 @@ icon-only left rail with tooltips):
 - `/` 307-redirects to `/cities` (next.config.mjs redirect + page fallback).
 - `/city/[id]` — city detail (SSG via generateStaticParams, 404 on unknown id).
   Highlights the Cities tab; the global wordmark bar hides there (the page has
-  its own sticky header: back / city + state / vote icon).
+  its own sticky header: back / city + state / ProfileAvatar — same 36px
+  avatar as the wordmark bar, opens its own ProfileOverlay; voting lives in
+  the ActionBar CTA only).
 - `/locate` — live location sharing. Registered users only (valid
   bh2-voter-id found in the roster); everyone else gets a centered
   "Identity required" gate into the NamePrompt.
@@ -118,10 +120,13 @@ app/
   │ │                        .card/.btn/.input/.label, tabular-nums on body
   │ ├ page.tsx               redirect fallback → /cities
   │ ├ cities/page.tsx        CITIES: walkability index list + sticky column
-  │ │                        header + sort pill + sort bottom sheet
+  │ │                        header + sort pill (8px rounded-btn, like every
+  │ │                        floating pill above the nav) + sort bottom sheet
   │ ├ city/[id]/page.tsx     server wrapper: generateStaticParams + notFound
-  │ ├ city/[id]/CityDetail.tsx  CITY DETAIL: opaque sticky header, live map
-  │ │                        w/ pins, Hotels/Bars/Food tabs (Supabase-fed,
+  │ ├ city/[id]/CityDetail.tsx  CITY DETAIL: opaque sticky header (back /
+  │ │                        city + state / ProfileAvatar → own
+  │ │                        ProfileOverlay mount), live map w/ pins,
+  │ │                        Hotels/Bars/Food tabs (Supabase-fed,
   │ │                        plain-text addresses, wrapping descriptors),
   │ │                        hotel preference star toggles ("Prefer" label
   │ │                        when unselected), vote CTA in ActionBar; ≥840px
@@ -135,19 +140,28 @@ app/
   │ ├ locate/page.tsx        LOCATE tab: registration gate, full-bleed dark
   │ │                        map (Ralston center, zoom 8, greedy gestures),
   │ │                        person pins (14px circle + name pill; own pin
-  │ │                        18px + amber ring, "You (name)"; not tappable),
+  │ │                        18px + 26px ring stroked in own pin_color,
+  │ │                        "You (name)"; not tappable), collapsible
   │ │                        right-side people strip overlay (120px / 160px
   │ │                        ≥640px, bg rgba(10,13,20,.85), border-l):
-  │ │                        pinned 44px "Show All" row (zoom_out_map +
-  │ │                        accent text; 1 sharer → pan/zoom 14, 2+ →
-  │ │                        fitBounds 40px, 0 → no-op) over sharers A–Z
-  │ │                        (44px rows on their pin_color, contrastColor
-  │ │                        text, own row 1.5px --ink border; tap →
-  │ │                        pan/zoom 15 + 400ms pin pulse), "Location
-  │ │                        Options" pill in normal flow between map and
-  │ │                        nav → BottomSheet (SHARING toggle +
-  │ │                        disclaimer; "Who can see me" mute toggles
-  │ │                        while sharing); no color picker — auto-assigned
+  │ │                        sticky 44px "Show All" row at the top of the
+  │ │                        scroll list (zoom_out_map + accent text; 1
+  │ │                        sharer → pan/zoom 14, 2+ → fitBounds 40px, 0 →
+  │ │                        no-op) over sharers A–Z (44px rows on their
+  │ │                        pin_color, contrastColor text, own row "(you)"
+  │ │                        + 1.5px rgba(255,255,255,.4) inset outline;
+  │ │                        tap → pan/zoom 15 + 400ms pin pulse), 44px
+  │ │                        "Hide" bar at the strip bottom collapses width
+  │ │                        → 0 (200ms ease; 28x56px floating chevron
+  │ │                        handle on the map's right edge re-expands),
+  │ │                        "Location Options" pill (8px radius) in normal
+  │ │                        flow between map and nav → centered Dialog
+  │ │                        modal with DRAFTED edits (sharing toggle +
+  │ │                        disclaimer; "Who can see me" mute list while
+  │ │                        the draft toggle is on; Save applies via
+  │ │                        toggleSharing/muteUser/unmuteUser, Cancel/
+  │ │                        scrim/Esc discards); no color picker —
+  │ │                        auto-assigned
   │ ├ admin/page.tsx         ADMIN (3s long-press on Locate icon ONLY): user
   │ │                        cards always plain-visible (name, pin_plain or
   │ │                        "PIN not set", last vote — NO eye toggle),
@@ -161,12 +175,17 @@ app/
   ├ components/
   │ ├ AppShell.tsx           4 tabs (Cities/Availability/Results/Locate),
   │ │                        fully opaque wordmark bar (hidden on /city/*
-  │ │                        and /admin) with ProfileAvatar top right
-  │ │                        (initials on bh2-pin-color, person icon when
-  │ │                        unregistered, tap opens ProfileOverlay),
-  │ │                        mobile bottom nav, 80px desktop rail; 3s
-  │ │                        long-press on Locate → /admin with
-  │ │                        opacity-pulse hold feedback
+  │ │                        and /admin) with ProfileAvatar top right (tap
+  │ │                        opens ProfileOverlay), mobile bottom nav, 80px
+  │ │                        desktop rail; 3s long-press on Locate → /admin
+  │ │                        with opacity-pulse hold feedback
+  │ ├ ProfileAvatar.tsx      the 36px avatar circle: initials on the
+  │ │                        bh2-pin-color cache (contrastColor text),
+  │ │                        person icon when unregistered; re-reads
+  │ │                        localStorage on identity changes + storage
+  │ │                        events; aria-label "Your profile"; shared by
+  │ │                        the AppShell wordmark bar and the city detail
+  │ │                        header (optional className prop)
   │ ├ ActionBar.tsx          the floating slot above the bottom nav (fixed on
   │ │                        mobile, sticky bottom of column ≥840px)
   │ ├ CityList.tsx           index rows (name/state/district · score+grade ·
@@ -422,8 +441,10 @@ Colors:
   heat-map fractions, both per spec). `font-variant-numeric: tabular-nums`
   is set on `body` — numbers are tabular everywhere.
 - Radius: 12px cards (`rounded-card`), 8px buttons/inputs (`rounded-btn`),
-  6px chips/badges (`rounded-chip`), `rounded-full` pills only (sort pill,
-  grade badges, voter tags, legend dots).
+  6px chips/badges (`rounded-chip`), `rounded-full` only for grade badges,
+  voter tags, and legend dots. EVERY floating pill button above the bottom
+  nav (sort pill, vote CTA, Location Options) is 8px `rounded-btn` — never
+  rounded-full.
 - Spacing: 4px grid. Cards 16px padding. List rows ≥56px; city index rows
   ≥72px. Sections 24px gap (`gap-6`). Page padding 16px (`px-4`).
 - Every interactive element ≥44px tall (`h-11`/`min-h-11`) — sacred.
@@ -486,7 +507,47 @@ See PROGRESS.md.
 
 ## Current state
 
-- Last change (2026-06-12, locate-layout-rebuild session): the Locate
+- Last change (2026-06-12, locate-polish + shared-avatar session): six
+  surgical fixes on the Locate screen and the city detail header — no
+  rebuilds. (1) The "Location Options" BottomSheet is GONE — the pill now
+  opens the centered Dialog modal with DRAFTED edits: pendingSharing +
+  pendingMuted copy the live values on open (the modal mounts only while
+  open, so each open re-seeds), the "Who can see me" mute list follows the
+  DRAFT toggle, and nothing writes until Save — mutes first (so a share
+  enabled in the same Save carries them), then toggleSharing if the switch
+  moved. Cancel, Esc, or a scrim tap discards the draft; a denied/error
+  share keeps the modal open with the inline error and reverts the draft
+  toggle. Mute rows scroll inside max-h-[35vh]; Save is btn-accent, Cancel
+  a text button, both disabled while busy. This modal is the ONE sanctioned
+  exception to the immediate/optimistic-write rule. (2) People-panel rows
+  keep their per-person v2_locations.pin_color fill + contrastColor text;
+  the own row now appends " (you)" and swapped its 1.5px --ink border for a
+  1.5px rgba(255,255,255,.4) outline (inset via outline-offset -1.5px so
+  the scroll container can't clip it). (3) "Show All" moved INSIDE the
+  scrollable list as position:sticky top-0 z-10 (bg-raised, border-b) — it
+  never scrolls away. (4) The strip is collapsible: a 44px "Hide" bar
+  (chevron_right 20px + 12px label, both --ink-dim, bg-raised, border-t)
+  at the strip bottom collapses the panel width to 0 (transition width
+  200ms ease, border-l dropped, aria-hidden + pointer-events-none while
+  collapsed); a 28x56px floating handle (chevron_left, raised @ 90%
+  opacity, --border border, border-radius 6px 0 0 6px) vertically centered
+  flush on the map's right edge re-expands it. (5) Floating-pill radius
+  unified at 8px: the /cities sort pill went rounded-full → rounded-btn;
+  the city-detail vote CTA and the Location Options pill already used 8px.
+  (6) ProfileAvatar extracted from AppShell into
+  components/ProfileAvatar.tsx (unchanged rendering, new optional
+  className prop — AppShell passes -mr-1) and the city-detail header's
+  top-right vote icon button is REPLACED by it; CityDetail mounts its own
+  ProfileOverlay, so the avatar + profile now persist on every screen
+  except /admin, and voting on city detail lives only in the ActionBar
+  CTA. (7) The own map pin's outer ring is scale 13 (26px) stroked in
+  YOUR OWN pin_color (was a hardcoded #FF8C42 22px ring); ring icon also
+  re-set in place on realtime updates. Every locate pin color comes from
+  the location row — zero hardcoded pin colors. useLocations, voting
+  logic, availability calendar, walkability index, Results, admin, the
+  map options/dark style, and the root index.html untouched. Build green —
+  36 static pages; lint + strict typecheck clean.
+- Earlier (2026-06-12, locate-layout-rebuild session): the Locate
   screen layout rebuilt — full-bleed map, right-side people strip, single
   options pill. The old bottom drawer (drag handle, 80px↔50vh panel height
   state, pointer drag handlers, row flash) and the inline ControlsCard are

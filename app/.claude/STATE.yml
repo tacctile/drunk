@@ -1,29 +1,34 @@
 last_updated: 2026-06-12
 last_session: >-
-  Locate screen layout rebuilt. The bottom drawer (drag handle, 80px↔50vh
-  panel height state, pointer drag handlers, row flash) and the inline
-  controls card are completely deleted. The registered screen is now a
-  fixed flex column (under the header → above the bottom nav): a full-bleed
-  dark map (same options: Ralston center, zoom 8, greedy gestures,
-  disableDefaultUI, clickableIcons false) with a right-side people strip
-  overlaid absolute right-0 inset-y-0 (120px / 160px ≥640px,
-  rgba(10,13,20,.85) bg, --border left hairline) — pinned 44px "Show All"
-  row on top (--surface-raised, zoom_out_map + accent 12px/600 text; 0
-  sharers no-op, 1 panTo + zoom 14, 2+ fitBounds w/ 40px padding) over a
-  scrollable A–Z list of active sharers (44px rows filled with their
-  pin_color, contrastColor() text, own row 1.5px --ink border, tap →
-  pan/zoom 15 + 400ms pin pulse; empty state "No one sharing"). Map pins
-  are clickable:false now that the drawer's row-highlight is gone. Below
-  the map, in normal flow, the single "Location Options" pill (btn-ghost,
-  44px, tune icon) opens a BottomSheet with a close button: SHARING
-  (toggle + disclaimer + inline denied/error copy) and, while sharing is
-  on, "Who can see me" — every other registered user A–Z with a 16px
-  pin_color dot and a "Hide from [name]" toggle wired to muted_ids. No
-  Save/Cancel — writes stay immediate/optimistic. Registration gate and
-  useLocations untouched. AppShell, voting, availability, city
-  list/detail, Results, admin, root index.html untouched. Build green (36
-  static pages), lint + strict typecheck clean.
-current_phase: locate_layout_rebuild
+  Six surgical fixes on the Locate screen + city detail header. (1) The
+  "Location Options" BottomSheet replaced by a centered Dialog modal with
+  DRAFTED edits — pendingSharing/pendingMuted copy live values on open
+  (modal mounts fresh per open), the mute list follows the draft toggle,
+  nothing writes until Save (mutes first, then toggleSharing if moved);
+  Cancel/Esc/scrim discards; denied/error keeps the modal open with the
+  inline error and reverts the draft toggle; mute rows scroll past 35vh.
+  (2) People-panel rows keep per-person pin_color fill + contrastColor
+  text; own row now appends " (you)" and wears a 1.5px
+  rgba(255,255,255,.4) inset outline instead of the --ink border. (3)
+  "Show All" is position:sticky top-0 inside the scrollable list
+  (bg-raised, border-b) — never scrolls away. (4) Strip is collapsible: a
+  44px "Hide" bar (chevron_right + label, --ink-dim, bg-raised, border-t)
+  collapses width to 0 (200ms ease, aria-hidden, pointer-events-none); a
+  28x56px floating chevron_left handle (raised @90%, --border, radius
+  6px 0 0 6px) vertically centered on the map's right edge re-expands.
+  (5) Floating pills unified at 8px — /cities sort pill rounded-full →
+  rounded-btn (vote CTA + options pill already 8px). (6) ProfileAvatar
+  extracted to components/ProfileAvatar.tsx (optional className prop;
+  AppShell passes -mr-1) and the city-detail header's vote icon REPLACED
+  by it with its own ProfileOverlay mount — avatar persists everywhere
+  except /admin; voting on city detail is ActionBar-only now. (7) Own map
+  pin's outer ring: scale 13 (26px) stroked in YOUR pin_color (was
+  hardcoded amber, 22px), icon re-set in place on realtime ticks — zero
+  hardcoded locate pin colors. useLocations, voting, availability, city
+  list walkability, Results, admin, map options/dark style, root
+  index.html untouched. Build green (36 static pages), lint + strict
+  typecheck clean.
+current_phase: locate_polish_shared_avatar
 build_complete: true
 supabase_schema_deployed: true
 vercel_deployed: false
@@ -59,9 +64,9 @@ known_issues:
     write again (e.g. vote) ensureVoter re-creates their voter row, and
     their cached votes/availability resurface (effectively re-registering
     by usage; pre-existing identity-layer behavior)
-  - The avatar lives in the wordmark bar, so it is absent on /city/* and
-    /admin, which bring their own headers (those headers are out of scope
-    per the Prompt 2 DO-NOT list)
+  - The avatar is absent only on /admin now (its own header has no avatar
+    slot); city detail carries the shared ProfileAvatar in its sticky
+    header with its own ProfileOverlay mount
   - A device registered before the pin-color system shows its initials on a
     plain --surface-raised avatar until the first roster refetch caches
     bh2-pin-color (self-healing, no action needed)
@@ -82,7 +87,13 @@ known_issues:
     expire also works)
   - Locate "Show All" fitBounds uses a flat 40px padding (per spec), which
     doesn't account for the 120/160px people strip — a fitted pin can land
-    under the strip on the right edge
+    under the strip on the right edge (collapsing the strip avoids it)
+  - Location Options edits apply on Save only — the ONE sanctioned
+    exception to the app's immediate/optimistic-write rule; enabling
+    sharing on Save can take up to ~20s waiting for a geolocation fix
+    (buttons disable while busy, no spinner per the no-spinner rule)
+  - The collapsed people-strip expand handle is 28px wide (spec'd), below
+    the app's 44px tap floor — an explicit spec exception
   - Locate map pins are no longer tappable — the pin-tap row highlight was
     removed along with the bottom drawer; the strip is the only way to
     target a person
