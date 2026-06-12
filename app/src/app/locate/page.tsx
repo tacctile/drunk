@@ -430,9 +430,16 @@ function LocationOptionsModal({ onClose, locations, voters, myId }: LocationOpti
     () =>
       voters
         .filter((v) => v.voter_id !== myId)
-        .map((v) => ({ id: v.voter_id, label: v.display_name ?? v.name, color: v.pin_color }))
+        .map((v) => {
+          const fromLocation = locations.activeLocations.find(
+            (l) => l.voter_id === v.voter_id,
+          )?.pin_color;
+          const color =
+            fromLocation ?? locations.voterColors[v.voter_id] ?? v.pin_color ?? "#888";
+          return { id: v.voter_id, label: v.display_name ?? v.name, color };
+        })
         .sort((a, b) => a.label.localeCompare(b.label)),
-    [voters, myId],
+    [voters, myId, locations.activeLocations, locations.voterColors],
   );
 
   const handleCancel = () => {
@@ -498,26 +505,26 @@ function LocationOptionsModal({ onClose, locations, voters, myId }: LocationOpti
           ) : (
             <div className="max-h-[35vh] overflow-y-auto">
               {others.map((person) => {
-                const hidden = pendingMuted.includes(person.id);
+                const canSeeMe = !pendingMuted.includes(person.id);
                 return (
                   <div key={person.id} className="flex min-h-11 items-center gap-3">
                     <span
                       aria-hidden="true"
-                      className="h-4 w-4 flex-none rounded-full"
-                      style={{ background: person.color }}
+                      className="flex-none rounded-full"
+                      style={{ width: 20, height: 20, background: person.color }}
                     />
                     <span className="min-w-0 flex-1 truncate text-base text-ink">
                       {person.label}
                     </span>
                     <Switch
-                      checked={hidden}
+                      checked={canSeeMe}
                       disabled={busy}
                       onToggle={() =>
                         setPendingMuted((prev) =>
-                          hidden ? prev.filter((id) => id !== person.id) : [...prev, person.id],
+                          canSeeMe ? [...prev, person.id] : prev.filter((id) => id !== person.id),
                         )
                       }
-                      ariaLabel={`Hide from ${person.label}`}
+                      ariaLabel={`${person.label} can see me`}
                     />
                   </div>
                 );
