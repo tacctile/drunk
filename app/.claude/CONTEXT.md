@@ -34,7 +34,7 @@ Bar Hoppers is a mobile-first Next.js webapp a small group of friends (~6–10 p
   first visit, stored in `v2_voters` (`display_name`, `pin_hash` — bcryptjs,
   10 salt rounds, NEVER plain text). Returning users pick their name from a
   roster dropdown and verify the PIN to load their voter_id onto the device.
-  No lockout, no complexity — wrong PIN just says "That PIN doesn't match.
+  No lockout, no complexity — wrong PIN just says "PIN doesn't match.
   Try again."
 - Icons: Material Symbols Outlined (Google Fonts CDN) — the only icon system
 - Font: Manrope 400/500/600/700/800 (Google Fonts CDN)
@@ -95,10 +95,10 @@ app/
   │ │                        when unselected), vote CTA in ActionBar; ≥840px
   │ │                        push layout keeps CityList visible left
   │ ├ calendar/page.tsx      CALENDAR: personal tri-state calendar only
-  │ ├ board/page.tsx         THE BOARD: read-only two-column layout (stacks
-  │ │                        <480px) — STANDINGS (city votes + hotel
-  │ │                        sub-rows) left, HOT DATES (dates by available
-  │ │                        count) right + "Not you?" identity switch
+  │ ├ board/page.tsx         THE BOARD: two card columns (stack <480px) —
+  │ │                        TOP CITIES (top 5, "See Votes" sheet) and HOT
+  │ │                        DATES (top 5, "See Who" sheet) + top-3 hotel
+  │ │                        section for the leading city + "Not you?" switch
   │ └ not-found.tsx          404
   ├ components/
   │ ├ AppShell.tsx           3 tabs (Cities/Calendar/The Board), wordmark bar,
@@ -116,11 +116,12 @@ app/
   │ │                        diffed by venue id + zoom-gated OverlayView
   │ │                        name labels (zoom ≥ 15)
   │ ├ VenueSheet.tsx         pin-tap sheet: name, address (plain), descriptor
-  │ ├ NamePrompt.tsx         identity dialogs: new user (name + last initial
-  │ │                        → 2-digit PIN + confirm) and return user (roster
-  │ │                        dropdown → PIN check); useNameGate() — every
+  │ ├ NamePrompt.tsx         single-screen identity modal ("Who are you?"):
+  │ │                        first name + initial + 2-digit PIN + Save, with
+  │ │                        an in-modal swap to sign-in (roster dropdown +
+  │ │                        PIN) — no steps; useNameGate() — every
   │ │                        identifying write funnels through it;
-  │ │                        IdentityWatcher (auto return flow on unverified
+  │ │                        IdentityWatcher (auto sign-in form on unverified
   │ │                        localStorage id); NotYouLink ("Not you?" switch)
   │ ├ Dialog.tsx             centered modal over scrim (esc/backdrop, scroll lock)
   │ ├ BottomSheet.tsx        slide-up sheet (sort options, venues, breakdowns)
@@ -326,7 +327,37 @@ See PROGRESS.md.
 
 ## Current state
 
-- Last change (2026-06-12, foundation-fixes session): identity system is now
+- Last change (2026-06-12, simplification session): NamePrompt is now ONE
+  single-screen modal ("Who are you?") — first name (max 15) + last initial
+  (1 letter, auto-capitalized) + 2-digit PIN stacked, 44px inputs, helper
+  line "Name, initial, and PIN let you vote from another device.", full-width
+  accent Save. No steps, no PIN-confirm screen. Validation runs on Save with
+  inline 12px red errors per field (first name letters-only 1–15, initial
+  exactly 1 letter, PIN exactly 2 digits); save still flows through
+  createIdentity (uuid + bcrypt hash + v2_voters upsert + localStorage).
+  "Sign in as existing user" swaps the same modal to the sign-in form (A–Z
+  roster dropdown + PIN + full-width Sign in; wrong PIN → "PIN doesn't
+  match. Try again." — no lockout; "Never mind, create new" swaps back).
+  Trigger logic (useNameGate / IdentityWatcher / NotYouLink) untouched.
+  The Board fully rebuilt: px-4 pt-4 page; Section 1 is two equal columns
+  (12px gap, stacking <480px) of 56px-min card rows (surface / 12px radius /
+  border, 8px row gap) — TOP CITIES left (top 5 by votes: name, "N votes"
+  accent count, 32px "See Votes" button → bottom sheet listing voter names
+  in 44px rows with a close button top right) and HOT DATES right (top 5 by
+  available count desc: "Sat Jun 28", "N free", "See Who" → bottom sheet
+  headed "Sat, Jun 28" with Available (green) / Not available (red) 44px
+  name rows). Section 2 (24px below): "Top Hotels in Top Voted City" —
+  v2_hotel_votes rows for the leading city only, grouped by hotel_name,
+  sorted count desc → stars desc → low end of price_range asc (stars/price
+  joined against the city's v2_hotels via useVenues by exact name match),
+  top 3 as card rows (name, "N prefer this", filled 14px accent stars); the
+  whole section hides when no city has votes or the leading city has no
+  hotel votes. Rank numbers, meters, voter pills, and hotel sub-rows are
+  gone from the board; the "Not you?" switcher stays at the page bottom.
+  Empty states: "No votes yet." / "No dates marked yet.". The 32px See
+  buttons are a spec'd exception to the 44px-target rule. Build green — 34
+  static pages; lint + strict typecheck clean.
+- Earlier (2026-06-12, foundation-fixes session): identity system is now
   name + last initial + 2-digit PIN. New users enter first name (1–15 chars)
   + last initial (1 letter), then choose/confirm a 2-digit PIN — a fresh
   uuid is generated, the PIN is bcrypt-hashed (bcryptjs, 10 rounds) and the
