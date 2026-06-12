@@ -1,38 +1,40 @@
 last_updated: 2026-06-12
 last_session: >-
-  Prompt 3 — the profile overlay. New components/ProfileOverlay.tsx: a
-  full-screen slide-up sheet (anim-sheet, --bg, z-50 over the tab bar, NO
-  route) opened by the AppShell avatar; own header (back arrow / "Profile"
-  / spacer) closing on tap, Escape, or a 70px header swipe-down; body
-  scroll locked; content + hooks mount only while open. Sections: 64px
-  pin-color avatar + display name + "Member since [date]"
-  (v2_voters.created_at, fetched per open alongside pin_hash); MY VOTE
-  card (city + "You voted for this city" + "Preferred hotel: X", or "No
-  vote cast yet" + "Go vote" → closes overlay, pushes /cities); MY
-  AVAILABILITY card ("[N] days available" green / "[N] days unavailable"
-  red / "Last updated [Month Year]", or "No dates marked yet" + "Mark
-  dates" → /calendar); LOCATION SHARING card (toggle on
-  useLocations.toggleSharing, "Sharing · expires in X hrs" / "Not
-  sharing", "This only affects Bar Hoppers." disclaimer); MY IDENTITY
-  confirm-then-change form (three always-shown confirmation inputs — PIN
-  masked w/ eyeball, bcrypt-compared against pin_hash; trimmed
-  case-insensitive matches gate "Update my profile", which reveals three
-  optional double-entry change pairs; empty pair = untouched field; "Save
-  changes" → useGroupData.updateProfile, 1.2s green check flash, form
-  reset); "Not [name]? Switch identity" → BottomSheet confirm → new
-  useGroupData.signOut (clears bh2-voter-id/-name/-pin-color + write
-  caches, context → unregistered, server rows remain) and the overlay
-  closes. Unregistered avatar taps get a "No identity yet" gate into
-  NamePrompt. Data layer: updateProfile (optimistic rename of context
-  name + roster row + bh2-voter-name; v2_voters upsert adds pin_hash +
-  pin_plain when the PIN changed), signOut, identity.clearIdentity();
-  useLocations channel topic is now unique per mount so /locate and the
-  overlay can subscribe simultaneously. Schema: v2_voters.pin_plain text
-  added live via MCP (idempotent; recovery-only — nothing verifies
-  against it). Voting/availability writes, city list/detail, Results,
-  admin, locate map logic, root index.html untouched. Build green (36
-  static pages), lint + strict typecheck clean.
-current_phase: profile_overlay
+  Admin hardening + back-nav fixes (four targeted fixes). (1)
+  ProfileOverlay intercepts the device/browser back button: opening pushes
+  a dummy { profile: true } history entry + popstate listener so Android
+  back / browser back closes the overlay instead of leaving the app;
+  in-app closes (back arrow / Escape / header swipe / sign-out) pop the
+  dummy entry via history.back() to keep the stack clean; Go vote / Mark
+  dates router.replace the dummy entry with the destination (popping
+  first would race the push). (2) Admin user cards are always
+  plain-visible — eyeball toggle and reveal state deleted; each card shows
+  display name, "PIN: [pin_plain]" or "PIN not set", "Last voted: [city]"
+  or "No vote", 44px pencil edit + new 44px red delete button; the edit
+  modal's PIN reset now also writes pin_plain so the displayed PIN stays
+  truthful, and its embedded delete flow moved out to the row button. (3)
+  Cascade delete fixed at the root: v2_voters had NO anon DELETE RLS
+  policy (only v2 user table without one) so the voter row silently
+  survived — policy added live via MCP (allow_anon_delete_v2_voters);
+  deleteUser deletes explicitly in FK order v2_locations → v2_availability
+  → v2_hotel_votes → v2_city_votes → v2_voters, each awaited, then
+  refetches without reload; confirm dialog (Cancel / red Delete) stays.
+  (4) Admin scroll fixed at the root: the save-and-restore body scroll
+  lock left body overflow stuck on "hidden" when stacked overlays
+  unmounted in one commit — Dialog/BottomSheet/ProfileOverlay now share a
+  counter-based lock (new lib/scrollLock.ts); admin content wrapper gained
+  pb-32 so the last section clears the bottom nav. (5) New DANGER ZONE
+  section below DATA HEALTH: red-bordered "Wipe All Users" (warning icon)
+  opens a BottomSheet with a "Type DELETE to confirm" input
+  (autoCapitalize, no autocorrect/autocomplete), text Cancel, and a red
+  filled "Wipe Everything" disabled until the input === "DELETE"
+  (case-sensitive); confirming wipes the five user tables in the same FK
+  order (.neq nil-uuid), closes the sheet, refetches, and shows "All
+  users wiped." centered in the users section for 4s. Voting,
+  availability calendar, city list/detail, Results, locate, root
+  index.html untouched. Build green (36 static pages), lint + strict
+  typecheck clean.
+current_phase: admin_hardening_and_back_nav
 build_complete: true
 supabase_schema_deployed: true
 vercel_deployed: false
@@ -60,19 +62,27 @@ known_issues:
   - Location coords only refresh while a Bar Hoppers tab is open (60s
     foreground interval — no background tracking, by design); a row from a
     closed session keeps its last coords until expiry or toggle-off
-  - Anyone can long-press into /admin — it is hidden, not authenticated
-    (acceptable for a ~10-friend app, per spec)
+  - Anyone can long-press into /admin — it is hidden, not authenticated —
+    and it now shows pin_plain values in plain text and can delete or wipe
+    every user (acceptable for a ~10-friend app, per spec)
+  - Deleting (or wiping) a user does not sign their device out — the next
+    refetch flags the identity invalid and auto-opens sign-in, but if they
+    write again (e.g. vote) ensureVoter re-creates their voter row, and
+    their cached votes/availability resurface (effectively re-registering
+    by usage; pre-existing identity-layer behavior)
   - The avatar lives in the wordmark bar, so it is absent on /city/* and
     /admin, which bring their own headers (those headers are out of scope
     per the Prompt 2 DO-NOT list)
   - A device registered before the pin-color system shows its initials on a
     plain --surface-raised avatar until the first roster refetch caches
     bh2-pin-color (self-healing, no action needed)
-  - pin_plain (per the Prompt 3 spec) stores the plain 2-digit PIN when it
-    is changed from the profile, and v2_voters is anon-readable — acceptable
-    for a ~10-friend app whose 00–99 PINs have no lockout, but it is NOT a
-    secret store; registration/sign-in never write it, so it only fills as
-    people change PINs
+  - pin_plain stores the plain 2-digit PIN when it is changed from the
+    profile or reset from the admin edit modal, and the admin user list
+    displays it in plain text; v2_voters is anon-readable — acceptable for
+    a ~10-friend app whose 00–99 PINs have no lockout, but it is NOT a
+    secret store. Registration/sign-in never write it, so users who never
+    changed their PIN show "PIN not set" in admin even though their hashed
+    PIN works (use the edit modal's PIN reset to backfill it)
   - Profile PIN confirmation falls back to accepting any valid 2-digit PIN
     when the row has no pin_hash or the fetch failed (offline) — mirrors the
     sign-in adoption rule for legacy rows

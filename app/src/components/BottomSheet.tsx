@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
+import { lockBodyScroll, unlockBodyScroll } from "@/lib/scrollLock";
 
 interface BottomSheetProps {
   open: boolean;
@@ -17,11 +18,10 @@ export function BottomSheet({ open, onClose, children, label }: BottomSheetProps
       if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    lockBodyScroll();
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
+      unlockBodyScroll();
     };
   }, [open, onClose]);
 

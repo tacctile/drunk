@@ -18,6 +18,7 @@ import { useVotes } from "@/hooks/useVotes";
 import { contrastColor, PIN_COLORS } from "@/lib/colors";
 import { buildDisplayName, getStoredPinColor, isValidPin } from "@/lib/identity";
 import { formatMonthTitle, plural } from "@/lib/format";
+import { lockBodyScroll, unlockBodyScroll } from "@/lib/scrollLock";
 import { getSupabase } from "@/lib/supabase";
 import { BottomSheet } from "./BottomSheet";
 import { Icon } from "./Icon";
@@ -590,8 +591,13 @@ function IdentityGate() {
   );
 }
 
-function ProfileBody({ onClose }: { onClose: () => void }) {
-  const router = useRouter();
+function ProfileBody({
+  onClose,
+  onNavigate,
+}: {
+  onClose: () => void;
+  onNavigate: (path: string) => void;
+}) {
   const { voterId, name, voters, updateProfile, signOut } = useGroupData();
   const locations = useLocations();
 
@@ -652,11 +658,6 @@ function ProfileBody({ onClose }: { onClose: () => void }) {
       })
     : null;
 
-  const navTo = (path: string) => {
-    onClose();
-    router.push(path);
-  };
-
   return (
     <>
       <div className="flex flex-col items-center text-center">
@@ -672,8 +673,8 @@ function ProfileBody({ onClose }: { onClose: () => void }) {
         )}
       </div>
 
-      <VoteCard onGoVote={() => navTo("/cities")} />
-      <AvailabilityCard onMarkDates={() => navTo("/calendar")} />
+      <VoteCard onGoVote={() => onNavigate("/cities")} />
+      <AvailabilityCard onMarkDates={() => onNavigate("/calendar")} />
       <LocationCard locations={locations} />
       <IdentityCard
         storedFirst={storedFirst}
@@ -700,26 +701,69 @@ interface ProfileOverlayProps {
 /**
  * The full-height sheet itself: slides up from the bottom over the whole
  * screen (tab bar included), own opaque header (back arrow / "Profile"),
- * scrollable content. Closes on the back arrow, Escape, or a downward swipe
- * on the header. Content mounts only while open so the data hooks (and the
- * locations realtime channel) live only as long as the overlay does.
+ * scrollable content. Closes on the back arrow, Escape, a downward swipe on
+ * the header, or the device/browser back button. Content mounts only while
+ * open so the data hooks (and the locations realtime channel) live only as
+ * long as the overlay does.
  */
 export function ProfileOverlay({ open, onClose }: ProfileOverlayProps) {
+  const router = useRouter();
   const dragY = useRef<number | null>(null);
+  // Latest onClose without retriggering the history effect below (AppShell
+  // recreates the prop every render).
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
+  // Device/browser back button closes the overlay instead of leaving the
+  // app: opening pushes a dummy history entry, so pressing back pops it and
+  // the popstate closes the overlay with the URL unchanged.
+  useEffect(() => {
+    if (!open) return;
+    window.history.pushState({ profile: true }, "");
+    const handlePop = () => onCloseRef.current();
+    window.addEventListener("popstate", handlePop);
+    return () => {
+      window.removeEventListener("popstate", handlePop);
+    };
+  }, [open]);
+
+  // In-app closes (back arrow, Escape, header swipe, sign-out) pop the dummy
+  // entry instead of closing directly — the popstate above then closes the
+  // overlay, keeping the history stack clean.
+  const requestClose = useCallback(() => {
+    if (window.history.state?.profile) {
+      window.history.back();
+    } else {
+      onCloseRef.current();
+    }
+  }, []);
+
+  // Deep links (Go vote / Mark dates) replace the dummy entry with the
+  // destination — popping it first would race the push and could swallow the
+  // navigation, and Back from there should return to the opening page.
+  const navTo = useCallback(
+    (path: string) => {
+      onCloseRef.current();
+      if (window.history.state?.profile) router.replace(path);
+      else router.push(path);
+    },
+    [router],
+  );
 
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") requestClose();
     };
     document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    lockBodyScroll();
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
+      unlockBodyScroll();
     };
-  }, [open, onClose]);
+  }, [open, requestClose]);
 
   if (!open) return null;
 
@@ -741,7 +785,7 @@ export function ProfileOverlay({ open, onClose }: ProfileOverlayProps) {
         onPointerMove={(e) => {
           if (dragY.current !== null && e.clientY - dragY.current > SWIPE_CLOSE_PX) {
             dragY.current = null;
-            onClose();
+            requestClose();
           }
         }}
         onPointerUp={() => {
@@ -754,7 +798,7 @@ export function ProfileOverlay({ open, onClose }: ProfileOverlayProps) {
         <button
           type="button"
           aria-label="Close profile"
-          onClick={onClose}
+          onClick={requestClose}
           className="flex h-11 w-11 items-center justify-center text-ink"
         >
           <Icon name="arrow_back" size={24} />
@@ -765,7 +809,7 @@ export function ProfileOverlay({ open, onClose }: ProfileOverlayProps) {
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 pb-[calc(24px+env(safe-area-inset-bottom))] pt-6">
-          <ProfileBody onClose={onClose} />
+          <ProfileBody onClose={requestClose} onNavigate={navTo} />
         </div>
       </div>
     </div>
