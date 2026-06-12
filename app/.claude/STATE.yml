@@ -1,32 +1,34 @@
 last_updated: 2026-06-12
 last_session: >-
-  Auto-assigned pin color system (identity foundation). New lib/colors.ts:
-  25-color PIN_COLORS pool, assignColor(n) = PIN_COLORS[n % 25] (Nth
-  registered voter gets the Nth color, cycling past 24), contrastColor(hex)
-  for avatar initials (consumed in Prompt 2). Schema applied live via MCP
-  (add_pin_color_to_v2_voters, idempotent): v2_voters.pin_color text NOT
-  NULL DEFAULT '#FF8C42'; the 4 pre-existing voters were backfilled with
-  pool colors in created_at order so registration-order assignment holds
-  for everyone. createIdentity now COUNTs v2_voters and upserts pin_color =
-  assignColor(count) with the bcrypt hash, then caches the color to
-  bh2-pin-color; signIn selects pin_color and caches it after PIN
-  verification; refetch re-syncs the cache from my server row (server truth
-  wins — stale picker-era colors retire themselves). VoterRow gained
-  pin_color: string and the roster select includes it — useGroupData
-  consumers can render colored circles next to names. Color picker DELETED
-  everywhere: PIN_PALETTE, DEFAULT_PIN_COLOR, updatePinColor, and all
-  bh2-pin-color writes removed from useLocations.ts; the swatch radiogroup
-  removed from locate/page.tsx (only change there); toggleSharing writes
-  v2_locations.pin_color from the bh2-pin-color cache ?? '#FF8C42'.
-  bh2-pin-color stays in the localStorage contract as an identity-layer
-  cache of the server-assigned color — never a user pick. ensureVoter
-  intentionally omits pin_color (insert takes the default, conflict update
-  preserves the assignment). The task spec's example upsert listed a
-  pin_plain field — intentionally NOT implemented (no such column; plain
-  PINs are forbidden by the architecture). AppShell, voting, availability,
-  city data, admin, root index.html untouched. Build green (36 static
-  pages), lint + strict typecheck clean.
-current_phase: pin_color_foundation
+  Prompt 2 — identity made visible. (1) AppShell wordmark bar gained a
+  ProfileAvatar top right (every screen that shows the bar; /city/* and
+  /admin keep their own headers as before): 36px circle, initials ("Nick B"
+  → "NB", 13px/700, contrastColor text) on the bh2-pin-color background
+  with a 1.5px ${color}4D border; unregistered devices get a person icon
+  (20px, --ink-dim) on --surface-raised instead. 44px tap target,
+  aria-label "Your profile", tap is a deliberate no-op until the profile
+  screen (Prompt 3). Re-reads localStorage whenever useGroupData
+  name/voters change (registration, sign-in, and roster pin-color re-sync
+  update it without a reload) plus a storage listener for other tabs;
+  first render is always the icon variant so SSR hydration stays clean.
+  (2) /locate controls card simplified to two labeled sections: SHARING
+  (toggle + unchanged disclaimer) and VISIBILITY ("Manage who sees you" —
+  renamed from "Manage visibility" — mute list) which renders only while
+  sharing is on. Swatches confirmed gone (deleted last session). No
+  Save/Cancel — writes stay immediate/optimistic per the architecture.
+  (3) People panel rows are single-line: 20px pin_color dot (own dot wears
+  a 2px --accent outline with a 2px gap), name (Title) with "(you)" in
+  --ink-dim, right-aligned "X min ago" (Meta, --ink-dim). Row tap pans to
+  the person, zooms to 15 (was 14), pulses the pin +6px diameter with a
+  400ms timeout reset (14px pin → exactly 20px; per-pin timers cleared on
+  teardown; old rAF sine pulse deleted), and flashes the row
+  --surface-raised for 1s (160ms transition fades it back). Pin taps still
+  highlight the row accent-dim without moving the map. (4) Verified, no
+  change needed: map pins already fill from v2_locations.pin_color
+  (written from the voter's auto-assigned color on toggle-on). Voting,
+  availability, city list/detail, Results, admin, root index.html
+  untouched. Build green (36 static pages), lint + strict typecheck clean.
+current_phase: avatar_and_locate_polish
 build_complete: true
 supabase_schema_deployed: true
 vercel_deployed: false
@@ -56,9 +58,15 @@ known_issues:
     closed session keeps its last coords until expiry or toggle-off
   - Anyone can long-press into /admin — it is hidden, not authenticated
     (acceptable for a ~10-friend app, per spec)
+  - The avatar lives in the wordmark bar, so it is absent on /city/* and
+    /admin, which bring their own headers (those headers are out of scope
+    per the Prompt 2 DO-NOT list)
+  - A device registered before the pin-color system shows its initials on a
+    plain --surface-raised avatar until the first roster refetch caches
+    bh2-pin-color (self-healing, no action needed)
 next_up:
-  - Prompt 2 — avatar in AppShell + colored roster circles on /locate
-    (pin_color + contrastColor are ready and exposed via useGroupData)
+  - Prompt 3 — profile screen; wire the avatar tap to open it (the avatar
+    button in AppShell.tsx is rendered and labeled, currently a no-op)
   - Backfill lat/lng for the 206 venue rows in the Supabase SQL editor
   - Create Vercel project with root directory app/ and deploy
   - Set NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY /
