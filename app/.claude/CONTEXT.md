@@ -1,6 +1,6 @@
 # BAR HOPPERS /app — CONTEXT (single source of truth)
 
-Last updated: 2026-06-12 · Phase: auto-assigned pin colors live (identity foundation), pending first deploy
+Last updated: 2026-06-12 · Phase: avatar in top bar + colored locate list (Prompt 2), pending first deploy
 
 ## What this app is
 
@@ -80,7 +80,11 @@ icon-only left rail with tooltips):
   release click is swallowed). No link, no menu entry anywhere. Brings its
   own sticky header (back arrow → /locate), so the wordmark bar hides there
   like on city detail.
-- Sticky top bar everywhere else: "Bar Hoppers" wordmark left, nothing right.
+- Sticky top bar everywhere else: "Bar Hoppers" wordmark left, profile
+  avatar right — a 36px circle showing your initials on your auto-assigned
+  pin color (bh2-pin-color cache), or a `person` icon on --surface-raised
+  before registration. Tapping it is a no-op until the profile screen
+  (Prompt 3).
 - EVERY sticky header in the app is fully opaque — plain `bg-bg`/`bg-surface`,
   never an opacity modifier (`/90`), never `backdrop-blur`.
 - A single floating control sits just above the bottom nav (`ActionBar`):
@@ -123,10 +127,15 @@ app/
   │ ├ locate/page.tsx        LOCATE tab: registration gate, full-screen dark
   │ │                        map (Ralston center, zoom 8, greedy gestures),
   │ │                        person pins (14px circle + name pill; own pin
-  │ │                        18px + amber ring, "You (name)"), sharing
-  │ │                        toggle + device-settings disclaimer, "Manage
-  │ │                        visibility" mute list, draggable people panel
-  │ │                        (80px ↔ 50vh); no color picker — auto-assigned
+  │ │                        18px + amber ring, "You (name)"), controls card
+  │ │                        with SHARING (toggle + disclaimer) and — only
+  │ │                        while sharing is on — VISIBILITY ("Manage who
+  │ │                        sees you" mute list), draggable people panel
+  │ │                        (80px ↔ 50vh; rows = 20px color dot, accent-
+  │ │                        ringed for you, name, right-aligned "X min
+  │ │                        ago"; row tap → pan/zoom 15 + 400ms pin pulse
+  │ │                        + 1s raised row flash); no color picker —
+  │ │                        auto-assigned
   │ ├ admin/page.tsx         ADMIN (3s long-press on Locate icon ONLY): user
   │ │                        cards (hashed-PIN status via eye toggle, last
   │ │                        vote, edit modal w/ PIN reset + cascade
@@ -137,8 +146,11 @@ app/
   ├ components/
   │ ├ AppShell.tsx           4 tabs (Cities/Availability/Results/Locate),
   │ │                        fully opaque wordmark bar (hidden on /city/*
-  │ │                        and /admin), mobile bottom nav, 80px desktop
-  │ │                        rail; 3s long-press on Locate → /admin with
+  │ │                        and /admin) with ProfileAvatar top right
+  │ │                        (initials on bh2-pin-color, person icon when
+  │ │                        unregistered, tap no-op until Prompt 3),
+  │ │                        mobile bottom nav, 80px desktop rail; 3s
+  │ │                        long-press on Locate → /admin with
   │ │                        opacity-pulse hold feedback
   │ ├ ActionBar.tsx          the floating slot above the bottom nav (fixed on
   │ │                        mobile, sticky bottom of column ≥840px)
@@ -410,7 +422,40 @@ See PROGRESS.md.
 
 ## Current state
 
-- Last change (2026-06-12, pin-color-foundation session): auto-assigned pin
+- Last change (2026-06-12, avatar-and-locate-polish session / Prompt 2):
+  identity made visible. (1) The AppShell wordmark bar carries a profile
+  avatar top right on every screen that shows the bar (city detail and
+  /admin keep their own headers, as before): a 36px circle — initials
+  ("Nick B" → "NB", 13px/700, contrastColor(bh2-pin-color) text) on the
+  bh2-pin-color background with a 1.5px border at 30% opacity of that color
+  (`${color}4D`); before registration it's a `person` icon (20px, --ink-dim)
+  on --surface-raised with a --border hairline. The button is a 44px target
+  wrapping the 36px circle, aria-label "Your profile", and tapping it is a
+  deliberate no-op until the profile screen lands (Prompt 3). It re-reads
+  localStorage whenever useGroupData's name/voters change — registration,
+  sign-in, and the roster pin-color re-sync all update it with no reload —
+  plus a `storage` listener for other tabs; the initial render is always
+  the icon variant so SSR hydration stays clean. (2) /locate options card
+  simplified into two labeled sections: SHARING (toggle + unchanged
+  disclaimer) and VISIBILITY — the mute list, renamed "Manage who sees you"
+  — which renders only while sharing is on. No color swatches anywhere
+  (deleted last session; verified). There are no Save/Cancel buttons —
+  writes stay immediate/optimistic like everywhere else in the app. (3)
+  People panel rows are single-line: 20px pin-color dot (your own wears a
+  2px --accent outline with a 2px gap), name (Title, --ink) with "(you)" in
+  --ink-dim, right-aligned "X min ago" (Meta, --ink-dim — the "Last
+  updated" prefix is gone). Tapping a row pans the map to that person,
+  zooms to 15 (was 14), pulses their pin by growing it +6px diameter with a
+  400ms timeout reset (a 14px pin hits exactly 20px; timers are tracked per
+  pin and cleared on teardown — the old rAF sine pulse is deleted), and
+  flashes the row --surface-raised for 1s before the 160ms transition fades
+  it back. Pin taps still highlight the row accent-dim without moving the
+  map. (4) Verified (no change needed): map pins already fill from
+  v2_locations.pin_color, which toggle-on writes from the voter's
+  auto-assigned color. Voting, availability, city list/detail, Results,
+  admin, and the root index.html untouched. Build green — 36 static pages;
+  lint + strict typecheck clean.
+- Earlier (2026-06-12, pin-color-foundation session): auto-assigned pin
   colors — the identity-layer foundation everything else builds on. New
   `lib/colors.ts`: 25-color `PIN_COLORS` pool, `assignColor(n)` (n % 25 →
   pool hex), `contrastColor(hex)` (black/white text for avatar initials —

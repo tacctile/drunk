@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
+import { useGroupData } from "@/hooks/useGroupData";
+import { contrastColor } from "@/lib/colors";
+import { getStoredName, getStoredPinColor } from "@/lib/identity";
 import { Icon } from "./Icon";
 
 const NAV = [
@@ -79,6 +82,66 @@ function useAdminHold() {
 // Suppresses the iOS link preview/callout so a 3s hold stays a hold.
 const HOLD_CLASS = "select-none [-webkit-touch-callout:none]";
 
+/** "Nick B" → "NB"; a single word gives its first letter. */
+function getInitials(displayName: string): string {
+  const parts = displayName.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return (parts[0]?.[0] ?? "").toUpperCase();
+}
+
+/**
+ * The avatar in the wordmark bar: initials on the auto-assigned pin color
+ * once registered, a quiet person icon before that. localStorage is re-read
+ * whenever the identity layer moves (registration, sign-in, roster re-sync)
+ * so it updates without a reload; the storage listener covers other tabs.
+ * Tapping it is a no-op until the profile screen lands (Prompt 3).
+ */
+function ProfileAvatar() {
+  const { name, voters } = useGroupData();
+  const [profile, setProfile] = useState<{ name: string; color: string | null }>({
+    name: "",
+    color: null,
+  });
+
+  useEffect(() => {
+    const read = () => {
+      const next = { name: getStoredName(), color: getStoredPinColor() };
+      setProfile((prev) =>
+        prev.name === next.name && prev.color === next.color ? prev : next,
+      );
+    };
+    read();
+    window.addEventListener("storage", read);
+    return () => window.removeEventListener("storage", read);
+  }, [name, voters]);
+
+  const registered = profile.name.length > 0;
+  const color = profile.color;
+
+  return (
+    <button
+      type="button"
+      aria-label="Your profile"
+      className="-mr-1 flex h-11 w-11 flex-none items-center justify-center"
+    >
+      <span
+        className="flex h-9 w-9 items-center justify-center rounded-full text-meta font-bold"
+        style={{
+          background: color ?? "var(--surface-raised)",
+          border: `1.5px solid ${color ? `${color}4D` : "var(--border)"}`,
+          color: color ? contrastColor(color) : "var(--ink)",
+        }}
+      >
+        {registered ? (
+          getInitials(profile.name)
+        ) : (
+          <Icon name="person" size={20} className="text-ink-dim" />
+        )}
+      </span>
+    </button>
+  );
+}
+
 /**
  * App chrome: sticky wordmark bar + fixed bottom nav on mobile, 80px icon
  * rail at >= 840px. City detail and admin bring their own sticky headers,
@@ -115,13 +178,14 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="min-w-0 flex-1">
-        {/* Sticky top bar — wordmark left, nothing right */}
+        {/* Sticky top bar — wordmark left, profile avatar right */}
         {!hasOwnHeader && (
           <header className="sticky top-0 z-30 border-b bg-bg">
-            <div className="mx-auto flex h-14 max-w-2xl items-center px-4">
+            <div className="mx-auto flex h-14 max-w-2xl items-center justify-between px-4">
               <Link href="/cities" className="flex h-11 items-center text-title font-extrabold tracking-tight">
                 Bar Hoppers
               </Link>
+              <ProfileAvatar />
             </div>
           </header>
         )}
