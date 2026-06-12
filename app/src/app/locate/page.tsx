@@ -420,7 +420,7 @@ interface LocationOptionsModalProps {
  * are auto-assigned — there is no picker here.
  */
 function LocationOptionsModal({ onClose, locations, voters, myId }: LocationOptionsModalProps) {
-  const { isSharing, mutedIds, toggleSharing, muteUser, unmuteUser } = locations;
+  const { isSharing, amDisabled, mutedIds, toggleSharing, muteUser, unmuteUser } = locations;
   // Drafts seeded from the live values — the modal mounts fresh per open.
   const [pendingSharing, setPendingSharing] = useState(isSharing);
   const [pendingMuted, setPendingMuted] = useState<string[]>(mutedIds);
@@ -430,7 +430,9 @@ function LocationOptionsModal({ onClose, locations, voters, myId }: LocationOpti
   const others = useMemo(
     () =>
       voters
-        .filter((v) => v.voter_id !== myId)
+        // Disabled voters are off every group-facing people list, the mute
+        // list included — they can't share a pin to hide anyway.
+        .filter((v) => v.voter_id !== myId && v.is_active !== false)
         .map((v) => {
           const fromLocation = locations.activeLocations.find(
             (l) => l.voter_id === v.voter_id,
@@ -480,13 +482,21 @@ function LocationOptionsModal({ onClose, locations, voters, myId }: LocationOpti
     <Dialog open onClose={handleCancel} title="Location Options">
       <div className="flex items-center justify-between gap-3">
         <p className="text-base text-ink">Share my location</p>
-        <Switch
-          checked={pendingSharing}
-          disabled={busy}
-          onToggle={() => setPendingSharing((v) => !v)}
-          ariaLabel="Share my location"
-        />
+        {/* Locked off while admin-disabled — grayed out, untappable. */}
+        <span style={amDisabled ? { pointerEvents: "none", opacity: 0.4 } : undefined}>
+          <Switch
+            checked={pendingSharing}
+            disabled={busy || amDisabled}
+            onToggle={() => setPendingSharing((v) => !v)}
+            ariaLabel="Share my location"
+          />
+        </span>
       </div>
+      {amDisabled && (
+        <p className="text-meta font-normal text-ink-dim">
+          Location sharing disabled by admin.
+        </p>
+      )}
       <p className="text-meta font-normal text-ink-dim">
         This only affects Bar Hoppers. Your device location settings are unchanged.
       </p>

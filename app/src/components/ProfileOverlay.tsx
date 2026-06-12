@@ -195,7 +195,7 @@ function AvailabilityCard({ onMarkDates }: { onMarkDates: () => void }) {
 }
 
 function LocationCard({ locations }: { locations: LocationsValue }) {
-  const { isSharing, myLocation, now, toggleSharing } = locations;
+  const { isSharing, amDisabled, myLocation, now, toggleSharing } = locations;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -222,13 +222,21 @@ function LocationCard({ locations }: { locations: LocationsValue }) {
       <div className="card mt-2">
         <div className="flex items-center justify-between gap-3">
           <p className="text-base text-ink">Share my location</p>
-          <Switch
-            checked={isSharing}
-            disabled={busy}
-            onToggle={() => void handleToggle()}
-            ariaLabel="Share my location"
-          />
+          {/* Locked off while admin-disabled — grayed out, untappable. */}
+          <span style={amDisabled ? { pointerEvents: "none", opacity: 0.4 } : undefined}>
+            <Switch
+              checked={isSharing}
+              disabled={busy || amDisabled}
+              onToggle={() => void handleToggle()}
+              ariaLabel="Share my location"
+            />
+          </span>
         </div>
+        {amDisabled && (
+          <p className="text-meta font-normal text-ink-dim">
+            Location sharing disabled by admin.
+          </p>
+        )}
         <p className={`text-meta font-normal ${isSharing ? "text-green" : "text-ink-dim"}`}>
           {isSharing && hoursLeft !== null
             ? `Sharing · expires in ${plural(hoursLeft, "hr")}`

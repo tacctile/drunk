@@ -1,6 +1,6 @@
 # BAR HOPPERS /app — CONTEXT (single source of truth)
 
-Last updated: 2026-06-12 · Phase: city-map tap-to-focus + your-location dot + sharing default ON, pending first deploy
+Last updated: 2026-06-12 · Phase: user disable/enable + group-view is_active filter + single-device location broadcast, pending first deploy (NEW SCHEMA SQL PENDING MANUAL RUN — see migration log)
 
 ## What this app is
 
@@ -168,9 +168,13 @@ app/
   │ │                        auto-assigned
   │ ├ admin/page.tsx         ADMIN (3s long-press on Locate icon ONLY): user
   │ │                        cards always plain-visible (name, pin_plain or
-  │ │                        "PIN not set", last vote — NO eye toggle),
-  │ │                        pencil edit modal (rename + PIN reset writing
-  │ │                        pin_hash AND pin_plain), red row delete →
+  │ │                        "PIN not set", last vote — NO eye toggle) with
+  │ │                        an Active/Disabled soft toggle (is_active flip,
+  │ │                        optimistic, no confirm; disabling also deletes
+  │ │                        their live v2_locations row; disabled cards
+  │ │                        opacity-60 — nothing else changes, no data
+  │ │                        deleted), pencil edit modal (rename + PIN reset
+  │ │                        writing pin_hash AND pin_plain), red row delete →
   │ │                        confirm → ordered cascade delete, reset votes /
   │ │                        reset availability, active-location list +
   │ │                        force expire, data-health count grid + refresh,
@@ -251,9 +255,10 @@ app/
   │ │                        pin_plain on PIN change) / signOut (clear
   │ │                        bh2-voter-id/-name/-pin-color + write caches,
   │ │                        reset context — roster row remains) /
-  │ │                        identityInvalid. Roster rows carry pin_color;
-  │ │                        refetch re-syncs bh2-pin-color from the server
-  │ │                        row.
+  │ │                        identityInvalid. Roster rows carry pin_color +
+  │ │                        is_active (locally-built self rows default
+  │ │                        is_active true — unknown ≠ disabled); refetch
+  │ │                        re-syncs bh2-pin-color from the server row.
   │ ├ useLocations.ts        v2_locations realtime (unique channel topic
   │ │                        per mount so locate page + profile overlay
   │ │                        can subscribe at once) + 30s clock; rows +
@@ -273,11 +278,28 @@ app/
   │ │                        toggleSharing (once per identity per session;
   │ │                        denied/error writes "false" — never re-prompts;
   │ │                        unregistered visitors never attempt or burn
-  │ │                        the key); bh2-muted-ids persistence
+  │ │                        the key); bh2-muted-ids persistence;
+  │ │                        single-device broadcast: toggle-ON mints a
+  │ │                        bh2-session-id uuid onto the row, the 60s tick
+  │ │                        first checks the row's session_id still matches
+  │ │                        (mismatch = another device took over → stop
+  │ │                        pushing; coord updates also .eq session_id so a
+  │ │                        stale device can never win a race; no stored id
+  │ │                        pairs with NULL rows for legacy sharers);
+  │ │                        amDisabled (roster is_active === false):
+  │ │                        toggle-ON blocked, auto-start skipped, live row
+  │ │                        torn down via the off branch, and disabled
+  │ │                        voters' rows filtered out of activeLocations
   │ ├ useVotes.ts            derived: city ranking + per-city hotel-preference
   │ │                        tallies (grouped by place_id), myCityId,
-  │ │                        myHotelPrefFor(cityId)
-  │ ├ useAvailability.ts     derived: my calendar, per-date breakdowns, heat
+  │ │                        myHotelPrefFor(cityId). Group tallies exclude
+  │ │                        voters with is_active === false (only KNOWN
+  │ │                        inactive — missing roster hides no one);
+  │ │                        myCityId/myHotelPrefFor/hasVoted stay unfiltered
+  │ ├ useAvailability.ts     derived: my calendar, per-date breakdowns, heat.
+  │ │                        Group views (byDate/heat/hot dates/breakdowns +
+  │ │                        the rosterSize denominator) exclude inactive
+  │ │                        voters; `mine` is always the voter's own data
   │ └ useVenues.ts           v2_hotels (stars >= 3) / v2_bars / v2_food per
   │                          city (the ONLY venue-list source, session-
   │                          cached, no LIMIT/ORDER BY) → empty on fail
@@ -319,6 +341,7 @@ CREATE TABLE v2_voters (
   pin_hash     text,        -- bcrypt hash of the 2-digit PIN; verification ALWAYS uses this
   pin_plain    text,        -- plain copy written by profile PIN changes + admin PIN resets (recovery/admin display; never verified against)
   pin_color    text not null default '#FF8C42',  -- auto-assigned pool color; never user-set
+  is_active    boolean not null default true,    -- admin soft-disable; false = excluded from ALL group views (PENDING manual run, see migration log)
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()
 );
@@ -361,7 +384,8 @@ CREATE TABLE v2_locations (
   sharing_since timestamptz not null default now(),
   expires_at   timestamptz not null default (now() + interval '72 hours'),
   updated_at   timestamptz not null default now(),
-  muted_ids    uuid[] not null default '{}'   -- voters this sharer hides from
+  muted_ids    uuid[] not null default '{}',  -- voters this sharer hides from
+  session_id   uuid               -- single-device broadcast lock; written fresh on every toggle-ON (PENDING manual run, see migration log)
 );
 -- RLS: anon SELECT only where expires_at > now(); anon INSERT/UPDATE/DELETE
 -- Sharing is ON by default for registered users (useLocations auto-starts it
@@ -423,6 +447,24 @@ lockout anyway:
 ALTER TABLE v2_voters ADD COLUMN IF NOT EXISTS pin_plain text;
 ```
 
+2026-06-12 disable/session migration (NOT YET APPLIED — run manually in the
+Supabase SQL editor BEFORE deploying this build; idempotent, safe to re-run).
+`is_active` is the admin soft-disable flag every group-facing query filters
+on (defaults true, so existing voters are unaffected); `session_id` is the
+single-device location-broadcast lock (nullable — legacy rows keep working
+until their sharer re-toggles). Until this runs, the v2_voters selects that
+name is_active fail and the app falls back to localStorage-only (group data
+looks empty), so run it first:
+
+```sql
+ALTER TABLE v2_voters
+  ADD COLUMN IF NOT EXISTS is_active boolean
+  NOT NULL DEFAULT true;
+
+ALTER TABLE v2_locations
+  ADD COLUMN IF NOT EXISTS session_id uuid;
+```
+
 2026-06-12 voters-delete migration (applied live via MCP,
 `allow_anon_delete_v2_voters`; idempotent — safe to re-run in the Supabase
 SQL editor). v2_voters was the ONLY v2 user table with no anon DELETE
@@ -443,9 +485,12 @@ CREATE POLICY v2_voters_delete ON public.v2_voters FOR DELETE TO anon USING (tru
 auto-assigned `v2_voters.pin_color` — written ONLY by the identity layer, never a user pick) ·
 `bh2-muted-ids` (JSON uuid[] — applies to the location row when sharing starts) ·
 `bh2-sharing-preference` ("true" | "false" — the explicit location-sharing choice; absent =
-never decided, so the next registered useLocations mount auto-starts sharing)
+never decided, so the next registered useLocations mount auto-starts sharing) ·
+`bh2-session-id` (uuid minted fresh on every sharing toggle-ON and stamped onto the
+v2_locations row — only the device whose stored id matches the row broadcasts coords;
+never cleared, a stale value is harmless)
 
-These nine keys are the entire localStorage surface. Do not add keys without updating this list.
+These ten keys are the entire localStorage surface. Do not add keys without updating this list.
 
 ## Design system
 
@@ -553,7 +598,54 @@ See PROGRESS.md.
 
 ## Current state
 
-- Last change (2026-06-12, city-map-focus + sharing-default session): four
+- Last change (2026-06-12, disable-enable + session-broadcast session):
+  admin user disable/enable, disabled users excluded from every group view,
+  single-device location broadcasting. SCHEMA SQL PENDING — `v2_voters.
+  is_active boolean NOT NULL DEFAULT true` + `v2_locations.session_id uuid`
+  must be run manually in the Supabase SQL editor BEFORE this build deploys
+  (until then the v2_voters selects naming is_active fail and group data
+  falls back to empty/local-only). (1) Admin: every user card has an
+  Active/Disabled chip toggle (green check_circle / red block, h-9,
+  rounded-chip, optimistic, NO confirm — it's reversible); disabling flips
+  is_active false and deletes their live v2_locations row; disabled cards
+  are opacity-60. Nothing is ever deleted beyond that row — re-enabling
+  instantly restores all their contributions to group views. (2) THE FILTER
+  PATTERN (applies to ALL group-facing queries, current and future): the
+  roster select now carries is_active; group aggregations drop rows whose
+  voter is KNOWN inactive (`v.is_active === false` — an unreachable roster
+  never hides anyone), while personal-facing values stay unfiltered.
+  useVotes: ranking/counts/voter tags/hotel tallies + totalVotes filtered;
+  myCityId/myHotelPrefFor/hasVoted untouched. useAvailability: byDate (heat,
+  hot dates, breakdowns, bestDate), rosterSize denominator, and noResponse
+  use active voters only; `mine` always reflects the user's own calendar
+  even while disabled (they can keep voting/marking — data stores, just
+  doesn't count). board/page.tsx's hotel-name-grouped leadingHotelPrefs (the
+  one read bypassing useVotes) filters the same way; locate's mute list
+  hides disabled voters; useLocations.activeLocations drops their rows
+  (map + people strip). The sign-in roster (NamePrompt) deliberately keeps
+  disabled users — they can still sign in and use the app normally. (3)
+  Disabled lock on sharing: useLocations exposes amDisabled (reactive —
+  roster realtime/focus refetch, so mid-session disable/re-enable applies
+  without reload); toggle-ON is blocked, auto-start skips without burning
+  bh2-sharing-preference, a live row is torn down via the off branch
+  (writes pref "false" — re-enable never auto-resumes sharing), and the
+  sharing Switch in BOTH the Locate options modal and the profile overlay
+  grays out (opacity .4, pointer-events none, disabled) with "Location
+  sharing disabled by admin." below. (4) Single-device broadcast:
+  toggle-ON mints a fresh uuid into bh2-session-id (tenth localStorage
+  key) and onto the row's session_id; the 60s coord tick first SELECTs the
+  row's session_id — mismatch means another device activated later, so
+  this device stops pushing (the user-level toggle stays ON everywhere:
+  the row exists, and toggle-OFF from ANY device still deletes it and
+  stops everyone — spec semantics); coord UPDATEs are additionally guarded
+  .eq(session_id) so a stale device can never overwrite a newer one even
+  if the check races; devices with no stored id pair with session_id NULL
+  rows so pre-migration sharers keep updating until a re-toggle. VoterRow
+  gained is_active, LocationRow gained session_id, both LOCATION_COLUMNS
+  lists select it. City detail map, walkability index, AppShell, and the
+  root index.html untouched. Build green — 36 static pages; lint + strict
+  typecheck clean.
+- Earlier (2026-06-12, city-map-focus + sharing-default session): four
   city-detail map features + the sharing default, nothing else. (1) Venue
   pins (already Supabase-coord-fed, diffed by id) grew from scale 5 to
   scale 9 (18px) with zIndex 10; on the first placement the map fitBounds

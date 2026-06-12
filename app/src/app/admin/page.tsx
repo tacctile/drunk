@@ -21,6 +21,9 @@ interface AdminVoter {
   /** Recovery copy of the 2-digit PIN — null until a profile/admin PIN change writes it. */
   pin_plain: string | null;
   created_at: string | null;
+  /** Soft-disable flag — false hides this voter from every group-facing view.
+   *  Nothing is deleted; re-enabling restores their contributions instantly. */
+  is_active: boolean;
 }
 
 interface CityVoteLite {
@@ -49,7 +52,7 @@ const EMPTY_STATS: Stats = {
 };
 
 const LOCATION_COLUMNS =
-  "voter_id,display_name,lat,lng,pin_color,sharing_since,expires_at,updated_at,muted_ids";
+  "voter_id,display_name,lat,lng,pin_color,sharing_since,expires_at,updated_at,muted_ids,session_id";
 
 // PostgREST refuses an unfiltered DELETE — every row matches this instead.
 const ALL_ROWS = "1970-01-01";
@@ -336,7 +339,10 @@ export default function AdminPage() {
 
   const refreshAll = useCallback(async () => {
     const [v, cv, loc] = await Promise.all([
-      safeSelect<AdminVoter>("v2_voters", "voter_id,name,display_name,pin_plain,created_at"),
+      safeSelect<AdminVoter>(
+        "v2_voters",
+        "voter_id,name,display_name,pin_plain,created_at,is_active",
+      ),
       safeSelect<CityVoteLite>("v2_city_votes", "voter_id,city_id"),
       safeSelect<LocationRow>("v2_locations", LOCATION_COLUMNS),
     ]);
@@ -391,6 +397,27 @@ export default function AdminPage() {
       // partial reset surfaces in the refreshed counts
     }
     void refreshAll();
+  };
+
+  // Soft disable/enable — reversible, no confirmation. Disabling also tears
+  // down any live location row (their map pin must vanish immediately and the
+  // sharing toggle is locked off for them); every other table is untouched,
+  // so re-enabling restores all their contributions to group views instantly.
+  const toggleUserActive = async (voterId: string, newState: boolean) => {
+    setVoters((prev) =>
+      prev.map((u) => (u.voter_id === voterId ? { ...u, is_active: newState } : u)),
+    );
+    const sb = getSupabase();
+    if (!sb) return;
+    try {
+      await sb.from("v2_voters").update({ is_active: newState }).eq("voter_id", voterId);
+      if (!newState) {
+        await sb.from("v2_locations").delete().eq("voter_id", voterId);
+        setLocations((prev) => prev.filter((l) => l.voter_id !== voterId));
+      }
+    } catch {
+      // a failed toggle surfaces on the next refresh
+    }
   };
 
   const forceExpire = async (voterId: string) => {
@@ -512,7 +539,12 @@ export default function AdminPage() {
           {voters.map((voter) => {
             const city = lastVoted(voter.voter_id);
             return (
-              <div key={voter.voter_id} className="rounded-card border bg-surface p-4">
+              <div
+                key={voter.voter_id}
+                className={`rounded-card border bg-surface p-4 ${
+                  voter.is_active ? "" : "opacity-60"
+                }`}
+              >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-title text-ink">{voterLabel(voter)}</p>
@@ -522,6 +554,22 @@ export default function AdminPage() {
                     <p className="mt-1 text-meta font-normal text-ink-dim">
                       {city ? `Last voted: ${city}` : "No vote"}
                     </p>
+                    {/* Disable/enable — reversible soft toggle, no confirm.
+                        Disabled users keep using the app; their data just
+                        stops counting in group views until re-enabled. */}
+                    <button
+                      type="button"
+                      onClick={() => void toggleUserActive(voter.voter_id, !voter.is_active)}
+                      className="mt-3 flex h-9 items-center gap-2 rounded-chip px-3 text-[12px] font-semibold"
+                      style={{
+                        background: voter.is_active ? "var(--green-dim)" : "var(--red-dim)",
+                        color: voter.is_active ? "var(--green)" : "var(--red)",
+                        border: `1px solid ${voter.is_active ? "var(--green)" : "var(--red)"}`,
+                      }}
+                    >
+                      <Icon name={voter.is_active ? "check_circle" : "block"} size={14} />
+                      {voter.is_active ? "Active" : "Disabled"}
+                    </button>
                   </div>
                   <div className="flex flex-none">
                     <IconButton

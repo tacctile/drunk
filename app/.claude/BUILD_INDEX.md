@@ -2,6 +2,20 @@
 
 Read CONTEXT.md first in every session. Then read ONLY what the task needs:
 
+## INVARIANT: the is_active filter applies to ALL group queries
+
+Voters with `v2_voters.is_active = false` (admin soft-disable) are excluded
+from EVERY group-facing view — vote counts, voter tags, hotel tallies, the
+availability heat map / hot dates / breakdowns / roster denominator, the
+location map, and every people list. The pattern: the roster select carries
+`is_active`; group aggregations drop rows whose voter is KNOWN inactive
+(`v.is_active === false` — an unreachable roster never hides anyone);
+personal-facing values (own vote, own calendar, own profile) are NEVER
+filtered. Any NEW group-facing query must apply the same filter. Disabled
+users keep full app access (their writes store but don't count) and their
+location sharing is locked off (useLocations.amDisabled). No data is ever
+deleted by disable/enable.
+
 ## Task: Edit city data (walk scores, grades, districts, miles, new city)
 READ: src/data/cities.ts (and src/data/types.ts if shape changes)
 DO NOT READ: anything else. Walkability is hardcoded research — never add math.
