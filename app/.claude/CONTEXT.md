@@ -55,14 +55,16 @@ icon-only left rail with tooltips):
 | Tab | Route | Icon |
 |---|---|---|
 | Cities (first screen) | `/cities` | `location_city` |
-| Calendar | `/calendar` | `calendar_month` |
-| The Board | `/board` | `bar_chart` |
+| Availability | `/calendar` | `event_available` |
+| Results | `/board` | `leaderboard` |
 
 - `/` 307-redirects to `/cities` (next.config.mjs redirect + page fallback).
 - `/city/[id]` — city detail (SSG via generateStaticParams, 404 on unknown id).
   Highlights the Cities tab; the global wordmark bar hides there (the page has
   its own sticky header: back / city + state / vote icon).
 - Sticky top bar everywhere else: "Bar Hoppers" wordmark left, nothing right.
+- EVERY sticky header in the app is fully opaque — plain `bg-bg`/`bg-surface`,
+  never an opacity modifier (`/90`), never `backdrop-blur`.
 - A single floating control sits just above the bottom nav (`ActionBar`):
   the sort pill on `/cities`, the full-width vote button on `/city/[id]`.
   Nowhere else.
@@ -94,15 +96,17 @@ app/
   │ │                        hotel preference star toggles ("Prefer" label
   │ │                        when unselected), vote CTA in ActionBar; ≥840px
   │ │                        push layout keeps CityList visible left
-  │ ├ calendar/page.tsx      CALENDAR: personal tri-state calendar only
-  │ ├ board/page.tsx         THE BOARD: two card columns (stack <480px) —
-  │ │                        TOP CITIES (top 5, "See Votes" sheet) and HOT
+  │ ├ calendar/page.tsx      AVAILABILITY tab: personal tri-state calendar only
+  │ ├ board/page.tsx         RESULTS tab (The Board): two card columns, side
+  │ │                        by side at EVERY width (never stack) — TOP
+  │ │                        CITIES (top 5, "See Votes" sheet) and HOT
   │ │                        DATES (top 5, "See Who" sheet) + top-3 hotel
   │ │                        section for the leading city + "Not you?" switch
   │ └ not-found.tsx          404
   ├ components/
-  │ ├ AppShell.tsx           3 tabs (Cities/Calendar/The Board), wordmark bar,
-  │ │                        mobile bottom nav, 80px desktop rail
+  │ ├ AppShell.tsx           3 tabs (Cities/Availability/Results), fully
+  │ │                        opaque wordmark bar, mobile bottom nav, 80px
+  │ │                        desktop rail
   │ ├ ActionBar.tsx          the floating slot above the bottom nav (fixed on
   │ │                        mobile, sticky bottom of column ≥840px)
   │ ├ CityList.tsx           index rows (name/state/district · score+grade ·
@@ -327,7 +331,23 @@ See PROGRESS.md.
 
 ## Current state
 
-- Last change (2026-06-12, simplification session): NamePrompt is now ONE
+- Last change (2026-06-12, surgical-polish session): three targeted fixes,
+  nothing else. (1) The Board's two card columns (TOP CITIES / HOT DATES)
+  are now side by side at EVERY width — `grid grid-cols-2 gap-3`, the
+  `<480px` stacking breakpoint is gone; row cards keep their existing
+  `px-3 py-2` padding, names/dates already truncate with ellipsis, counts
+  and the 32px See buttons stay visible at 375px. Hotel section untouched.
+  (2) The AppShell wordmark bar is fully opaque — `bg-bg/90 backdrop-blur`
+  replaced with plain `bg-bg`; this was the ONLY opacity/blur header in the
+  app (city-list column header, city-detail header, and venue-tab bar were
+  already plain `bg-bg`/`bg-surface`; modal scrims are intentionally
+  translucent and unchanged). Every sticky header on every page is now
+  fully opaque. (3) Nav renames — Calendar → "Availability"
+  (`event_available` icon), The Board → "Results" (`leaderboard` icon);
+  Cities unchanged; routes unchanged (/calendar, /board); still three tabs
+  (the Locate tab arrives in a later prompt). No logic, query, or route
+  changes. Build green — 34 static pages; lint + strict typecheck clean.
+- Earlier (2026-06-12, simplification session): NamePrompt is now ONE
   single-screen modal ("Who are you?") — first name (max 15) + last initial
   (1 letter, auto-capitalized) + 2-digit PIN stacked, 44px inputs, helper
   line "Name, initial, and PIN let you vote from another device.", full-width

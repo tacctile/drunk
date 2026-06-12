@@ -1,33 +1,22 @@
 last_updated: 2026-06-12
 last_session: >-
-  Simplification fixes. NamePrompt replaced with ONE single-screen modal
-  ("Who are you?"): first name (max 15) + last initial (1 letter,
-  auto-capitalized) + 2-digit PIN stacked over a helper line and a
-  full-width accent Save — no steps, no PIN-confirm screen. Validation runs
-  on Save with inline 12px red errors under the offending field (letters
-  only 1–15 / exactly 1 letter / exactly 2 digits); a valid save flows
-  through the untouched createIdentity (fresh uuid, bcrypt pin_hash,
-  v2_voters upsert, bh2-voter-id/-name to localStorage) and the pending
-  action runs. "Sign in as existing user" swaps the same modal to the
-  sign-in form (A–Z roster dropdown + PIN + Sign in; wrong PIN → "PIN
-  doesn't match. Try again." — no lockout; "Never mind, create new" swaps
-  back). useNameGate / IdentityWatcher / NotYouLink trigger logic untouched.
-  The Board fully rebuilt: Section 1 is two equal columns (12px gap,
-  stacking <480px) of 56px-min surface card rows — TOP CITIES (top 5 by
-  votes, "N votes", 32px "See Votes" → bottom sheet of voter names, 44px
-  rows, close top right) and HOT DATES (top 5 by available count desc,
-  "Sat Jun 28", "N free", "See Who" → bottom sheet headed "Sat, Jun 28"
-  with Available names in green / Not available in red). Section 2 (24px
-  gap): "Top Hotels in Top Voted City" — v2_hotel_votes for the leading
-  city only, grouped by hotel_name, count desc → stars desc → low end of
-  price_range asc (joined to v2_hotels via useVenues by exact name), top 3
-  rows with filled 14px accent stars; section hidden entirely when no city
-  votes exist or the leading city has no hotel votes. Rank numbers, meters,
-  voter pills, and hotel sub-rows removed from the board; "Not you?"
-  switcher kept at the page bottom. Calendar, city list, city detail,
-  AppShell, useVotes/useAvailability read logic all untouched. Build green
+  Three surgical fixes, nothing else. (1) Board columns: TOP CITIES / HOT
+  DATES are side by side at EVERY width — "grid grid-cols-2 gap-3", the
+  <480px stacking removed; row cards keep px-3 py-2 padding, names/dates
+  truncate with ellipsis, counts + 32px See buttons stay visible at 375px;
+  hotel section untouched. (2) Header opacity: AppShell wordmark bar is now
+  plain bg-bg (bg-bg/90 + backdrop-blur removed) — that was the only
+  translucent/blurred header in the app; city-list column header,
+  city-detail header, and the venue-tab bar were already opaque
+  bg-bg/bg-surface, and a full grep of src/ confirms zero backdrop-blur and
+  zero bg-*/NN classes remain on sticky/fixed headers (Dialog/BottomSheet
+  scrims stay translucent by design — they are overlays, not headers).
+  (3) Nav: Calendar → "Availability" (event_available icon), The Board →
+  "Results" (leaderboard icon), Cities unchanged; routes unchanged
+  (/calendar, /board); still three tabs — the Locate tab is a later prompt.
+  No voting logic, Supabase queries, or routes touched. Build green
   (34 static pages), lint + strict typecheck clean.
-current_phase: single_screen_identity_board_v2
+current_phase: surgical_polish_board_headers_nav
 build_complete: true
 supabase_schema_deployed: true
 vercel_deployed: false
