@@ -1,6 +1,6 @@
 # BAR HOPPERS /app — CONTEXT (single source of truth)
 
-Last updated: 2026-06-12 · Phase: Supabase-primary venue layer complete, pending first deploy
+Last updated: 2026-06-12 · Phase: Locate tab + hidden Admin live, pending first deploy
 
 ## What this app is
 
@@ -49,7 +49,7 @@ Bar Hoppers is a mobile-first Next.js webapp a small group of friends (~6–10 p
 
 ## Routes & navigation
 
-Three bottom-nav tabs (mobile fixed bar, 64px + safe inset; ≥840px an 80px
+Four bottom-nav tabs (mobile fixed bar, 64px + safe inset; ≥840px an 80px
 icon-only left rail with tooltips):
 
 | Tab | Route | Icon |
@@ -57,11 +57,21 @@ icon-only left rail with tooltips):
 | Cities (first screen) | `/cities` | `location_city` |
 | Availability | `/calendar` | `event_available` |
 | Results | `/board` | `leaderboard` |
+| Locate (rightmost) | `/locate` | `person_pin` |
 
 - `/` 307-redirects to `/cities` (next.config.mjs redirect + page fallback).
 - `/city/[id]` — city detail (SSG via generateStaticParams, 404 on unknown id).
   Highlights the Cities tab; the global wordmark bar hides there (the page has
   its own sticky header: back / city + state / vote icon).
+- `/locate` — live location sharing. Registered users only (valid
+  bh2-voter-id found in the roster); everyone else gets a centered
+  "Identity required" gate into the NamePrompt.
+- `/admin` — hidden management screen. The ONLY way in is a 3-second
+  long-press on the Locate nav icon (the item pulses opacity 1→0.5→1 across
+  the hold; a normal tap still goes to /locate; once the hold fires the
+  release click is swallowed). No link, no menu entry anywhere. Brings its
+  own sticky header (back arrow → /locate), so the wordmark bar hides there
+  like on city detail.
 - Sticky top bar everywhere else: "Bar Hoppers" wordmark left, nothing right.
 - EVERY sticky header in the app is fully opaque — plain `bg-bg`/`bg-surface`,
   never an opacity modifier (`/90`), never `backdrop-blur`.
@@ -102,11 +112,26 @@ app/
   │ │                        CITIES (top 5, "See Votes" sheet) and HOT
   │ │                        DATES (top 5, "See Who" sheet) + top-3 hotel
   │ │                        section for the leading city + "Not you?" switch
+  │ ├ locate/page.tsx        LOCATE tab: registration gate, full-screen dark
+  │ │                        map (Ralston center, zoom 8, greedy gestures),
+  │ │                        person pins (14px circle + name pill; own pin
+  │ │                        18px + amber ring, "You (name)"), sharing
+  │ │                        toggle + device-settings disclaimer, 10-swatch
+  │ │                        pin color picker, "Manage visibility" mute
+  │ │                        list, draggable people panel (80px ↔ 50vh)
+  │ ├ admin/page.tsx         ADMIN (3s long-press on Locate icon ONLY): user
+  │ │                        cards (hashed-PIN status via eye toggle, last
+  │ │                        vote, edit modal w/ PIN reset + cascade
+  │ │                        delete), reset votes / reset availability,
+  │ │                        active-location list + force expire,
+  │ │                        data-health count grid + refresh
   │ └ not-found.tsx          404
   ├ components/
-  │ ├ AppShell.tsx           3 tabs (Cities/Availability/Results), fully
-  │ │                        opaque wordmark bar, mobile bottom nav, 80px
-  │ │                        desktop rail
+  │ ├ AppShell.tsx           4 tabs (Cities/Availability/Results/Locate),
+  │ │                        fully opaque wordmark bar (hidden on /city/*
+  │ │                        and /admin), mobile bottom nav, 80px desktop
+  │ │                        rail; 3s long-press on Locate → /admin with
+  │ │                        opacity-pulse hold feedback
   │ ├ ActionBar.tsx          the floating slot above the bottom nav (fixed on
   │ │                        mobile, sticky bottom of column ≥840px)
   │ ├ CityList.tsx           index rows (name/state/district · score+grade ·
@@ -136,6 +161,13 @@ app/
   │ │                        setHotelPref / setAvailability / createIdentity
   │ │                        (bcrypt PIN hash) / signIn (PIN verify + adopt)
   │ │                        / identityInvalid.
+  │ ├ useLocations.ts        v2_locations realtime + 30s clock:
+  │ │                        activeLocations (expired + muted-from-you rows
+  │ │                        filtered, self first), isSharing, toggleSharing
+  │ │                        (geolocation prompt → upsert w/ 72h expiry, 60s
+  │ │                        coord updates while granted, delete on off),
+  │ │                        updatePinColor, muteUser/unmuteUser;
+  │ │                        bh2-pin-color + bh2-muted-ids persistence
   │ ├ useVotes.ts            derived: city ranking + per-city hotel-preference
   │ │                        tallies (grouped by place_id), myCityId,
   │ │                        myHotelPrefFor(cityId)
@@ -163,7 +195,7 @@ app/
 
 ## Supabase schema (deployed; verified live 2026-06-12)
 
-User data (all four in the `supabase_realtime` publication):
+User data (all five in the `supabase_realtime` publication):
 
 ```sql
 CREATE TABLE v2_voters (
@@ -203,6 +235,21 @@ CREATE TABLE v2_availability (
   unique(voter_id, date)
 );
 -- RLS: anon SELECT/INSERT/UPDATE/DELETE
+
+CREATE TABLE v2_locations (
+  voter_id     uuid primary key references v2_voters(voter_id) on delete cascade,
+  display_name text not null,
+  lat          float8 not null,
+  lng          float8 not null,
+  pin_color    text not null default '#FF8C42',
+  sharing_since timestamptz not null default now(),
+  expires_at   timestamptz not null default (now() + interval '72 hours'),
+  updated_at   timestamptz not null default now(),
+  muted_ids    uuid[] not null default '{}'   -- voters this sharer hides from
+);
+-- RLS: anon SELECT only where expires_at > now(); anon INSERT/UPDATE/DELETE
+-- Sharing is opt-in, expires 72h after enable; app also filters expiry +
+-- mutes client-side. Created 2026-06-12 via MCP migration create_v2_locations.
 ```
 
 Curated venue tables — the CANONICAL venue source (read-only to the app, anon
@@ -236,9 +283,10 @@ ALTER TABLE v2_food ADD COLUMN IF NOT EXISTS lng float8;
 
 `bh2-voter-id` (uuid) · `bh2-voter-name` · `bh2-city-vote-cache` (CityVoteRow | absent) ·
 `bh2-hotel-vote-cache` (Record<cityId, HotelVoteRow>) · `bh2-avail-cache` ({date: status}) ·
-`bh2-city-sort` ("distance" | "walk" | "name" | "state")
+`bh2-city-sort` ("distance" | "walk" | "name" | "state") · `bh2-pin-color` (palette hex) ·
+`bh2-muted-ids` (JSON uuid[] — applies to the location row when sharing starts)
 
-These six keys are the entire localStorage surface. Do not add keys without updating this list.
+These eight keys are the entire localStorage surface. Do not add keys without updating this list.
 
 ## Design system
 
@@ -331,7 +379,58 @@ See PROGRESS.md.
 
 ## Current state
 
-- Last change (2026-06-12, surgical-polish session): three targeted fixes,
+- Last change (2026-06-12, locate-and-admin session): the Locate tab and the
+  hidden Admin screen. (1) Nav: fourth tab "Locate" (`person_pin`, /locate),
+  rightmost on the mobile bar and bottom of the desktop rail; a 3-second
+  long-press on the Locate item (mouse or touch) opens /admin — the ONLY way
+  in — with an opacity 1→0.5→1 pulse over the full hold (`anim-hold`); a
+  normal tap navigates to /locate; once the hold fires the release click is
+  swallowed. (2) /locate: registered users only (stored voter id verified
+  against the roster; otherwise a centered "Identity required" card →
+  NamePrompt). Full-screen dark Google Map (Ralston center 41.172/-96.1358,
+  zoom 8, greedy gestures, disableDefaultUI, clickableIcons false) under the
+  wordmark bar. Pins read from v2_locations via a realtime subscription
+  (`bh2-locations` channel, debounced refetch + focus refetch + 30s clock):
+  expired rows and rows whose muted_ids contain you are filtered everywhere;
+  others are 14px filled circles (white 2px stroke) with an always-visible
+  name pill above; your own pin is 18px with a 22px amber ring and "You
+  (name)". Pin tap highlights + reveals that row in the list (map stays
+  put); list-row tap pans/zooms the map to them (zoom 14) and pulses the pin
+  once (400ms). Controls card: "Share my location" toggle (opt-in, OFF by
+  default, 44px) with the disclaimer "This only affects Bar Hoppers. Your
+  device location settings are unchanged."; denied permission shows the
+  inline error and the toggle stays off; ON upserts the row (display name,
+  coords, pin color, muted_ids, expires_at = now()+72h) and updates coords
+  every 60s (only auto-resumes when the browser permission is already
+  granted — never a surprise prompt); OFF deletes the row — device settings
+  are never touched. 10-swatch pin color picker (32px circles, ink ring on
+  selected, persists to bh2-pin-color) shows while sharing. "Manage
+  visibility" expands to a one-directional mute list (hide MY pin from
+  specific people — they never know); muted ids live on my row's muted_ids
+  and mirror to bh2-muted-ids so they apply when sharing starts. People
+  panel: drag/tap bottom sheet (collapsed 80px = handle + first row,
+  expanded 50% viewport), rows 56px (color dot, name — self first with
+  "(you)", "Last updated X min ago"), empty state "No one is sharing their
+  location right now.". (3) /admin: own sticky header (back arrow →
+  /locate). REGISTERED USERS — v2_voters by created_at asc as cards: name,
+  PIN status ("PIN: ••" until the eye reveals "PIN set ✓ / No PIN set —
+  PINs are hashed and cannot be recovered. Use edit to reset."), "Last
+  voted: [city]" via v2_city_votes join, pencil → edit modal (rename,
+  optional PIN reset w/ confirm, "Delete user" → confirmation → cascade
+  delete from v2_city_votes/v2_hotel_votes/v2_availability/v2_locations
+  then v2_voters). TRIP MANAGEMENT — Reset All Votes (clears
+  v2_city_votes + v2_hotel_votes) and Reset All Availability, both behind
+  red confirmation modals. ACTIVE LOCATIONS — non-expired v2_locations
+  rows ("sharing since/expires in hours", Force expire sets expires_at =
+  now()). DATA HEALTH — count grid (voters, city votes, availability,
+  active locations, hotels, bars, food) with a refresh button. (4) Supabase:
+  v2_locations created live via MCP (RLS anon read gated to expires_at >
+  now(), anon insert/update/delete, added to supabase_realtime) — SQL is
+  idempotent and safe to re-run. New hook useLocations.ts; LocationRow type
+  in supabase.ts; two new localStorage keys (bh2-pin-color, bh2-muted-ids).
+  No voting/availability/city/board logic touched. Build green — 36 static
+  pages; lint + strict typecheck clean.
+- Earlier (2026-06-12, surgical-polish session): three targeted fixes,
   nothing else. (1) The Board's two card columns (TOP CITIES / HOT DATES)
   are now side by side at EVERY width — `grid grid-cols-2 gap-3`, the
   `<480px` stacking breakpoint is gone; row cards keep their existing

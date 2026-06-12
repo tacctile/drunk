@@ -1,22 +1,38 @@
 last_updated: 2026-06-12
 last_session: >-
-  Three surgical fixes, nothing else. (1) Board columns: TOP CITIES / HOT
-  DATES are side by side at EVERY width — "grid grid-cols-2 gap-3", the
-  <480px stacking removed; row cards keep px-3 py-2 padding, names/dates
-  truncate with ellipsis, counts + 32px See buttons stay visible at 375px;
-  hotel section untouched. (2) Header opacity: AppShell wordmark bar is now
-  plain bg-bg (bg-bg/90 + backdrop-blur removed) — that was the only
-  translucent/blurred header in the app; city-list column header,
-  city-detail header, and the venue-tab bar were already opaque
-  bg-bg/bg-surface, and a full grep of src/ confirms zero backdrop-blur and
-  zero bg-*/NN classes remain on sticky/fixed headers (Dialog/BottomSheet
-  scrims stay translucent by design — they are overlays, not headers).
-  (3) Nav: Calendar → "Availability" (event_available icon), The Board →
-  "Results" (leaderboard icon), Cities unchanged; routes unchanged
-  (/calendar, /board); still three tabs — the Locate tab is a later prompt.
-  No voting logic, Supabase queries, or routes touched. Build green
-  (34 static pages), lint + strict typecheck clean.
-current_phase: surgical_polish_board_headers_nav
+  Locate tab + hidden Admin screen. Nav has FOUR tabs (Locate rightmost,
+  person_pin, /locate); a 3-second long-press on the Locate item — mobile
+  bar or desktop rail — opens /admin (the ONLY entry point) with an
+  opacity 1→0.5→1 pulse across the hold; normal taps still go to /locate
+  and the post-hold release click is swallowed. /locate gates on a
+  registered identity (stored voter id verified against the roster;
+  otherwise "Identity required" card → NamePrompt), then renders a
+  full-screen dark map (Ralston 41.172/-96.1358, zoom 8, greedy) fed by a
+  v2_locations realtime subscription with expired rows and rows muting the
+  viewer filtered out; other people are 14px pins + name pills, own pin is
+  18px + 22px amber ring + "You (name)". Controls: opt-in "Share my
+  location" toggle (OFF by default, disclaimer "This only affects Bar
+  Hoppers. Your device location settings are unchanged.", denied permission
+  → inline error + toggle stays off, ON → upsert with expires_at now()+72h
+  and a 60s coord updater that only auto-resumes when permission is already
+  granted, OFF → row deleted), 10-swatch pin color picker (persists to
+  bh2-pin-color), one-directional mute list under "Manage visibility"
+  (muted_ids on my row, mirrored to bh2-muted-ids while not sharing).
+  People panel: draggable bottom sheet 80px ↔ 50% viewport, 56px rows
+  (dot/name/"Last updated X min ago", self first "(you)"), pin tap
+  highlights the row, row tap pans+zooms (14) and pulses the pin. /admin:
+  registered-user cards (eye reveals hashed-PIN status — never a PIN; edit
+  modal renames, optionally resets PIN with confirm, cascade-deletes the
+  user across votes/availability/locations), Reset All Votes + Reset All
+  Availability behind red confirm modals, active-location list with Force
+  expire, and a data-health count grid with refresh. Supabase: v2_locations
+  created live via MCP (anon read only while expires_at > now(), anon
+  write/update/delete, in supabase_realtime; idempotent SQL safe to
+  re-run). New files: locate/page.tsx, admin/page.tsx, useLocations.ts.
+  localStorage grew to eight bh2-* keys. No voting, availability, city,
+  or board logic touched. Build green (36 static pages), lint + strict
+  typecheck clean.
+current_phase: locate_tab_and_admin
 build_complete: true
 supabase_schema_deployed: true
 vercel_deployed: false
@@ -33,8 +49,13 @@ known_issues:
     groups hotel votes by hotel_name)
   - Board hotel rows join v2_hotels by exact hotel_name match — renamed or
     sub-3-star hotels show no stars and sort last on the price tie-breaker
-  - The 32px "See Votes"/"See Who" buttons are below the app's 44px tap
-    floor — explicit spec exception
+  - The 32px "See Votes"/"See Who" buttons and the 32px pin-color swatches
+    are below the app's 44px tap floor — explicit spec exceptions
+  - Location coords only refresh while a Bar Hoppers tab is open (60s
+    foreground interval — no background tracking, by design); a row from a
+    closed session keeps its last coords until expiry or toggle-off
+  - Anyone can long-press into /admin — it is hidden, not authenticated
+    (acceptable for a ~10-friend app, per spec)
 next_up:
   - Backfill lat/lng for the 206 venue rows in the Supabase SQL editor
   - Create Vercel project with root directory app/ and deploy
