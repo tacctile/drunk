@@ -1,20 +1,33 @@
 // Bar Hoppers — city dataset.
-// Source of truth for all destination data. Cleaned against the verified
-// address research (bar_crawl_addresses_completed.md): closed venues and
-// wrong-city venues removed, verified addresses applied, venues that could
-// not be verified carry verified: false (and stay in the list on purpose).
-// Walkability tiers and composite scores are computed from coords in
-// src/lib/score.ts — never hardcode them here.
+// Source of truth for the 27 candidate cities. walkScore / walkGrade /
+// district are hardcoded research, not math — never calculate them.
+//
+// The hotels/bars/food/vibes/tagline fields below are LEGACY research data,
+// retained in this file for reference only. They are deliberately absent from
+// the City type and the UI never reads them — venue lists come live from
+// Google Places (with the curated v2_hotels/v2_bars/v2_food Supabase tables
+// as the silent fallback).
 
 import type { City } from "./types";
 
-export const cities: City[] = [
+type CityRecord = City & {
+  tagline?: string;
+  vibes?: readonly string[];
+  hotels?: readonly unknown[];
+  bars?: readonly unknown[];
+  food?: readonly unknown[];
+};
+
+const records: CityRecord[] = [
   {
     id: "sioux-city",
     name: "Sioux City",
     state: "IA",
     miles: 97,
     drive: "1 hr 37 min",
+    walkScore: 84,
+    walkGrade: "B+",
+    district: "4th Street District",
     tagline: "Crash steps away after nine Fourth Street bars, but everything dies at 2AM.",
     mapCenter: { lat: 42.4941, lng: -96.3961 },
     mapZoom: 15,
@@ -58,6 +71,9 @@ export const cities: City[] = [
     state: "NE",
     miles: 112,
     drive: "1 hr 45 min",
+    walkScore: 70,
+    walkGrade: "B-",
+    district: "Norfolk Avenue Strip",
     tagline: "Short strip, easy stumbles between every dive on Norfolk Ave.",
     mapCenter: { lat: 42.0289, lng: -97.4175 },
     mapZoom: 15,
@@ -91,6 +107,9 @@ export const cities: City[] = [
     state: "NE",
     miles: 72,
     drive: "1 hr 5 min",
+    walkScore: 55,
+    walkGrade: "C-",
+    district: "11th Street / Glur's Tavern",
     tagline: "Historic Glur's anchors a tight Eleventh Street cluster that punches above its size.",
     mapCenter: { lat: 41.4302, lng: -97.3686 },
     mapZoom: 15,
@@ -119,6 +138,9 @@ export const cities: City[] = [
     state: "IA",
     miles: 173,
     drive: "2 hr 30 min",
+    walkScore: 58,
+    walkGrade: "C-",
+    district: "Downtown District",
     tagline: "A dusty railroad town with five decent bars in a three-block stumble.",
     mapCenter: { lat: 41.0591, lng: -94.361 },
     mapZoom: 15,
@@ -146,6 +168,9 @@ export const cities: City[] = [
     state: "MO",
     miles: 120,
     drive: "1 hr 48 min",
+    walkScore: 68,
+    walkGrade: "C+",
+    district: "Main Street Strip",
     tagline: "Cheap pitchers and loud college kids all down Main Street.",
     mapCenter: { lat: 40.3467, lng: -94.8727 },
     mapZoom: 15,
@@ -172,6 +197,9 @@ export const cities: City[] = [
     state: "MO",
     miles: 95,
     drive: "1 hr 25 min",
+    walkScore: 62,
+    walkGrade: "C",
+    district: "Felix Street Downtown",
     tagline: "Felix Street is solid downtown, but the hotel is a drive and that's a problem.",
     mapCenter: { lat: 39.773, lng: -94.849 },
     mapZoom: 15,
@@ -199,6 +227,9 @@ export const cities: City[] = [
     state: "SD",
     miles: 78,
     drive: "1 hr 15 min",
+    walkScore: 82,
+    walkGrade: "B",
+    district: "Main Street Strip",
     tagline: "Main Street is basically one long continuous bar for USD students.",
     mapCenter: { lat: 42.7791, lng: -96.9293 },
     mapZoom: 15,
@@ -228,6 +259,9 @@ export const cities: City[] = [
     state: "SD",
     miles: 92,
     drive: "1 hr 25 min",
+    walkScore: 65,
+    walkGrade: "C+",
+    district: "3rd Street Strip",
     tagline: "A no-frills walkable river town strip along Third Street.",
     mapCenter: { lat: 42.8714, lng: -97.3976 },
     mapZoom: 15,
@@ -255,6 +289,9 @@ export const cities: City[] = [
     state: "IA",
     miles: 237,
     drive: "3 hr 20 min",
+    walkScore: 52,
+    walkGrade: "D+",
+    district: "Valley Junction District",
     tagline: "Valley Junction is quiet and closes early — a low-key night only.",
     mapCenter: { lat: 41.5668, lng: -93.714 },
     mapZoom: 15,
@@ -282,6 +319,9 @@ export const cities: City[] = [
     state: "NE",
     miles: 22,
     drive: "32 min",
+    walkScore: 28,
+    walkGrade: "F",
+    district: "Downtown Corridor",
     tagline: "Drink downtown, then drive twenty minutes to Fremont for a bed.",
     mapCenter: { lat: 41.5433, lng: -96.1294 },
     mapZoom: 15,
@@ -308,6 +348,9 @@ export const cities: City[] = [
     state: "NE",
     miles: 37,
     drive: "42 min",
+    walkScore: 35,
+    walkGrade: "F",
+    district: "Downtown Area",
     tagline: "A couple of local taverns and nowhere nearby to sleep it off.",
     mapCenter: { lat: 41.2097, lng: -96.6222 },
     mapZoom: 15,
@@ -333,6 +376,9 @@ export const cities: City[] = [
     state: "NE",
     miles: 52,
     drive: "55 min",
+    walkScore: 50,
+    walkGrade: "D",
+    district: "Central Avenue Strip",
     tagline: "Central Ave bar strip, but Lied Lodge is a pricey Uber away.",
     mapCenter: { lat: 40.6764, lng: -95.8594 },
     mapZoom: 15,
@@ -359,6 +405,9 @@ export const cities: City[] = [
     state: "NE",
     miles: 35,
     drive: "42 min",
+    walkScore: 76,
+    walkGrade: "B",
+    district: "Main Street Cluster",
     tagline: "Eight bars crammed into a few Main Street blocks, park once and walk.",
     mapCenter: { lat: 41.4327, lng: -96.498 },
     mapZoom: 15,
@@ -389,6 +438,9 @@ export const cities: City[] = [
     state: "NE",
     miles: 88,
     drive: "1 hr 18 min",
+    walkScore: 45,
+    walkGrade: "D-",
+    district: "Court Street Corridor",
     tagline: "Stone Hollow Brewery anchors Court Street, then wander the townie bars.",
     mapCenter: { lat: 40.268, lng: -96.7481 },
     mapZoom: 15,
@@ -420,6 +472,9 @@ export const cities: City[] = [
     state: "IA",
     miles: 198,
     drive: "2 hr 55 min",
+    walkScore: 74,
+    walkGrade: "B-",
+    district: "Broadway Street",
     tagline: "Broadway Street is a summer party that completely dies in winter.",
     mapCenter: { lat: 43.3858, lng: -95.1344 },
     mapZoom: 15,
@@ -452,6 +507,9 @@ export const cities: City[] = [
     state: "NE",
     miles: 153,
     drive: "2 hr 10 min",
+    walkScore: 88,
+    walkGrade: "A-",
+    district: "Murphy's Wagon Wheel Block",
     tagline: "Rent a room at Sky Lofts and walk downstairs into the bar.",
     mapCenter: { lat: 40.5861, lng: -98.3881 },
     mapZoom: 15,
@@ -482,6 +540,9 @@ export const cities: City[] = [
     state: "IA",
     miles: 7,
     drive: "12 min",
+    walkScore: 30,
+    walkGrade: "F",
+    district: "Casino Resorts",
     tagline: "Three casinos seven miles away — you never leave the property.",
     mapCenter: { lat: 41.22, lng: -95.845 },
     mapZoom: 14,
@@ -510,6 +571,9 @@ export const cities: City[] = [
     state: "IA",
     miles: 237,
     drive: "3 hr 20 min",
+    walkScore: 91,
+    walkGrade: "A",
+    district: "Court Avenue District",
     tagline: "Court Ave has a serious bar scene but that three-hour drive home will hurt.",
     mapCenter: { lat: 41.5874, lng: -93.6225 },
     mapZoom: 15,
@@ -541,6 +605,9 @@ export const cities: City[] = [
     state: "NE",
     miles: 55,
     drive: "50 min",
+    walkScore: 96,
+    walkGrade: "A+",
+    district: "Haymarket / Zoo Bar",
     tagline: "Haymarket breweries, then squeeze into Zoo Bar for sweaty live music.",
     mapCenter: { lat: 40.823, lng: -96.709 },
     mapZoom: 15,
@@ -572,6 +639,9 @@ export const cities: City[] = [
     state: "SD",
     miles: 185,
     drive: "2 hr 45 min",
+    walkScore: 89,
+    walkGrade: "A-",
+    district: "Phillips Avenue Corridor",
     tagline: "Phillips Ave is a proper strip; Hotel on Phillips puts you steps from all of it.",
     mapCenter: { lat: 43.5468, lng: -96.7281 },
     mapZoom: 15,
@@ -604,6 +674,9 @@ export const cities: City[] = [
     state: "NE",
     miles: 152,
     drive: "2 hr 5 min",
+    walkScore: 60,
+    walkGrade: "C",
+    district: "Downtown Cluster",
     tagline: "A speakeasy and a brewery anchor a compact downtown cluster.",
     mapCenter: { lat: 40.9249, lng: -98.342 },
     mapZoom: 15,
@@ -632,6 +705,9 @@ export const cities: City[] = [
     state: "NE",
     miles: 178,
     drive: "2 hr 30 min",
+    walkScore: 54,
+    walkGrade: "D+",
+    district: "Central Ave & 21st St",
     tagline: "Thunderhead anchors 21st Street, Central Ave fills out the rest of the night.",
     mapCenter: { lat: 40.7007, lng: -99.0816 },
     mapZoom: 15,
@@ -663,6 +739,9 @@ export const cities: City[] = [
     state: "IA",
     miles: 210,
     drive: "3 hr 5 min",
+    walkScore: 90,
+    walkGrade: "A",
+    district: "Welch Avenue Strip",
     tagline: "Welch Ave is wall-to-wall Iowa State students and cheap drinks.",
     mapCenter: { lat: 42.0261, lng: -93.649 },
     mapZoom: 15,
@@ -694,6 +773,9 @@ export const cities: City[] = [
     state: "IA",
     miles: 158,
     drive: "2 hr 18 min",
+    walkScore: 32,
+    walkGrade: "F",
+    district: "Main Street Strip",
     tagline: "A few simple Main Street taverns with almost no lodging options.",
     mapCenter: { lat: 42.0644, lng: -94.8674 },
     mapZoom: 15,
@@ -719,6 +801,9 @@ export const cities: City[] = [
     state: "KS",
     miles: 293,
     drive: "4 hr 15 min",
+    walkScore: 87,
+    walkGrade: "A-",
+    district: "Aggieville District",
     tagline: "Aggieville is a legendary college bar district and an absolute haul to get there.",
     mapCenter: { lat: 39.1927, lng: -96.573 },
     mapZoom: 15,
@@ -750,6 +835,9 @@ export const cities: City[] = [
     state: "IA",
     miles: 207,
     drive: "3 hr 0 min",
+    walkScore: 40,
+    walkGrade: "D-",
+    district: "Downtown District",
     tagline: "Small downtown, thin bar data, proceed with low expectations.",
     mapCenter: { lat: 42.4974, lng: -94.168 },
     mapZoom: 15,
@@ -776,6 +864,9 @@ export const cities: City[] = [
     state: "IA",
     miles: 112,
     drive: "1 hr 42 min",
+    walkScore: 33,
+    walkGrade: "F",
+    district: "4th Ave / Cronk's Cafe",
     tagline: "Cronk's anchors a quiet, limited scene — honest but not a destination.",
     mapCenter: { lat: 41.9878, lng: -95.3497 },
     mapZoom: 15,
@@ -797,5 +888,7 @@ export const cities: City[] = [
     ],
   },
 ];
+
+export const cities: City[] = records;
 
 export const cityById = (id: string): City | undefined => cities.find((c) => c.id === id);

@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
-import { Icon } from "./Icon";
+import { useEffect, type ReactNode } from "react";
 
 interface DialogProps {
   open: boolean;
@@ -10,10 +9,8 @@ interface DialogProps {
   children: ReactNode;
 }
 
-/** Centered modal. Escape and backdrop-tap close it; body scroll locks. */
+/** Centered modal over a scrim. Escape and backdrop-tap close it; body scroll locks. */
 export function Dialog({ open, onClose, title, children }: DialogProps) {
-  const ref = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -32,29 +29,18 @@ export function Dialog({ open, onClose, title, children }: DialogProps) {
 
   return (
     <div
-      className="anim-fade fixed inset-0 z-50 flex items-end justify-center bg-black/55 p-4 sm:items-center"
+      className="anim-fade fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div
-        ref={ref}
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="anim-rise w-full max-w-md rounded border border-line bg-surface p-5 shadow-overlay"
+        className="anim-rise w-full max-w-sm rounded-card border bg-surface p-4 shadow-overlay"
       >
-        <div className="mb-4 flex items-center justify-between gap-4">
-          <h2 className="text-lg font-bold">{title}</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="flex h-11 w-11 items-center justify-center rounded text-muted transition hover:bg-raised hover:text-ink"
-          >
-            <Icon name="close" size={22} />
-          </button>
-        </div>
+        <h2 className="mb-4 text-title font-bold">{title}</h2>
         {children}
       </div>
     </div>

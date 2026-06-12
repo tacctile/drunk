@@ -1,8 +1,11 @@
 # Bar Hoppers — /app
 
-Mobile-first webapp for planning overnight bar-hop trips from Ralston, NE:
-browse 27 scored cities, vote city + hotel, and find the weekend everyone's free.
-Live group sync via Supabase realtime, silent localStorage fallback offline.
+Mobile-first webapp for planning overnight bar-hop trips from Ralston, NE.
+Three tabs: **Cities** (the walkability index — 27 cities, hardcoded research
+scores), **Calendar** (personal availability, tap to cycle), **The Board**
+(hot dates + vote standings). City pages pull hotels/bars/food live from
+Google Places; votes and availability sync over Supabase realtime with a
+silent localStorage fallback. Dark only.
 
 This directory is a self-contained Next.js app — its own dependencies, deploy,
 and `.claude/` docs. The repo root `index.html` is the v1 app and stays untouched.

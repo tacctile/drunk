@@ -23,9 +23,9 @@ import { getStoredName, getVoterId, sanitizeName, storeName } from "@/lib/identi
 // Silent-fallback caches. Every successful server write mirrors into these;
 // when Supabase is unreachable the app keeps working from them (the rest of
 // the group's data simply isn't visible until we're back online).
-const CITY_VOTE_CACHE = "bh2-city-vote-cache";
-const HOTEL_VOTE_CACHE = "bh2-hotel-vote-cache";
-const AVAIL_CACHE = "bh2-avail-cache";
+const CITY_VOTE_CACHE = "bh2-city-vote-cache"; // CityVoteRow | null
+const HOTEL_VOTE_CACHE = "bh2-hotel-vote-cache"; // Record<cityId, HotelVoteRow>
+const AVAIL_CACHE = "bh2-avail-cache"; // Record<dateKey, status>
 
 function readCache<T>(key: string): T | null {
   try {
@@ -45,6 +45,11 @@ function writeCache(key: string, value: unknown) {
   }
 }
 
+export interface HotelPref {
+  placeId: string;
+  name: string;
+}
+
 interface GroupDataValue {
   /** First load has settled (server or fallback). */
   ready: boolean;
@@ -56,8 +61,10 @@ interface GroupDataValue {
   hotelVotes: HotelVoteRow[];
   availability: AvailabilityRow[];
   saveName: (raw: string) => Promise<void>;
-  /** City + hotel vote commit together as one action. */
-  castVote: (cityId: string, hotelId: string) => Promise<void>;
+  /** One city vote per person; null clears it. */
+  setCityVote: (cityId: string | null) => Promise<void>;
+  /** One preferred hotel per person per city; null clears that city's pick. */
+  setHotelPref: (cityId: string, pref: HotelPref | null) => Promise<void>;
   setAvailability: (dateKey: string, status: "available" | "unavailable" | null) => Promise<void>;
 }
 
@@ -93,8 +100,14 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
       if (cachedCity && !cv.some((r) => r.voter_id === me)) cv.push({ ...cachedCity, voter_id: me });
 
       const hv = serverHotel ? [...serverHotel] : [];
-      const cachedHotel = readCache<HotelVoteRow>(HOTEL_VOTE_CACHE);
-      if (cachedHotel && !hv.some((r) => r.voter_id === me)) hv.push({ ...cachedHotel, voter_id: me });
+      const cachedHotel = readCache<Record<string, HotelVoteRow>>(HOTEL_VOTE_CACHE);
+      if (cachedHotel) {
+        for (const row of Object.values(cachedHotel)) {
+          if (!hv.some((r) => r.voter_id === me && r.city_id === row.city_id)) {
+            hv.push({ ...row, voter_id: me });
+          }
+        }
+      }
 
       const av = serverAvail ? [...serverAvail] : [];
       const cachedAvail = readCache<Record<string, "available" | "unavailable">>(AVAIL_CACHE);
@@ -118,18 +131,22 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
     const [sv, sc, sh, sa] = await Promise.all([
       safeSelect<VoterRow>("v2_voters", "voter_id,name"),
       safeSelect<CityVoteRow>("v2_city_votes", "voter_id,city_id,updated_at"),
-      safeSelect<HotelVoteRow>("v2_hotel_votes", "voter_id,city_id,hotel_id,updated_at"),
+      safeSelect<HotelVoteRow>(
+        "v2_hotel_votes",
+        "voter_id,city_id,hotel_place_id,hotel_name,updated_at",
+      ),
       safeSelect<AvailabilityRow>("v2_availability", "voter_id,date,status"),
     ]);
     // Keep caches in sync with server truth for this voter.
     const me = voterIdRef.current;
     if (sc) {
       const mine = sc.find((r) => r.voter_id === me);
-      if (mine) writeCache(CITY_VOTE_CACHE, mine);
+      writeCache(CITY_VOTE_CACHE, mine ?? null);
     }
     if (sh) {
-      const mine = sh.find((r) => r.voter_id === me);
-      if (mine) writeCache(HOTEL_VOTE_CACHE, mine);
+      const mine: Record<string, HotelVoteRow> = {};
+      for (const r of sh) if (r.voter_id === me) mine[r.city_id] = r;
+      writeCache(HOTEL_VOTE_CACHE, mine);
     }
     if (sa) {
       const mine: Record<string, string> = {};
@@ -211,33 +228,78 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const castVote = useCallback(async (cityId: string, hotelId: string) => {
-    const me = voterIdRef.current;
-    const now = new Date().toISOString();
-    const cityRow: CityVoteRow = { voter_id: me, city_id: cityId, updated_at: now };
-    const hotelRow: HotelVoteRow = { voter_id: me, city_id: cityId, hotel_id: hotelId, updated_at: now };
-
-    // Optimistic: replace any previous vote (one city + one hotel per person).
-    setCityVotes((prev) => [...prev.filter((r) => r.voter_id !== me), cityRow]);
-    setHotelVotes((prev) => [...prev.filter((r) => r.voter_id !== me), hotelRow]);
-    writeCache(CITY_VOTE_CACHE, cityRow);
-    writeCache(HOTEL_VOTE_CACHE, hotelRow);
-
+  /** Voter row must exist before any FK write lands. */
+  const ensureVoter = useCallback(async (now: string) => {
     const sb = getSupabase();
     if (!sb) return;
-    try {
-      // Voter row must exist first (FK), then both votes land together.
-      await sb
-        .from("v2_voters")
-        .upsert({ voter_id: me, name: nameRef.current || "Someone", updated_at: now });
-      await Promise.all([
-        sb.from("v2_city_votes").upsert(cityRow),
-        sb.from("v2_hotel_votes").upsert(hotelRow),
-      ]);
-    } catch {
-      // cached locally; converges on next successful refetch
-    }
+    await sb
+      .from("v2_voters")
+      .upsert({ voter_id: voterIdRef.current, name: nameRef.current || "Someone", updated_at: now });
   }, []);
+
+  const setCityVote = useCallback(
+    async (cityId: string | null) => {
+      const me = voterIdRef.current;
+      const now = new Date().toISOString();
+      const row: CityVoteRow | null = cityId ? { voter_id: me, city_id: cityId, updated_at: now } : null;
+
+      // Optimistic — one city per person, no spinners.
+      setCityVotes((prev) => {
+        const next = prev.filter((r) => r.voter_id !== me);
+        if (row) next.push(row);
+        return next;
+      });
+      writeCache(CITY_VOTE_CACHE, row);
+
+      const sb = getSupabase();
+      if (!sb) return;
+      try {
+        await ensureVoter(now);
+        if (row) await sb.from("v2_city_votes").upsert(row);
+        else await sb.from("v2_city_votes").delete().eq("voter_id", me);
+      } catch {
+        // cached locally; converges on next successful refetch
+      }
+    },
+    [ensureVoter],
+  );
+
+  const setHotelPref = useCallback(
+    async (cityId: string, pref: HotelPref | null) => {
+      const me = voterIdRef.current;
+      const now = new Date().toISOString();
+      const row: HotelVoteRow | null = pref
+        ? {
+            voter_id: me,
+            city_id: cityId,
+            hotel_place_id: pref.placeId,
+            hotel_name: pref.name,
+            updated_at: now,
+          }
+        : null;
+
+      setHotelVotes((prev) => {
+        const next = prev.filter((r) => !(r.voter_id === me && r.city_id === cityId));
+        if (row) next.push(row);
+        return next;
+      });
+      const cached = readCache<Record<string, HotelVoteRow>>(HOTEL_VOTE_CACHE) ?? {};
+      if (row) cached[cityId] = row;
+      else delete cached[cityId];
+      writeCache(HOTEL_VOTE_CACHE, cached);
+
+      const sb = getSupabase();
+      if (!sb) return;
+      try {
+        await ensureVoter(now);
+        if (row) await sb.from("v2_hotel_votes").upsert(row, { onConflict: "voter_id,city_id" });
+        else await sb.from("v2_hotel_votes").delete().eq("voter_id", me).eq("city_id", cityId);
+      } catch {
+        // cached locally; converges on next successful refetch
+      }
+    },
+    [ensureVoter],
+  );
 
   const setAvailabilityFor = useCallback(
     async (dateKey: string, status: "available" | "unavailable" | null) => {
@@ -256,9 +318,7 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
       if (!sb) return;
       const now = new Date().toISOString();
       try {
-        await sb
-          .from("v2_voters")
-          .upsert({ voter_id: me, name: nameRef.current || "Someone", updated_at: now });
+        await ensureVoter(now);
         if (status) {
           await sb
             .from("v2_availability")
@@ -273,7 +333,7 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
         // cached locally; converges on next successful refetch
       }
     },
-    [],
+    [ensureVoter],
   );
 
   const value = useMemo<GroupDataValue>(
@@ -286,10 +346,11 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
       hotelVotes,
       availability,
       saveName,
-      castVote,
+      setCityVote,
+      setHotelPref,
       setAvailability: setAvailabilityFor,
     }),
-    [ready, voterId, name, voters, cityVotes, hotelVotes, availability, saveName, castVote, setAvailabilityFor],
+    [ready, voterId, name, voters, cityVotes, hotelVotes, availability, saveName, setCityVote, setHotelPref, setAvailabilityFor],
   );
 
   return <GroupDataContext.Provider value={value}>{children}</GroupDataContext.Provider>;

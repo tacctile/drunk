@@ -1,41 +1,59 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { buildMonthGrid, formatMonthTitle } from "@/lib/format";
-import type { DayStatus } from "@/hooks/useAvailability";
+import { useAvailability } from "@/hooks/useAvailability";
+import { useGroupData } from "@/hooks/useGroupData";
+import { useNameGate } from "./NamePrompt";
 import { Icon } from "./Icon";
 
-const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
-const isWeekendIndex = (i: number) => i % 7 === 5 || i % 7 === 6; // Fri / Sat — trip nights
+const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
-export function MonthNav({
-  year,
-  month,
-  onChange,
-}: {
+/**
+ * Month navigation state. `ready` flips after mount — calendars render
+ * nothing until then, because "today" at static-build time and "today" on
+ * the user's phone are different days and would mismatch on hydration.
+ */
+export function useMonthNav() {
+  const [ready, setReady] = useState(false);
+  const [ym, setYm] = useState({ year: 2026, month: 0 });
+  useEffect(() => {
+    const d = new Date();
+    setYm({ year: d.getFullYear(), month: d.getMonth() });
+    setReady(true);
+  }, []);
+  const shift = (delta: number) =>
+    setYm(({ year, month }) => {
+      const d = new Date(year, month + delta, 1);
+      return { year: d.getFullYear(), month: d.getMonth() };
+    });
+  return { ...ym, ready, prev: () => shift(-1), next: () => shift(1) };
+}
+
+interface MonthHeaderProps {
   year: number;
   month: number;
-  onChange: (year: number, month: number) => void;
-}) {
-  const shift = (delta: number) => {
-    const d = new Date(year, month + delta, 1);
-    onChange(d.getFullYear(), d.getMonth());
-  };
+  onPrev: () => void;
+  onNext: () => void;
+}
+
+export function MonthHeader({ year, month, onPrev, onNext }: MonthHeaderProps) {
   return (
-    <div className="mb-2 flex items-center justify-between">
+    <div className="flex h-11 items-center justify-between">
       <button
         type="button"
-        onClick={() => shift(-1)}
+        onClick={onPrev}
         aria-label="Previous month"
-        className="flex h-11 w-11 items-center justify-center rounded text-muted transition hover:bg-raised hover:text-ink"
+        className="flex h-11 w-11 items-center justify-center rounded-btn text-ink-muted transition hover:bg-raised hover:text-ink"
       >
         <Icon name="chevron_left" size={24} />
       </button>
-      <h3 className="text-base font-bold">{formatMonthTitle(year, month)}</h3>
+      <h2 className="text-title font-bold">{formatMonthTitle(year, month)}</h2>
       <button
         type="button"
-        onClick={() => shift(1)}
+        onClick={onNext}
         aria-label="Next month"
-        className="flex h-11 w-11 items-center justify-center rounded text-muted transition hover:bg-raised hover:text-ink"
+        className="flex h-11 w-11 items-center justify-center rounded-btn text-ink-muted transition hover:bg-raised hover:text-ink"
       >
         <Icon name="chevron_right" size={24} />
       </button>
@@ -43,14 +61,11 @@ export function MonthNav({
   );
 }
 
-function WeekdayHeader() {
+export function WeekdayRow() {
   return (
     <div className="mb-1 grid grid-cols-7 gap-1">
-      {WEEKDAYS.map((d, i) => (
-        <div
-          key={i}
-          className={`label text-center ${isWeekendIndex(i) ? "text-muted" : ""}`}
-        >
+      {WEEKDAYS.map((d) => (
+        <div key={d} className="py-1 text-center text-label font-semibold uppercase tracking-label text-ink-dim">
           {d}
         </div>
       ))}
@@ -59,129 +74,128 @@ function WeekdayHeader() {
 }
 
 /**
- * Personal calendar, mode-toggle model: a tap applies the active mode's
- * status; tapping a day already set to that status clears it. No cycling.
- * Friday/Saturday read brighter — those are the nights that matter.
+ * Personal availability. One gesture, three states:
+ * tap neutral → available → not available → clear.
  */
-export function MyCalendar({
-  year,
-  month,
-  mine,
-  onTap,
-}: {
-  year: number;
-  month: number;
-  mine: Record<string, DayStatus>;
-  onTap: (dateKey: string, current: DayStatus | undefined) => void;
-}) {
-  const cells = buildMonthGrid(year, month);
+export function PersonalCalendar({ year, month }: { year: number; month: number }) {
+  const { setAvailability } = useGroupData();
+  const { mine } = useAvailability();
+  const { requireName, prompt } = useNameGate();
+
+  const cycle = (dateKey: string) => {
+    const current = mine[dateKey];
+    const next =
+      current === "available" ? "unavailable" : current === "unavailable" ? null : "available";
+    void setAvailability(dateKey, next);
+  };
+
   return (
     <div>
-      <WeekdayHeader />
+      <WeekdayRow />
       <div className="grid grid-cols-7 gap-1">
-        {cells.map((cell, i) => {
+        {buildMonthGrid(year, month).map((cell) => {
+          if (!cell.inMonth) return <div key={cell.key} aria-hidden="true" />;
           const status = mine[cell.key];
-          const weekend = isWeekendIndex(i);
-          const tone =
+          const palette =
             status === "available"
-              ? "bg-good text-bg"
+              ? "bg-green-dim text-green"
               : status === "unavailable"
-                ? "bg-bad text-bg"
-                : weekend
-                  ? "bg-raised text-ink"
-                  : "bg-surface text-muted";
+                ? "bg-red-dim text-red"
+                : "bg-raised text-ink";
           return (
             <button
               key={cell.key}
               type="button"
               disabled={cell.isPast}
-              onClick={() => onTap(cell.key, status)}
-              aria-label={`${cell.key}${status ? ` — ${status === "available" ? "free" : "busy"}` : ""}`}
-              className={`flex h-11 items-center justify-center rounded text-base font-semibold tabular-nums transition ${tone} ${
-                !cell.inMonth ? "opacity-40" : ""
-              } ${cell.isPast ? "cursor-not-allowed opacity-25" : ""} ${
-                cell.isToday ? "ring-2 ring-inset ring-accent" : ""
+              onClick={() => requireName(() => cycle(cell.key))}
+              aria-label={`${cell.key}${
+                status ? ` — ${status === "available" ? "available" : "not available"}` : ""
               }`}
+              className={`flex h-14 min-h-11 flex-col items-center justify-center rounded-btn text-base font-semibold transition ${palette} ${
+                cell.isToday ? "border-[1.5px] border-accent" : ""
+              } ${cell.isPast ? "opacity-40" : ""}`}
             >
               {cell.day}
+              <span className="flex h-4 items-center" aria-hidden="true">
+                {status === "available" && <Icon name="check" size={16} />}
+                {status === "unavailable" && <Icon name="close" size={16} />}
+              </span>
             </button>
           );
         })}
       </div>
-      <div className="label mt-3 flex flex-wrap items-center gap-x-4 gap-y-1">
-        <span className="inline-flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-good" aria-hidden /> Free
+
+      <div className="mt-4 flex items-center gap-5">
+        <span className="flex items-center gap-2 text-meta font-normal text-ink-muted">
+          <span className="h-2 w-2 rounded-full bg-green" />
+          Available
         </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-bad" aria-hidden /> Busy
+        <span className="flex items-center gap-2 text-meta font-normal text-ink-muted">
+          <span className="h-2 w-2 rounded-full bg-red" />
+          Not available
         </span>
-        <span>Tap sets · same tap clears</span>
       </div>
+      {prompt}
     </div>
   );
 }
 
-/** Group heat map: cell intensity = share of the roster marked free. */
-export function GroupCalendar({
+/**
+ * Read-only heat map for The Board. Cells color by the share of respondents
+ * who are available; tapping a cell with responses reports who's in and out.
+ */
+export function HeatCalendar({
   year,
   month,
-  heatFor,
-  availableCountFor,
-  hasResponsesFor,
-  onPick,
+  onDayTap,
 }: {
   year: number;
   month: number;
-  heatFor: (date: string) => number;
-  availableCountFor: (date: string) => number;
-  hasResponsesFor: (date: string) => boolean;
-  onPick: (dateKey: string) => void;
+  onDayTap: (dateKey: string) => void;
 }) {
-  const cells = buildMonthGrid(year, month);
+  const { breakdownFor } = useAvailability();
+
   return (
     <div>
-      <WeekdayHeader />
+      <WeekdayRow />
       <div className="grid grid-cols-7 gap-1">
-        {cells.map((cell, i) => {
-          const heat = heatFor(cell.key);
-          const count = availableCountFor(cell.key);
-          const hasData = hasResponsesFor(cell.key);
-          const weekend = isWeekendIndex(i);
+        {buildMonthGrid(year, month).map((cell) => {
+          if (!cell.inMonth) return <div key={cell.key} aria-hidden="true" />;
+          const { available, unavailable } = breakdownFor(cell.key);
+          const responded = available.length + unavailable.length;
+          const pct = responded === 0 ? null : (available.length / responded) * 100;
+          const heat =
+            pct === null
+              ? "bg-raised"
+              : pct <= 33
+                ? "bg-red-dim"
+                : pct <= 66
+                  ? "bg-accent-dim"
+                  : pct <= 89
+                    ? "bg-green-dim"
+                    : "bg-[rgba(52,211,153,0.30)]"; // --green at 30%
           return (
             <button
               key={cell.key}
               type="button"
-              disabled={!hasData}
-              onClick={() => onPick(cell.key)}
-              aria-label={`${cell.key} — ${count} free`}
-              className={`flex h-11 items-center justify-center rounded text-base font-semibold tabular-nums transition ${
-                hasData ? "hover:ring-2 hover:ring-inset hover:ring-line-strong" : "cursor-default"
-              } ${!cell.inMonth ? "opacity-40" : ""} ${cell.isPast ? "opacity-25" : ""} ${
-                cell.isToday ? "ring-2 ring-inset ring-accent" : ""
-              }`}
-              style={{
-                background:
-                  heat > 0
-                    ? `rgba(52, 211, 153, ${0.14 + heat * 0.72})`
-                    : weekend
-                      ? "var(--raised)"
-                      : "var(--surface)",
-                color: heat > 0.55 ? "var(--bg)" : heat > 0 ? "var(--ink)" : weekend ? "var(--ink)" : "var(--muted)",
-              }}
+              disabled={responded === 0}
+              onClick={() => onDayTap(cell.key)}
+              aria-label={
+                responded === 0
+                  ? `${cell.key} — no responses`
+                  : `${cell.key} — ${available.length} of ${responded} available`
+              }
+              className={`flex h-14 min-h-11 flex-col items-center justify-center rounded-btn transition ${heat} ${
+                cell.isToday ? "border-[1.5px] border-accent" : ""
+              } ${cell.isPast ? "opacity-40" : ""}`}
             >
-              {cell.day}
+              <span className="text-base font-semibold text-ink">{cell.day}</span>
+              <span className="flex h-4 items-center text-[11px] font-medium text-ink-muted">
+                {responded > 0 ? `${available.length}/${responded}` : ""}
+              </span>
             </button>
           );
         })}
-      </div>
-      <div className="label mt-3 flex items-center gap-2">
-        Fewer free
-        <span className="flex h-2.5 flex-1 overflow-hidden rounded-full" aria-hidden>
-          {[0.18, 0.34, 0.5, 0.68, 0.86].map((a) => (
-            <span key={a} className="flex-1" style={{ background: `rgba(52, 211, 153, ${a})` }} />
-          ))}
-        </span>
-        More free
       </div>
     </div>
   );

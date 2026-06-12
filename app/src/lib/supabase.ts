@@ -44,8 +44,20 @@ export interface CityVoteRow {
 export interface HotelVoteRow {
   voter_id: string;
   city_id: string;
-  hotel_id: string;
+  hotel_place_id: string; // Google Places place_id (or the v2_hotels uuid in fallback mode)
+  hotel_name: string;
   updated_at: string;
+}
+
+/** Curated venue rows (v2_hotels / v2_bars / v2_food) — the Places fallback. */
+export interface DbVenueRow {
+  id: string;
+  city_id: string;
+  name: string;
+  address: string | null;
+  descriptor: string | null;
+  stars?: number | null; // v2_hotels only
+  price_range?: string | null; // v2_hotels only
 }
 
 export interface AvailabilityRow {
