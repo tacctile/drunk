@@ -1,6 +1,6 @@
 # BAR HOPPERS /app — CONTEXT (single source of truth)
 
-Last updated: 2026-06-12 · Phase: avatar in top bar + colored locate list (Prompt 2), pending first deploy
+Last updated: 2026-06-12 · Phase: profile overlay (Prompt 3), pending first deploy
 
 ## What this app is
 
@@ -32,10 +32,14 @@ Bar Hoppers is a mobile-first Next.js webapp a small group of friends (~6–10 p
   are reference data only — the UI never reads them).
 - Identity: first name + last initial ("Nick B") + a 2-digit PIN chosen on
   first visit, stored in `v2_voters` (`display_name`, `pin_hash` — bcryptjs,
-  10 salt rounds, NEVER plain text). Returning users pick their name from a
-  roster dropdown and verify the PIN to load their voter_id onto the device.
-  No lockout, no complexity — wrong PIN just says "PIN doesn't match.
-  Try again."
+  10 salt rounds). Returning users pick their name from a roster dropdown and
+  verify the PIN to load their voter_id onto the device. No lockout, no
+  complexity — wrong PIN just says "PIN doesn't match. Try again." ONE
+  sanctioned plain-text exception (Prompt 3 spec): a PIN changed from the
+  profile overlay also writes `v2_voters.pin_plain` so a forgotten PIN can be
+  recovered; it is NEVER read for verification (sign-in and the profile
+  confirmation always compare against `pin_hash`). Registration and sign-in
+  do not write it.
 - Pin colors are AUTO-ASSIGNED at registration — never user-selectable,
   never changeable. The Nth registered voter gets the Nth entry of the
   25-color `PIN_COLORS` pool in `lib/colors.ts` (`assignColor(count)`,
@@ -83,8 +87,10 @@ icon-only left rail with tooltips):
 - Sticky top bar everywhere else: "Bar Hoppers" wordmark left, profile
   avatar right — a 36px circle showing your initials on your auto-assigned
   pin color (bh2-pin-color cache), or a `person` icon on --surface-raised
-  before registration. Tapping it is a no-op until the profile screen
-  (Prompt 3).
+  before registration. Tapping it opens the ProfileOverlay — a full-screen
+  slide-up sheet (overlay component only, NO /profile route): vote +
+  availability summaries, location-sharing toggle, confirm-then-change
+  identity editing, and "Switch identity" sign-out.
 - EVERY sticky header in the app is fully opaque — plain `bg-bg`/`bg-surface`,
   never an opacity modifier (`/90`), never `backdrop-blur`.
 - A single floating control sits just above the bottom nav (`ActionBar`):
@@ -148,7 +154,7 @@ app/
   │ │                        fully opaque wordmark bar (hidden on /city/*
   │ │                        and /admin) with ProfileAvatar top right
   │ │                        (initials on bh2-pin-color, person icon when
-  │ │                        unregistered, tap no-op until Prompt 3),
+  │ │                        unregistered, tap opens ProfileOverlay),
   │ │                        mobile bottom nav, 80px desktop rail; 3s
   │ │                        long-press on Locate → /admin with
   │ │                        opacity-pulse hold feedback
@@ -172,6 +178,17 @@ app/
   │ │                        identifying write funnels through it;
   │ │                        IdentityWatcher (auto sign-in form on unverified
   │ │                        localStorage id); NotYouLink ("Not you?" switch)
+  │ ├ ProfileOverlay.tsx     full-screen profile sheet (avatar tap): 64px
+  │ │                        avatar + member-since, MY VOTE / MY
+  │ │                        AVAILABILITY summary cards (Go vote / Mark
+  │ │                        dates deep links), LOCATION SHARING toggle
+  │ │                        (useLocations), MY IDENTITY confirm-then-
+  │ │                        change form (bcrypt PIN confirm, double-entry
+  │ │                        changed fields, masked PINs w/ eyeball,
+  │ │                        updateProfile), "Switch identity" sign-out
+  │ │                        behind a BottomSheet confirm; closes on back
+  │ │                        arrow / Esc / header swipe-down; body mounts
+  │ │                        only while open
   │ ├ Dialog.tsx             centered modal over scrim (esc/backdrop, scroll lock)
   │ ├ BottomSheet.tsx        slide-up sheet (sort options, venues, breakdowns)
   │ └ Icon.tsx               Material Symbol primitive
@@ -181,10 +198,18 @@ app/
   │ │                        setHotelPref / setAvailability / createIdentity
   │ │                        (bcrypt PIN hash + pin_color via
   │ │                        assignColor(voter count)) / signIn (PIN verify
-  │ │                        + adopt + pin-color cache) / identityInvalid.
-  │ │                        Roster rows carry pin_color; refetch re-syncs
-  │ │                        bh2-pin-color from the server row.
-  │ ├ useLocations.ts        v2_locations realtime + 30s clock:
+  │ │                        + adopt + pin-color cache) / updateProfile
+  │ │                        (in-place rename + re-PIN: optimistic name +
+  │ │                        roster + bh2-voter-name, upsert w/ pin_hash +
+  │ │                        pin_plain on PIN change) / signOut (clear
+  │ │                        bh2-voter-id/-name/-pin-color + write caches,
+  │ │                        reset context — roster row remains) /
+  │ │                        identityInvalid. Roster rows carry pin_color;
+  │ │                        refetch re-syncs bh2-pin-color from the server
+  │ │                        row.
+  │ ├ useLocations.ts        v2_locations realtime (unique channel topic
+  │ │                        per mount so locate page + profile overlay
+  │ │                        can subscribe at once) + 30s clock:
   │ │                        activeLocations (expired + muted-from-you rows
   │ │                        filtered, self first), isSharing, toggleSharing
   │ │                        (geolocation prompt → upsert w/ 72h expiry +
@@ -230,7 +255,8 @@ CREATE TABLE v2_voters (
   voter_id     uuid not null primary key,
   name         text not null check (char_length(name) between 1 and 20),
   display_name text,        -- "Nick B"; null on legacy rows (fall back to name)
-  pin_hash     text,        -- bcrypt hash of the 2-digit PIN; NEVER plain text
+  pin_hash     text,        -- bcrypt hash of the 2-digit PIN; verification ALWAYS uses this
+  pin_plain    text,        -- plain copy written ONLY by profile PIN changes (recovery; never verified against)
   pin_color    text not null default '#FF8C42',  -- auto-assigned pool color; never user-set
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()
@@ -320,6 +346,18 @@ ALTER TABLE v2_voters
 The rows that existed before the column was added were backfilled (one-time
 UPDATE, also already applied) with pool colors in `created_at` order, so
 registration-order assignment holds for everyone.
+
+2026-06-12 pin-plain migration (applied live via MCP, `add_pin_plain_to_v2_voters`;
+idempotent — safe to re-run in the Supabase SQL editor). Per the Prompt 3
+profile spec: a PIN changed from the profile overlay stores its plain value
+alongside the re-hash so it can be recovered; nothing ever verifies against
+it. Note the column is readable through the public anon key like the rest of
+v2_voters — acceptable for a ~10-friend app whose 2-digit PINs have no
+lockout anyway:
+
+```sql
+ALTER TABLE v2_voters ADD COLUMN IF NOT EXISTS pin_plain text;
+```
 
 ## localStorage contract
 
@@ -422,7 +460,56 @@ See PROGRESS.md.
 
 ## Current state
 
-- Last change (2026-06-12, avatar-and-locate-polish session / Prompt 2):
+- Last change (2026-06-12, profile-overlay session / Prompt 3): the avatar
+  tap finally goes somewhere. New `components/ProfileOverlay.tsx` — a
+  full-screen sheet (anim-sheet slide-up over everything incl. the tab bar,
+  --bg background, z-50, NOT a route) opened from the AppShell avatar
+  (`profileOpen` state). Own opaque header: back arrow / "Profile" (Title) /
+  spacer; closes on back arrow, Escape, or a 70px downward swipe on the
+  header; body scroll locks while open; the content (and its hooks) mounts
+  only while open. Sections top to bottom: (1) 64px pin-color avatar with
+  contrast initials, display name (Display), "Member since [Month D, YYYY]"
+  from v2_voters.created_at (fetched per open with pin_hash; line hidden
+  offline). (2) MY VOTE card — voted: city name + "You voted for this city"
+  + "Preferred hotel: X" when a pref exists for that city; not voted: "No
+  vote cast yet" + accent "Go vote" text button that closes the overlay and
+  pushes /cities. (3) MY AVAILABILITY card — "[N] days available" (--green,
+  Title) + "[N] days unavailable" (--red, Title) + "Last updated [Month
+  Year]" from the latest marked date; empty state "No dates marked yet" +
+  "Mark dates" → /calendar. (4) LOCATION SHARING card — "Share my location"
+  toggle wired to useLocations.toggleSharing (same denied/error inline
+  copy as /locate), status line "Sharing · expires in X hrs" (--green) /
+  "Not sharing" (--ink-dim), disclaimer "This only affects Bar Hoppers."
+  (5) MY IDENTITY card — confirm-then-change: three always-shown
+  confirmation inputs (first name / initial / PIN — PIN masked with an
+  eyeball reveal); all comparisons trimmed + case-insensitive; the PIN is
+  bcrypt-compared against the fetched pin_hash (a hashless legacy row or
+  offline fetch accepts any valid PIN, mirroring sign-in adoption).
+  "Update my profile" (disabled: raised/dim/border; enabled: accent)
+  unlocks on full match; tapping it reveals the change section: three
+  optional pairs (new first name / new initial / new PIN, each confirm
+  input appearing once its field has content, PINs masked w/ eyeballs);
+  a filled pair must be valid + entered twice (matching), empty pairs are
+  left alone. "Save changes" (accent, full width) calls the new
+  useGroupData.updateProfile, flashes a green check for 1.2s, then resets
+  the form. (6) "Not [name]? Switch identity" (--ink-dim, 44px, mt-6) →
+  BottomSheet confirm ("Sign out as [name]? You'll need your PIN to sign
+  back in." / Cancel / red Sign out) → new useGroupData.signOut + overlay
+  closes. Unregistered avatar taps see a quiet "No identity yet" gate into
+  NamePrompt instead of an empty profile. Data layer: useGroupData gained
+  `updateProfile` (optimistic name/roster/bh2-voter-name update; v2_voters
+  upsert carries pin_hash + pin_plain when the PIN changed — pin_plain is
+  new, per spec, recovery-only) and `signOut` (clears
+  bh2-voter-id/-name/-pin-color + the three write caches, resets context
+  to unregistered; server rows untouched); identity.ts gained
+  clearIdentity(); useLocations now subscribes under a unique channel
+  topic per mount so the overlay and /locate can run simultaneously
+  without killing each other's realtime feed. Schema: `v2_voters.pin_plain
+  text` added live via MCP (idempotent, see migration log). Voting,
+  availability, city list/detail, Results, admin, locate map logic, and
+  the root index.html untouched. Build green — 36 static pages; lint +
+  strict typecheck clean.
+- Earlier (2026-06-12, avatar-and-locate-polish session / Prompt 2):
   identity made visible. (1) The AppShell wordmark bar carries a profile
   avatar top right on every screen that shows the bar (city detail and
   /admin keep their own headers, as before): a 36px circle — initials
@@ -642,3 +729,6 @@ See PROGRESS.md.
   NEXT_PUBLIC_ env vars (optional — fallbacks baked), restrict the Google
   Maps key to the deploy domain, and confirm the key has the Maps JavaScript
   API enabled with billing (Geocoding and Places APIs are no longer needed).
+  Possible follow-up: surface pin_plain in the admin user cards so a
+  forgotten PIN can actually be read back (today the column fills only when
+  someone changes their PIN from the profile).

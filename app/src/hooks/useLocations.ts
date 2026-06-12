@@ -13,6 +13,10 @@ import { getStoredPinColor } from "@/lib/identity";
 import { getSupabase, safeSelect, type LocationRow } from "@/lib/supabase";
 
 const MUTED_IDS_KEY = "bh2-muted-ids";
+// Each hook instance subscribes under its own channel topic. Two mounts can
+// coexist (the locate page + the profile overlay) — a shared topic would make
+// the second join close the first and silently kill its realtime feed.
+let channelSeq = 0;
 const LOCATION_COLUMNS =
   "voter_id,display_name,lat,lng,pin_color,sharing_since,expires_at,updated_at,muted_ids";
 const UPDATE_MS = 60_000; // sharer re-sends coords every minute
@@ -137,7 +141,7 @@ export function useLocations(): LocationsValue {
     };
     if (sb) {
       try {
-        channel = sb.channel("bh2-locations");
+        channel = sb.channel(`bh2-locations-${++channelSeq}`);
         channel.on(
           "postgres_changes",
           { event: "*", schema: "public", table: "v2_locations" },

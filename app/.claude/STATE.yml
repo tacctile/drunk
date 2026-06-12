@@ -1,34 +1,38 @@
 last_updated: 2026-06-12
 last_session: >-
-  Prompt 2 — identity made visible. (1) AppShell wordmark bar gained a
-  ProfileAvatar top right (every screen that shows the bar; /city/* and
-  /admin keep their own headers as before): 36px circle, initials ("Nick B"
-  → "NB", 13px/700, contrastColor text) on the bh2-pin-color background
-  with a 1.5px ${color}4D border; unregistered devices get a person icon
-  (20px, --ink-dim) on --surface-raised instead. 44px tap target,
-  aria-label "Your profile", tap is a deliberate no-op until the profile
-  screen (Prompt 3). Re-reads localStorage whenever useGroupData
-  name/voters change (registration, sign-in, and roster pin-color re-sync
-  update it without a reload) plus a storage listener for other tabs;
-  first render is always the icon variant so SSR hydration stays clean.
-  (2) /locate controls card simplified to two labeled sections: SHARING
-  (toggle + unchanged disclaimer) and VISIBILITY ("Manage who sees you" —
-  renamed from "Manage visibility" — mute list) which renders only while
-  sharing is on. Swatches confirmed gone (deleted last session). No
-  Save/Cancel — writes stay immediate/optimistic per the architecture.
-  (3) People panel rows are single-line: 20px pin_color dot (own dot wears
-  a 2px --accent outline with a 2px gap), name (Title) with "(you)" in
-  --ink-dim, right-aligned "X min ago" (Meta, --ink-dim). Row tap pans to
-  the person, zooms to 15 (was 14), pulses the pin +6px diameter with a
-  400ms timeout reset (14px pin → exactly 20px; per-pin timers cleared on
-  teardown; old rAF sine pulse deleted), and flashes the row
-  --surface-raised for 1s (160ms transition fades it back). Pin taps still
-  highlight the row accent-dim without moving the map. (4) Verified, no
-  change needed: map pins already fill from v2_locations.pin_color
-  (written from the voter's auto-assigned color on toggle-on). Voting,
-  availability, city list/detail, Results, admin, root index.html
-  untouched. Build green (36 static pages), lint + strict typecheck clean.
-current_phase: avatar_and_locate_polish
+  Prompt 3 — the profile overlay. New components/ProfileOverlay.tsx: a
+  full-screen slide-up sheet (anim-sheet, --bg, z-50 over the tab bar, NO
+  route) opened by the AppShell avatar; own header (back arrow / "Profile"
+  / spacer) closing on tap, Escape, or a 70px header swipe-down; body
+  scroll locked; content + hooks mount only while open. Sections: 64px
+  pin-color avatar + display name + "Member since [date]"
+  (v2_voters.created_at, fetched per open alongside pin_hash); MY VOTE
+  card (city + "You voted for this city" + "Preferred hotel: X", or "No
+  vote cast yet" + "Go vote" → closes overlay, pushes /cities); MY
+  AVAILABILITY card ("[N] days available" green / "[N] days unavailable"
+  red / "Last updated [Month Year]", or "No dates marked yet" + "Mark
+  dates" → /calendar); LOCATION SHARING card (toggle on
+  useLocations.toggleSharing, "Sharing · expires in X hrs" / "Not
+  sharing", "This only affects Bar Hoppers." disclaimer); MY IDENTITY
+  confirm-then-change form (three always-shown confirmation inputs — PIN
+  masked w/ eyeball, bcrypt-compared against pin_hash; trimmed
+  case-insensitive matches gate "Update my profile", which reveals three
+  optional double-entry change pairs; empty pair = untouched field; "Save
+  changes" → useGroupData.updateProfile, 1.2s green check flash, form
+  reset); "Not [name]? Switch identity" → BottomSheet confirm → new
+  useGroupData.signOut (clears bh2-voter-id/-name/-pin-color + write
+  caches, context → unregistered, server rows remain) and the overlay
+  closes. Unregistered avatar taps get a "No identity yet" gate into
+  NamePrompt. Data layer: updateProfile (optimistic rename of context
+  name + roster row + bh2-voter-name; v2_voters upsert adds pin_hash +
+  pin_plain when the PIN changed), signOut, identity.clearIdentity();
+  useLocations channel topic is now unique per mount so /locate and the
+  overlay can subscribe simultaneously. Schema: v2_voters.pin_plain text
+  added live via MCP (idempotent; recovery-only — nothing verifies
+  against it). Voting/availability writes, city list/detail, Results,
+  admin, locate map logic, root index.html untouched. Build green (36
+  static pages), lint + strict typecheck clean.
+current_phase: profile_overlay
 build_complete: true
 supabase_schema_deployed: true
 vercel_deployed: false
@@ -64,9 +68,20 @@ known_issues:
   - A device registered before the pin-color system shows its initials on a
     plain --surface-raised avatar until the first roster refetch caches
     bh2-pin-color (self-healing, no action needed)
+  - pin_plain (per the Prompt 3 spec) stores the plain 2-digit PIN when it
+    is changed from the profile, and v2_voters is anon-readable — acceptable
+    for a ~10-friend app whose 00–99 PINs have no lockout, but it is NOT a
+    secret store; registration/sign-in never write it, so it only fills as
+    people change PINs
+  - Profile PIN confirmation falls back to accepting any valid 2-digit PIN
+    when the row has no pin_hash or the fetch failed (offline) — mirrors the
+    sign-in adoption rule for legacy rows
+  - A PIN change saved while offline is dropped silently (the old PIN keeps
+    working); profile renames converge via ensureVoter on the next write
+  - Switch-identity sign-out leaves an active v2_locations row sharing until
+    it expires or the same person signs back in and toggles off (admin Force
+    expire also works)
 next_up:
-  - Prompt 3 — profile screen; wire the avatar tap to open it (the avatar
-    button in AppShell.tsx is rendered and labeled, currently a no-op)
   - Backfill lat/lng for the 206 venue rows in the Supabase SQL editor
   - Create Vercel project with root directory app/ and deploy
   - Set NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY /

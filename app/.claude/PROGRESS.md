@@ -45,6 +45,7 @@ Legend: [x] complete · [~] partial · [ ] pending
 - [x] LOCATE (fourth tab, rightmost): registered-only gate → full-screen dark map (Ralston, zoom 8, greedy), realtime person pins (14px + name pill; own 18px + amber ring), opt-in share toggle (off by default, 72h expiry, 60s updates, device-settings disclaimer, denied-permission inline error), 10-color pin picker (persisted), one-directional mute list, draggable people panel (80px ↔ 50vh, "Last updated X min ago", row tap pans+pulses pin)
 - [x] ADMIN (3s long-press on the Locate nav icon — the only entry): user cards w/ hashed-PIN status + last vote, edit modal (rename / PIN reset / cascade delete), Reset All Votes + Reset All Availability behind confirms, active-location list w/ Force expire, data-health count grid w/ refresh
 - [x] v2_locations table live (anon read gated to unexpired rows, in supabase_realtime); useLocations hook filters expiry + mutes client-side
+- [x] PROFILE overlay (avatar tap, full-screen slide-up sheet, no route): 64px avatar + member-since, MY VOTE + MY AVAILABILITY summary cards w/ Go vote / Mark dates deep links, LOCATION SHARING toggle, MY IDENTITY confirm-then-change form (bcrypt PIN confirm, double-entry changed fields, masked PINs w/ eyeball, pin_plain stored on PIN change for recovery), "Switch identity" sign-out behind a confirm sheet
 
 ## Guardrails honored
 - [x] Root index.html untouched; all work inside /app
