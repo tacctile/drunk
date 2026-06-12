@@ -5,9 +5,9 @@ import { useEffect, useState } from "react";
 import { cityById } from "@/data/cities";
 import type { VenueKind } from "@/data/types";
 import { useGroupData } from "@/hooks/useGroupData";
-import { usePlaces } from "@/hooks/usePlaces";
+import { useVenues } from "@/hooks/useVenues";
 import { useVotes } from "@/hooks/useVotes";
-import { mapsUrl, priceSymbols, type Venue } from "@/lib/venues";
+import type { Venue } from "@/lib/venues";
 import { ActionBar } from "@/components/ActionBar";
 import { CityList, loadSort, type CitySort } from "@/components/CityList";
 import { CityMap } from "@/components/CityMap";
@@ -21,27 +21,23 @@ const TABS: { kind: VenueKind; label: string }[] = [
   { kind: "food", label: "Food" },
 ];
 
-function AddressLink({ venue }: { venue: Venue }) {
-  if (!venue.address) return null;
+/** Hotel class as filled accent stars — 3 stars = three filled glyphs. */
+function Stars({ count }: { count: number }) {
+  const n = Math.max(0, Math.min(5, Math.floor(count)));
+  if (n === 0) return null;
   return (
-    <a
-      href={mapsUrl(venue.name, venue.address)}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={(e) => e.stopPropagation()}
-      className="flex min-h-11 items-center text-meta font-normal text-ink-muted transition hover:text-ink"
-    >
-      <span className="truncate underline decoration-border-strong underline-offset-4">
-        {venue.address}
-      </span>
-    </a>
+    <span className="flex items-center text-accent" aria-label={`${n}-star hotel`}>
+      {Array.from({ length: n }, (_, i) => (
+        <Icon key={i} name="star" filled size={14} />
+      ))}
+    </span>
   );
 }
 
 export function CityDetail({ cityId }: { cityId: string }) {
   // The server wrapper 404s unknown ids before this component renders.
   const city = cityById(cityId)!;
-  const { venues, ready } = usePlaces(city);
+  const { venues, ready } = useVenues(city);
   const { setCityVote, setHotelPref } = useGroupData();
   const { myCityId, myHotelPrefFor } = useVotes();
   const { requireName, prompt } = useNameGate();
@@ -75,8 +71,8 @@ export function CityDetail({ cityId }: { cityId: string }) {
       </aside>
 
       <div className="min-w-0">
-        {/* Sticky header — back, city + state, vote */}
-        <header className="sticky top-0 z-30 grid h-14 grid-cols-[44px_1fr_44px] items-center border-b bg-bg/90 px-2 backdrop-blur">
+        {/* Sticky header — back, city + state, vote. Fully opaque, always. */}
+        <header className="sticky top-0 z-30 grid h-14 grid-cols-[44px_1fr_44px] items-center border-b bg-bg px-2">
           <Link
             href="/cities"
             aria-label="Back to cities"
@@ -133,32 +129,32 @@ export function CityDetail({ cityId }: { cityId: string }) {
         ) : (
           <ul className="mx-auto max-w-2xl" role={tab === "hotel" ? "radiogroup" : undefined} aria-label={tab === "hotel" ? "Preferred hotel" : undefined}>
             {list.map((venue) => (
-              <li key={venue.id} className="flex min-h-14 items-center gap-2 border-b py-2 pl-4 pr-2">
+              <li key={venue.id} className="flex min-h-14 items-center gap-2 border-b py-3 pl-4 pr-2">
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-title font-bold text-ink">{venue.name}</p>
-                  <AddressLink venue={venue} />
+                  {venue.address && (
+                    <p className="truncate text-meta font-normal text-ink-muted">{venue.address}</p>
+                  )}
                   {tab === "hotel" ? (
-                    <p className="flex items-center gap-2 pb-1 text-meta font-normal text-ink-muted">
-                      {priceSymbols(venue.priceLevel) && (
-                        <span className="font-semibold text-accent">
-                          {priceSymbols(venue.priceLevel)}
-                        </span>
-                      )}
-                      {!venue.priceLevel && venue.priceText && <span>{venue.priceText}</span>}
-                      {venue.rating !== null && (
-                        <span className="flex items-center gap-1">
-                          <Icon name="star" filled size={14} />
-                          {venue.rating.toFixed(1)}
-                          {venue.ratingCount !== null && ` (${venue.ratingCount})`}
-                        </span>
-                      )}
-                    </p>
-                  ) : (
-                    venue.descriptor && (
-                      <p className="truncate pb-1 text-meta font-normal text-ink-dim">
-                        {venue.descriptor}
+                    (venue.stars != null || venue.price_range) && (
+                      <p className="flex items-center gap-2 pt-0.5 text-meta font-normal text-ink-muted">
+                        {venue.stars != null && <Stars count={venue.stars} />}
+                        {venue.price_range && <span>{venue.price_range}</span>}
                       </p>
                     )
+                  ) : (
+                    <>
+                      {venue.descriptor && (
+                        <p className="truncate pt-0.5 text-meta font-normal text-ink-dim">
+                          {venue.descriptor}
+                        </p>
+                      )}
+                      {(tab === "bar" ? venue.has_food : venue.has_bar) && (
+                        <span className="mt-1.5 inline-flex rounded-full bg-raised px-2.5 py-0.5 text-meta font-normal text-ink-muted">
+                          {tab === "bar" ? "Also serves food" : "Full bar"}
+                        </span>
+                      )}
+                    </>
                   )}
                 </div>
                 {tab === "hotel" && (

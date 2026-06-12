@@ -106,7 +106,7 @@ function CityRow({ city, active, voted, onVote }: CityRowProps) {
               {city.district}
             </span>
           </span>
-          <span className="flex flex-none items-center gap-1.5">
+          <span className="flex w-[96px] flex-none items-center justify-center gap-1.5">
             <span className={`text-display ${GRADE_TEXT[k]}`}>{city.walkScore}</span>
             <span className={`rounded-full px-2 py-0.5 text-meta font-bold ${GRADE_BADGE[k]}`}>
               {city.walkGrade}
@@ -135,14 +135,36 @@ function CityRow({ city, active, voted, onVote }: CityRowProps) {
   );
 }
 
+/**
+ * Sticky column labels for the index — rides just below the 56px wordmark
+ * bar, fully opaque, and mirrors the row grid exactly (flex-1 name column,
+ * 96px walkability, 72px distance, 44px vote, same gaps and padding).
+ */
+function ColumnHeader() {
+  return (
+    <div className="sticky top-14 z-10 flex h-9 items-center gap-2 border-b bg-bg pl-4 pr-2">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <span className="label min-w-0 flex-1 !text-ink-dim">City</span>
+        <span className="label w-[96px] flex-none whitespace-nowrap text-center !text-ink-dim">
+          Walkability
+        </span>
+        <span className="label w-[72px] flex-none text-right !text-ink-dim">Distance</span>
+      </div>
+      <span className="label w-11 flex-none text-center !text-ink-dim">Vote</span>
+    </div>
+  );
+}
+
 interface CityListProps {
   sort: CitySort;
   /** Highlights the open city when the list rides along on desktop detail. */
   activeCityId?: string;
+  /** Sticky column header row — the /cities page only. */
+  withHeader?: boolean;
 }
 
 /** The walkability index — every city, sorted the user's way. */
-export function CityList({ sort, activeCityId }: CityListProps) {
+export function CityList({ sort, activeCityId, withHeader = false }: CityListProps) {
   const { setCityVote } = useGroupData();
   const { myCityId } = useVotes();
   const { requireName, prompt } = useNameGate();
@@ -164,6 +186,7 @@ export function CityList({ sort, activeCityId }: CityListProps) {
   if (sort !== "state") {
     return (
       <>
+        {withHeader && <ColumnHeader />}
         <ul>{sorted.map(row)}</ul>
         {prompt}
       </>
@@ -179,6 +202,7 @@ export function CityList({ sort, activeCityId }: CityListProps) {
 
   return (
     <div>
+      {withHeader && <ColumnHeader />}
       {groups.map((group) => (
         <section key={group.state}>
           <h2 className="label border-b bg-bg px-4 pb-2 pt-5">

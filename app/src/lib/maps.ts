@@ -3,6 +3,8 @@
 import { Loader } from "@googlemaps/js-api-loader";
 import type { VenueKind } from "@/data/types";
 
+// The key needs the Maps JavaScript API (map display) and the Geocoding API
+// (pin coordinates). The Places API is no longer used anywhere.
 const MAPS_API_KEY =
   process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "AIzaSyAKzTDijoSvxp9Gb2oEqYXW4kmnEzkbMWQ";
 
@@ -18,7 +20,7 @@ let loaderPromise: Promise<typeof google> | null = null;
 
 export function loadGoogleMaps(): Promise<typeof google> {
   if (!loaderPromise) {
-    const loader = new Loader({ apiKey: MAPS_API_KEY, version: "weekly", libraries: ["places"] });
+    const loader = new Loader({ apiKey: MAPS_API_KEY, version: "weekly" });
     loaderPromise = loader.load();
   }
   return loaderPromise;
