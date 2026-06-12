@@ -52,9 +52,19 @@ DO NOT READ: hooks internals, calendar code
 READ: src/app/globals.css, tailwind.config.ts
 DO NOT READ: pages, hooks, data. Dark only — there is no theme system.
 
-## Task: Navigation / app shell
+## Task: Navigation / app shell / long-press admin trigger
 READ: src/components/AppShell.tsx, src/app/layout.tsx, next.config.mjs
 DO NOT READ: pages, hooks, data
+
+## Task: Locate tab / location sharing / pins / people panel / mutes
+READ: src/app/locate/page.tsx, src/hooks/useLocations.ts, src/lib/maps.ts,
+src/lib/supabase.ts (LocationRow), CONTEXT.md (v2_locations schema)
+DO NOT READ: voting code, calendar code, city detail, venue hooks
+
+## Task: Admin screen (users, PIN resets, trip resets, location oversight)
+READ: src/app/admin/page.tsx, src/components/AppShell.tsx (the long-press
+trigger), src/lib/identity.ts, CONTEXT.md (schema section)
+DO NOT READ: map components, calendar code, venue hooks
 
 ## After ANY session
 UPDATE: .claude/STATE.yml (always), .claude/PROGRESS.md (if features changed),

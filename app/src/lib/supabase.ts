@@ -74,6 +74,20 @@ export interface AvailabilityRow {
   status: "available" | "unavailable";
 }
 
+/** Live location shares (v2_locations) — one row per sharer, 72h lifetime. */
+export interface LocationRow {
+  voter_id: string;
+  display_name: string;
+  lat: number;
+  lng: number;
+  pin_color: string;
+  sharing_since: string;
+  expires_at: string;
+  updated_at: string;
+  /** Voters this sharer hides their pin from — one-directional, never disclosed. */
+  muted_ids: string[];
+}
+
 /** Swallows all failures; returns null so callers can fall back silently. */
 export async function safeSelect<T>(table: string, columns: string): Promise<T[] | null> {
   const sb = getSupabase();

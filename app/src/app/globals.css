@@ -127,9 +127,17 @@ body {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
+/* Long-press feedback on the Locate tab: one slow opacity dip across the
+   full 3-second admin hold so the user knows something is happening. */
+@keyframes bh-hold-pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
 .anim-fade { animation: bh-fade-in 160ms ease both; }
 .anim-rise { animation: bh-rise 160ms ease both; }
 .anim-sheet { animation: bh-sheet-up 160ms ease both; }
+.anim-hold { animation: bh-hold-pulse 3s ease both; }
 
 @media (prefers-reduced-motion: reduce) {
   *,

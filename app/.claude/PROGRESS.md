@@ -42,6 +42,9 @@ Legend: [x] complete · [~] partial · [ ] pending
 - [x] THE BOARD: hot-dates heat map (respondent-share buckets, yes/total fractions, month nav, tap → who's in/out sheet) + standings (rank, count, accent meter, voter pills, hotel preference sub-rows) + empty state
 - [x] / → /cities redirect (server redirect + page fallback); 404 for unknown city ids
 - [x] ZERO external links — venue addresses are plain text everywhere (rows + pin sheet)
+- [x] LOCATE (fourth tab, rightmost): registered-only gate → full-screen dark map (Ralston, zoom 8, greedy), realtime person pins (14px + name pill; own 18px + amber ring), opt-in share toggle (off by default, 72h expiry, 60s updates, device-settings disclaimer, denied-permission inline error), 10-color pin picker (persisted), one-directional mute list, draggable people panel (80px ↔ 50vh, "Last updated X min ago", row tap pans+pulses pin)
+- [x] ADMIN (3s long-press on the Locate nav icon — the only entry): user cards w/ hashed-PIN status + last vote, edit modal (rename / PIN reset / cascade delete), Reset All Votes + Reset All Availability behind confirms, active-location list w/ Force expire, data-health count grid w/ refresh
+- [x] v2_locations table live (anon read gated to unexpired rows, in supabase_realtime); useLocations hook filters expiry + mutes client-side
 
 ## Guardrails honored
 - [x] Root index.html untouched; all work inside /app
