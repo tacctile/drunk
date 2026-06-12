@@ -27,7 +27,7 @@ export default function CitiesPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <CityList sort={sort} />
+      <CityList sort={sort} withHeader />
 
       <ActionBar>
         <button

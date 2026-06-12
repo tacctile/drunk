@@ -15,9 +15,9 @@ Legend: [x] complete · [~] partial · [ ] pending
 - [x] 27-city dataset with HARDCODED walkability research: walkScore (0–100), walkGrade (A+…F), district name
 - [x] City type slimmed to id/name/state/miles/drive/walkScore/walkGrade/district/mapCenter/mapZoom
 - [x] Legacy hotel/bar/food/vibes/tagline arrays retained in cities.ts as reference only (out of the type, never read by UI)
-- [x] Venue lists live from Google Places Nearby Search (lodging 2000m / bar 1000m / restaurant 800m, prominence)
-- [x] Chain filter (name regex) on bars + food; non-OPERATIONAL results dropped
-- [x] Silent fallback chain: Places → curated v2_hotels/v2_bars/v2_food tables → empty state
+- [x] Venue lists read ONLY from the curated v2_hotels/v2_bars/v2_food Supabase tables (Places Nearby Search removed)
+- [x] Map pin coords geocoded in the background by name + address (3 concurrent, session-cached, silent skip) — lists never block on pins
+- [x] Silent failure handling: Supabase error → empty state, geocode failure → no pin (no error UI anywhere)
 
 ## Supabase
 - [x] v2 user tables (v2_voters, v2_city_votes, v2_hotel_votes, v2_availability) + anon RLS — live
@@ -33,14 +33,15 @@ Legend: [x] complete · [~] partial · [ ] pending
 
 ## Views
 - [x] CITIES (first screen): walkability index — 72px rows: name + state + district · score (display, grade color) + grade badge · miles + drive · 44px inline vote icon
+- [x] Sticky column header row on /cities (CITY / WALKABILITY / DISTANCE / VOTE, 36px, opaque, below the wordmark bar, aligned to the row grid)
 - [x] Sort pill above bottom nav → bottom sheet: Distance from Ralston (default) / Walkability Score / City Name A–Z / By State (grouped sections); persisted to bh2-city-sort
-- [x] CITY DETAIL: sticky header (back / name + state / vote icon), 280–380px dark map, cooperative gestures, circle pins (hotel accent / bar green / food blue), pin tap → venue sheet (name, tappable address, rating, price)
-- [x] Hotels / Bars / Food tab bar (44px, accent indicator) over Places-fed lists; hotel rows carry $-symbols + rating + "prefer this hotel" radio (one per user per city, place_id keyed)
+- [x] CITY DETAIL: fully opaque sticky header (back / name + state / vote icon), 280–380px dark map, cooperative gestures, circle pins (hotel accent / bar green / food blue) + zoom-gated OverlayView name labels (zoom ≥ 15), pin tap → venue sheet (name, plain address, descriptor)
+- [x] Hotels / Bars / Food tab bar (44px, accent indicator) over Supabase-fed lists; hotel rows carry star icons + price_range + "prefer this hotel" radio (one per user per city, v2_hotels uuid keyed); bar/food rows carry curated descriptors + has_food/has_bar pills
 - [x] Full-width vote CTA above the nav: "Vote for X" ↔ "Your pick — X ✓" (tap to undo), optimistic
 - [x] CALENDAR: personal only — tap cycles available → not available → clear; check/X icons in cells, today ring, past dates dimmed/disabled, green/red legend; upsert/delete to v2_availability
 - [x] THE BOARD: hot-dates heat map (respondent-share buckets, yes/total fractions, month nav, tap → who's in/out sheet) + standings (rank, count, accent meter, voter pills, hotel preference sub-rows) + empty state
 - [x] / → /cities redirect (server redirect + page fallback); 404 for unknown city ids
-- [x] Tappable addresses everywhere → maps.google.com in a new tab
+- [x] ZERO external links — venue addresses are plain text everywhere (rows + pin sheet)
 
 ## Guardrails honored
 - [x] Root index.html untouched; all work inside /app
@@ -51,6 +52,6 @@ Legend: [x] complete · [~] partial · [ ] pending
 
 ## Backlog
 - [ ] Vercel deploy (root dir app/) + env vars + Maps key domain restriction
-- [ ] Confirm Places API (Nearby Search) quota/billing on the production key
-- [ ] Spot-check Places result quality for the smallest towns (fallback tables cover gaps)
+- [ ] Confirm Geocoding API (and Maps JavaScript API) enabled with billing on the production key — Places can be disabled
+- [ ] Spot-check geocode hit-rate for venues with sparse/missing addresses (no pin = silent)
 - [ ] Per-city availability (current model is one shared group calendar — matches v1)

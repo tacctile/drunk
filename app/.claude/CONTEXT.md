@@ -1,6 +1,6 @@
 # BAR HOPPERS /app — CONTEXT (single source of truth)
 
-Last updated: 2026-06-12 · Phase: ground-up UI/UX rebuild complete (walkability index), pending first deploy
+Last updated: 2026-06-12 · Phase: Supabase-primary venue layer complete, pending first deploy
 
 ## What this app is
 
@@ -19,13 +19,15 @@ Bar Hoppers is a mobile-first Next.js webapp a small group of friends (~6–10 p
 - Tailwind CSS v3 — tokens are CSS variables in `globals.css`, mapped in `tailwind.config.ts`
 - NO UI component libraries (no shadcn/radix/chakra/MUI). Everything hand-built.
 - Supabase JS v2 (`@supabase/supabase-js`) — client components + hooks only
-- Google Maps JS API via `@googlemaps/js-api-loader` (`weekly`, `places` library loaded)
-- Venue lists (hotels/bars/food) come LIVE from Google Places Nearby Search.
-  If Places returns nothing for a category (no key, quota, offline), the app
-  silently falls back to the curated `v2_hotels`/`v2_bars`/`v2_food` Supabase
-  tables, and to an empty state after that. Venue lists are never hardcoded
-  in the bundle (the legacy arrays still sitting in `cities.ts` are reference
-  data only — the UI never reads them).
+- Google Maps JS API via `@googlemaps/js-api-loader` (`weekly`, no extra
+  libraries) — map display + Geocoder only. The Places API is NOT used.
+- Venue lists (hotels/bars/food) come ONLY from the curated
+  `v2_hotels`/`v2_bars`/`v2_food` Supabase tables (empty state if the query
+  fails — never an error UI). Map pin coordinates are resolved in the
+  background by the Geocoding API (venue name + address, session-cached,
+  3 concurrent, silent skip on failure) — lists never wait on pins. Venue
+  lists are never hardcoded in the bundle (the legacy arrays still sitting
+  in `cities.ts` are reference data only — the UI never reads them).
 - Icons: Material Symbols Outlined (Google Fonts CDN) — the only icon system
 - Font: Manrope 400/500/600/700/800 (Google Fonts CDN)
 - All user-rendered strings go through React JSX escaping (no `dangerouslySetInnerHTML` anywhere)
@@ -34,8 +36,8 @@ Bar Hoppers is a mobile-first Next.js webapp a small group of friends (~6–10 p
 - Walkability scores, letter grades, and district names are HARDCODED research
   in `cities.ts` — never calculated. The old scoring/cluster math is deleted.
 - Never hardcode city counts — always derive from `cities.length`.
-- Addresses are tappable → `https://maps.google.com/?q=[name+address]` in a new
-  tab (the app's only external links).
+- ZERO external links. Venue addresses render as plain text (rows + pin
+  sheet) — a tap never leaves the app.
 
 ## Routes & navigation
 
@@ -75,13 +77,14 @@ app/
   │ ├ globals.css            dark-only tokens on :root, .ms icons, anims,
   │ │                        .card/.btn/.input/.label, tabular-nums on body
   │ ├ page.tsx               redirect fallback → /cities
-  │ ├ cities/page.tsx        CITIES: walkability index list + sort pill +
-  │ │                        sort bottom sheet (Distance/Walk/A–Z/By State)
+  │ ├ cities/page.tsx        CITIES: walkability index list + sticky column
+  │ │                        header + sort pill + sort bottom sheet
   │ ├ city/[id]/page.tsx     server wrapper: generateStaticParams + notFound
-  │ ├ city/[id]/CityDetail.tsx  CITY DETAIL: sticky header, live map w/ pins,
-  │ │                        Hotels/Bars/Food tabs (Places-fed), hotel
-  │ │                        preference radios, vote CTA in ActionBar;
-  │ │                        ≥840px push layout keeps CityList visible left
+  │ ├ city/[id]/CityDetail.tsx  CITY DETAIL: opaque sticky header, live map
+  │ │                        w/ pins, Hotels/Bars/Food tabs (Supabase-fed,
+  │ │                        plain-text addresses), hotel preference radios,
+  │ │                        vote CTA in ActionBar; ≥840px push layout keeps
+  │ │                        CityList visible left
   │ ├ calendar/page.tsx      CALENDAR: personal tri-state calendar only
   │ ├ board/page.tsx         THE BOARD: hot-dates heat map + vote standings
   │ │                        (+ hotel preference sub-rows) + day breakdown sheet
@@ -92,13 +95,16 @@ app/
   │ ├ ActionBar.tsx          the floating slot above the bottom nav (fixed on
   │ │                        mobile, sticky bottom of column ≥840px)
   │ ├ CityList.tsx           index rows (name/state/district · score+grade ·
-  │ │                        miles/drive · inline vote), sort logic + persistence,
-  │ │                        by-state grouping, grade color lookups
+  │ │                        miles/drive · inline vote), sticky column header
+  │ │                        (City/Walkability/Distance/Vote, /cities only),
+  │ │                        sort logic + persistence, by-state grouping
   │ ├ Calendar.tsx           useMonthNav (hydration-safe), MonthHeader,
   │ │                        PersonalCalendar (tap-cycle), HeatCalendar (board)
   │ ├ CityMap.tsx            live dark Google Map, 10px circle pins w/ white
-  │ │                        stroke (hotel accent / bar green / food blue)
-  │ ├ VenueSheet.tsx         pin-tap sheet: name, tappable address, rating, price
+  │ │                        stroke (hotel accent / bar green / food blue),
+  │ │                        diffed by venue id + zoom-gated OverlayView
+  │ │                        name labels (zoom ≥ 15)
+  │ ├ VenueSheet.tsx         pin-tap sheet: name, address (plain), descriptor
   │ ├ NamePrompt.tsx         "What's your name?" dialog + useNameGate() hook —
   │ │                        every identifying write funnels through it
   │ ├ Dialog.tsx             centered modal over scrim (esc/backdrop, scroll lock)
@@ -112,17 +118,17 @@ app/
   │ │                        tallies (grouped by place_id), myCityId,
   │ │                        myHotelPrefFor(cityId)
   │ ├ useAvailability.ts     derived: my calendar, per-date breakdowns, heat
-  │ └ usePlaces.ts           Places Nearby Search per city (lodging 2000m /
-  │                          bar 1000m / restaurant 800m, prominence, chain
-  │                          filter) → Supabase venue tables fallback → empty;
-  │                          session-cached per city
+  │ └ useVenues.ts           v2_hotels/v2_bars/v2_food per city (the ONLY
+  │                          venue-list source, session-cached) + background
+  │                          Geocoding of pin coords (name+address, 3
+  │                          concurrent, cached, silent skip) → empty on fail
   ├ lib/
   │ ├ supabase.ts            lazy client, env w/ baked fallbacks, safeSelect,
-  │ │                        row types (HotelVoteRow = place_id + name)
+  │ │                        row types (HotelVoteRow = v2_hotels uuid + name)
   │ ├ identity.ts            bh2-voter-id / bh2-voter-name helpers
-  │ ├ venues.ts              Venue UI model, chain regex, types→descriptor,
-  │ │                        $-symbols, maps.google.com URL builder
-  │ ├ maps.ts                Maps loader (places lib), single dark style,
+  │ ├ venues.ts              Venue UI model (curated v2 row fields + geocoded
+  │ │                        coords), CityVenues, EMPTY_VENUES
+  │ ├ maps.ts                Maps loader (no extra libs), single dark style,
   │ │                        PIN_COLORS, BASE_MAP_OPTIONS
   │ └ format.ts              local-time date keys, month grid, labels
   └ data/
@@ -157,7 +163,7 @@ CREATE TABLE v2_city_votes (
 CREATE TABLE v2_hotel_votes (
   voter_id   uuid not null references v2_voters(voter_id),
   city_id    text not null,
-  hotel_place_id text not null,     -- Google Places place_id (or v2_hotels uuid in fallback mode)
+  hotel_place_id text not null,     -- v2_hotels row uuid (legacy rows may hold Google place_ids)
   hotel_name text not null,
   updated_at timestamptz not null default now(),
   primary key (voter_id, city_id)   -- one preferred hotel per person per city
@@ -175,10 +181,11 @@ CREATE TABLE v2_availability (
 -- RLS: anon SELECT/INSERT/UPDATE/DELETE
 ```
 
-Curated venue fallback tables (read-only to the app, anon SELECT only, NOT in
-the realtime publication): `v2_hotels` (id uuid PK, city_id, name, address,
-descriptor, stars, price_range), `v2_bars` / `v2_food` (id uuid PK, city_id,
-name, address, descriptor, has_food/has_bar). Populated with ~206 curated rows.
+Curated venue tables — the CANONICAL venue source (read-only to the app, anon
+SELECT only, NOT in the realtime publication): `v2_hotels` (id uuid PK,
+city_id, name, address, descriptor, stars, price_range, distance_note),
+`v2_bars` / `v2_food` (id uuid PK, city_id, name, address, descriptor,
+has_food/has_bar). 56 + 75 + 75 = 206 curated rows (verified live 2026-06-12).
 
 ## localStorage contract
 
@@ -228,21 +235,25 @@ Colors:
 - Governing principle: design for 0.08 BAC — one thumb, dim bar, ten seconds.
   Nothing that requires explanation.
 
-## Google Maps & Places setup
+## Google Maps & Geocoding setup
 
-- Loaded with `@googlemaps/js-api-loader` (`weekly`, `libraries: ["places"]`)
-  in `lib/maps.ts`; key from `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` with baked
-  public fallback.
+- Loaded with `@googlemaps/js-api-loader` (`weekly`, no extra libraries) in
+  `lib/maps.ts`; key from `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` with baked public
+  fallback. The key needs Maps JavaScript API + Geocoding API enabled —
+  the Places API is no longer used anywhere.
 - The detail map always mounts: 280px tall mobile, 380px ≥600px wide.
   `gestureHandling: 'cooperative'`, `disableDefaultUI`, `clickableIcons: false`.
 - Single dark style: land #0A0D14, roads #1A1F2B, labels --ink-dim, no POI/transit.
-- Venues via classic `PlacesService.nearbySearch` (service bound to a detached
-  div): lodging r=2000m, bar r=1000m, restaurant r=800m, prominence ranking,
-  non-OPERATIONAL filtered, name-regex chain filter on bars/food only.
+- Pin coords via `google.maps.Geocoder` in `useVenues` (query = venue name +
+  address, 3 concurrent, one retry on OVER_QUERY_LIMIT, session-cached per
+  venue id, silent skip on failure). Lists render immediately; pins stream
+  in as geocodes resolve (markers diffed by venue id, never torn down).
 - Pins: filled 10px circles (Symbol CIRCLE scale 5), white 2px stroke —
   hotel #FF8C42 / bar #34D399 / food #60A5FA. Pin tap → `VenueSheet`.
-- Bar/food descriptor = Places `types` formatted to readable text (no
-  per-venue details calls; `editorial_summary` is not in nearby results).
+- Pin labels: custom `OverlayView` pill per pin (rgba(10,13,20,.85) bg,
+  --ink text, 11px, 4px radius, 2px/6px padding, pointer-events: none),
+  sits right of the pin and flips left at the map edge; hidden below zoom 15.
+- Venue descriptors are the curated `descriptor` column — never derived.
 
 ## Data model
 
@@ -256,9 +267,13 @@ interface City {
   mapCenter: Coords; mapZoom: number;
 }
 type VenueKind = "hotel" | "bar" | "food";
-// UI venue shape (lib/venues.ts) — id is place_id (or fallback uuid):
-interface Venue { id; kind; name; address; coords|null; rating|null;
-  ratingCount|null; priceLevel|null; priceText|null; descriptor }
+// UI venue shape (lib/venues.ts) — id is the v2_* row uuid (it is what
+// v2_hotel_votes.hotel_place_id stores); coords geocoded for pins only:
+interface Venue { id; kind; city_id; name; address; descriptor;
+  stars?; price_range?; distance_note?;   // hotels
+  has_food?;                              // bars
+  has_bar?;                               // food
+  coords: Coords | null }
 ```
 
 Hardcoded walkability research (do not recalculate, do not "fix"): Lincoln 96
@@ -271,7 +286,26 @@ See PROGRESS.md.
 
 ## Current state
 
-- Last change (2026-06-12): complete ground-up UI/UX rebuild. Three-tab IA
+- Last change (2026-06-12, later session): venue data layer flipped to
+  Supabase-primary. `v2_hotels`/`v2_bars`/`v2_food` are now the ONLY source
+  for venue lists (`usePlaces.ts` deleted → `useVenues.ts`; Places Nearby
+  Search, the chain filter, and the types→descriptor formatter removed; the
+  Maps loader no longer loads the `places` library). Google APIs serve only
+  the map display and background Geocoding of pin coords — lists render
+  immediately, pins stream in, geocode failures silently mean no pin. ALL
+  external links removed (`mapsUrl()` deleted; addresses are plain text in
+  rows and the pin sheet — zero `target="_blank"` in the app). Hotel rows:
+  name, address, filled accent star icons (`stars`), `price_range`, plus the
+  untouched preference radio (now keyed by v2_hotels uuids). Bar/food rows:
+  name, address, curated descriptor, "Also serves food"/"Full bar" pills
+  (has_food/has_bar). City detail sticky header is fully opaque (`bg-bg`,
+  no /90 opacity, no backdrop-blur). /cities gained a 36px sticky column
+  header (CITY/WALKABILITY/DISTANCE/VOTE) below the wordmark bar; the row
+  walkability block is fixed at 96px so columns align. Map pins are diffed
+  by venue id and carry zoom-gated OverlayView name labels (zoom ≥ 15,
+  edge-flipping pills). `npm run build` green — 34 static pages; lint +
+  strict typecheck clean.
+- Earlier (2026-06-12): complete ground-up UI/UX rebuild. Three-tab IA
   (Cities / Calendar / The Board); walkability index list with hardcoded
   scores/grades/districts, sort pill + bottom sheet (distance default);
   city detail with always-mounted dark map, Google Places venue tabs
@@ -290,4 +324,5 @@ See PROGRESS.md.
   in the realtime publication.
 - What's next: deploy to Vercel (root dir `app/`), set the three NEXT_PUBLIC_
   env vars (optional — fallbacks baked), restrict the Google Maps key to the
-  deploy domain, and confirm Places API quota/billing covers Nearby Search.
+  deploy domain, and confirm the key has Maps JavaScript API + Geocoding API
+  enabled with billing (Places API is no longer needed).
