@@ -108,10 +108,11 @@ function HotelSection({ city, prefs }: { city: City; prefs: { name: string; coun
 }
 
 /**
- * The Board — group truth, read-only. Two card columns (stacking below
- * 480px): top 5 cities by votes left, top 5 dates by available count right,
- * each row drilling into a bottom sheet of names. Below them, the top 3
- * hotel preferences for the leading city (hidden until it has hotel votes).
+ * The Board (the Results tab) — group truth, read-only. Two card columns,
+ * side by side at every width: top 5 cities by votes left, top 5 dates by
+ * available count right, each row drilling into a bottom sheet of names.
+ * Below them, the top 3 hotel preferences for the leading city (hidden
+ * until it has hotel votes).
  */
 export default function BoardPage() {
   const { breakdownFor, allResponseDates } = useAvailability();
@@ -144,8 +145,8 @@ export default function BoardPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 pt-4">
-      {/* Section 1 — two columns, stacking below 480px */}
-      <div className="grid grid-cols-1 items-start gap-3 min-[480px]:grid-cols-2">
+      {/* Section 1 — two columns, side by side at every width */}
+      <div className="grid grid-cols-2 items-start gap-3">
         <section>
           <h2 className="label pb-2 !text-ink-dim">Top Cities</h2>
           {topCities.length === 0 ? (

@@ -7,8 +7,8 @@ import { Icon } from "./Icon";
 
 const NAV = [
   { href: "/cities", icon: "location_city", label: "Cities" },
-  { href: "/calendar", icon: "calendar_month", label: "Calendar" },
-  { href: "/board", icon: "bar_chart", label: "The Board" },
+  { href: "/calendar", icon: "event_available", label: "Availability" },
+  { href: "/board", icon: "leaderboard", label: "Results" },
 ] as const;
 
 function isActive(pathname: string, href: string): boolean {
@@ -51,7 +51,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="min-w-0 flex-1">
         {/* Sticky top bar — wordmark left, nothing right */}
         {!onCityDetail && (
-          <header className="sticky top-0 z-30 border-b bg-bg/90 backdrop-blur">
+          <header className="sticky top-0 z-30 border-b bg-bg">
             <div className="mx-auto flex h-14 max-w-2xl items-center px-4">
               <Link href="/cities" className="flex h-11 items-center text-title font-extrabold tracking-tight">
                 Bar Hoppers
