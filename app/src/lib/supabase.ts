@@ -38,6 +38,9 @@ export interface VoterRow {
   display_name: string | null;
   /** Auto-assigned from the 25-color pool at registration — never user-set. */
   pin_color: string;
+  /** Admin soft-disable. false = excluded from every group-facing view;
+   *  the person can still use the app and their data is never deleted. */
+  is_active: boolean;
 }
 
 export interface CityVoteRow {
@@ -88,6 +91,9 @@ export interface LocationRow {
   updated_at: string;
   /** Voters this sharer hides their pin from — one-directional, never disclosed. */
   muted_ids: string[];
+  /** Broadcast lock: only the device whose bh2-session-id matches may push
+   *  coords. Rewritten on every toggle-ON — the newest device wins. */
+  session_id: string | null;
 }
 
 /** Swallows all failures; returns null so callers can fall back silently. */

@@ -45,10 +45,21 @@ export function useAvailability(): AvailabilityView {
       };
     };
 
+    // Disabled voters (is_active = false) are excluded from every group-facing
+    // view — the heat map, hot dates, breakdowns, and the roster denominator.
+    // Their rows still exist (re-enabling restores them instantly). `mine` is
+    // personal-facing and ALWAYS reflects the current voter's own calendar,
+    // disabled or not.
+    const inactive = new Set(
+      voters.filter((v) => v.is_active === false).map((v) => v.voter_id),
+    );
+    const activeVoters = voters.filter((v) => !inactive.has(v.voter_id));
+
     const mine: Record<string, DayStatus> = {};
     const byDate = new Map<string, { available: string[]; unavailable: string[] }>();
     for (const row of availability) {
       if (row.voter_id === voterId) mine[row.date] = row.status;
+      if (inactive.has(row.voter_id)) continue;
       let entry = byDate.get(row.date);
       if (!entry) {
         entry = { available: [], unavailable: [] };
@@ -57,7 +68,7 @@ export function useAvailability(): AvailabilityView {
       entry[row.status].push(row.voter_id);
     }
 
-    const rosterSize = Math.max(voters.length, 1);
+    const rosterSize = Math.max(activeVoters.length, 1);
 
     let bestDate: AvailabilityView["bestDate"] = null;
     for (const [date, entry] of byDate) {
@@ -82,7 +93,9 @@ export function useAvailability(): AvailabilityView {
           date,
           available: entry.available.map(tagOf),
           unavailable: entry.unavailable.map(tagOf),
-          noResponse: voters.filter((v) => !responded.has(v.voter_id)).map((v) => tagOf(v.voter_id)),
+          noResponse: activeVoters
+            .filter((v) => !responded.has(v.voter_id))
+            .map((v) => tagOf(v.voter_id)),
         };
       },
       heatFor: (date: string) => (byDate.get(date)?.available.length ?? 0) / rosterSize,

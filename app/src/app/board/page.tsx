@@ -117,7 +117,7 @@ function HotelSection({ city, prefs }: { city: City; prefs: { name: string; coun
 export default function BoardPage() {
   const { breakdownFor, allResponseDates } = useAvailability();
   const { ranking } = useVotes();
-  const { hotelVotes } = useGroupData();
+  const { hotelVotes, voters } = useGroupData();
   const [citySheetId, setCitySheetId] = useState<string | null>(null);
   const [dateSheetKey, setDateSheetKey] = useState<string | null>(null);
 
@@ -129,16 +129,22 @@ export default function BoardPage() {
     .slice(0, 5);
 
   const leading = ranking[0] ?? null;
-  // Hotel preferences for the leading city only, grouped by hotel name.
+  // Hotel preferences for the leading city only, grouped by hotel name (by
+  // name, not place_id, so legacy Google-place rows still count). Disabled
+  // voters are excluded here like in every other group view — this is the
+  // one read that bypasses the already-filtered useVotes hook.
   const leadingHotelPrefs = useMemo(() => {
     if (!leading) return [];
+    const inactive = new Set(
+      voters.filter((v) => v.is_active === false).map((v) => v.voter_id),
+    );
     const counts = new Map<string, number>();
     for (const row of hotelVotes) {
-      if (row.city_id !== leading.city.id) continue;
+      if (row.city_id !== leading.city.id || inactive.has(row.voter_id)) continue;
       counts.set(row.hotel_name, (counts.get(row.hotel_name) ?? 0) + 1);
     }
     return [...counts].map(([name, count]) => ({ name, count }));
-  }, [hotelVotes, leading]);
+  }, [hotelVotes, voters, leading]);
 
   const citySheet = citySheetId ? ranking.find((t) => t.city.id === citySheetId) ?? null : null;
   const dateSheet = dateSheetKey ? breakdownFor(dateSheetKey) : null;

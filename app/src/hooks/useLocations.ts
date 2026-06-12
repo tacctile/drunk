@@ -12,17 +12,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGroupData } from "@/hooks/useGroupData";
 import { PIN_COLORS } from "@/lib/colors";
-import { getStoredPinColor } from "@/lib/identity";
+import { getStoredPinColor, newVoterId } from "@/lib/identity";
 import { getSupabase, safeSelect, type LocationRow } from "@/lib/supabase";
 
 const MUTED_IDS_KEY = "bh2-muted-ids";
 const SHARING_PREF_KEY = "bh2-sharing-preference";
+// Single-device broadcast lock: a fresh uuid is written here on every
+// toggle-ON and stamped onto the v2_locations row. Only the device whose
+// stored id matches the row may push coords — the newest activation wins.
+const SESSION_ID_KEY = "bh2-session-id";
 // Each hook instance subscribes under its own channel topic. Two mounts can
 // coexist (the locate page + the profile overlay) — a shared topic would make
 // the second join close the first and silently kill its realtime feed.
 let channelSeq = 0;
 const LOCATION_COLUMNS =
-  "voter_id,display_name,lat,lng,pin_color,sharing_since,expires_at,updated_at,muted_ids";
+  "voter_id,display_name,lat,lng,pin_color,sharing_since,expires_at,updated_at,muted_ids,session_id";
 const UPDATE_MS = 60_000; // sharer re-sends coords every minute
 const CLOCK_MS = 30_000; // expiry filter + "min ago" labels re-evaluate
 const EXPIRY_MS = 72 * 60 * 60 * 1000;
@@ -115,6 +119,10 @@ export interface LocationsValue {
   /** Your own unexpired row, when sharing. */
   myLocation: LocationRow | null;
   isSharing: boolean;
+  /** Admin disabled this voter (v2_voters.is_active = false): the sharing
+   *  toggle is locked off and any live row is torn down. Tracks the roster
+   *  reactively, so an admin re-enable restores the toggle mid-session. */
+  amDisabled: boolean;
   mutedIds: string[];
   /** Re-render clock (ms) — keeps "X min ago" and expiry honest. */
   now: number;
@@ -126,7 +134,7 @@ export interface LocationsValue {
 }
 
 export function useLocations(): LocationsValue {
-  const { voterId, name, identityInvalid } = useGroupData();
+  const { voterId, name, identityInvalid, voters } = useGroupData();
   const [rows, setRows] = useState<LocationRow[]>(sharedRows.get);
   const [now, setNow] = useState(() => Date.now());
   const [mutedIds, setMutedIds] = useState<string[]>(currentMutedIds);
@@ -137,6 +145,18 @@ export function useLocations(): LocationsValue {
   voterIdRef.current = voterId;
   const nameRef = useRef(name);
   nameRef.current = name;
+
+  // Voters the admin has disabled. Only a roster row that SAYS false counts —
+  // an unreachable roster (offline) never hides anyone. useGroupData keeps
+  // this current via its v2_voters realtime subscription + focus refetch, so
+  // a mid-session disable/re-enable lands here without a reload.
+  const inactiveIds = useMemo(
+    () => new Set(voters.filter((v) => v.is_active === false).map((v) => v.voter_id)),
+    [voters],
+  );
+  const amDisabled = inactiveIds.has(voterId);
+  const amDisabledRef = useRef(amDisabled);
+  amDisabledRef.current = amDisabled;
 
   // Mirror the module-scoped stores into this instance's render state. The
   // first instance up seeds the mute prefs from localStorage so they apply
@@ -241,14 +261,15 @@ export function useLocations(): LocationsValue {
   const isSharingRef = useRef(isSharing);
   isSharingRef.current = isSharing;
 
-  // Expired rows and rows hiding from this user never leave the hook. An
-  // absent or empty muted_ids means visible to everyone — nothing is ever
-  // hidden by default.
+  // Expired rows, rows hiding from this user, and rows belonging to disabled
+  // voters never leave the hook. An absent or empty muted_ids means visible
+  // to everyone — nothing is ever hidden by default.
   const activeLocations = useMemo(() => {
     return rows
       .filter(
         (r) =>
           new Date(r.expires_at).getTime() > now &&
+          !inactiveIds.has(r.voter_id) &&
           (r.voter_id === voterId || !(r.muted_ids ?? []).includes(voterId)),
       )
       .sort((a, b) => {
@@ -256,7 +277,7 @@ export function useLocations(): LocationsValue {
         if (b.voter_id === voterId) return 1;
         return a.display_name.localeCompare(b.display_name);
       });
-  }, [rows, voterId, now]);
+  }, [rows, voterId, now, inactiveIds]);
 
   /** Voter row must exist before the FK write lands. Never touches pin_hash. */
   const ensureVoter = useCallback(async (nowIso: string) => {
@@ -275,10 +296,19 @@ export function useLocations(): LocationsValue {
       prev.map((r) => (r.voter_id === me ? { ...r, lat, lng, updated_at: nowIso } : r)),
     );
     try {
-      await getSupabase()
-        ?.from("v2_locations")
+      const sb = getSupabase();
+      if (!sb) return;
+      // Session-guarded: even if the takeover check below races, a stale
+      // device can never overwrite a newer device's position. Rows from
+      // before the session system (session_id NULL) pair with devices that
+      // never stored a session id.
+      const session = readStorage(SESSION_ID_KEY);
+      let query = sb
+        .from("v2_locations")
         .update({ lat, lng, updated_at: nowIso })
         .eq("voter_id", me);
+      query = session ? query.eq("session_id", session) : query.is("session_id", null);
+      await query;
     } catch {
       // offline — the next tick converges
     }
@@ -286,19 +316,47 @@ export function useLocations(): LocationsValue {
 
   // While sharing: refresh coords every minute. Resumes only when the browser
   // permission is already granted — a live row from an earlier session must
-  // never cause a surprise permission prompt.
+  // never cause a surprise permission prompt. Each tick first verifies this
+  // device still owns the broadcast (the row's session_id matches ours); if
+  // another device toggled sharing on since, this one stops pushing for good.
   useEffect(() => {
     if (!isSharing) return;
     let cancelled = false;
     let timer: ReturnType<typeof setInterval> | null = null;
 
-    const tick = () => {
-      void getPosition().then((pos) => {
-        if (!cancelled && typeof pos === "object") void pushCoords(pos.lat, pos.lng);
-      });
+    const stop = () => {
+      if (timer) clearInterval(timer);
+      timer = null;
+    };
+
+    const tick = async () => {
+      const sb = getSupabase();
+      if (sb) {
+        try {
+          const { data, error } = await sb
+            .from("v2_locations")
+            .select("session_id")
+            .eq("voter_id", voterIdRef.current)
+            .maybeSingle();
+          if (
+            !cancelled &&
+            !error &&
+            data &&
+            (data.session_id ?? null) !== readStorage(SESSION_ID_KEY)
+          ) {
+            stop(); // another device took over — stop broadcasting from this one
+            return;
+          }
+        } catch {
+          // offline — push anyway; the update itself is session-guarded
+        }
+      }
+      if (cancelled) return;
+      const pos = await getPosition();
+      if (!cancelled && typeof pos === "object") void pushCoords(pos.lat, pos.lng);
     };
     const arm = () => {
-      if (!cancelled && !timer) timer = setInterval(tick, UPDATE_MS);
+      if (!cancelled && !timer) timer = setInterval(() => void tick(), UPDATE_MS);
     };
 
     if (typeof navigator !== "undefined" && navigator.permissions?.query) {
@@ -337,8 +395,17 @@ export function useLocations(): LocationsValue {
       return "off";
     }
 
+    // Locked off while admin-disabled — the toggles are grayed out, this is
+    // the backstop for any path that still reaches here (e.g. auto-start).
+    if (amDisabledRef.current) return "error";
+
     const pos = await getPosition();
     if (pos === "denied" || pos === "error") return pos;
+
+    // Fresh session id per activation — this device becomes THE broadcaster;
+    // any other device's next takeover check sees the mismatch and stops.
+    const sessionId = newVoterId();
+    writeStorage(SESSION_ID_KEY, sessionId);
 
     const nowIso = new Date().toISOString();
     const row: LocationRow = {
@@ -353,6 +420,7 @@ export function useLocations(): LocationsValue {
       expires_at: new Date(Date.now() + EXPIRY_MS).toISOString(),
       updated_at: nowIso,
       muted_ids: currentMutedIds(),
+      session_id: sessionId,
     };
     desiredSharing = true;
     sharedRows.set((prev) => [...prev.filter((r) => r.voter_id !== me), row]);
@@ -377,6 +445,9 @@ export function useLocations(): LocationsValue {
   // same gate the locate screen uses.
   useEffect(() => {
     if (!voterId || !name || identityInvalid) return;
+    // Admin-disabled voters never auto-start — and the attempt/pref keys stay
+    // untouched, so a later re-enable behaves like any registered user.
+    if (amDisabled) return;
     if (!initialFetchDone || isSharing) return;
     if (autoStartAttemptedFor === voterId) return;
     if (readStorage(SHARING_PREF_KEY) !== null) return;
@@ -386,7 +457,16 @@ export function useLocations(): LocationsValue {
         writeStorage(SHARING_PREF_KEY, "false");
       }
     });
-  }, [voterId, name, identityInvalid, initialFetchDone, isSharing, toggleSharing]);
+  }, [voterId, name, identityInvalid, amDisabled, initialFetchDone, isSharing, toggleSharing]);
+
+  // Admin disabled this voter while they had a live row (or the row outraced
+  // the disable): tear sharing down immediately. toggleSharing's off branch
+  // deletes the row and records the explicit-off preference — re-enabling
+  // never auto-resumes sharing, the person flips the toggle themselves.
+  useEffect(() => {
+    if (!amDisabled || !isSharing) return;
+    void toggleSharing();
+  }, [amDisabled, isSharing, toggleSharing]);
 
   const setMuted = useCallback(async (targetId: string, muted: boolean) => {
     const current = currentMutedIds();
@@ -421,6 +501,7 @@ export function useLocations(): LocationsValue {
       activeLocations,
       myLocation,
       isSharing,
+      amDisabled,
       mutedIds,
       now,
       voterColors,
@@ -428,6 +509,6 @@ export function useLocations(): LocationsValue {
       muteUser,
       unmuteUser,
     }),
-    [activeLocations, myLocation, isSharing, mutedIds, now, voterColors, toggleSharing, muteUser, unmuteUser],
+    [activeLocations, myLocation, isSharing, amDisabled, mutedIds, now, voterColors, toggleSharing, muteUser, unmuteUser],
   );
 }

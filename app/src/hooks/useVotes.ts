@@ -52,14 +52,25 @@ export function useVotes(): VotesView {
       isYou: id === voterId,
     });
 
+    // Disabled voters (is_active = false) are excluded from every group-facing
+    // tally — counts, voter tags, hotel preferences. Their rows still exist
+    // (re-enabling restores them instantly); only KNOWN-inactive voters are
+    // dropped, so an unreachable roster never hides anyone's data. Personal
+    // values below (myCityId, myHotelPrefFor) stay unfiltered on purpose.
+    const inactive = new Set(
+      voters.filter((v) => v.is_active === false).map((v) => v.voter_id),
+    );
+    const groupCityVotes = cityVotes.filter((r) => !inactive.has(r.voter_id));
+    const groupHotelVotes = hotelVotes.filter((r) => !inactive.has(r.voter_id));
+
     const ranking: CityTally[] = [];
     for (const city of cities) {
-      const cv = cityVotes.filter((r) => r.city_id === city.id);
+      const cv = groupCityVotes.filter((r) => r.city_id === city.id);
       if (cv.length === 0) continue;
 
       // Group hotel preferences by place_id; the row carries the display name.
       const byPlace = new Map<string, HotelPrefTally>();
-      for (const r of hotelVotes) {
+      for (const r of groupHotelVotes) {
         if (r.city_id !== city.id) continue;
         let entry = byPlace.get(r.hotel_place_id);
         if (!entry) {
@@ -85,7 +96,7 @@ export function useVotes(): VotesView {
     return {
       ranking,
       countFor: (cityId: string) => ranking.find((t) => t.city.id === cityId)?.count ?? 0,
-      totalVotes: cityVotes.length,
+      totalVotes: groupCityVotes.length,
       myCityId: mine?.city_id ?? null,
       myHotelPrefFor: (cityId: string) => myHotelPrefs.get(cityId) ?? null,
       myName: name,

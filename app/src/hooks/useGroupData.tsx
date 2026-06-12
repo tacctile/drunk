@@ -133,6 +133,7 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
           name: myName,
           display_name: myName,
           pin_color: getStoredPinColor() ?? PIN_COLORS[0],
+          is_active: true, // unknown offline = not disabled
         });
       }
 
@@ -170,7 +171,7 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
 
   const refetch = useCallback(async () => {
     const [sv, sc, sh, sa] = await Promise.all([
-      safeSelect<VoterRow>("v2_voters", "voter_id,name,display_name,pin_color"),
+      safeSelect<VoterRow>("v2_voters", "voter_id,name,display_name,pin_color,is_active"),
       safeSelect<CityVoteRow>("v2_city_votes", "voter_id,city_id,updated_at"),
       safeSelect<HotelVoteRow>(
         "v2_hotel_votes",
@@ -268,6 +269,7 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
         name: displayName,
         display_name: displayName,
         pin_color: getStoredPinColor() ?? PIN_COLORS[0],
+        is_active: true, // server truth lands on the next refetch
       });
       return next;
     });
