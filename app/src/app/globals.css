@@ -3,28 +3,37 @@
 @tailwind utilities;
 
 /* ---------------------------------------------------------------------------
-   Bar Hoppers design tokens — dark only.
-   Blue-black surfaces with a single warm streetlight-orange accent. Depth is
-   surface lift + hairline borders, never heavy shadows. Everything sits on a
-   4px grid; every interactive element is at least 44px tall.
+   Bar Hoppers design tokens — dark only, forever.
+   Blue-black surfaces, one warm accent, grade colors for the walkability
+   index. Depth is surface lift + hairline borders. 4px grid; every
+   interactive element is at least 44px tall; no meaningful text under 13px
+   (the 12px Label voice and the heat-map fractions are the two sanctioned
+   exceptions).
 --------------------------------------------------------------------------- */
 
 :root {
   --bg: #0a0d14;
   --surface: #12161f;
-  --raised: #1a1f2b;
-  --line: #232a38;
-  --line-strong: #2e3748;
+  --surface-raised: #1a1f2b;
+  --border: #252b3a;
+  --border-strong: #323a4f;
   --ink: #e8ecf4;
-  --muted: #8e99ac;
-  --dim: #5c6678;
-  --accent: #ff9433;
-  --accent-ink: #1a0e00;
-  --accent-soft: rgba(255, 148, 51, 0.12);
-  --good: #34d399;
-  --good-soft: rgba(52, 211, 153, 0.14);
-  --bad: #f87171;
-  --bad-soft: rgba(248, 113, 113, 0.14);
+  --ink-muted: #8892a4;
+  --ink-dim: #4a5468;
+  --accent: #ff8c42;
+  --accent-dim: rgba(255, 140, 66, 0.15);
+  --green: #34d399;
+  --green-dim: rgba(52, 211, 153, 0.15);
+  --red: #f87171;
+  --red-dim: rgba(248, 113, 113, 0.15);
+
+  /* Grade colors — keyed by the letter, +/- variants share the base color */
+  --grade-a: #34d399;
+  --grade-b: #86efac;
+  --grade-c: #fcd34d;
+  --grade-d: #fb923c;
+  --grade-f: #f87171;
+
   color-scheme: dark;
 }
 
@@ -40,6 +49,8 @@ body {
   font-weight: 500;
   line-height: 1.5;
   min-height: 100%;
+  /* Numbers are tabular everywhere, always. */
+  font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -66,29 +77,23 @@ body {
 
 @layer components {
   .card {
-    @apply rounded border border-line bg-surface;
+    @apply rounded-card border bg-surface p-4;
   }
   .btn {
-    @apply inline-flex h-11 items-center justify-center gap-2 rounded px-5 text-base font-semibold transition disabled:opacity-50;
+    @apply inline-flex h-11 items-center justify-center gap-2 rounded-btn px-5 text-base font-semibold transition disabled:opacity-50;
   }
   .btn-accent {
-    @apply btn bg-accent text-accent-ink hover:brightness-110 active:brightness-95;
+    @apply btn bg-accent text-bg hover:brightness-110 active:brightness-95;
   }
   .btn-ghost {
-    @apply btn border border-line bg-surface text-ink hover:bg-raised;
-  }
-  .chip {
-    @apply inline-flex h-11 items-center gap-1.5 whitespace-nowrap rounded-full border border-line bg-surface px-4 text-sm font-semibold text-muted transition;
-  }
-  .chip-on {
-    @apply border-line-strong bg-raised text-ink;
+    @apply btn border bg-raised text-ink hover:bg-surface;
   }
   .input {
-    @apply h-11 w-full rounded border border-line-strong bg-raised px-4 text-base text-ink outline-none transition placeholder:text-dim focus:border-accent;
+    @apply h-11 w-full rounded-btn border border-border-strong bg-raised px-4 text-base text-ink outline-none transition placeholder:text-ink-dim focus:border-accent;
   }
-  /* Label voice: 12px / 600 / uppercase / +0.06em. Never bold, never bigger. */
+  /* Label voice: 12px / 600 / uppercase / +0.06em. */
   .label {
-    @apply text-xs font-semibold uppercase tracking-label text-dim;
+    @apply text-label font-semibold uppercase tracking-label text-ink-muted;
   }
 }
 
@@ -102,12 +107,12 @@ body {
 /* Subtle scrollbars */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--line-strong) transparent;
+  scrollbar-color: var(--border-strong) transparent;
 }
 
 ::selection {
   background: var(--accent);
-  color: var(--accent-ink);
+  color: var(--bg);
 }
 
 @keyframes bh-fade-in {
@@ -122,21 +127,9 @@ body {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
-@keyframes bh-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.45; transform: scale(0.85); }
-}
-/* One subtle beat when someone ELSE's vote moves a row/hero. Never looped. */
-@keyframes bh-pulse-once {
-  0% { opacity: 1; }
-  35% { opacity: 0.5; }
-  100% { opacity: 1; }
-}
-.anim-fade { animation: bh-fade-in 200ms ease-out both; }
-.anim-rise { animation: bh-rise 220ms ease-out both; }
-.anim-sheet { animation: bh-sheet-up 220ms ease-out both; }
-.anim-pulse { animation: bh-pulse 1.8s ease-in-out infinite; }
-.anim-pulse-once { animation: bh-pulse-once 700ms ease-out 1 both; }
+.anim-fade { animation: bh-fade-in 160ms ease both; }
+.anim-rise { animation: bh-rise 160ms ease both; }
+.anim-sheet { animation: bh-sheet-up 160ms ease both; }
 
 @media (prefers-reduced-motion: reduce) {
   *,

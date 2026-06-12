@@ -1,14 +1,20 @@
 import type { Config } from "tailwindcss";
 
 // Dark only — semantic tokens live on :root in globals.css and map 1:1 here.
-// Three type voices: Display (32/800/tight), Body (15/500), Label (12/600/
-// uppercase/+0.06em). One radius (16px) plus full for initial circles.
+// Type voices: Display 28/800/tight, Title 17/700, Body 15/500, Label 12/600/
+// uppercase/+0.06em, Meta 13/400. Radius: 12px cards, 8px buttons/inputs,
+// 6px chips/badges, 9999px pills only. Transitions 160ms ease.
+// Grade colors are literal hex (not vars) so Tailwind opacity modifiers like
+// bg-grade-a/15 work; the values mirror the --grade-* variables exactly.
 const config: Config = {
   content: ["./src/**/*.{ts,tsx}"],
   theme: {
     borderRadius: {
       none: "0",
-      DEFAULT: "16px",
+      chip: "6px",
+      btn: "8px",
+      DEFAULT: "8px",
+      card: "12px",
       full: "9999px",
     },
     boxShadow: {
@@ -19,37 +25,47 @@ const config: Config = {
       colors: {
         bg: "var(--bg)",
         surface: "var(--surface)",
-        raised: "var(--raised)",
-        line: "var(--line)",
-        "line-strong": "var(--line-strong)",
+        raised: "var(--surface-raised)",
+        border: "var(--border)",
+        "border-strong": "var(--border-strong)",
         ink: "var(--ink)",
-        muted: "var(--muted)",
-        dim: "var(--dim)",
+        "ink-muted": "var(--ink-muted)",
+        "ink-dim": "var(--ink-dim)",
         accent: "var(--accent)",
-        "accent-ink": "var(--accent-ink)",
-        "accent-soft": "var(--accent-soft)",
-        good: "var(--good)",
-        "good-soft": "var(--good-soft)",
-        bad: "var(--bad)",
-        "bad-soft": "var(--bad-soft)",
+        "accent-dim": "var(--accent-dim)",
+        green: "var(--green)",
+        "green-dim": "var(--green-dim)",
+        red: "var(--red)",
+        "red-dim": "var(--red-dim)",
+        grade: {
+          a: "#34D399",
+          b: "#86EFAC",
+          c: "#FCD34D",
+          d: "#FB923C",
+          f: "#F87171",
+        },
+      },
+      borderColor: {
+        DEFAULT: "var(--border)",
       },
       fontFamily: {
         sans: ["Manrope", "system-ui", "-apple-system", "Segoe UI", "sans-serif"],
       },
       fontSize: {
-        xs: ["12px", "16px"],
-        sm: ["13px", "20px"],
-        base: ["15px", "24px"],
-        lg: ["17px", "24px"],
-        xl: ["20px", "28px"],
-        "2xl": ["24px", "32px"],
-        display: ["32px", { lineHeight: "36px", letterSpacing: "-0.02em", fontWeight: "800" }],
+        label: ["12px", { lineHeight: "16px", letterSpacing: "0.06em", fontWeight: "600" }],
+        meta: ["13px", "18px"],
+        base: ["15px", "22px"],
+        title: ["17px", { lineHeight: "24px", fontWeight: "700" }],
+        display: ["28px", { lineHeight: "32px", letterSpacing: "-0.02em", fontWeight: "800" }],
       },
       letterSpacing: {
         label: "0.06em",
       },
       transitionDuration: {
-        DEFAULT: "200ms",
+        DEFAULT: "160ms",
+      },
+      transitionTimingFunction: {
+        DEFAULT: "ease",
       },
     },
   },

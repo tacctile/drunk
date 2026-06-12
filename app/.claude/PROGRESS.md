@@ -4,46 +4,53 @@ Legend: [x] complete · [~] partial · [ ] pending
 
 ## Foundation
 - [x] Next.js 14 App Router + TypeScript strict scaffold in /app (own package.json, own ecosystem)
-- [x] Tailwind v3 with CSS-variable design tokens (4px grid, 44px interactive height)
+- [x] Tailwind v3 with CSS-variable design tokens (4px grid, 44px interactive height, 160ms ease)
 - [x] Manrope (400–800) + Material Symbols Outlined via Google Fonts CDN
-- [x] Dark mode default + fully built light mode, pre-paint boot script, persisted to bh2-theme
+- [x] Dark only — no light variables, no theme toggle, no boot script, no light Maps style
 - [x] prefers-reduced-motion respected (all animation collapses)
-- [x] Mobile-first 375px canvas; desktop ≥840px gets left rail + 2-col grids
+- [x] Mobile-first; desktop ≥840px gets an 80px icon rail + push layout on city detail
+- [x] Tabular numerals globally (font-variant-numeric on body)
 
 ## Data
-- [x] 27-city dataset cleaned per research MD (closed venues removed, wrong-city venues removed, Candlewood Suites removed from Grand Island)
-- [x] Verified addresses applied; unverified venues kept and flagged `verified: false`
-- [x] hotel_id kebab-case slugs on every hotel (vote target ids)
-- [x] Vibe tags: exactly 2–3 per city from the fixed 10-tag list
-- [x] Walkability: Haversine cluster math (outlier-robust seeding), tiers per thresholds
-- [x] Composite score 0–100 (40% walkability / 30% bar count / 30% hotel proximity)
+- [x] 27-city dataset with HARDCODED walkability research: walkScore (0–100), walkGrade (A+…F), district name
+- [x] City type slimmed to id/name/state/miles/drive/walkScore/walkGrade/district/mapCenter/mapZoom
+- [x] Legacy hotel/bar/food/vibes/tagline arrays retained in cities.ts as reference only (out of the type, never read by UI)
+- [x] Venue lists live from Google Places Nearby Search (lodging 2000m / bar 1000m / restaurant 800m, prominence)
+- [x] Chain filter (name regex) on bars + food; non-OPERATIONAL results dropped
+- [x] Silent fallback chain: Places → curated v2_hotels/v2_bars/v2_food tables → empty state
 
 ## Supabase
-- [x] v2 schema (v2_voters, v2_city_votes, v2_hotel_votes, v2_availability) + RLS policies — applied to project tszssadgsxjoymcttlwd as migration `bar_hoppers_v2_schema`
-- [x] Tables added to supabase_realtime publication
-- [x] Realtime subscriptions (single channel, debounced refetch) + refetch on focus
+- [x] v2 user tables (v2_voters, v2_city_votes, v2_hotel_votes, v2_availability) + anon RLS — live
+- [x] v2_hotel_votes in place_id shape: PK (voter_id, city_id), hotel_place_id, hotel_name
+- [x] Curated venue fallback tables v2_hotels/v2_bars/v2_food (anon read, ~206 rows) — live
+- [x] All four user tables in supabase_realtime publication; single channel, debounced refetch, refetch on focus
 - [x] Silent localStorage fallback for every read and write (six bh2-* keys, no error UI)
 
 ## Identity
 - [x] UUID per device (bh2-voter-id) generated on first visit
-- [x] Name prompt on first vote/availability action (first name, max 20 chars)
-- [x] Upsert to v2_voters on name save; name changeable from Vote view
+- [x] "What's your name?" dialog (Save/Cancel, first name, max 20 chars) on first vote or first calendar tap
+- [x] useNameGate() — every identifying write funnels through it; never asked again once set
 
 ## Views
-- [x] Dashboard: vote leader w/ momentum (+N ahead, pulse), hotel leader, best-weekend card, roster, quick-action CTAs (hide once done), top-3 score cards, live standings
-- [x] Cities: card grid (1-col / 2-col), sort Distance/Score/A–Z/Most Votes, filter by vibe tag + walkability tier, per-card vote count + best weekend
-- [x] City Detail: hero (name/state/miles/drive/tier/vibes/score), in-app themed Google Map (circle pins, filter chips, fitBounds, zoom≥15 OverlayView labels, pin→sheet), vote section, hotel cards w/ drill-in walking distances (ft<1000/mi), bars list, food list (list tap pans map + opens sheet)
-- [x] Vote: cast/change flow (city picker → hotel picker, atomic commit), ranked results w/ meters, expandable hotel race per city, voter chips with "You" highlight, rename affordance
-- [x] Dates: My Dates tri-state calendar (past disabled, today ringed), Group View heat map w/ tap-for-breakdown sheet, shared month nav between tabs, chronological All Responses list, upsert/delete writes
+- [x] CITIES (first screen): walkability index — 72px rows: name + state + district · score (display, grade color) + grade badge · miles + drive · 44px inline vote icon
+- [x] Sort pill above bottom nav → bottom sheet: Distance from Ralston (default) / Walkability Score / City Name A–Z / By State (grouped sections); persisted to bh2-city-sort
+- [x] CITY DETAIL: sticky header (back / name + state / vote icon), 280–380px dark map, cooperative gestures, circle pins (hotel accent / bar green / food blue), pin tap → venue sheet (name, tappable address, rating, price)
+- [x] Hotels / Bars / Food tab bar (44px, accent indicator) over Places-fed lists; hotel rows carry $-symbols + rating + "prefer this hotel" radio (one per user per city, place_id keyed)
+- [x] Full-width vote CTA above the nav: "Vote for X" ↔ "Your pick — X ✓" (tap to undo), optimistic
+- [x] CALENDAR: personal only — tap cycles available → not available → clear; check/X icons in cells, today ring, past dates dimmed/disabled, green/red legend; upsert/delete to v2_availability
+- [x] THE BOARD: hot-dates heat map (respondent-share buckets, yes/total fractions, month nav, tap → who's in/out sheet) + standings (rank, count, accent meter, voter pills, hotel preference sub-rows) + empty state
+- [x] / → /cities redirect (server redirect + page fallback); 404 for unknown city ids
+- [x] Tappable addresses everywhere → maps.google.com in a new tab
 
 ## Guardrails honored
 - [x] Root index.html untouched; all work inside /app
-- [x] No UI component libraries; no external nav links except hotel websites
-- [x] No hardcoded city counts; everything derives from data
+- [x] No UI component libraries; no spinners on writes; no Supabase errors surfaced
+- [x] No walk strips / constellation maps / score circles / tier pills / vibe tags / Trip tab
+- [x] No hardcoded venue lists; walkability never calculated
 - [x] React JSX escaping for all user strings
 
 ## Backlog
 - [ ] Vercel deploy (root dir app/) + env vars + Maps key domain restriction
-- [ ] Address research for the 99 venues still flagged unverified
+- [ ] Confirm Places API (Nearby Search) quota/billing on the production key
+- [ ] Spot-check Places result quality for the smallest towns (fallback tables cover gaps)
 - [ ] Per-city availability (current model is one shared group calendar — matches v1)
-- [ ] True transactional vote commit via Postgres function (nice-to-have)

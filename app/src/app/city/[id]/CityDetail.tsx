@@ -1,212 +1,211 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
-import { cities, cityById } from "@/data/cities";
+import { useEffect, useState } from "react";
+import { cityById } from "@/data/cities";
+import type { VenueKind } from "@/data/types";
+import { useGroupData } from "@/hooks/useGroupData";
+import { usePlaces } from "@/hooks/usePlaces";
 import { useVotes } from "@/hooks/useVotes";
+import { mapsUrl, priceSymbols, type Venue } from "@/lib/venues";
+import { ActionBar } from "@/components/ActionBar";
+import { CityList, loadSort, type CitySort } from "@/components/CityList";
 import { CityMap } from "@/components/CityMap";
-import { ConstellationMap } from "@/components/ConstellationMap";
-import { HotelCard } from "@/components/HotelCard";
 import { Icon } from "@/components/Icon";
-import { VenueRow } from "@/components/VenueRow";
-import { VenueSheet, findSheetVenue } from "@/components/VenueSheet";
-import { VoterAvatars } from "@/components/VoterAvatars";
-import { WalkStrip } from "@/components/WalkStrip";
+import { useNameGate } from "@/components/NamePrompt";
+import { VenueSheet } from "@/components/VenueSheet";
 
-/**
- * The full trip brief. Mobile is a single column; >= 840px adds a persistent
- * cities list on the left. The map starts as the SVG constellation peek and
- * only mounts the live Google map once expanded.
- */
+const TABS: { kind: VenueKind; label: string }[] = [
+  { kind: "hotel", label: "Hotels" },
+  { kind: "bar", label: "Bars" },
+  { kind: "food", label: "Food" },
+];
+
+function AddressLink({ venue }: { venue: Venue }) {
+  if (!venue.address) return null;
+  return (
+    <a
+      href={mapsUrl(venue.name, venue.address)}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      className="flex min-h-11 items-center text-meta font-normal text-ink-muted transition hover:text-ink"
+    >
+      <span className="truncate underline decoration-border-strong underline-offset-4">
+        {venue.address}
+      </span>
+    </a>
+  );
+}
+
 export function CityDetail({ cityId }: { cityId: string }) {
+  // The server wrapper 404s unknown ids before this component renders.
   const city = cityById(cityId)!;
-  const votes = useVotes();
-  const tally = votes.ranking.find((t) => t.city.id === city.id);
+  const { venues, ready } = usePlaces(city);
+  const { setCityVote, setHotelPref } = useGroupData();
+  const { myCityId, myHotelPrefFor } = useVotes();
+  const { requireName, prompt } = useNameGate();
 
-  const [sheetId, setSheetId] = useState<string | null>(null);
-  const [focusId, setFocusId] = useState<string | null>(null);
-  const [mapOpen, setMapOpen] = useState(false);
-  const mapAnchor = useRef<HTMLDivElement>(null);
-
-  // Pin tap: open the in-app sheet (and keep that pin spotlit).
-  const onPinTap = useCallback((id: string) => {
-    setFocusId(id);
-    setSheetId(id);
+  const [tab, setTab] = useState<VenueKind>("hotel");
+  const [pinned, setPinned] = useState<Venue | null>(null);
+  const [listSort, setListSort] = useState<CitySort>("distance");
+  useEffect(() => {
+    setListSort(loadSort());
   }, []);
 
-  // List tap: expand the map and pan to the venue's pin.
-  const focusFromList = (id: string) => {
-    setFocusId(id);
-    setMapOpen(true);
-    mapAnchor.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
+  const voted = myCityId === city.id;
+  const myHotel = myHotelPrefFor(city.id);
 
-  const sheetVenue = findSheetVenue(city, sheetId);
-  const votedHere = votes.myCityId === city.id;
-  const myHotel =
-    votedHere && votes.myHotelId
-      ? city.hotels.find((h) => h.id === votes.myHotelId) ?? null
-      : null;
+  const toggleVote = () => requireName(() => void setCityVote(voted ? null : city.id));
+  const toggleHotel = (venue: Venue) =>
+    requireName(() =>
+      void setHotelPref(
+        city.id,
+        myHotel === venue.id ? null : { placeId: venue.id, name: venue.name },
+      ),
+    );
 
-  const sidebarCities = [...cities].sort((a, b) => a.name.localeCompare(b.name));
+  const list = venues[tab];
 
   return (
-    <div className="anim-fade min-[840px]:grid min-[840px]:grid-cols-[240px_1fr] min-[840px]:items-start min-[840px]:gap-8">
-      {/* Persistent cities list — desktop two-pane only */}
-      <aside className="sticky top-8 hidden max-h-[calc(100dvh-96px)] flex-col gap-0.5 overflow-y-auto pr-1 min-[840px]:flex">
-        <p className="label mb-2 px-3">Cities</p>
-        {sidebarCities.map((c) => {
-          const current = c.id === city.id;
-          return (
-            <Link
-              key={c.id}
-              href={`/city/${c.id}`}
-              aria-current={current ? "page" : undefined}
-              className={`flex h-11 flex-none items-center justify-between gap-2 rounded px-3 text-sm font-semibold transition ${
-                current ? "bg-raised text-ink" : "text-muted hover:bg-raised/60 hover:text-ink"
-              }`}
-            >
-              <span className="truncate">{c.name}</span>
-              <span className="label flex-none">{c.state}</span>
-            </Link>
-          );
-        })}
+    <div className="min-[840px]:grid min-[840px]:grid-cols-[360px_1fr]">
+      {/* Push layout — the index stays visible on desktop */}
+      <aside className="hidden border-r min-[840px]:sticky min-[840px]:top-0 min-[840px]:block min-[840px]:h-dvh min-[840px]:overflow-y-auto">
+        <CityList sort={listSort} activeCityId={city.id} />
       </aside>
 
-      <div className="flex min-w-0 flex-col gap-8">
-        {/* Sticky header */}
-        <header className="sticky top-14 z-20 -mx-4 -mb-4 flex h-14 items-center gap-1 border-b border-line bg-bg/90 px-2 backdrop-blur min-[840px]:top-0 min-[840px]:mx-0 min-[840px]:px-0">
+      <div className="min-w-0">
+        {/* Sticky header — back, city + state, vote */}
+        <header className="sticky top-0 z-30 grid h-14 grid-cols-[44px_1fr_44px] items-center border-b bg-bg/90 px-2 backdrop-blur">
           <Link
             href="/cities"
             aria-label="Back to cities"
-            className="flex h-11 w-11 flex-none items-center justify-center rounded text-muted transition hover:bg-raised hover:text-ink"
+            className="flex h-11 w-11 items-center justify-center rounded-btn text-ink-muted transition hover:bg-raised hover:text-ink"
           >
             <Icon name="arrow_back" size={22} />
           </Link>
-          <p className="min-w-0 truncate text-base font-bold">{city.name}</p>
-        </header>
-
-        {/* Hero */}
-        <section>
-          <h1 className="text-display tracking-tight">{city.name}</h1>
-          <p className="label mt-1 tabular-nums">
-            {city.state} · {city.drive}
-          </p>
-          <p className="mt-3 max-w-prose text-base text-muted">{city.tagline}</p>
-          <div className="mt-5">
-            <WalkStrip city={city} />
+          <div className="flex items-baseline justify-center gap-1.5 overflow-hidden">
+            <span className="truncate text-title font-bold text-ink">{city.name}</span>
+            <span className="label flex-none">{city.state}</span>
           </div>
-          <div className="mt-5">
-            <Link
-              href={`/vote?city=${city.id}`}
-              className={`${votedHere ? "btn-ghost" : "btn-accent"} w-full min-[840px]:w-auto`}
-            >
-              {votedHere ? "Change your hotel" : `Make ${city.name} your vote`}
-            </Link>
-          </div>
-        </section>
-
-        {/* Constellation peek <-> live map */}
-        <section ref={mapAnchor} className="scroll-mt-32 min-[840px]:scroll-mt-4">
-          <div
-            className={`overflow-hidden transition-[height] duration-200 ease-out ${
-              mapOpen ? "h-[400px] min-[840px]:h-[500px]" : "h-[170px]"
+          <button
+            type="button"
+            onClick={toggleVote}
+            aria-label={voted ? `Remove your vote for ${city.name}` : `Vote for ${city.name}`}
+            aria-pressed={voted}
+            className={`flex h-11 w-11 items-center justify-center rounded-btn transition ${
+              voted ? "text-accent" : "text-ink-dim hover:text-ink-muted"
             }`}
           >
-            {mapOpen ? (
-              <CityMap
-                city={city}
-                focusId={focusId}
-                onPinTap={onPinTap}
-                onCollapse={() => setMapOpen(false)}
-              />
-            ) : (
+            <Icon name="how_to_vote" filled={voted} size={22} />
+          </button>
+        </header>
+
+        <CityMap city={city} venues={venues} onPinTap={setPinned} />
+
+        {/* Hotels / Bars / Food */}
+        <div className="sticky top-[57px] z-20 flex h-11 border-b bg-surface">
+          {TABS.map(({ kind, label }) => {
+            const active = tab === kind;
+            return (
               <button
+                key={kind}
                 type="button"
-                onClick={() => setMapOpen(true)}
-                aria-label={`Expand the live ${city.name} map`}
-                className="card relative block h-[170px] w-full overflow-hidden text-left transition hover:border-line-strong"
+                onClick={() => setTab(kind)}
+                aria-pressed={active}
+                className={`relative h-11 flex-1 text-base font-semibold transition ${
+                  active ? "text-accent" : "text-ink-muted hover:text-ink"
+                }`}
               >
-                <ConstellationMap city={city} />
-                <span className="label absolute bottom-3 right-3 flex h-7 items-center gap-1 rounded bg-bg/70 px-2 text-muted backdrop-blur">
-                  <Icon name="open_in_full" size={14} />
-                  Live map
-                </span>
+                {label}
+                {active && <span className="absolute inset-x-0 bottom-0 h-0.5 bg-accent" />}
               </button>
-            )}
-          </div>
-        </section>
+            );
+          })}
+        </div>
 
-        {/* Vote */}
-        <section className="card flex items-center gap-4 p-5">
-          {votedHere ? (
-            <>
-              <span className="flex h-11 w-11 flex-none items-center justify-center rounded bg-accent-soft">
-                <Icon name="how_to_vote" size={22} className="text-accent" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="label">Your current vote</p>
-                <p className="mt-0.5 truncate text-base font-bold">
-                  {myHotel ? myHotel.name : city.name}
-                </p>
-              </div>
-              <Link href={`/vote?city=${city.id}`} className="btn-ghost flex-none">
-                Change
-              </Link>
-            </>
-          ) : (
-            <>
-              <div className="min-w-0 flex-1">
-                <p className="text-base font-bold">Make {city.name} your vote</p>
-                {tally && (
-                  <div className="mt-2">
-                    <VoterAvatars voters={tally.voters} size="sm" />
-                  </div>
+        {!ready ? (
+          <p className="px-4 py-10 text-center text-meta font-normal text-ink-dim">Loading…</p>
+        ) : list.length === 0 ? (
+          <p className="px-4 py-10 text-center text-meta font-normal text-ink-dim">
+            Nothing found near {city.district}.
+          </p>
+        ) : (
+          <ul className="mx-auto max-w-2xl" role={tab === "hotel" ? "radiogroup" : undefined} aria-label={tab === "hotel" ? "Preferred hotel" : undefined}>
+            {list.map((venue) => (
+              <li key={venue.id} className="flex min-h-14 items-center gap-2 border-b py-2 pl-4 pr-2">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-title font-bold text-ink">{venue.name}</p>
+                  <AddressLink venue={venue} />
+                  {tab === "hotel" ? (
+                    <p className="flex items-center gap-2 pb-1 text-meta font-normal text-ink-muted">
+                      {priceSymbols(venue.priceLevel) && (
+                        <span className="font-semibold text-accent">
+                          {priceSymbols(venue.priceLevel)}
+                        </span>
+                      )}
+                      {!venue.priceLevel && venue.priceText && <span>{venue.priceText}</span>}
+                      {venue.rating !== null && (
+                        <span className="flex items-center gap-1">
+                          <Icon name="star" filled size={14} />
+                          {venue.rating.toFixed(1)}
+                          {venue.ratingCount !== null && ` (${venue.ratingCount})`}
+                        </span>
+                      )}
+                    </p>
+                  ) : (
+                    venue.descriptor && (
+                      <p className="truncate pb-1 text-meta font-normal text-ink-dim">
+                        {venue.descriptor}
+                      </p>
+                    )
+                  )}
+                </div>
+                {tab === "hotel" && (
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={myHotel === venue.id}
+                    aria-label={`Prefer ${venue.name}`}
+                    onClick={() => toggleHotel(venue)}
+                    className={`flex h-11 w-11 flex-none items-center justify-center rounded-btn transition ${
+                      myHotel === venue.id ? "text-accent" : "text-ink-dim hover:text-ink-muted"
+                    }`}
+                  >
+                    <Icon
+                      name={myHotel === venue.id ? "radio_button_checked" : "radio_button_unchecked"}
+                      size={22}
+                    />
+                  </button>
                 )}
-              </div>
-              <Link href={`/vote?city=${city.id}`} className="btn-accent flex-none">
-                Vote
-              </Link>
-            </>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {/* Vote CTA — replaces the sort pill on this page only */}
+        <ActionBar>
+          {voted ? (
+            <button
+              type="button"
+              onClick={toggleVote}
+              className="h-11 w-full rounded-btn bg-accent text-base font-bold text-bg shadow-overlay transition hover:brightness-110"
+            >
+              Your pick — {city.name} ✓
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={toggleVote}
+              className="h-11 w-full rounded-btn border bg-raised text-base font-bold text-accent shadow-overlay transition hover:border-border-strong"
+            >
+              Vote for {city.name}
+            </button>
           )}
-        </section>
+        </ActionBar>
 
-        {/* Hotels */}
-        <section>
-          <h2 className="label mb-3">Hotels</h2>
-          <div className="flex flex-col gap-4">
-            {city.hotels.map((h) => (
-              <HotelCard
-                key={h.id}
-                city={city}
-                hotel={h}
-                voters={tally?.hotelRanking.find((r) => r.hotel.id === h.id)?.voters ?? []}
-              />
-            ))}
-          </div>
-        </section>
-
-        {/* Bars */}
-        <section>
-          <h2 className="label mb-1">Bars</h2>
-          <div className="flex flex-col">
-            {city.bars.map((b) => (
-              <VenueRow key={b.id} venue={b} kind="bar" onTap={() => focusFromList(b.id)} />
-            ))}
-          </div>
-        </section>
-
-        {/* Food */}
-        <section>
-          <h2 className="label mb-1">Food</h2>
-          <div className="flex flex-col">
-            {city.food.map((f) => (
-              <VenueRow key={f.id} venue={f} kind="food" onTap={() => focusFromList(f.id)} />
-            ))}
-          </div>
-        </section>
-
-        <VenueSheet city={city} venue={sheetVenue} onClose={() => setSheetId(null)} />
+        <VenueSheet venue={pinned} onClose={() => setPinned(null)} />
+        {prompt}
       </div>
     </div>
   );

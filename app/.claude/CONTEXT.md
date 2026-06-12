@@ -1,10 +1,10 @@
 # BAR HOPPERS /app — CONTEXT (single source of truth)
 
-Last updated: 2026-06-11 · Phase: dark-only redesign complete, pending first deploy
+Last updated: 2026-06-12 · Phase: ground-up UI/UX rebuild complete (walkability index), pending first deploy
 
 ## What this app is
 
-Bar Hoppers is a mobile-first Next.js webapp a small group of friends (~6–10 people from Ralston, NE) uses to decide where their next overnight bar-hop trip goes. The perfect trip: drive to a city, check into a hotel steps from the bar district, walk to dinner, hop bars on foot all night, walk back to the hotel — never touch the car. The app ranks 27 candidate cities against that standard, runs a city + hotel vote, and finds the weekend the most people are free. 90%+ of usage is on a phone.
+Bar Hoppers is a mobile-first Next.js webapp a small group of friends (~6–10 people from Ralston, NE) uses to decide where their next overnight bar-hop trip goes. The perfect trip: drive to a city, check into a hotel steps from the bar district, walk to dinner, hop bars on foot all night, walk back to the hotel — never touch the car. The app ranks 27 candidate cities by a hardcoded walkability index, runs a city + hotel-preference vote, and finds the weekend the most people are free. 90%+ of usage is on a phone.
 
 ## Repo & deploy
 
@@ -18,84 +18,124 @@ Bar Hoppers is a mobile-first Next.js webapp a small group of friends (~6–10 p
 - Next.js 14 App Router + TypeScript, strict mode
 - Tailwind CSS v3 — tokens are CSS variables in `globals.css`, mapped in `tailwind.config.ts`
 - NO UI component libraries (no shadcn/radix/chakra/MUI). Everything hand-built.
-- Supabase JS v2 (`@supabase/supabase-js`) — client components + hooks only; no React Server Components for anything touching Supabase realtime
-- Google Maps JS API via `@googlemaps/js-api-loader` — in-app map only, NO external navigation links anywhere (hotel websites are the single exception to external links)
+- Supabase JS v2 (`@supabase/supabase-js`) — client components + hooks only
+- Google Maps JS API via `@googlemaps/js-api-loader` (`weekly`, `places` library loaded)
+- Venue lists (hotels/bars/food) come LIVE from Google Places Nearby Search.
+  If Places returns nothing for a category (no key, quota, offline), the app
+  silently falls back to the curated `v2_hotels`/`v2_bars`/`v2_food` Supabase
+  tables, and to an empty state after that. Venue lists are never hardcoded
+  in the bundle (the legacy arrays still sitting in `cities.ts` are reference
+  data only — the UI never reads them).
 - Icons: Material Symbols Outlined (Google Fonts CDN) — the only icon system
 - Font: Manrope 400/500/600/700/800 (Google Fonts CDN)
-- All user-rendered strings go through React JSX escaping (no `dangerouslySetInnerHTML` for user data; the only `dangerouslySetInnerHTML` is the static theme boot script)
+- All user-rendered strings go through React JSX escaping (no `dangerouslySetInnerHTML` anywhere)
 - Supabase failures fall back to localStorage silently. Never show Supabase errors to users.
+- No spinners for vote/availability writes — optimistic updates only.
+- Walkability scores, letter grades, and district names are HARDCODED research
+  in `cities.ts` — never calculated. The old scoring/cluster math is deleted.
 - Never hardcode city counts — always derive from `cities.length`.
+- Addresses are tappable → `https://maps.google.com/?q=[name+address]` in a new
+  tab (the app's only external links).
+
+## Routes & navigation
+
+Three bottom-nav tabs (mobile fixed bar, 64px + safe inset; ≥840px an 80px
+icon-only left rail with tooltips):
+
+| Tab | Route | Icon |
+|---|---|---|
+| Cities (first screen) | `/cities` | `location_city` |
+| Calendar | `/calendar` | `calendar_month` |
+| The Board | `/board` | `bar_chart` |
+
+- `/` 307-redirects to `/cities` (next.config.mjs redirect + page fallback).
+- `/city/[id]` — city detail (SSG via generateStaticParams, 404 on unknown id).
+  Highlights the Cities tab; the global wordmark bar hides there (the page has
+  its own sticky header: back / city + state / vote icon).
+- Sticky top bar everywhere else: "Bar Hoppers" wordmark left, nothing right.
+- A single floating control sits just above the bottom nav (`ActionBar`):
+  the sort pill on `/cities`, the full-width vote button on `/city/[id]`.
+  Nowhere else.
 
 ## File map
 
 ```
 app/
 ├ package.json               deps + scripts (dev/build/start/lint/typecheck)
-├ next.config.mjs            default config
+├ next.config.mjs            reactStrictMode + / → /cities redirect
 ├ .eslintrc.json             next/core-web-vitals (font-link rules off for App Router)
-├ tailwind.config.ts         dark-only tokens → CSS vars, 3-voice type scale, 16px radius
+├ tailwind.config.ts         dark-only tokens → CSS vars, 5-voice type scale,
+│                            radius: chip 6 / btn 8 / card 12 / full
 ├ tsconfig.json              strict TS, @/* → src/*
 ├ .env.example               documented env vars (app has working fallbacks)
 ├ .claude/                   agent operating system (this folder)
 └ src/
   ├ app/
-  │ ├ layout.tsx             fonts, GroupDataProvider, AppShell (no theming)
+  │ ├ layout.tsx             fonts, GroupDataProvider, AppShell
   │ ├ globals.css            dark-only tokens on :root, .ms icons, anims,
-  │ │                        .card/.btn/.chip/.input/.label
-  │ ├ page.tsx               TRIP: decision board — leader hero (the vote surface),
-  │ │                        standings, closest picks, roster, date nudge
-  │ ├ cities/page.tsx        CITIES: sort (Nearest/Best walk/Most votes/A–Z),
-  │ │                        state filter pills, sticky footer vote pill
+  │ │                        .card/.btn/.input/.label, tabular-nums on body
+  │ ├ page.tsx               redirect fallback → /cities
+  │ ├ cities/page.tsx        CITIES: walkability index list + sort pill +
+  │ │                        sort bottom sheet (Distance/Walk/A–Z/By State)
   │ ├ city/[id]/page.tsx     server wrapper: generateStaticParams + notFound
-  │ ├ city/[id]/CityDetail.tsx  CITY DETAIL: two-pane ≥840px, hero, constellation
-  │ │                        peek ↔ expanded live map, vote, hotels, bars, food
-  │ ├ vote/page.tsx          VOTE FLOW: full-screen three beats (city → hotel →
-  │ │                        confirm), no app chrome, ?city= enters at beat 2
-  │ ├ dates/page.tsx         DATES: I'm Free / I'm Busy mode toggle, My/Group tabs,
-  │ │                        heat map, responses
+  │ ├ city/[id]/CityDetail.tsx  CITY DETAIL: sticky header, live map w/ pins,
+  │ │                        Hotels/Bars/Food tabs (Places-fed), hotel
+  │ │                        preference radios, vote CTA in ActionBar;
+  │ │                        ≥840px push layout keeps CityList visible left
+  │ ├ calendar/page.tsx      CALENDAR: personal tri-state calendar only
+  │ ├ board/page.tsx         THE BOARD: hot-dates heat map + vote standings
+  │ │                        (+ hotel preference sub-rows) + day breakdown sheet
   │ └ not-found.tsx          404
   ├ components/
-  │ ├ AppShell.tsx           3 tabs (Trip/Cities/Dates): bottom nav mobile, 224px
-  │ │                        rail ≥840px; renders nothing around /vote
-  │ ├ Icon.tsx               Material Symbol primitive
-  │ ├ WalkStrip.tsx          THE signature element: fixed 0→1 mi SVG strip,
-  │ │                        bar dots + accent hotel square, city & per-hotel variants
-  │ ├ ConstellationMap.tsx   pure-SVG venue dot-field (city identity, map peek)
-  │ ├ VoterAvatars.tsx       overlapping first-name initials (max 5 + "+N", own in accent)
-  │ ├ Stars.tsx              hotel star rating (muted)
-  │ ├ CityCard.tsx           5 elements: name+state, tagline, walk strip, drive, initials
-  │ ├ Dialog.tsx             centered modal (esc/backdrop close, scroll lock)
-  │ ├ BottomSheet.tsx        slide-up sheet
-  │ ├ NamePrompt.tsx         first-name identity dialog (max 20 chars)
-  │ ├ CityMap.tsx            live Google map — mounted ONLY when expanded; dark style
-  │ │                        only; shape pins (accent square / white dot / outlined
-  │ │                        circle), zoom≥15 labels, filter chips, collapse button
-  │ ├ HotelCard.tsx          hotel card: stars/price/on-site, per-hotel walk strip,
-  │ │                        vote initials, website link, expandable distance list
-  │ ├ VenueRow.tsx           bar/food row (shape glyph) — tap expands map + pans
-  │ ├ VenueSheet.tsx         venue bottom sheet (pin tap)
-  │ └ Calendar.tsx           MonthNav, MyCalendar (mode-toggle set/clear),
-  │                          GroupCalendar (heat map), Fri/Sat emphasis
+  │ ├ AppShell.tsx           3 tabs (Cities/Calendar/The Board), wordmark bar,
+  │ │                        mobile bottom nav, 80px desktop rail
+  │ ├ ActionBar.tsx          the floating slot above the bottom nav (fixed on
+  │ │                        mobile, sticky bottom of column ≥840px)
+  │ ├ CityList.tsx           index rows (name/state/district · score+grade ·
+  │ │                        miles/drive · inline vote), sort logic + persistence,
+  │ │                        by-state grouping, grade color lookups
+  │ ├ Calendar.tsx           useMonthNav (hydration-safe), MonthHeader,
+  │ │                        PersonalCalendar (tap-cycle), HeatCalendar (board)
+  │ ├ CityMap.tsx            live dark Google Map, 10px circle pins w/ white
+  │ │                        stroke (hotel accent / bar green / food blue)
+  │ ├ VenueSheet.tsx         pin-tap sheet: name, tappable address, rating, price
+  │ ├ NamePrompt.tsx         "What's your name?" dialog + useNameGate() hook —
+  │ │                        every identifying write funnels through it
+  │ ├ Dialog.tsx             centered modal over scrim (esc/backdrop, scroll lock)
+  │ ├ BottomSheet.tsx        slide-up sheet (sort options, venues, breakdowns)
+  │ └ Icon.tsx               Material Symbol primitive
   ├ hooks/
-  │ ├ useGroupData.tsx       THE data layer: fetch + realtime + optimistic mutations
-  │ │                        + localStorage fallback. Provider wraps the whole app.
-  │ ├ useVotes.ts            derived: city ranking, hotel ranking, my vote, leader,
-  │ │                        recentlyChangedCityIds (others-only diff → one-shot pulse)
-  │ └ useAvailability.ts     derived: my calendar, heat map, best date, breakdowns
+  │ ├ useGroupData.tsx       THE data layer: fetch + realtime + optimistic
+  │ │                        mutations + localStorage fallback. setCityVote /
+  │ │                        setHotelPref / setAvailability / saveName.
+  │ ├ useVotes.ts            derived: city ranking + per-city hotel-preference
+  │ │                        tallies (grouped by place_id), myCityId,
+  │ │                        myHotelPrefFor(cityId)
+  │ ├ useAvailability.ts     derived: my calendar, per-date breakdowns, heat
+  │ └ usePlaces.ts           Places Nearby Search per city (lodging 2000m /
+  │                          bar 1000m / restaurant 800m, prominence, chain
+  │                          filter) → Supabase venue tables fallback → empty;
+  │                          session-cached per city
   ├ lib/
-  │ ├ supabase.ts            lazy client, env w/ baked fallbacks, safeSelect
+  │ ├ supabase.ts            lazy client, env w/ baked fallbacks, safeSelect,
+  │ │                        row types (HotelVoteRow = place_id + name)
   │ ├ identity.ts            bh2-voter-id / bh2-voter-name helpers
-  │ ├ geo.ts                 haversineMiles, centroid, formatWalkDistance (ft<1000, else mi)
-  │ ├ score.ts               cityMeta: bar district centroid, nearest hotel, composite
-  │ │                        score — UI-invisible; score is only the "Best walk" sort key
-  │ ├ maps.ts                Maps loader, single dark style, PIN_COLORS (shape inks)
+  │ ├ venues.ts              Venue UI model, chain regex, types→descriptor,
+  │ │                        $-symbols, maps.google.com URL builder
+  │ ├ maps.ts                Maps loader (places lib), single dark style,
+  │ │                        PIN_COLORS, BASE_MAP_OPTIONS
   │ └ format.ts              local-time date keys, month grid, labels
   └ data/
-    ├ types.ts               City/Hotel/Venue/VibeTag/WalkabilityTier interfaces
-    └ cities.ts              27 cities, cleaned + verified data (see Data notes)
+    ├ types.ts               City (id/name/state/miles/drive/walkScore/
+    │                        walkGrade/district/mapCenter/mapZoom), Coords,
+    │                        VenueKind
+    └ cities.ts              27 cities + hardcoded walkability research;
+                             legacy venue arrays retained as reference only
 ```
 
-## Supabase schema (deployed 2026-06-11 as migration `bar_hoppers_v2_schema`)
+## Supabase schema (deployed; verified live 2026-06-12)
+
+User data (all four in the `supabase_realtime` publication):
 
 ```sql
 CREATE TABLE v2_voters (
@@ -104,35 +144,25 @@ CREATE TABLE v2_voters (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-ALTER TABLE v2_voters ENABLE ROW LEVEL SECURITY;
-CREATE POLICY v2_voters_read   ON v2_voters FOR SELECT TO anon USING (true);
-CREATE POLICY v2_voters_write  ON v2_voters FOR INSERT TO anon WITH CHECK (true);
-CREATE POLICY v2_voters_update ON v2_voters FOR UPDATE TO anon USING (true);
+-- RLS: anon SELECT/INSERT/UPDATE
 
 CREATE TABLE v2_city_votes (
   voter_id   uuid not null references v2_voters(voter_id),
   city_id    text not null,
   updated_at timestamptz not null default now(),
-  primary key (voter_id)
+  primary key (voter_id)            -- one city vote per person
 );
-ALTER TABLE v2_city_votes ENABLE ROW LEVEL SECURITY;
-CREATE POLICY v2_cvotes_read   ON v2_city_votes FOR SELECT TO anon USING (true);
-CREATE POLICY v2_cvotes_write  ON v2_city_votes FOR INSERT TO anon WITH CHECK (true);
-CREATE POLICY v2_cvotes_update ON v2_city_votes FOR UPDATE TO anon USING (true);
-CREATE POLICY v2_cvotes_delete ON v2_city_votes FOR DELETE TO anon USING (true);
+-- RLS: anon SELECT/INSERT/UPDATE/DELETE
 
 CREATE TABLE v2_hotel_votes (
   voter_id   uuid not null references v2_voters(voter_id),
   city_id    text not null,
-  hotel_id   text not null,
+  hotel_place_id text not null,     -- Google Places place_id (or v2_hotels uuid in fallback mode)
+  hotel_name text not null,
   updated_at timestamptz not null default now(),
-  primary key (voter_id)
+  primary key (voter_id, city_id)   -- one preferred hotel per person per city
 );
-ALTER TABLE v2_hotel_votes ENABLE ROW LEVEL SECURITY;
-CREATE POLICY v2_hvotes_read   ON v2_hotel_votes FOR SELECT TO anon USING (true);
-CREATE POLICY v2_hvotes_write  ON v2_hotel_votes FOR INSERT TO anon WITH CHECK (true);
-CREATE POLICY v2_hvotes_update ON v2_hotel_votes FOR UPDATE TO anon USING (true);
-CREATE POLICY v2_hvotes_delete ON v2_hotel_votes FOR DELETE TO anon USING (true);
+-- RLS: anon SELECT/INSERT/UPDATE/DELETE
 
 CREATE TABLE v2_availability (
   id         uuid default gen_random_uuid() primary key,
@@ -142,84 +172,77 @@ CREATE TABLE v2_availability (
   updated_at timestamptz not null default now(),
   unique(voter_id, date)
 );
-ALTER TABLE v2_availability ENABLE ROW LEVEL SECURITY;
-CREATE POLICY v2_avail_read   ON v2_availability FOR SELECT TO anon USING (true);
-CREATE POLICY v2_avail_write  ON v2_availability FOR INSERT TO anon WITH CHECK (true);
-CREATE POLICY v2_avail_update ON v2_availability FOR UPDATE TO anon USING (true);
-CREATE POLICY v2_avail_delete ON v2_availability FOR DELETE TO anon USING (true);
-
--- realtime
-ALTER PUBLICATION supabase_realtime ADD TABLE v2_voters, v2_city_votes, v2_hotel_votes, v2_availability;
+-- RLS: anon SELECT/INSERT/UPDATE/DELETE
 ```
+
+Curated venue fallback tables (read-only to the app, anon SELECT only, NOT in
+the realtime publication): `v2_hotels` (id uuid PK, city_id, name, address,
+descriptor, stars, price_range), `v2_bars` / `v2_food` (id uuid PK, city_id,
+name, address, descriptor, has_food/has_bar). Populated with ~206 curated rows.
 
 ## localStorage contract
 
-`bh2-voter-id` (uuid) · `bh2-voter-name` · `bh2-city-vote-cache` (CityVoteRow) ·
-`bh2-hotel-vote-cache` (HotelVoteRow) · `bh2-avail-cache` ({date: status})
+`bh2-voter-id` (uuid) · `bh2-voter-name` · `bh2-city-vote-cache` (CityVoteRow | absent) ·
+`bh2-hotel-vote-cache` (Record<cityId, HotelVoteRow>) · `bh2-avail-cache` ({date: status}) ·
+`bh2-city-sort` ("distance" | "walk" | "name" | "state")
 
-These five keys are the entire localStorage surface. Do not add keys without updating this list.
+These six keys are the entire localStorage surface. Do not add keys without updating this list.
 
 ## Design system
 
-Dark ONLY. No light mode, no theme toggle, no `prefers-color-scheme` handling, no theme
-persistence. All tokens live directly on `:root` in `globals.css` (`color-scheme: dark`).
+Dark ONLY. Forever. No light mode, no theme toggle, no `prefers-color-scheme`
+handling, no theme persistence. All tokens live on `:root` in `globals.css`
+(`color-scheme: dark`).
 
-- Surfaces: bg `#0A0D14`, surface `#12161F`, raised `#1A1F2B` — three clearly separated
-  lifts. Depth = surface lift + hairline borders (line `#232A38`, line-strong `#2E3748`),
-  near-zero shadows (one `shadow-overlay` value for sheets/dialogs only).
-- Text: ink `#E8ECF4` (never pure white), muted `#8E99AC`, dim `#5C6678`. Body text is
-  15px minimum; nothing meaningful below 13px. Tabular numerals (`tabular-nums`) on every
-  number.
-- ONE accent: warm streetlight orange `#FF9433` (accent-ink `#1A0E00`, accent-soft 12%).
-  It appears ONLY on: the current vote leader, the user's own vote (initial/CTA states),
-  the walk strip's hotel square, primary action buttons, hotel pins/dots on the
-  constellation and live map, the active nav tab, and the today ring. Nowhere else.
-- Status colors exist only in the calendar: good `#34D399`, bad `#F87171` (+ softs).
-  Never elsewhere, never beside the accent.
-- Typography — exactly three voices (Manrope 400–800, Google Fonts CDN):
-  - Display: 32px / 800 / 36px line / −0.02em (`text-display`) — city names, hero lines.
-  - Body: 15px / 500 (`text-base`, body default) — everything readable.
-  - Label: 12px / 600 / uppercase / +0.06em (`.label`) — section markers, metadata.
-  Weight communicates importance; metadata/labels never render bold/extrabold.
-- Radius: 16px (`rounded`) on ALL cards/panels/buttons; `rounded-full` only on
-  avatar/initial circles and the sanctioned pills (chips, footer vote pill). No other
-  radius values in markup.
-- Spacing: 4px grid; 32px between sections (`gap-8`); 20px card padding (`p-5`); list
-  rows ≥56px (`min-h-14`); every tap target ≥44px (`h-11`) — sacred, no exceptions.
-- Signature element: `WalkStrip` — fixed shared 0→1 mi axis on EVERY strip (auto-scaling
-  per city is forbidden), ¼ mi tick, near-white bar dots, accent hotel square; hotel
-  past 1 mi snaps to the edge with "[X] mi — you'll need a ride"; no coords →
-  "Map data pending". It replaces ALL score/tier/vibe UI; the composite score number
-  never appears anywhere (it survives only as the invisible "Best walk" sort key).
-- City identity: `ConstellationMap` pure-SVG dot-field (accent squares / near-white
-  dots / outlined muted circles) — also the collapsed map peek.
-- Vote counts render as overlapping first-name initials (max 5 + "+N", own initial in
-  accent; colliding first letters get two). No vote bars, no badges, no tier/vibe pills,
-  no "unverified" flags, no `distanceNote`, and the word "cluster" never renders in UI
-  chrome (hand-written taglines are exempt).
-- Live pulse: when ANOTHER person's vote changes, the affected row/hero plays
-  `anim-pulse-once` (driven by `useVotes.recentlyChangedCityIds`); never on your own
-  optimistic writes; killed by `prefers-reduced-motion`.
-- Transitions: 200ms ease-out default (keyframes 180–220ms); `prefers-reduced-motion`
-  collapses all animation.
-- Governing principle: design for 0.08 BAC — one thumb, dim bar, ten seconds. Two taps
-  to any primary action; nothing that needs explanation.
+Colors:
 
-## Google Maps setup
+```
+--bg #0A0D14 · --surface #12161F · --surface-raised #1A1F2B
+--border #252B3A · --border-strong #323A4F
+--ink #E8ECF4 · --ink-muted #8892A4 · --ink-dim #4A5468
+--accent #FF8C42 · --accent-dim rgba(255,140,66,.15)
+--green #34D399 / --green-dim · --red #F87171 / --red-dim
+--grade-a #34D399 · --grade-b #86EFAC · --grade-c #FCD34D · --grade-d #FB923C · --grade-f #F87171
+```
 
-- Loaded with `@googlemaps/js-api-loader` (`weekly` channel) in `lib/maps.ts`; key from
-  `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` with baked public fallback.
-- The live map mounts ONLY in the expanded state. Collapsed (~170px) renders the
-  pure-SVG `ConstellationMap` peek — the Google map is never mounted collapsed, and the
-  map element's size is never animated (the container's height/clip animates instead).
-- Single dark style array tuned to the blue-black surfaces. The light style is gone.
-- Pins differentiate by SHAPE, not color: hotel = filled accent `#FF9433` square
-  (custom Symbol path), bar = filled near-white `#E8ECF4` circle, food = outlined muted
-  `#8E99AC` circle.
-- Labels: custom `OverlayView` per venue, attached at zoom ≥ 15, detached below.
-- `fitBounds` with 48px padding on load; filter chips (expanded only) toggle marker
-  visibility; venue-list taps expand the map and pan to the pin.
-- Pin tap → in-app `VenueSheet`. There is intentionally no "Open in Maps" anywhere.
+- Grade colors also exist as literal hex in `tailwind.config.ts` (`grade.a`…)
+  so opacity modifiers work (`bg-grade-a/15` for the grade badges).
+- Typography (Manrope): Display 28/800/−0.02em (`text-display`) — scores, rank
+  numbers; Title 17/700 (`text-title`) — city/hotel names, section headers;
+  Body 15/500 (`text-base`); Label 12/600/uppercase/+0.06em (`.label`);
+  Meta 13/400 (`text-meta`) — addresses, secondary info. Minimum rendered
+  text 13px (sanctioned exceptions: the 12px Label voice and the 11px
+  heat-map fractions, both per spec). `font-variant-numeric: tabular-nums`
+  is set on `body` — numbers are tabular everywhere.
+- Radius: 12px cards (`rounded-card`), 8px buttons/inputs (`rounded-btn`),
+  6px chips/badges (`rounded-chip`), `rounded-full` pills only (sort pill,
+  grade badges, voter tags, legend dots).
+- Spacing: 4px grid. Cards 16px padding. List rows ≥56px; city index rows
+  ≥72px. Sections 24px gap (`gap-6`). Page padding 16px (`px-4`).
+- Every interactive element ≥44px tall (`h-11`/`min-h-11`) — sacred.
+- Bottom nav 64px + safe-area inset, `--surface` bg, `--border` top hairline.
+- Transitions 160ms ease; `prefers-reduced-motion` collapses all animation.
+- Calendar status colors: green = available, red = not available — calendar
+  surfaces only. Heat buckets: 0 resp → raised; 1–33% → red-dim; 34–66% →
+  accent-dim; 67–89% → green-dim; 90–100% → green @ 30%.
+- Governing principle: design for 0.08 BAC — one thumb, dim bar, ten seconds.
+  Nothing that requires explanation.
+
+## Google Maps & Places setup
+
+- Loaded with `@googlemaps/js-api-loader` (`weekly`, `libraries: ["places"]`)
+  in `lib/maps.ts`; key from `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` with baked
+  public fallback.
+- The detail map always mounts: 280px tall mobile, 380px ≥600px wide.
+  `gestureHandling: 'cooperative'`, `disableDefaultUI`, `clickableIcons: false`.
+- Single dark style: land #0A0D14, roads #1A1F2B, labels --ink-dim, no POI/transit.
+- Venues via classic `PlacesService.nearbySearch` (service bound to a detached
+  div): lodging r=2000m, bar r=1000m, restaurant r=800m, prominence ranking,
+  non-OPERATIONAL filtered, name-regex chain filter on bars/food only.
+- Pins: filled 10px circles (Symbol CIRCLE scale 5), white 2px stroke —
+  hotel #FF8C42 / bar #34D399 / food #60A5FA. Pin tap → `VenueSheet`.
+- Bar/food descriptor = Places `types` formatted to readable text (no
+  per-venue details calls; `editorial_summary` is not in nearby results).
 
 ## Data model
 
@@ -227,54 +250,44 @@ persistence. All tokens live directly on `:root` in `globals.css` (`color-scheme
 interface City {
   id: string; name: string; state: string;
   miles: number; drive: string;            // from Ralston, NE
+  walkScore: number;                       // 0–100, hardcoded research
+  walkGrade: string;                       // "A+"…"F", hardcoded research
+  district: string;                        // social gathering district name
   mapCenter: Coords; mapZoom: number;
-  vibes: VibeTag[];                        // exactly 2–3 from the fixed tag list
-  hotels: Hotel[]; bars: Venue[]; food: Venue[];
 }
-interface Hotel {
-  id: string;                              // kebab-case slug → v2_hotel_votes.hotel_id
-  name: string; address: string; stars: number; priceRange: string;
-  distanceNote: string; onSite?: string;
-  website: string;                         // the ONLY external link in the app
-  coords?: Coords; verified: boolean; unverifiedNote?: string;
-}
-interface Venue {
-  id: string; name: string; address: string; description: string;
-  hours?: string; coords?: Coords; verified: boolean; unverifiedNote?: string;
-}
+type VenueKind = "hotel" | "bar" | "food";
+// UI venue shape (lib/venues.ts) — id is place_id (or fallback uuid):
+interface Venue { id; kind; name; address; coords|null; rating|null;
+  ratingCount|null; priceLevel|null; priceText|null; descriptor }
 ```
 
-### Data notes
-
-- Cleaned against `bar_crawl_addresses_completed.md` research: CLOSED venues removed,
-  wrong-city venues removed (TommyJack's + Thirsty Duck from Yankton, Dario's from Lincoln,
-  Malarky's + Norse Horse from Carroll, Olde Main from Fort Dodge), Candlewood Suites removed
-  from Grand Island. Verified addresses applied; venues the research couldn't verify stay in
-  the data with `verified: false` (rendered with an "unverified" flag).
-- Blair's bar list legitimately includes Churchill's Cigar Bar (Fremont) and Fremont hotels —
-  the walkability math handles that via outlier-robust clustering (see below).
-- Scoring (lib/score.ts, computed at module load into `cityMeta`):
-  - Main bar cluster = bars within 2.5 mi of the densest-neighborhood seed bar (robust to
-    one far-flung venue). `barSpreadMi` = cluster radius (max bar→centroid distance).
-  - Tier: Walk Everything = nearest hotel ≤ 0.2 mi AND radius ≤ 0.3 mi;
-    Walk Most = ≤ 0.5 mi AND ≤ 0.5 mi; else Need a Ride.
-  - Score = 40% walkability (0.55·tightness + 0.45·hotel reach, continuous) +
-    30% bar count (walkable bars / 8, capped) + 30% hotel proximity (1 − mi/1.0, capped).
-- Walking distances render in feet under 1000 ft, miles (1 decimal) above.
+Hardcoded walkability research (do not recalculate, do not "fix"): Lincoln 96
+A+ … Blair 28 F — full table lives in `cities.ts`, one entry per city, with
+the district names.
 
 ## Feature checklist
 
-See PROGRESS.md. Everything in the build spec is implemented; deploy + schema were done
-2026-06-11 (schema), Vercel deploy still pending.
+See PROGRESS.md.
 
 ## Current state
 
-- Last change: full dark-only UI/UX overhaul — blue-black token system, three-tab nav
-  (Trip / Cities / Dates), decision-board Trip screen, WalkStrip + ConstellationMap
-  signature elements, full-screen three-beat /vote flow, mode-toggle calendar,
-  expand-only live map with shape pins. ThemeProvider/Pills/VoteMeter/VoteFlow deleted;
-  Maryville's placeholder `downtown-loft-rentals` hotel removed from data. Data layer,
-  routing, and a11y patterns untouched. `npm run build` green, 34 static pages.
-- Supabase v2 schema: DEPLOYED (migration `bar_hoppers_v2_schema` incl. realtime publication).
-- What's next: deploy to Vercel (root dir `app/`), set the three NEXT_PUBLIC_ env vars
-  (optional — fallbacks baked), restrict the Google Maps key to the deploy domain.
+- Last change (2026-06-12): complete ground-up UI/UX rebuild. Three-tab IA
+  (Cities / Calendar / The Board); walkability index list with hardcoded
+  scores/grades/districts, sort pill + bottom sheet (distance default);
+  city detail with always-mounted dark map, Google Places venue tabs
+  (Supabase venue tables as silent fallback), per-city hotel preference
+  radios (place_id keyed), full-width vote CTA; personal-only tri-state
+  calendar (tap cycles available → not available → clear); The Board with
+  respondents heat map + day breakdown sheet + vote standings with hotel
+  sub-rows. Deleted: Trip dashboard, /vote flow, /dates page, WalkStrip,
+  ConstellationMap, CityCard, HotelCard, VenueRow, VoterAvatars, Stars,
+  score.ts, geo.ts. `npm run build` green — 34 static pages; lint + strict
+  typecheck clean.
+- Supabase: schema verified live 2026-06-12 — v2_hotel_votes already matches
+  the new shape (PK voter_id+city_id, hotel_place_id, hotel_name + full anon
+  RLS); v2_hotels/v2_bars/v2_food curated fallback tables present (~206 rows,
+  anon read). No SQL changes were needed this session. All four user tables
+  in the realtime publication.
+- What's next: deploy to Vercel (root dir `app/`), set the three NEXT_PUBLIC_
+  env vars (optional — fallbacks baked), restrict the Google Maps key to the
+  deploy domain, and confirm Places API quota/billing covers Nearby Search.

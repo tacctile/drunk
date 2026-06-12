@@ -1,21 +1,32 @@
-last_updated: 2026-06-11
+last_updated: 2026-06-12
 last_session: >-
-  Initial full build of the /app Next.js webapp: data pipeline (27 cities
-  cleaned against verified-address research), composite scoring + walkability
-  tiers, dashboard, cities browser, city detail with in-app Google Map,
-  atomic city+hotel voting, tri-state availability calendar with group heat
-  map, Supabase realtime with silent localStorage fallback, dark/light
-  theming, and the full .claude/ ecosystem. Supabase v2 schema applied as
-  migration bar_hoppers_v2_schema (incl. realtime publication).
-current_phase: initial_build
+  Complete ground-up UI/UX rebuild of the presentation layer (data layer,
+  Supabase hooks, and routing structure kept). New three-tab IA: Cities
+  (walkability index, first screen), Calendar (personal tri-state only),
+  The Board (hot-dates heat map + standings + hotel preferences). Hardcoded
+  walkScore/walkGrade/district added to all 27 cities; legacy venue arrays
+  retained in cities.ts as reference but removed from the City type. Venue
+  lists now come live from Google Places Nearby Search (chain-filtered, with
+  the curated v2_hotels/v2_bars/v2_food Supabase tables as silent fallback);
+  hotel preference voting keyed by Places place_id into v2_hotel_votes
+  (PK voter_id+city_id — already deployed in the new shape, no SQL needed).
+  New token system (#FF8C42 accent, grade colors), 160ms transitions,
+  / → /cities redirect. Deleted: Trip dashboard, /vote flow, /dates,
+  WalkStrip, ConstellationMap, CityCard, HotelCard, VenueRow, VoterAvatars,
+  Stars, score.ts, geo.ts. Build green (34 static pages), lint + strict
+  typecheck clean, all routes smoke-tested.
+current_phase: walkability_index_rebuild
 build_complete: true
 supabase_schema_deployed: true
 vercel_deployed: false
 known_issues:
-  - 99 venues remain verified:false (flagged in UI) pending address research
-  - Vote atomicity is sequential upserts, not a DB transaction (fine at this scale)
+  - Places Nearby Search results are unverified-by-us live data; quality of
+    bar/food lists depends on Google data for these small towns
+  - Heat-map fraction text renders at 11px per spec (below the 13px floor)
+  - Supabase-fallback venues have no coords, so they get no map pins
 next_up:
   - Create Vercel project with root directory app/ and deploy
-  - Set NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel (optional — fallbacks baked in)
-  - Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in Vercel (optional — fallback baked in)
-  - Restrict the Google Maps API key to the production domain
+  - Set NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY /
+    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in Vercel (optional — fallbacks baked in)
+  - Restrict the Google Maps API key to the production domain and confirm
+    Places API (Nearby Search) is enabled with billing/quota for the key
