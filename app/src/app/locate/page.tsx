@@ -16,7 +16,7 @@ import { Icon } from "@/components/Icon";
 import { NamePrompt } from "@/components/NamePrompt";
 import type { Coords } from "@/data/types";
 import { useGroupData } from "@/hooks/useGroupData";
-import { PIN_PALETTE, useLocations, type LocationsValue } from "@/hooks/useLocations";
+import { useLocations, type LocationsValue } from "@/hooks/useLocations";
 import { BASE_MAP_OPTIONS, DARK_MAP_STYLE, loadGoogleMaps } from "@/lib/maps";
 import type { LocationRow, VoterRow } from "@/lib/supabase";
 
@@ -285,10 +285,9 @@ interface ControlsCardProps {
   myId: string;
 }
 
-/** Sharing toggle + disclaimer, pin color picker (while on), mute list. */
+/** Sharing toggle + disclaimer, mute list. Pin colors are auto-assigned. */
 function ControlsCard({ locations, voters, myId }: ControlsCardProps) {
-  const { isSharing, pinColor, mutedIds, toggleSharing, updatePinColor, muteUser, unmuteUser } =
-    locations;
+  const { isSharing, mutedIds, toggleSharing, muteUser, unmuteUser } = locations;
   const [busy, setBusy] = useState(false);
   const [shareError, setShareError] = useState("");
   const [muteOpen, setMuteOpen] = useState(false);
@@ -335,25 +334,6 @@ function ControlsCard({ locations, voters, myId }: ControlsCardProps) {
         <p className="mt-2 text-meta font-medium text-red" role="alert">
           {shareError}
         </p>
-      )}
-
-      {isSharing && (
-        <div className="mt-3 flex flex-wrap gap-2" role="radiogroup" aria-label="Pin color">
-          {PIN_PALETTE.map((color) => (
-            <button
-              key={color}
-              type="button"
-              role="radio"
-              aria-checked={pinColor === color}
-              aria-label={`Pin color ${color}`}
-              onClick={() => void updatePinColor(color)}
-              className={`h-8 w-8 rounded-full transition ${
-                pinColor === color ? "ring-2 ring-ink ring-offset-2 ring-offset-surface" : ""
-              }`}
-              style={{ background: color }}
-            />
-          ))}
-        </div>
       )}
 
       <button

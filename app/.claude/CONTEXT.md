@@ -1,6 +1,6 @@
 # BAR HOPPERS /app — CONTEXT (single source of truth)
 
-Last updated: 2026-06-12 · Phase: Locate tab + hidden Admin live, pending first deploy
+Last updated: 2026-06-12 · Phase: auto-assigned pin colors live (identity foundation), pending first deploy
 
 ## What this app is
 
@@ -36,6 +36,14 @@ Bar Hoppers is a mobile-first Next.js webapp a small group of friends (~6–10 p
   roster dropdown and verify the PIN to load their voter_id onto the device.
   No lockout, no complexity — wrong PIN just says "PIN doesn't match.
   Try again."
+- Pin colors are AUTO-ASSIGNED at registration — never user-selectable,
+  never changeable. The Nth registered voter gets the Nth entry of the
+  25-color `PIN_COLORS` pool in `lib/colors.ts` (`assignColor(count)`,
+  cycling back to index 0 past 24), stored permanently in
+  `v2_voters.pin_color`. `bh2-pin-color` is only a local cache of the
+  server-assigned color, written by the identity layer (createIdentity /
+  signIn / roster refetch) and read for avatar rendering and the
+  v2_locations upsert. There is NO color picker anywhere.
 - Icons: Material Symbols Outlined (Google Fonts CDN) — the only icon system
 - Font: Manrope 400/500/600/700/800 (Google Fonts CDN)
 - All user-rendered strings go through React JSX escaping (no `dangerouslySetInnerHTML` anywhere)
@@ -116,9 +124,9 @@ app/
   │ │                        map (Ralston center, zoom 8, greedy gestures),
   │ │                        person pins (14px circle + name pill; own pin
   │ │                        18px + amber ring, "You (name)"), sharing
-  │ │                        toggle + device-settings disclaimer, 10-swatch
-  │ │                        pin color picker, "Manage visibility" mute
-  │ │                        list, draggable people panel (80px ↔ 50vh)
+  │ │                        toggle + device-settings disclaimer, "Manage
+  │ │                        visibility" mute list, draggable people panel
+  │ │                        (80px ↔ 50vh); no color picker — auto-assigned
   │ ├ admin/page.tsx         ADMIN (3s long-press on Locate icon ONLY): user
   │ │                        cards (hashed-PIN status via eye toggle, last
   │ │                        vote, edit modal w/ PIN reset + cascade
@@ -159,15 +167,18 @@ app/
   │ ├ useGroupData.tsx       THE data layer: fetch + realtime + optimistic
   │ │                        mutations + localStorage fallback. setCityVote /
   │ │                        setHotelPref / setAvailability / createIdentity
-  │ │                        (bcrypt PIN hash) / signIn (PIN verify + adopt)
-  │ │                        / identityInvalid.
+  │ │                        (bcrypt PIN hash + pin_color via
+  │ │                        assignColor(voter count)) / signIn (PIN verify
+  │ │                        + adopt + pin-color cache) / identityInvalid.
+  │ │                        Roster rows carry pin_color; refetch re-syncs
+  │ │                        bh2-pin-color from the server row.
   │ ├ useLocations.ts        v2_locations realtime + 30s clock:
   │ │                        activeLocations (expired + muted-from-you rows
   │ │                        filtered, self first), isSharing, toggleSharing
-  │ │                        (geolocation prompt → upsert w/ 72h expiry, 60s
-  │ │                        coord updates while granted, delete on off),
-  │ │                        updatePinColor, muteUser/unmuteUser;
-  │ │                        bh2-pin-color + bh2-muted-ids persistence
+  │ │                        (geolocation prompt → upsert w/ 72h expiry +
+  │ │                        cached auto pin_color, 60s coord updates while
+  │ │                        granted, delete on off), muteUser/unmuteUser;
+  │ │                        bh2-muted-ids persistence
   │ ├ useVotes.ts            derived: city ranking + per-city hotel-preference
   │ │                        tallies (grouped by place_id), myCityId,
   │ │                        myHotelPrefFor(cityId)
@@ -179,7 +190,12 @@ app/
   │ ├ supabase.ts            lazy client, env w/ baked fallbacks, safeSelect,
   │ │                        row types (HotelVoteRow = v2_hotels uuid + name)
   │ ├ identity.ts            bh2-voter-id / bh2-voter-name helpers +
-  │ │                        buildDisplayName ("Nick B") + isValidPin (00–99)
+  │ │                        bh2-pin-color cache (getStoredPinColor /
+  │ │                        storePinColor) + buildDisplayName ("Nick B") +
+  │ │                        isValidPin (00–99)
+  │ ├ colors.ts              25-color PIN_COLORS pool + assignColor(count)
+  │ │                        (registration-order auto-assignment, cycles at
+  │ │                        25) + contrastColor (avatar initials b/w)
   │ ├ venues.ts              Venue UI model (curated v2 row fields incl.
   │ │                        nullable lat/lng), CityVenues, EMPTY_VENUES
   │ ├ maps.ts                Maps loader (no extra libs), single dark style,
@@ -203,6 +219,7 @@ CREATE TABLE v2_voters (
   name         text not null check (char_length(name) between 1 and 20),
   display_name text,        -- "Nick B"; null on legacy rows (fall back to name)
   pin_hash     text,        -- bcrypt hash of the 2-digit PIN; NEVER plain text
+  pin_color    text not null default '#FF8C42',  -- auto-assigned pool color; never user-set
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()
 );
@@ -279,11 +296,25 @@ ALTER TABLE v2_food ADD COLUMN IF NOT EXISTS lat float8;
 ALTER TABLE v2_food ADD COLUMN IF NOT EXISTS lng float8;
 ```
 
+2026-06-12 pin-color migration (applied live via MCP, `add_pin_color_to_v2_voters`;
+idempotent — safe to re-run in the Supabase SQL editor):
+
+```sql
+ALTER TABLE v2_voters
+  ADD COLUMN IF NOT EXISTS pin_color text
+  NOT NULL DEFAULT '#FF8C42';
+```
+
+The rows that existed before the column was added were backfilled (one-time
+UPDATE, also already applied) with pool colors in `created_at` order, so
+registration-order assignment holds for everyone.
+
 ## localStorage contract
 
 `bh2-voter-id` (uuid) · `bh2-voter-name` · `bh2-city-vote-cache` (CityVoteRow | absent) ·
 `bh2-hotel-vote-cache` (Record<cityId, HotelVoteRow>) · `bh2-avail-cache` ({date: status}) ·
-`bh2-city-sort` ("distance" | "walk" | "name" | "state") · `bh2-pin-color` (palette hex) ·
+`bh2-city-sort` ("distance" | "walk" | "name" | "state") · `bh2-pin-color` (cache of the
+auto-assigned `v2_voters.pin_color` — written ONLY by the identity layer, never a user pick) ·
 `bh2-muted-ids` (JSON uuid[] — applies to the location row when sharing starts)
 
 These eight keys are the entire localStorage surface. Do not add keys without updating this list.
@@ -379,7 +410,30 @@ See PROGRESS.md.
 
 ## Current state
 
-- Last change (2026-06-12, locate-and-admin session): the Locate tab and the
+- Last change (2026-06-12, pin-color-foundation session): auto-assigned pin
+  colors — the identity-layer foundation everything else builds on. New
+  `lib/colors.ts`: 25-color `PIN_COLORS` pool, `assignColor(n)` (n % 25 →
+  pool hex), `contrastColor(hex)` (black/white text for avatar initials —
+  consumed in Prompt 2). Schema: `v2_voters.pin_color text NOT NULL DEFAULT
+  '#FF8C42'` added live via MCP (idempotent SQL in the migration log above);
+  the 4 pre-existing voters were backfilled with pool colors in created_at
+  order. createIdentity counts v2_voters (COUNT exact, head:true), upserts
+  `pin_color: assignColor(count)` alongside the bcrypt hash, and caches the
+  color to bh2-pin-color; signIn selects pin_color and caches it after PIN
+  verification; refetch re-syncs the cache from my server row every time
+  (server truth wins — retires colors picked with the old swatch UI).
+  VoterRow gained `pin_color: string`, the roster select includes it, and
+  useGroupData's voters now carry it so components can render colored
+  circles next to names. The color picker is DELETED everywhere:
+  PIN_PALETTE, DEFAULT_PIN_COLOR, updatePinColor, and all bh2-pin-color
+  writes are gone from useLocations.ts; the swatch radiogroup block is gone
+  from locate/page.tsx (the ONLY change there); toggleSharing writes
+  v2_locations.pin_color from the bh2-pin-color cache ?? '#FF8C42'.
+  ensureVoter deliberately omits pin_color (insert → column default,
+  conflict update → assignment preserved). AppShell, voting, availability,
+  city data, admin, and the root index.html untouched. Build green — 36
+  static pages; lint + strict typecheck clean.
+- Earlier (2026-06-12, locate-and-admin session): the Locate tab and the
   hidden Admin screen. (1) Nav: fourth tab "Locate" (`person_pin`, /locate),
   rightmost on the mobile bar and bottom of the desktop rail; a 3-second
   long-press on the Locate item (mouse or touch) opens /admin — the ONLY way

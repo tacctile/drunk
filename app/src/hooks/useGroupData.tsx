@@ -19,13 +19,16 @@ import {
   type VoterRow,
 } from "@/lib/supabase";
 import { compare as comparePin, hash as hashPin } from "bcryptjs";
+import { assignColor, PIN_COLORS } from "@/lib/colors";
 import {
   buildDisplayName,
   getStoredName,
+  getStoredPinColor,
   getVoterId,
   isValidPin,
   newVoterId,
   storeIdentity,
+  storePinColor,
 } from "@/lib/identity";
 
 // Silent-fallback caches. Every successful server write mirrors into these;
@@ -120,7 +123,12 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
 
       const v = serverVoters ? [...serverVoters] : [];
       if (myName && !v.some((r) => r.voter_id === me)) {
-        v.push({ voter_id: me, name: myName, display_name: myName });
+        v.push({
+          voter_id: me,
+          name: myName,
+          display_name: myName,
+          pin_color: getStoredPinColor() ?? PIN_COLORS[0],
+        });
       }
 
       const cv = serverCity ? [...serverCity] : [];
@@ -157,7 +165,7 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
 
   const refetch = useCallback(async () => {
     const [sv, sc, sh, sa] = await Promise.all([
-      safeSelect<VoterRow>("v2_voters", "voter_id,name,display_name"),
+      safeSelect<VoterRow>("v2_voters", "voter_id,name,display_name,pin_color"),
       safeSelect<CityVoteRow>("v2_city_votes", "voter_id,city_id,updated_at"),
       safeSelect<HotelVoteRow>(
         "v2_hotel_votes",
@@ -171,6 +179,12 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
     // the return-user flow is auto-shown so they can sign back in.
     if (sv && !adoptedRef.current) {
       setIdentityInvalid(Boolean(me && nameRef.current && !sv.some((r) => r.voter_id === me)));
+    }
+    // The server-assigned color is the truth — keep the avatar cache aligned
+    // (also retires colors picked with the deleted swatch picker).
+    if (sv) {
+      const mine = sv.find((r) => r.voter_id === me);
+      if (mine?.pin_color) storePinColor(mine.pin_color);
     }
     if (sc) {
       const mine = sc.find((r) => r.voter_id === me);
@@ -244,7 +258,12 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
     clearWriteCaches();
     setVoters((prev) => {
       const next = prev.filter((v) => v.voter_id !== id);
-      next.push({ voter_id: id, name: displayName, display_name: displayName });
+      next.push({
+        voter_id: id,
+        name: displayName,
+        display_name: displayName,
+        pin_color: getStoredPinColor() ?? PIN_COLORS[0],
+      });
       return next;
     });
   }, []);
@@ -258,12 +277,26 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
       const id = newVoterId();
       adoptIdentity(id, displayName);
       try {
+        const sb = getSupabase();
+        // Auto-assigned, never user-selectable: the Nth registered voter gets
+        // the Nth pool color, cycling at 25. Offline the count is 0, which
+        // matches the column default the row gets when ensureVoter syncs it.
+        let existingCount = 0;
+        if (sb) {
+          const { count, error } = await sb
+            .from("v2_voters")
+            .select("voter_id", { count: "exact", head: true });
+          if (!error && typeof count === "number") existingCount = count;
+        }
+        const pinColor = assignColor(existingCount);
+        storePinColor(pinColor); // instant avatar rendering without a query
         const pinHash = await hashPin(pin, 10);
-        await getSupabase()?.from("v2_voters").upsert({
+        await sb?.from("v2_voters").upsert({
           voter_id: id,
           name: displayName,
           display_name: displayName,
           pin_hash: pinHash,
+          pin_color: pinColor,
           updated_at: new Date().toISOString(),
         });
       } catch {
@@ -284,7 +317,7 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
       try {
         const { data, error } = await sb
           .from("v2_voters")
-          .select("voter_id,name,display_name,pin_hash")
+          .select("voter_id,name,display_name,pin_hash,pin_color")
           .eq("voter_id", targetVoterId)
           .maybeSingle();
         if (error || !data) return "error";
@@ -303,6 +336,8 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
             })
             .eq("voter_id", targetVoterId);
         }
+        // Cache the server-assigned color so the avatar renders instantly.
+        if (row.pin_color) storePinColor(row.pin_color);
         adoptIdentity(targetVoterId, row.display_name ?? row.name);
         void refetch();
         return "ok";
@@ -313,7 +348,9 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
     [adoptIdentity, refetch],
   );
 
-  /** Voter row must exist before any FK write lands. Never touches pin_hash. */
+  /** Voter row must exist before any FK write lands. Never touches pin_hash
+   *  or pin_color (an insert takes the column default; an update keeps the
+   *  assigned color). */
   const ensureVoter = useCallback(async (now: string) => {
     const sb = getSupabase();
     if (!sb) return;
