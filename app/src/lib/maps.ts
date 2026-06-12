@@ -3,8 +3,9 @@
 import { Loader } from "@googlemaps/js-api-loader";
 import type { VenueKind } from "@/data/types";
 
-// The key needs the Maps JavaScript API (map display) and the Geocoding API
-// (pin coordinates). The Places API is no longer used anywhere.
+// The key needs the Maps JavaScript API only (map display). Pin coordinates
+// come from the curated lat/lng columns — the Geocoding and Places APIs are
+// no longer used anywhere.
 const MAPS_API_KEY =
   process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "AIzaSyAKzTDijoSvxp9Gb2oEqYXW4kmnEzkbMWQ";
 

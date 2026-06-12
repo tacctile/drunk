@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/AppShell";
+import { IdentityWatcher } from "@/components/NamePrompt";
 import { GroupDataProvider } from "@/hooks/useGroupData";
 import "./globals.css";
 
@@ -35,6 +36,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <GroupDataProvider>
           <AppShell>{children}</AppShell>
+          {/* Auto-opens the return-user flow when the stored identity can't be verified */}
+          <IdentityWatcher />
         </GroupDataProvider>
       </body>
     </html>

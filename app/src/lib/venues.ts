@@ -1,12 +1,13 @@
 "use client";
 
-import type { Coords, VenueKind } from "@/data/types";
+import type { VenueKind } from "@/data/types";
 
 /**
  * The one venue shape the UI renders. Rows come straight from the curated
  * v2_hotels / v2_bars / v2_food Supabase tables — `id` is the row uuid, and
- * it is what v2_hotel_votes.hotel_place_id stores. `coords` is resolved in
- * the background by the Geocoding API purely for map pins; null = no pin.
+ * it is what v2_hotel_votes.hotel_place_id stores. `lat`/`lng` are the
+ * curated coordinate columns, used only for map pins; null = no pin (the
+ * list row renders regardless).
  */
 export interface Venue {
   id: string;
@@ -25,7 +26,8 @@ export interface Venue {
   has_food?: boolean;
   /** v2_food only — restaurant also has a full bar. */
   has_bar?: boolean;
-  coords: Coords | null;
+  lat: number | null;
+  lng: number | null;
 }
 
 export interface CityVenues {

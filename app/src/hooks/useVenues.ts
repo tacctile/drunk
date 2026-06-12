@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { City, Coords, VenueKind } from "@/data/types";
-import { loadGoogleMaps } from "@/lib/maps";
+import type { City, VenueKind } from "@/data/types";
 import { getSupabase, type DbVenueRow } from "@/lib/supabase";
 import { EMPTY_VENUES, type CityVenues, type Venue } from "@/lib/venues";
 
@@ -13,10 +12,6 @@ const TABLES: Record<VenueKind, string> = {
   food: "v2_food",
 };
 
-// How many geocode requests run at once — kept low to stay under the
-// Geocoder's client-side rate limit.
-const GEOCODE_CONCURRENCY = 3;
-
 function toVenue(kind: VenueKind, row: DbVenueRow): Venue {
   const venue: Venue = {
     id: row.id,
@@ -25,7 +20,10 @@ function toVenue(kind: VenueKind, row: DbVenueRow): Venue {
     name: row.name,
     address: row.address ?? "",
     descriptor: row.descriptor ?? "",
-    coords: null,
+    // Pin coordinates come straight from the curated lat/lng columns.
+    // Null (not yet backfilled) just means no pin — the row still renders.
+    lat: row.lat ?? null,
+    lng: row.lng ?? null,
   };
   if (row.stars != null) venue.stars = row.stars;
   if (row.price_range != null) venue.price_range = row.price_range;
@@ -35,15 +33,18 @@ function toVenue(kind: VenueKind, row: DbVenueRow): Venue {
   return venue;
 }
 
-/** One category from Supabase. Failures collapse to an empty list — no error UI. */
+/**
+ * One category from Supabase. Every row for the city — no LIMIT, no ORDER BY
+ * (insertion order is already proximity/rating order from the curated SQL).
+ * Hotels are filtered to 3 stars and above. Failures collapse to an empty
+ * list — no error UI.
+ */
 async function fetchKind(kind: VenueKind, cityId: string): Promise<Venue[]> {
   const sb = getSupabase();
   if (!sb) return [];
   try {
     const base = sb.from(TABLES[kind]).select("*").eq("city_id", cityId);
-    // Hotels carry a proximity note from the curated research; bars and food
-    // were inserted in display order already.
-    const { data, error } = await (kind === "hotel" ? base.order("distance_note") : base);
+    const { data, error } = await (kind === "hotel" ? base.gte("stars", 3) : base);
     if (error || !data) return [];
     return (data as DbVenueRow[]).map((row) => toVenue(kind, row));
   } catch {
@@ -63,94 +64,9 @@ async function fetchCityVenues(cityId: string): Promise<CityVenues> {
 // One list fetch per city per session — curated rows don't change mid-visit.
 const listCache = new Map<string, Promise<CityVenues>>();
 
-// venue id → geocoded coords (null = lookup failed; no pin this session)
-const coordsCache = new Map<string, Coords | null>();
-const inflight = new Map<string, Promise<Coords | null>>();
-
-async function geocodeQuery(
-  geocoder: google.maps.Geocoder,
-  address: string,
-): Promise<Coords | null> {
-  for (let attempt = 0; ; attempt++) {
-    try {
-      const { results } = await geocoder.geocode({ address });
-      const location = results?.[0]?.geometry?.location;
-      return location ? { lat: location.lat(), lng: location.lng() } : null;
-    } catch (err) {
-      // One backoff retry when rate-limited; anything else means no pin.
-      const code = (err as { code?: string } | null)?.code;
-      if (attempt === 0 && code === "OVER_QUERY_LIMIT") {
-        await new Promise((resolve) => setTimeout(resolve, 1200));
-        continue;
-      }
-      return null;
-    }
-  }
-}
-
-function geocodeVenue(
-  geocoder: google.maps.Geocoder,
-  venue: Venue,
-  city: City,
-): Promise<Coords | null> {
-  const cached = coordsCache.get(venue.id);
-  if (cached !== undefined) return Promise.resolve(cached);
-  let promise = inflight.get(venue.id);
-  if (!promise) {
-    const query = venue.address
-      ? `${venue.name}, ${venue.address}`
-      : `${venue.name}, ${city.name}, ${city.state}`;
-    promise = geocodeQuery(geocoder, query).then((coords) => {
-      coordsCache.set(venue.id, coords);
-      inflight.delete(venue.id);
-      return coords;
-    });
-    inflight.set(venue.id, promise);
-  }
-  return promise;
-}
-
-/**
- * Resolves map-pin coordinates in the background, a few venues at a time.
- * Never blocks the lists; a venue whose geocode fails simply has no pin.
- */
-async function resolveCoords(
-  venues: Venue[],
-  city: City,
-  onCoords: (venueId: string, coords: Coords) => void,
-): Promise<void> {
-  let geocoder: google.maps.Geocoder;
-  try {
-    const g = await loadGoogleMaps();
-    geocoder = new g.maps.Geocoder();
-  } catch {
-    return; // Maps unavailable — lists render without pins
-  }
-  const queue = [...venues];
-  const worker = async () => {
-    for (let venue = queue.shift(); venue; venue = queue.shift()) {
-      const coords = await geocodeVenue(geocoder, venue, city);
-      if (coords) onCoords(venue.id, coords);
-    }
-  };
-  await Promise.allSettled(Array.from({ length: GEOCODE_CONCURRENCY }, () => worker()));
-}
-
-function mapVenues(venues: CityVenues, fn: (venue: Venue) => Venue): CityVenues {
-  return { hotel: venues.hotel.map(fn), bar: venues.bar.map(fn), food: venues.food.map(fn) };
-}
-
-/** Coords already resolved in a previous visit attach without re-geocoding. */
-function withKnownCoords(venues: CityVenues): CityVenues {
-  return mapVenues(venues, (venue) => {
-    const coords = coordsCache.get(venue.id);
-    return coords ? { ...venue, coords } : venue;
-  });
-}
-
 export interface VenuesView {
   venues: CityVenues;
-  /** False until the Supabase lists settle. Pins keep resolving afterwards. */
+  /** False until the Supabase lists settle. */
   ready: boolean;
 }
 
@@ -170,23 +86,7 @@ export function useVenues(city: City): VenuesView {
     }
     promise.then(
       (venues) => {
-        if (cancelled) return;
-        // The list renders immediately; pins stream in as geocoding resolves.
-        setState({ cityId: city.id, venues: withKnownCoords(venues), ready: true });
-        const all = [...venues.hotel, ...venues.bar, ...venues.food];
-        void resolveCoords(all, city, (venueId, coords) => {
-          if (cancelled) return;
-          setState((prev) =>
-            prev.cityId === city.id
-              ? {
-                  ...prev,
-                  venues: mapVenues(prev.venues, (venue) =>
-                    venue.id === venueId ? { ...venue, coords } : venue,
-                  ),
-                }
-              : prev,
-          );
-        });
+        if (!cancelled) setState({ cityId: city.id, venues, ready: true });
       },
       () => {
         listCache.delete(city.id);

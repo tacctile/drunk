@@ -36,11 +36,14 @@ export function useAvailability(): AvailabilityView {
 
   return useMemo(() => {
     const today = todayKey();
-    const tagOf = (id: string) => ({
-      voterId: id,
-      name: voters.find((v) => v.voter_id === id)?.name ?? "Someone",
-      isYou: id === voterId,
-    });
+    const tagOf = (id: string) => {
+      const voter = voters.find((v) => v.voter_id === id);
+      return {
+        voterId: id,
+        name: voter ? voter.display_name ?? voter.name : "Someone",
+        isYou: id === voterId,
+      };
+    };
 
     const mine: Record<string, DayStatus> = {};
     const byDate = new Map<string, { available: string[]; unavailable: string[] }>();

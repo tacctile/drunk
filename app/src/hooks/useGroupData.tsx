@@ -18,7 +18,15 @@ import {
   type HotelVoteRow,
   type VoterRow,
 } from "@/lib/supabase";
-import { getStoredName, getVoterId, sanitizeName, storeName } from "@/lib/identity";
+import { compare as comparePin, hash as hashPin } from "bcryptjs";
+import {
+  buildDisplayName,
+  getStoredName,
+  getVoterId,
+  isValidPin,
+  newVoterId,
+  storeIdentity,
+} from "@/lib/identity";
 
 // Silent-fallback caches. Every successful server write mirrors into these;
 // when Supabase is unreachable the app keeps working from them (the rest of
@@ -45,6 +53,15 @@ function writeCache(key: string, value: unknown) {
   }
 }
 
+/** Cached writes belong to the previous identity — drop them on switch. */
+function clearWriteCaches() {
+  writeCache(CITY_VOTE_CACHE, null);
+  writeCache(HOTEL_VOTE_CACHE, null);
+  writeCache(AVAIL_CACHE, null);
+}
+
+export type SignInResult = "ok" | "wrong-pin" | "error";
+
 export interface HotelPref {
   placeId: string;
   name: string;
@@ -60,7 +77,12 @@ interface GroupDataValue {
   cityVotes: CityVoteRow[];
   hotelVotes: HotelVoteRow[];
   availability: AvailabilityRow[];
-  saveName: (raw: string) => Promise<void>;
+  /** localStorage holds an identity the server roster can't verify. */
+  identityInvalid: boolean;
+  /** New account: name + last initial + 2-digit PIN (stored bcrypt-hashed). */
+  createIdentity: (first: string, lastInitial: string, pin: string) => Promise<boolean>;
+  /** Cross-device sign-in: verify PIN against the stored hash, adopt the identity. */
+  signIn: (targetVoterId: string, pin: string) => Promise<SignInResult>;
   /** One city vote per person; null clears it. */
   setCityVote: (cityId: string | null) => Promise<void>;
   /** One preferred hotel per person per city; null clears that city's pick. */
@@ -78,8 +100,12 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
   const [cityVotes, setCityVotes] = useState<CityVoteRow[]>([]);
   const [hotelVotes, setHotelVotes] = useState<HotelVoteRow[]>([]);
   const [availability, setAvailability] = useState<AvailabilityRow[]>([]);
+  const [identityInvalid, setIdentityInvalid] = useState(false);
   const voterIdRef = useRef("");
   const nameRef = useRef("");
+  // An identity created or signed into this session is trusted even before
+  // the server roster reflects it (it syncs on the first write).
+  const adoptedRef = useRef(false);
 
   /** Overlay this device's cached writes wherever the server copy lacks them. */
   const overlayLocal = useCallback(
@@ -93,7 +119,9 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
       const myName = nameRef.current;
 
       const v = serverVoters ? [...serverVoters] : [];
-      if (myName && !v.some((r) => r.voter_id === me)) v.push({ voter_id: me, name: myName });
+      if (myName && !v.some((r) => r.voter_id === me)) {
+        v.push({ voter_id: me, name: myName, display_name: myName });
+      }
 
       const cv = serverCity ? [...serverCity] : [];
       const cachedCity = readCache<CityVoteRow>(CITY_VOTE_CACHE);
@@ -129,7 +157,7 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
 
   const refetch = useCallback(async () => {
     const [sv, sc, sh, sa] = await Promise.all([
-      safeSelect<VoterRow>("v2_voters", "voter_id,name"),
+      safeSelect<VoterRow>("v2_voters", "voter_id,name,display_name"),
       safeSelect<CityVoteRow>("v2_city_votes", "voter_id,city_id,updated_at"),
       safeSelect<HotelVoteRow>(
         "v2_hotel_votes",
@@ -139,6 +167,11 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
     ]);
     // Keep caches in sync with server truth for this voter.
     const me = voterIdRef.current;
+    // A stored identity the live roster doesn't know can't be verified —
+    // the return-user flow is auto-shown so they can sign back in.
+    if (sv && !adoptedRef.current) {
+      setIdentityInvalid(Boolean(me && nameRef.current && !sv.some((r) => r.voter_id === me)));
+    }
     if (sc) {
       const mine = sc.find((r) => r.voter_id === me);
       writeCache(CITY_VOTE_CACHE, mine ?? null);
@@ -167,14 +200,6 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
     setName(storedName);
 
     void refetch();
-
-    // If we have a name (maybe saved while offline), make sure the roster has us.
-    if (storedName) {
-      void getSupabase()
-        ?.from("v2_voters")
-        .upsert({ voter_id: id, name: storedName, updated_at: new Date().toISOString() })
-        .then(() => undefined, () => undefined);
-    }
 
     const sb = getSupabase();
     let channel: ReturnType<NonNullable<typeof sb>["channel"]> | null = null;
@@ -207,34 +232,97 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
     };
   }, [refetch]);
 
-  const saveName = useCallback(async (raw: string) => {
-    const clean = sanitizeName(raw);
-    if (!clean) return;
-    nameRef.current = clean;
-    setName(clean);
-    storeName(clean);
-    const me = voterIdRef.current;
+  /** Switch this device to the given identity and drop the old one's caches. */
+  const adoptIdentity = useCallback((id: string, displayName: string) => {
+    adoptedRef.current = true;
+    voterIdRef.current = id;
+    nameRef.current = displayName;
+    setVoterId(id);
+    setName(displayName);
+    setIdentityInvalid(false);
+    storeIdentity(id, displayName);
+    clearWriteCaches();
     setVoters((prev) => {
-      const next = prev.filter((v) => v.voter_id !== me);
-      next.push({ voter_id: me, name: clean });
+      const next = prev.filter((v) => v.voter_id !== id);
+      next.push({ voter_id: id, name: displayName, display_name: displayName });
       return next;
     });
-    try {
-      await getSupabase()
-        ?.from("v2_voters")
-        .upsert({ voter_id: me, name: clean, updated_at: new Date().toISOString() });
-    } catch {
-      // offline — name is already in localStorage, roster syncs next time
-    }
   }, []);
 
-  /** Voter row must exist before any FK write lands. */
+  const createIdentity = useCallback(
+    async (first: string, lastInitial: string, pin: string) => {
+      const displayName = buildDisplayName(first, lastInitial);
+      if (!displayName || !isValidPin(pin)) return false;
+      // Always a fresh uuid — reusing the device id could hijack the row of
+      // whoever was signed in here before.
+      const id = newVoterId();
+      adoptIdentity(id, displayName);
+      try {
+        const pinHash = await hashPin(pin, 10);
+        await getSupabase()?.from("v2_voters").upsert({
+          voter_id: id,
+          name: displayName,
+          display_name: displayName,
+          pin_hash: pinHash,
+          updated_at: new Date().toISOString(),
+        });
+      } catch {
+        // offline — identity lives locally; ensureVoter syncs the row
+        // (without a PIN) on the first successful write
+      }
+      void refetch();
+      return true;
+    },
+    [adoptIdentity, refetch],
+  );
+
+  const signIn = useCallback(
+    async (targetVoterId: string, pin: string): Promise<SignInResult> => {
+      if (!isValidPin(pin)) return "wrong-pin";
+      const sb = getSupabase();
+      if (!sb) return "error";
+      try {
+        const { data, error } = await sb
+          .from("v2_voters")
+          .select("voter_id,name,display_name,pin_hash")
+          .eq("voter_id", targetVoterId)
+          .maybeSingle();
+        if (error || !data) return "error";
+        const row = data as VoterRow & { pin_hash: string | null };
+        if (row.pin_hash) {
+          if (!(await comparePin(pin, row.pin_hash))) return "wrong-pin";
+        } else {
+          // Voter from before the PIN system — their first sign-in sets it.
+          const pinHash = await hashPin(pin, 10);
+          await sb
+            .from("v2_voters")
+            .update({
+              pin_hash: pinHash,
+              display_name: row.display_name ?? row.name,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("voter_id", targetVoterId);
+        }
+        adoptIdentity(targetVoterId, row.display_name ?? row.name);
+        void refetch();
+        return "ok";
+      } catch {
+        return "error";
+      }
+    },
+    [adoptIdentity, refetch],
+  );
+
+  /** Voter row must exist before any FK write lands. Never touches pin_hash. */
   const ensureVoter = useCallback(async (now: string) => {
     const sb = getSupabase();
     if (!sb) return;
-    await sb
-      .from("v2_voters")
-      .upsert({ voter_id: voterIdRef.current, name: nameRef.current || "Someone", updated_at: now });
+    await sb.from("v2_voters").upsert({
+      voter_id: voterIdRef.current,
+      name: nameRef.current || "Someone",
+      display_name: nameRef.current || null,
+      updated_at: now,
+    });
   }, []);
 
   const setCityVote = useCallback(
@@ -345,12 +433,14 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
       cityVotes,
       hotelVotes,
       availability,
-      saveName,
+      identityInvalid,
+      createIdentity,
+      signIn,
       setCityVote,
       setHotelPref,
       setAvailability: setAvailabilityFor,
     }),
-    [ready, voterId, name, voters, cityVotes, hotelVotes, availability, saveName, setCityVote, setHotelPref, setAvailabilityFor],
+    [ready, voterId, name, voters, cityVotes, hotelVotes, availability, identityInvalid, createIdentity, signIn, setCityVote, setHotelPref, setAvailabilityFor],
   );
 
   return <GroupDataContext.Provider value={value}>{children}</GroupDataContext.Provider>;
