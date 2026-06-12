@@ -1,6 +1,6 @@
 # BAR HOPPERS /app — CONTEXT (single source of truth)
 
-Last updated: 2026-06-12 · Phase: profile overlay (Prompt 3), pending first deploy
+Last updated: 2026-06-12 · Phase: admin hardening + back-nav fixes, pending first deploy
 
 ## What this app is
 
@@ -36,10 +36,11 @@ Bar Hoppers is a mobile-first Next.js webapp a small group of friends (~6–10 p
   verify the PIN to load their voter_id onto the device. No lockout, no
   complexity — wrong PIN just says "PIN doesn't match. Try again." ONE
   sanctioned plain-text exception (Prompt 3 spec): a PIN changed from the
-  profile overlay also writes `v2_voters.pin_plain` so a forgotten PIN can be
-  recovered; it is NEVER read for verification (sign-in and the profile
-  confirmation always compare against `pin_hash`). Registration and sign-in
-  do not write it.
+  profile overlay or reset from the admin edit modal also writes
+  `v2_voters.pin_plain` so a forgotten PIN can be recovered — the admin user
+  list displays it in plain text; it is NEVER read for verification (sign-in
+  and the profile confirmation always compare against `pin_hash`).
+  Registration and sign-in do not write it.
 - Pin colors are AUTO-ASSIGNED at registration — never user-selectable,
   never changeable. The Nth registered voter gets the Nth entry of the
   25-color `PIN_COLORS` pool in `lib/colors.ts` (`assignColor(count)`,
@@ -143,11 +144,14 @@ app/
   │ │                        + 1s raised row flash); no color picker —
   │ │                        auto-assigned
   │ ├ admin/page.tsx         ADMIN (3s long-press on Locate icon ONLY): user
-  │ │                        cards (hashed-PIN status via eye toggle, last
-  │ │                        vote, edit modal w/ PIN reset + cascade
-  │ │                        delete), reset votes / reset availability,
-  │ │                        active-location list + force expire,
-  │ │                        data-health count grid + refresh
+  │ │                        cards always plain-visible (name, pin_plain or
+  │ │                        "PIN not set", last vote — NO eye toggle),
+  │ │                        pencil edit modal (rename + PIN reset writing
+  │ │                        pin_hash AND pin_plain), red row delete →
+  │ │                        confirm → ordered cascade delete, reset votes /
+  │ │                        reset availability, active-location list +
+  │ │                        force expire, data-health count grid + refresh,
+  │ │                        DANGER ZONE wipe-all users (type-DELETE sheet)
   │ └ not-found.tsx          404
   ├ components/
   │ ├ AppShell.tsx           4 tabs (Cities/Availability/Results/Locate),
@@ -187,8 +191,10 @@ app/
   │ │                        changed fields, masked PINs w/ eyeball,
   │ │                        updateProfile), "Switch identity" sign-out
   │ │                        behind a BottomSheet confirm; closes on back
-  │ │                        arrow / Esc / header swipe-down; body mounts
-  │ │                        only while open
+  │ │                        arrow / Esc / header swipe-down / device back
+  │ │                        button (dummy history entry + popstate;
+  │ │                        in-app closes pop it, deep links replace it);
+  │ │                        body mounts only while open
   │ ├ Dialog.tsx             centered modal over scrim (esc/backdrop, scroll lock)
   │ ├ BottomSheet.tsx        slide-up sheet (sort options, venues, breakdowns)
   │ └ Icon.tsx               Material Symbol primitive
@@ -237,6 +243,9 @@ app/
   │ │                        nullable lat/lng), CityVenues, EMPTY_VENUES
   │ ├ maps.ts                Maps loader (no extra libs), single dark style,
   │ │                        PIN_COLORS, BASE_MAP_OPTIONS
+  │ ├ scrollLock.ts          counter-based body scroll lock shared by every
+  │ │                        overlay (safe when stacked overlays unmount
+  │ │                        in the same commit)
   │ └ format.ts              local-time date keys, month grid, labels
   └ data/
     ├ types.ts               City (id/name/state/miles/drive/walkScore/
@@ -256,12 +265,12 @@ CREATE TABLE v2_voters (
   name         text not null check (char_length(name) between 1 and 20),
   display_name text,        -- "Nick B"; null on legacy rows (fall back to name)
   pin_hash     text,        -- bcrypt hash of the 2-digit PIN; verification ALWAYS uses this
-  pin_plain    text,        -- plain copy written ONLY by profile PIN changes (recovery; never verified against)
+  pin_plain    text,        -- plain copy written by profile PIN changes + admin PIN resets (recovery/admin display; never verified against)
   pin_color    text not null default '#FF8C42',  -- auto-assigned pool color; never user-set
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()
 );
--- RLS: anon SELECT/INSERT/UPDATE
+-- RLS: anon SELECT/INSERT/UPDATE/DELETE (DELETE added 2026-06-12 for admin user management)
 
 CREATE TABLE v2_city_votes (
   voter_id   uuid not null references v2_voters(voter_id),
@@ -357,6 +366,18 @@ lockout anyway:
 
 ```sql
 ALTER TABLE v2_voters ADD COLUMN IF NOT EXISTS pin_plain text;
+```
+
+2026-06-12 voters-delete migration (applied live via MCP,
+`allow_anon_delete_v2_voters`; idempotent — safe to re-run in the Supabase
+SQL editor). v2_voters was the ONLY v2 user table with no anon DELETE
+policy, which made the admin cascade delete a silent no-op (child rows went,
+the voter row survived and the user reappeared on refetch). Required by both
+the per-user delete and the wipe-all action:
+
+```sql
+DROP POLICY IF EXISTS v2_voters_delete ON public.v2_voters;
+CREATE POLICY v2_voters_delete ON public.v2_voters FOR DELETE TO anon USING (true);
 ```
 
 ## localStorage contract
@@ -460,7 +481,51 @@ See PROGRESS.md.
 
 ## Current state
 
-- Last change (2026-06-12, profile-overlay session / Prompt 3): the avatar
+- Last change (2026-06-12, admin-hardening + back-nav session): four
+  targeted fixes, nothing else. (1) ProfileOverlay intercepts the
+  device/browser back button: opening pushes a dummy `{ profile: true }`
+  history entry and listens for popstate, so Android back / browser back
+  closes the overlay instead of leaving the app. In-app closes (back arrow,
+  Escape, header swipe, sign-out confirm) call history.back() to pop the
+  dummy entry — the popstate then closes the overlay — keeping the stack
+  clean; the Go vote / Mark dates deep links instead router.replace the
+  dummy entry with the destination (popping first would race the push), so
+  Back from there returns to the page the overlay was opened from. (2)
+  Admin user cards are always plain-visible — the eyeball toggle and all
+  reveal state are deleted. Each card: display name (Title/--ink), "PIN:
+  [pin_plain]" or "PIN not set" (--ink-dim), "Last voted: [city]" or "No
+  vote" (Meta/--ink-dim), 44px pencil edit + NEW 44px red delete button.
+  The edit modal's PIN reset now writes pin_plain alongside pin_hash so the
+  displayed PIN stays truthful; the modal's embedded "Delete user" flow
+  moved out to the row delete button (modal is rename/PIN-reset only now).
+  (3) Cascade delete actually works: root cause was v2_voters having NO
+  anon DELETE RLS policy (the only v2 user table without one) — added live
+  via MCP (`allow_anon_delete_v2_voters`, see migration log). deleteUser
+  deletes explicitly in FK order — v2_locations → v2_availability →
+  v2_hotel_votes → v2_city_votes → v2_voters — each step awaited, then
+  refetches the list without a reload; the confirm dialog ("Delete [name]?
+  This removes all their votes, availability, and location data. Cannot be
+  undone." / Cancel / red Delete) stays. (4) Admin scroll fixed at the real
+  root cause: the old save-and-restore body scroll lock broke when two
+  stacked overlays unmounted in the same commit (edit dialog + its nested
+  confirm) — the second cleanup restored "hidden" and the page locked
+  forever. Dialog, BottomSheet, and ProfileOverlay now share a
+  counter-based lock (new lib/scrollLock.ts: lockBodyScroll /
+  unlockBodyScroll); the admin content wrapper also gained pb-32 so the
+  last section clears the bottom nav. (5) NEW DANGER ZONE section below
+  DATA HEALTH: full-width red-bordered "Wipe All Users" button (warning
+  icon, bg-raised) opens a BottomSheet — red "Wipe All Users" heading,
+  warning copy, "Type DELETE to confirm" input (44px,
+  autoCapitalize="characters", no autocorrect/autocomplete), full-width
+  text Cancel, and a red filled "Wipe Everything" button disabled until the
+  input is exactly "DELETE" (case-sensitive). Confirming deletes every row
+  from the five user tables in the same FK order (`.neq(voter_id,
+  nil-uuid)` filters), closes the sheet, refetches (list now empty), and
+  shows "All users wiped." centered in the users section for 4s. Voting
+  logic, availability calendar, city list/detail, Results, locate, and the
+  root index.html untouched. Build green — 36 static pages; lint + strict
+  typecheck clean.
+- Earlier (2026-06-12, profile-overlay session / Prompt 3): the avatar
   tap finally goes somewhere. New `components/ProfileOverlay.tsx` — a
   full-screen sheet (anim-sheet slide-up over everything incl. the tab bar,
   --bg background, z-50, NOT a route) opened from the AppShell avatar
@@ -729,6 +794,6 @@ See PROGRESS.md.
   NEXT_PUBLIC_ env vars (optional — fallbacks baked), restrict the Google
   Maps key to the deploy domain, and confirm the key has the Maps JavaScript
   API enabled with billing (Geocoding and Places APIs are no longer needed).
-  Possible follow-up: surface pin_plain in the admin user cards so a
-  forgotten PIN can actually be read back (today the column fills only when
-  someone changes their PIN from the profile).
+  (pin_plain now surfaces in the admin user cards; it still only fills when
+  a PIN is changed from the profile or reset from the admin edit modal —
+  everyone else shows "PIN not set" even though their hashed PIN works.)

@@ -5,8 +5,9 @@
 // location oversight, and data health counts.
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { hash as hashPin } from "bcryptjs";
+import { BottomSheet } from "@/components/BottomSheet";
 import { Dialog } from "@/components/Dialog";
 import { Icon } from "@/components/Icon";
 import { cityById } from "@/data/cities";
@@ -17,7 +18,8 @@ interface AdminVoter {
   voter_id: string;
   name: string;
   display_name: string | null;
-  pin_hash: string | null;
+  /** Recovery copy of the 2-digit PIN — null until a profile/admin PIN change writes it. */
+  pin_plain: string | null;
   created_at: string | null;
 }
 
@@ -52,6 +54,10 @@ const LOCATION_COLUMNS =
 // PostgREST refuses an unfiltered DELETE — every row matches this instead.
 const ALL_ROWS = "1970-01-01";
 
+// The wipe-all deletes hit every real row by excluding the nil uuid.
+const NIL_UUID = "00000000-0000-0000-0000-000000000000";
+const WIPED_FLASH_MS = 4000; // "All users wiped." dwell in the users section
+
 function voterLabel(v: AdminVoter): string {
   return v.display_name ?? v.name;
 }
@@ -81,22 +87,24 @@ async function countRows(table: string, onlyActive = false): Promise<number | nu
   }
 }
 
-/** 44px icon button used for the eye / pencil / refresh actions. */
+/** 44px icon button used for the pencil / delete / refresh actions. */
 function IconButton({
   name,
   label,
   onClick,
+  className = "text-ink-dim hover:text-ink",
 }: {
   name: string;
   label: string;
   onClick: () => void;
+  className?: string;
 }) {
   return (
     <button
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="flex h-11 w-11 flex-none items-center justify-center rounded-btn text-ink-dim transition hover:bg-raised hover:text-ink"
+      className={`flex h-11 w-11 flex-none items-center justify-center rounded-btn transition hover:bg-raised ${className}`}
     >
       <Icon name={name} size={22} />
     </button>
@@ -114,7 +122,7 @@ function FieldError({ children }: { children: string }) {
 interface EditUserDialogProps {
   voter: AdminVoter;
   onClose: () => void;
-  /** Saved or deleted — the page refetches either way. */
+  /** Saved — the page refetches. */
   onChanged: () => void;
 }
 
@@ -133,7 +141,6 @@ function EditUserDialog({ voter, onClose, onChanged }: EditUserDialogProps) {
     pin?: string;
     save?: string;
   }>({});
-  const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const save = async () => {
@@ -160,8 +167,12 @@ function EditUserDialog({ voter, onClose, onChanged }: EditUserDialogProps) {
         display_name: displayName,
         updated_at: nowIso,
       };
-      // Blank PIN keeps the existing hash; a new PIN resets it.
-      if (newPin) patch.pin_hash = await hashPin(newPin, 10);
+      // Blank PIN keeps the existing PIN; a new one resets the hash and the
+      // recovery copy the user list displays.
+      if (newPin) {
+        patch.pin_hash = await hashPin(newPin, 10);
+        patch.pin_plain = newPin;
+      }
       const { error } = await sb.from("v2_voters").update(patch).eq("voter_id", voter.voter_id);
       if (error) throw error;
       // Keep the denormalized name on any live location row in sync.
@@ -178,133 +189,75 @@ function EditUserDialog({ voter, onClose, onChanged }: EditUserDialogProps) {
     setBusy(false);
   };
 
-  const deleteUser = async () => {
-    if (busy) return;
-    const sb = getSupabase();
-    if (!sb) return;
-    setBusy(true);
-    try {
-      // Votes, availability, and location first — v2_voters last so a failed
-      // step never strands child rows behind a missing voter.
-      for (const table of ["v2_city_votes", "v2_hotel_votes", "v2_availability", "v2_locations"]) {
-        await sb.from(table).delete().eq("voter_id", voter.voter_id);
-      }
-      await sb.from("v2_voters").delete().eq("voter_id", voter.voter_id);
-      onChanged();
-      onClose();
-      return;
-    } catch {
-      setConfirming(false);
-      setErrors({ save: "Couldn't delete. Try again." });
-    }
-    setBusy(false);
-  };
-
   return (
-    <>
-      <Dialog open onClose={onClose} title={`Edit ${label}`}>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            void save();
-          }}
-          className="flex flex-col gap-3"
-        >
-          <div className="flex flex-col gap-1">
-            <input
-              className="input"
-              placeholder="First name"
-              autoComplete="off"
-              value={first}
-              maxLength={MAX_FIRST_NAME_LENGTH}
-              onChange={(e) => setFirst(e.target.value)}
-              aria-label="First name"
-            />
-            {errors.first && <FieldError>{errors.first}</FieldError>}
-          </div>
-          <div className="flex flex-col gap-1">
-            <input
-              className="input"
-              placeholder="Initial"
-              autoComplete="off"
-              autoCapitalize="characters"
-              value={initial}
-              maxLength={1}
-              onChange={(e) =>
-                setInitial(e.target.value.replace(/[^A-Za-z]/g, "").slice(0, 1).toUpperCase())
-              }
-              aria-label="Last initial"
-            />
-            {errors.initial && <FieldError>{errors.initial}</FieldError>}
-          </div>
-          <div className="flex flex-col gap-1">
+    <Dialog open onClose={onClose} title={`Edit ${label}`}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void save();
+        }}
+        className="flex flex-col gap-3"
+      >
+        <div className="flex flex-col gap-1">
+          <input
+            className="input"
+            placeholder="First name"
+            autoComplete="off"
+            value={first}
+            maxLength={MAX_FIRST_NAME_LENGTH}
+            onChange={(e) => setFirst(e.target.value)}
+            aria-label="First name"
+          />
+          {errors.first && <FieldError>{errors.first}</FieldError>}
+        </div>
+        <div className="flex flex-col gap-1">
+          <input
+            className="input"
+            placeholder="Initial"
+            autoComplete="off"
+            autoCapitalize="characters"
+            value={initial}
+            maxLength={1}
+            onChange={(e) =>
+              setInitial(e.target.value.replace(/[^A-Za-z]/g, "").slice(0, 1).toUpperCase())
+            }
+            aria-label="Last initial"
+          />
+          {errors.initial && <FieldError>{errors.initial}</FieldError>}
+        </div>
+        <div className="flex flex-col gap-1">
+          <input
+            className="input"
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            placeholder="New PIN (blank keeps current)"
+            value={newPin}
+            maxLength={2}
+            onChange={(e) => setNewPin(e.target.value.replace(/\D/g, "").slice(0, 2))}
+            aria-label="New 2-digit PIN"
+          />
+          {newPin && (
             <input
               className="input"
               type="text"
               inputMode="numeric"
               autoComplete="off"
-              placeholder="New PIN (blank keeps current)"
-              value={newPin}
+              placeholder="Confirm new PIN"
+              value={confirmPin}
               maxLength={2}
-              onChange={(e) => setNewPin(e.target.value.replace(/\D/g, "").slice(0, 2))}
-              aria-label="New 2-digit PIN"
+              onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, 2))}
+              aria-label="Confirm new 2-digit PIN"
             />
-            {newPin && (
-              <input
-                className="input"
-                type="text"
-                inputMode="numeric"
-                autoComplete="off"
-                placeholder="Confirm new PIN"
-                value={confirmPin}
-                maxLength={2}
-                onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, 2))}
-                aria-label="Confirm new 2-digit PIN"
-              />
-            )}
-            {errors.pin && <FieldError>{errors.pin}</FieldError>}
-          </div>
-          {errors.save && <FieldError>{errors.save}</FieldError>}
-          <button type="submit" className="btn-accent w-full" disabled={busy}>
-            Save changes
-          </button>
-          <button
-            type="button"
-            onClick={() => setConfirming(true)}
-            className="h-11 text-base font-semibold text-red"
-            disabled={busy}
-          >
-            Delete user
-          </button>
-        </form>
-      </Dialog>
-
-      {confirming && (
-        <Dialog open onClose={() => setConfirming(false)} title={`Delete ${label}?`}>
-          <p className="text-base font-normal text-ink-muted">
-            This removes all their votes, availability, and location data. Cannot be undone.
-          </p>
-          <div className="mt-4 flex gap-3">
-            <button
-              type="button"
-              className="btn-ghost flex-1"
-              onClick={() => setConfirming(false)}
-              disabled={busy}
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              className="btn flex-1 bg-red text-bg hover:brightness-110"
-              onClick={() => void deleteUser()}
-              disabled={busy}
-            >
-              Delete
-            </button>
-          </div>
-        </Dialog>
-      )}
-    </>
+          )}
+          {errors.pin && <FieldError>{errors.pin}</FieldError>}
+        </div>
+        {errors.save && <FieldError>{errors.save}</FieldError>}
+        <button type="submit" className="btn-accent w-full" disabled={busy}>
+          Save changes
+        </button>
+      </form>
+    </Dialog>
   );
 }
 
@@ -341,9 +294,22 @@ export default function AdminPage() {
   const [cityVotes, setCityVotes] = useState<CityVoteLite[]>([]);
   const [locations, setLocations] = useState<LocationRow[]>([]);
   const [stats, setStats] = useState<Stats>(EMPTY_STATS);
-  const [revealed, setRevealed] = useState<Record<string, boolean>>({});
   const [editing, setEditing] = useState<AdminVoter | null>(null);
+  const [deleting, setDeleting] = useState<AdminVoter | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
   const [confirmReset, setConfirmReset] = useState<"votes" | "availability" | null>(null);
+  const [wipeOpen, setWipeOpen] = useState(false);
+  const [wipeText, setWipeText] = useState("");
+  const [wipeBusy, setWipeBusy] = useState(false);
+  const [wiped, setWiped] = useState(false);
+  const wipedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (wipedTimer.current) clearTimeout(wipedTimer.current);
+    },
+    [],
+  );
 
   const nowMs = Date.now();
 
@@ -370,7 +336,7 @@ export default function AdminPage() {
 
   const refreshAll = useCallback(async () => {
     const [v, cv, loc] = await Promise.all([
-      safeSelect<AdminVoter>("v2_voters", "voter_id,name,display_name,pin_hash,created_at"),
+      safeSelect<AdminVoter>("v2_voters", "voter_id,name,display_name,pin_plain,created_at"),
       safeSelect<CityVoteLite>("v2_city_votes", "voter_id,city_id"),
       safeSelect<LocationRow>("v2_locations", LOCATION_COLUMNS),
     ]);
@@ -443,6 +409,66 @@ export default function AdminPage() {
     void refreshAll();
   };
 
+  // Cascade delete, child tables first in FK-dependency order, each step
+  // awaited before the next, v2_voters last — never a single cascade call.
+  const deleteUser = useCallback(
+    async (voterId: string) => {
+      const sb = getSupabase();
+      if (sb) {
+        try {
+          await sb.from("v2_locations").delete().eq("voter_id", voterId);
+          await sb.from("v2_availability").delete().eq("voter_id", voterId);
+          await sb.from("v2_hotel_votes").delete().eq("voter_id", voterId);
+          await sb.from("v2_city_votes").delete().eq("voter_id", voterId);
+          await sb.from("v2_voters").delete().eq("voter_id", voterId);
+        } catch {
+          // a partial delete surfaces in the refreshed list
+        }
+      }
+      await refreshAll();
+    },
+    [refreshAll],
+  );
+
+  const confirmDeleteUser = async () => {
+    if (!deleting || deleteBusy) return;
+    setDeleteBusy(true);
+    await deleteUser(deleting.voter_id);
+    setDeleteBusy(false);
+    setDeleting(null);
+  };
+
+  const closeWipeSheet = () => {
+    if (wipeBusy) return;
+    setWipeOpen(false);
+    setWipeText("");
+  };
+
+  // The nuclear option — same table order as deleteUser, but every row goes.
+  const wipeAllUsers = async () => {
+    if (wipeBusy || wipeText !== "DELETE") return;
+    setWipeBusy(true);
+    const sb = getSupabase();
+    if (sb) {
+      try {
+        await sb.from("v2_locations").delete().neq("voter_id", NIL_UUID);
+        await sb.from("v2_availability").delete().neq("voter_id", NIL_UUID);
+        await sb.from("v2_hotel_votes").delete().neq("voter_id", NIL_UUID);
+        await sb.from("v2_city_votes").delete().neq("voter_id", NIL_UUID);
+        await sb.from("v2_voters").delete().neq("voter_id", NIL_UUID);
+      } catch {
+        // a partial wipe surfaces in the refreshed list
+      }
+    }
+    await refreshAll();
+    setWipeBusy(false);
+    setWipeOpen(false);
+    setWipeText("");
+    setWiped(true);
+    if (wipedTimer.current) clearTimeout(wipedTimer.current);
+    wipedTimer.current = setTimeout(() => setWiped(false), WIPED_FLASH_MS);
+  };
+
   const statCells: { label: string; value: number | null }[] = [
     { label: "Registered users", value: stats.voters },
     { label: "Total votes cast", value: stats.cityVotes },
@@ -470,45 +496,44 @@ export default function AdminPage() {
         </div>
       </header>
 
-      <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-4">
-        {/* Section 1 — Registered users */}
+      <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 pb-32 pt-4">
+        {/* Section 1 — Registered users. Name, PIN, and last vote are always
+            plain visible text — no masking, no reveal toggle. */}
         <section className="flex flex-col gap-3">
           <h2 className="label">Registered users</h2>
-          {voters.length === 0 && (
-            <p className="text-meta font-normal text-ink-dim">No registered users.</p>
-          )}
+          {voters.length === 0 &&
+            (wiped ? (
+              <p className="py-4 text-center text-base text-ink-muted" role="status">
+                All users wiped.
+              </p>
+            ) : (
+              <p className="text-meta font-normal text-ink-dim">No registered users.</p>
+            ))}
           {voters.map((voter) => {
-            const isRevealed = revealed[voter.voter_id] ?? false;
             const city = lastVoted(voter.voter_id);
             return (
               <div key={voter.voter_id} className="rounded-card border bg-surface p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-title text-ink">{voterLabel(voter)}</p>
-                    {isRevealed ? (
-                      <p className="mt-1 text-meta font-normal text-ink-dim">
-                        {voter.pin_hash ? "PIN set ✓" : "No PIN set"} — PINs are hashed and
-                        cannot be recovered. Use edit to reset.
-                      </p>
-                    ) : (
-                      <p className="mt-1 text-meta font-normal text-ink-dim">PIN: ••</p>
-                    )}
                     <p className="mt-1 text-meta font-normal text-ink-dim">
-                      {city ? `Last voted: ${city}` : "No vote cast"}
+                      {voter.pin_plain ? `PIN: ${voter.pin_plain}` : "PIN not set"}
+                    </p>
+                    <p className="mt-1 text-meta font-normal text-ink-dim">
+                      {city ? `Last voted: ${city}` : "No vote"}
                     </p>
                   </div>
                   <div className="flex flex-none">
                     <IconButton
-                      name={isRevealed ? "visibility_off" : "visibility"}
-                      label={isRevealed ? `Hide PIN status for ${voterLabel(voter)}` : `Show PIN status for ${voterLabel(voter)}`}
-                      onClick={() =>
-                        setRevealed((prev) => ({ ...prev, [voter.voter_id]: !isRevealed }))
-                      }
-                    />
-                    <IconButton
                       name="edit"
                       label={`Edit ${voterLabel(voter)}`}
                       onClick={() => setEditing(voter)}
+                    />
+                    <IconButton
+                      name="delete"
+                      label={`Delete ${voterLabel(voter)}`}
+                      className="text-red"
+                      onClick={() => setDeleting(voter)}
                     />
                   </div>
                 </div>
@@ -580,6 +605,19 @@ export default function AdminPage() {
             ))}
           </div>
         </section>
+
+        {/* Section 5 — Danger zone */}
+        <section className="flex flex-col gap-3">
+          <h2 className="label text-red">Danger zone</h2>
+          <button
+            type="button"
+            onClick={() => setWipeOpen(true)}
+            className="btn w-full border border-red bg-raised text-red"
+          >
+            <Icon name="warning" size={20} />
+            Wipe All Users
+          </button>
+        </section>
       </div>
 
       {editing && (
@@ -589,6 +627,78 @@ export default function AdminPage() {
           onChanged={() => void refreshAll()}
         />
       )}
+
+      {deleting && (
+        <Dialog
+          open
+          onClose={() => {
+            if (!deleteBusy) setDeleting(null);
+          }}
+          title={`Delete ${voterLabel(deleting)}?`}
+        >
+          <p className="text-base font-normal text-ink-muted">
+            This removes all their votes, availability, and location data. Cannot be undone.
+          </p>
+          <div className="mt-4 flex gap-3">
+            <button
+              type="button"
+              className="btn-ghost flex-1"
+              onClick={() => setDeleting(null)}
+              disabled={deleteBusy}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="btn flex-1 bg-red text-bg hover:brightness-110"
+              onClick={() => void confirmDeleteUser()}
+              disabled={deleteBusy}
+            >
+              Delete
+            </button>
+          </div>
+        </Dialog>
+      )}
+
+      <BottomSheet open={wipeOpen} onClose={closeWipeSheet} label="Wipe all users">
+        <div className="flex flex-col gap-3 px-1 pb-1">
+          <h2 className="text-title text-red">Wipe All Users</h2>
+          <p className="text-base font-normal text-ink-muted">
+            This permanently deletes every registered user and all their votes, availability,
+            hotel preferences, and location data. This cannot be undone.
+          </p>
+          <p className="text-base font-normal text-ink-muted">
+            Type DELETE in the field below to confirm.
+          </p>
+          <input
+            className="input"
+            placeholder="Type DELETE to confirm"
+            autoCapitalize="characters"
+            autoCorrect="off"
+            autoComplete="off"
+            spellCheck={false}
+            value={wipeText}
+            onChange={(e) => setWipeText(e.target.value)}
+            aria-label="Type DELETE to confirm"
+          />
+          <button
+            type="button"
+            onClick={closeWipeSheet}
+            disabled={wipeBusy}
+            className="flex h-11 w-full items-center justify-center text-base font-medium text-ink-muted"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => void wipeAllUsers()}
+            disabled={wipeText !== "DELETE" || wipeBusy}
+            className="btn w-full bg-red text-bg hover:brightness-110"
+          >
+            Wipe Everything
+          </button>
+        </div>
+      </BottomSheet>
 
       {confirmReset === "votes" && (
         <ConfirmResetDialog
