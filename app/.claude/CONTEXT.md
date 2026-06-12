@@ -1,6 +1,6 @@
 # BAR HOPPERS /app — CONTEXT (single source of truth)
 
-Last updated: 2026-06-12 · Phase: admin hardening + back-nav fixes, pending first deploy
+Last updated: 2026-06-12 · Phase: locate layout rebuild (right-side people strip), pending first deploy
 
 ## What this app is
 
@@ -96,7 +96,8 @@ icon-only left rail with tooltips):
   never an opacity modifier (`/90`), never `backdrop-blur`.
 - A single floating control sits just above the bottom nav (`ActionBar`):
   the sort pill on `/cities`, the full-width vote button on `/city/[id]`.
-  Nowhere else.
+  Nowhere else. (/locate's "Location Options" pill occupies the same visual
+  slot but is in normal flow below the map, not ActionBar.)
 
 ## File map
 
@@ -131,18 +132,22 @@ app/
   │ │                        CITIES (top 5, "See Votes" sheet) and HOT
   │ │                        DATES (top 5, "See Who" sheet) + top-3 hotel
   │ │                        section for the leading city + "Not you?" switch
-  │ ├ locate/page.tsx        LOCATE tab: registration gate, full-screen dark
+  │ ├ locate/page.tsx        LOCATE tab: registration gate, full-bleed dark
   │ │                        map (Ralston center, zoom 8, greedy gestures),
   │ │                        person pins (14px circle + name pill; own pin
-  │ │                        18px + amber ring, "You (name)"), controls card
-  │ │                        with SHARING (toggle + disclaimer) and — only
-  │ │                        while sharing is on — VISIBILITY ("Manage who
-  │ │                        sees you" mute list), draggable people panel
-  │ │                        (80px ↔ 50vh; rows = 20px color dot, accent-
-  │ │                        ringed for you, name, right-aligned "X min
-  │ │                        ago"; row tap → pan/zoom 15 + 400ms pin pulse
-  │ │                        + 1s raised row flash); no color picker —
-  │ │                        auto-assigned
+  │ │                        18px + amber ring, "You (name)"; not tappable),
+  │ │                        right-side people strip overlay (120px / 160px
+  │ │                        ≥640px, bg rgba(10,13,20,.85), border-l):
+  │ │                        pinned 44px "Show All" row (zoom_out_map +
+  │ │                        accent text; 1 sharer → pan/zoom 14, 2+ →
+  │ │                        fitBounds 40px, 0 → no-op) over sharers A–Z
+  │ │                        (44px rows on their pin_color, contrastColor
+  │ │                        text, own row 1.5px --ink border; tap →
+  │ │                        pan/zoom 15 + 400ms pin pulse), "Location
+  │ │                        Options" pill in normal flow between map and
+  │ │                        nav → BottomSheet (SHARING toggle +
+  │ │                        disclaimer; "Who can see me" mute toggles
+  │ │                        while sharing); no color picker — auto-assigned
   │ ├ admin/page.tsx         ADMIN (3s long-press on Locate icon ONLY): user
   │ │                        cards always plain-visible (name, pin_plain or
   │ │                        "PIN not set", last vote — NO eye toggle),
@@ -481,7 +486,42 @@ See PROGRESS.md.
 
 ## Current state
 
-- Last change (2026-06-12, admin-hardening + back-nav session): four
+- Last change (2026-06-12, locate-layout-rebuild session): the Locate
+  screen layout rebuilt — full-bleed map, right-side people strip, single
+  options pill. The old bottom drawer (drag handle, 80px↔50vh panel height
+  state, pointer drag handlers, row flash) and the inline ControlsCard are
+  completely deleted. The registered screen is a fixed flex column from
+  under the header to above the bottom nav: (1) the map container
+  (relative, flex-1) holds the full-bleed dark map — options unchanged
+  (Ralston center 41.172/-96.1358, zoom 8, greedy gestures,
+  disableDefaultUI, clickableIcons false, dark style) — with the people
+  strip overlaid absolute right-0 inset-y-0 (120px wide, 160px ≥640px,
+  rgba(10,13,20,.85) bg, 1px --border left hairline, z-10). Strip content:
+  a pinned 44px "Show All" row on top (--surface-raised, border-b,
+  centered 16px zoom_out_map icon + 12px/600 accent text; tap = no-op with
+  0 sharers, panTo + zoom 14 with exactly 1, fitBounds with 40px padding
+  with 2+), then a scrollable list of every active sharer A–Z by
+  display_name — each row min 44px, px-2, filled with their
+  v2_locations.pin_color, contrastColor() text (12px Label voice,
+  truncated), own row wears a 1.5px --ink border; row tap pans/zooms 15 +
+  400ms pin pulse (same mechanic, now driven by one MapCommand state:
+  fly | showAll). Empty state: a single 44px "No one sharing" row
+  (--ink-dim). Map pins no longer take taps (the row-highlight behavior
+  died with the drawer) — markers are clickable: false. (2) Below the map
+  container, in normal flow (not fixed/absolute, not ActionBar), the
+  single "Location Options" pill (btn-ghost: 44px, full width minus 32px
+  margins, --surface-raised bg, --border border, --ink text, 8px radius,
+  tune icon) opens a BottomSheet: title + close button top right, SHARING
+  (toggle + "This only affects Bar Hoppers..." disclaimer + the inline
+  denied/error copy), and — only while sharing is on — "Who can see me":
+  every registered user except self, A–Z, as 44px rows (16px pin_color
+  dot, name, "Hide from [name]" toggle wired to muteUser/unmuteUser →
+  muted_ids). No Save/Cancel — writes stay immediate/optimistic.
+  Registration gate untouched; useLocations untouched. AppShell, voting,
+  availability calendar, city list/detail, Results, admin, and the root
+  index.html untouched. Build green — 36 static pages; lint + strict
+  typecheck clean.
+- Earlier (2026-06-12, admin-hardening + back-nav session): four
   targeted fixes, nothing else. (1) ProfileOverlay intercepts the
   device/browser back button: opening pushes a dummy `{ profile: true }`
   history entry and listens for popstate, so Android back / browser back
