@@ -1,40 +1,29 @@
 last_updated: 2026-06-12
 last_session: >-
-  Admin hardening + back-nav fixes (four targeted fixes). (1)
-  ProfileOverlay intercepts the device/browser back button: opening pushes
-  a dummy { profile: true } history entry + popstate listener so Android
-  back / browser back closes the overlay instead of leaving the app;
-  in-app closes (back arrow / Escape / header swipe / sign-out) pop the
-  dummy entry via history.back() to keep the stack clean; Go vote / Mark
-  dates router.replace the dummy entry with the destination (popping
-  first would race the push). (2) Admin user cards are always
-  plain-visible — eyeball toggle and reveal state deleted; each card shows
-  display name, "PIN: [pin_plain]" or "PIN not set", "Last voted: [city]"
-  or "No vote", 44px pencil edit + new 44px red delete button; the edit
-  modal's PIN reset now also writes pin_plain so the displayed PIN stays
-  truthful, and its embedded delete flow moved out to the row button. (3)
-  Cascade delete fixed at the root: v2_voters had NO anon DELETE RLS
-  policy (only v2 user table without one) so the voter row silently
-  survived — policy added live via MCP (allow_anon_delete_v2_voters);
-  deleteUser deletes explicitly in FK order v2_locations → v2_availability
-  → v2_hotel_votes → v2_city_votes → v2_voters, each awaited, then
-  refetches without reload; confirm dialog (Cancel / red Delete) stays.
-  (4) Admin scroll fixed at the root: the save-and-restore body scroll
-  lock left body overflow stuck on "hidden" when stacked overlays
-  unmounted in one commit — Dialog/BottomSheet/ProfileOverlay now share a
-  counter-based lock (new lib/scrollLock.ts); admin content wrapper gained
-  pb-32 so the last section clears the bottom nav. (5) New DANGER ZONE
-  section below DATA HEALTH: red-bordered "Wipe All Users" (warning icon)
-  opens a BottomSheet with a "Type DELETE to confirm" input
-  (autoCapitalize, no autocorrect/autocomplete), text Cancel, and a red
-  filled "Wipe Everything" disabled until the input === "DELETE"
-  (case-sensitive); confirming wipes the five user tables in the same FK
-  order (.neq nil-uuid), closes the sheet, refetches, and shows "All
-  users wiped." centered in the users section for 4s. Voting,
-  availability calendar, city list/detail, Results, locate, root
-  index.html untouched. Build green (36 static pages), lint + strict
-  typecheck clean.
-current_phase: admin_hardening_and_back_nav
+  Locate screen layout rebuilt. The bottom drawer (drag handle, 80px↔50vh
+  panel height state, pointer drag handlers, row flash) and the inline
+  controls card are completely deleted. The registered screen is now a
+  fixed flex column (under the header → above the bottom nav): a full-bleed
+  dark map (same options: Ralston center, zoom 8, greedy gestures,
+  disableDefaultUI, clickableIcons false) with a right-side people strip
+  overlaid absolute right-0 inset-y-0 (120px / 160px ≥640px,
+  rgba(10,13,20,.85) bg, --border left hairline) — pinned 44px "Show All"
+  row on top (--surface-raised, zoom_out_map + accent 12px/600 text; 0
+  sharers no-op, 1 panTo + zoom 14, 2+ fitBounds w/ 40px padding) over a
+  scrollable A–Z list of active sharers (44px rows filled with their
+  pin_color, contrastColor() text, own row 1.5px --ink border, tap →
+  pan/zoom 15 + 400ms pin pulse; empty state "No one sharing"). Map pins
+  are clickable:false now that the drawer's row-highlight is gone. Below
+  the map, in normal flow, the single "Location Options" pill (btn-ghost,
+  44px, tune icon) opens a BottomSheet with a close button: SHARING
+  (toggle + disclaimer + inline denied/error copy) and, while sharing is
+  on, "Who can see me" — every other registered user A–Z with a 16px
+  pin_color dot and a "Hide from [name]" toggle wired to muted_ids. No
+  Save/Cancel — writes stay immediate/optimistic. Registration gate and
+  useLocations untouched. AppShell, voting, availability, city
+  list/detail, Results, admin, root index.html untouched. Build green (36
+  static pages), lint + strict typecheck clean.
+current_phase: locate_layout_rebuild
 build_complete: true
 supabase_schema_deployed: true
 vercel_deployed: false
@@ -91,6 +80,14 @@ known_issues:
   - Switch-identity sign-out leaves an active v2_locations row sharing until
     it expires or the same person signs back in and toggles off (admin Force
     expire also works)
+  - Locate "Show All" fitBounds uses a flat 40px padding (per spec), which
+    doesn't account for the 120/160px people strip — a fitted pin can land
+    under the strip on the right edge
+  - Locate map pins are no longer tappable — the pin-tap row highlight was
+    removed along with the bottom drawer; the strip is the only way to
+    target a person
+  - Long display names truncate hard in the 120px strip on mobile (12px
+    Label voice, ellipsis)
 next_up:
   - Backfill lat/lng for the 206 venue rows in the Supabase SQL editor
   - Create Vercel project with root directory app/ and deploy
