@@ -8,18 +8,11 @@ export interface MessageRow {
   created_at: string;
 }
 
-export interface ReactionRow {
-  message_id: string;
-  voter_id: string;
-  emoji: string;
-  created_at: string;
-}
+import type { MessageReactionRow } from "@/lib/supabase";
 
-export interface ReadRow {
-  message_id: string;
-  voter_id: string;
-  read_at: string;
-}
+export type { MessageReactionRow as ReactionRow, MessageReadRow as ReadRow } from "@/lib/supabase";
+
+type ReactionRow = MessageReactionRow;
 
 export const CHAT_PAGE_SIZE = 50;
 

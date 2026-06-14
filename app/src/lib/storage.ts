@@ -1,5 +1,46 @@
 import { getSupabase } from "@/lib/supabase";
 
+export function lsGet(key: string): string | null {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+export function lsSet(key: string, value: string): void {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // storage unavailable
+  }
+}
+
+export function lsRemove(key: string): void {
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+    // storage unavailable
+  }
+}
+
+export function lsGetJson<T>(key: string): T | null {
+  try {
+    const raw = lsGet(key);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function lsSetJson(key: string, value: unknown): void {
+  try {
+    lsSet(key, JSON.stringify(value));
+  } catch {
+    // storage unavailable
+  }
+}
+
 const BUCKET = "hoppz-media";
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 

@@ -5,11 +5,13 @@ import { useEffect, useState } from "react";
 import { hash as hashPin } from "bcryptjs";
 import { ActiveLocationsPanel } from "@/components/ActiveLocationsPanel";
 import { Avatar } from "@/components/Avatar";
+import { FieldError } from "@/components/FieldError";
 import { Icon } from "@/components/Icon";
 import { RoleBadge } from "@/components/RoleBadge";
 import { TripResetsPanel } from "@/components/TripResetsPanel";
 import { TripSetupPanel } from "@/components/TripSetupPanel";
 import { useGroupData } from "@/hooks/useGroupData";
+import { useLocations } from "@/hooks/useLocations";
 import { useTripData } from "@/hooks/useTripData";
 import { MAX_FIRST_NAME_LENGTH, buildDisplayName, isValidPin } from "@/lib/identity";
 import {
@@ -54,14 +56,6 @@ function TripStatusButtons({
         );
       })}
     </div>
-  );
-}
-
-function FieldError({ children }: { children: string }) {
-  return (
-    <p className="text-[12px] font-medium text-red" role="alert">
-      {children}
-    </p>
   );
 }
 
@@ -342,6 +336,7 @@ function CrewCard({ voter, tripStatus, onTripStatusChange, onNameSaved }: CrewCa
 export default function ModeratorPage() {
   const router = useRouter();
   const { voterId, voters } = useGroupData();
+  const { activeLocations } = useLocations();
   const { members, setMemberStatus } = useTripData();
   const myRow = voters.find((v) => v.voter_id === voterId);
   const myRole = getRoleForVoter(voterId, myRow?.role ?? null);
@@ -432,7 +427,7 @@ export default function ModeratorPage() {
         </section>
 
         {/* Section 4 — Active Locations */}
-        <ActiveLocationsPanel />
+        <ActiveLocationsPanel locations={activeLocations} />
 
         {/* Section 5 — Trip Resets */}
         <TripResetsPanel />

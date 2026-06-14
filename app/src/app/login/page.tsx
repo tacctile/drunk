@@ -5,18 +5,11 @@ import { useRouter } from "next/navigation";
 import { useGroupData } from "@/hooks/useGroupData";
 import { isAuthenticated, mirrorAuthCookie, setLastWing } from "@/lib/auth";
 import { isValidPin, MAX_FIRST_NAME_LENGTH } from "@/lib/identity";
+import { FieldError } from "@/components/FieldError";
 
 interface InstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
-
-function FieldError({ children }: { children: string }) {
-  return (
-    <p className="text-[12px] font-medium text-red" role="alert">
-      {children}
-    </p>
-  );
 }
 
 export default function LoginPage() {

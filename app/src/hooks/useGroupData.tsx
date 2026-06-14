@@ -33,37 +33,16 @@ import {
   storeIdentity,
   storePinColor,
 } from "@/lib/identity";
+import { lsGetJson, lsSetJson, lsRemove } from "@/lib/storage";
 
-// Silent-fallback caches. Every successful server write mirrors into these;
-// when Supabase is unreachable the app keeps working from them (the rest of
-// the group's data simply isn't visible until we're back online).
-const CITY_VOTE_CACHE = "bh2-city-vote-cache"; // CityVoteRow | null
-const HOTEL_VOTE_CACHE = "bh2-hotel-vote-cache"; // Record<cityId, HotelVoteRow>
-const AVAIL_CACHE = "bh2-avail-cache"; // Record<dateKey, status>
+const CITY_VOTE_CACHE = "bh2-city-vote-cache";
+const HOTEL_VOTE_CACHE = "bh2-hotel-vote-cache";
+const AVAIL_CACHE = "bh2-avail-cache";
 
-function readCache<T>(key: string): T | null {
-  try {
-    const raw = window.localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : null;
-  } catch {
-    return null;
-  }
-}
-
-function writeCache(key: string, value: unknown) {
-  try {
-    if (value === null) window.localStorage.removeItem(key);
-    else window.localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // storage unavailable — nothing to do, never surface it
-  }
-}
-
-/** Cached writes belong to the previous identity — drop them on switch. */
 function clearWriteCaches() {
-  writeCache(CITY_VOTE_CACHE, null);
-  writeCache(HOTEL_VOTE_CACHE, null);
-  writeCache(AVAIL_CACHE, null);
+  lsRemove(CITY_VOTE_CACHE);
+  lsRemove(HOTEL_VOTE_CACHE);
+  lsRemove(AVAIL_CACHE);
 }
 
 export type SignInResult = "ok" | "wrong-pin" | "error";
@@ -144,11 +123,11 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
       }
 
       const cv = serverCity ? [...serverCity] : [];
-      const cachedCity = readCache<CityVoteRow>(CITY_VOTE_CACHE);
+      const cachedCity = lsGetJson<CityVoteRow>(CITY_VOTE_CACHE);
       if (cachedCity && !cv.some((r) => r.voter_id === me)) cv.push({ ...cachedCity, voter_id: me });
 
       const hv = serverHotel ? [...serverHotel] : [];
-      const cachedHotel = readCache<Record<string, HotelVoteRow>>(HOTEL_VOTE_CACHE);
+      const cachedHotel = lsGetJson<Record<string, HotelVoteRow>>(HOTEL_VOTE_CACHE);
       if (cachedHotel) {
         for (const row of Object.values(cachedHotel)) {
           if (!hv.some((r) => r.voter_id === me && r.city_id === row.city_id)) {
@@ -158,7 +137,7 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
       }
 
       const av = serverAvail ? [...serverAvail] : [];
-      const cachedAvail = readCache<Record<string, "available" | "unavailable">>(AVAIL_CACHE);
+      const cachedAvail = lsGetJson<Record<string, "available" | "unavailable">>(AVAIL_CACHE);
       if (cachedAvail) {
         for (const [date, status] of Object.entries(cachedAvail)) {
           if (!av.some((r) => r.voter_id === me && r.date === date)) {
@@ -201,17 +180,17 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
     }
     if (sc) {
       const mine = sc.find((r) => r.voter_id === me);
-      writeCache(CITY_VOTE_CACHE, mine ?? null);
+      lsSetJson(CITY_VOTE_CACHE, mine ?? null);
     }
     if (sh) {
       const mine: Record<string, HotelVoteRow> = {};
       for (const r of sh) if (r.voter_id === me) mine[r.city_id] = r;
-      writeCache(HOTEL_VOTE_CACHE, mine);
+      lsSetJson(HOTEL_VOTE_CACHE, mine);
     }
     if (sa) {
       const mine: Record<string, string> = {};
       for (const r of sa) if (r.voter_id === me) mine[r.date] = r.status;
-      writeCache(AVAIL_CACHE, mine);
+      lsSetJson(AVAIL_CACHE, mine);
     }
     overlayLocal(sv, sc, sh, sa);
     setReady(true);
@@ -468,7 +447,7 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
         if (row) next.push(row);
         return next;
       });
-      writeCache(CITY_VOTE_CACHE, row);
+      lsSetJson(CITY_VOTE_CACHE, row);
 
       const sb = getSupabase();
       if (!sb) return;
@@ -502,10 +481,10 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
         if (row) next.push(row);
         return next;
       });
-      const cached = readCache<Record<string, HotelVoteRow>>(HOTEL_VOTE_CACHE) ?? {};
+      const cached = lsGetJson<Record<string, HotelVoteRow>>(HOTEL_VOTE_CACHE) ?? {};
       if (row) cached[cityId] = row;
       else delete cached[cityId];
-      writeCache(HOTEL_VOTE_CACHE, cached);
+      lsSetJson(HOTEL_VOTE_CACHE, cached);
 
       const sb = getSupabase();
       if (!sb) return;
@@ -528,10 +507,10 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
         if (status) next.push({ voter_id: me, date: dateKey, status });
         return next;
       });
-      const cached = readCache<Record<string, "available" | "unavailable">>(AVAIL_CACHE) ?? {};
+      const cached = lsGetJson<Record<string, "available" | "unavailable">>(AVAIL_CACHE) ?? {};
       if (status) cached[dateKey] = status;
       else delete cached[dateKey];
-      writeCache(AVAIL_CACHE, cached);
+      lsSetJson(AVAIL_CACHE, cached);
 
       const sb = getSupabase();
       if (!sb) return;

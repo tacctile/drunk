@@ -1,10 +1,5 @@
 # Hoppz — Project Context
 > Single source of truth for all Claude Code sessions. Read this before starting.
->
-> NOTE: This documents **v2 — the Next.js app under `app/`** (the live product).
-> The root `index.html` is the legacy v1 single-file app, kept for reference only;
-> both share the same Supabase project. When this doc and `index.html` disagree,
-> `app/` wins.
 
 ---
 
@@ -58,62 +53,91 @@ Key dirs:
   Admin long-press on Plan tab.
 - `components/HopShell.tsx` — hopp-wing shell: TopBar + children + HopNav.
   Used by `social/layout.tsx`.
-- `components/RoleBadge.tsx` — role badge pill (sm for inline lists, md for
-  profile hero). Renders crown/Admin for super_admin, shield/Moderator for
-  moderator. Returns null for null role.
-- `components/VoterProfileSheet.tsx` — BottomSheet showing read-only voter
-  profile: avatar, name, role badge, locate button (if sharing), about notes,
-  moderator toggle (super admin only).
-- `hooks/useAdminHold.ts` — hold hook shared by PlanNav, HopNav, and
-  ProfileAvatar. Accepts optional holdMs param (default 3000ms).
-- `hooks/useHopperz.ts` — data hook for Hopperz screen. Merges voters,
-  locations, roles, and note counts into HopperzVoter[]. Sorted: you first,
-  then A–Z. Trip status per voter (on_trip/remote/out), sorted by status group.
-- `hooks/useTrip.ts` — trip data hook: trip state, hotels, assignments,
-  members, realtime (channel "hoppz-trip"), mutations, date-based
-  status auto-transition. Single source of truth for all trip data.
-- `hooks/useTripData.tsx` — TripDataProvider + useTripData context hook.
-  Mounted in layout.tsx inside GroupDataProvider.
-- `hooks/useChat.ts` — chat data hook: messages, reactions, reads, realtime,
-  optimistic sends, pagination, markRead. Channel "hoppz-chat".
-- `hooks/useCamera.ts` — camera hook: getUserMedia, flip, capture (canvas →
-  JPEG data URL), retake, permission/error states. Returns videoRef.
-- `lib/chat.ts` — chat types (MessageRow, ReactionRow, ReadRow), helpers
-  (formatMessageTime, formatDayDivider, isDifferentDay, shouldGroup),
-  constants (CHAT_PAGE_SIZE = 50, GALLERY_PAGE_SIZE = 30, EMOJI_REACTIONS).
-- `lib/storage.ts` — Supabase storage helper. uploadChatImage(file) uploads
-  to hoppz-media bucket (path: chat/{timestamp}-{uuid}.{ext}), returns
-  UploadResult (ok+url or error). 10MB max, never throws. uploadAvatar(blob,
-  voterId) uploads to avatars/{voterId}.jpg with upsert.
-- `lib/roles.ts` — Role system: getRoleForVoter, isSuperAdmin, isModerator,
-  role labels/badges, moderator permissions/restrictions constants.
-- `components/Avatar.tsx` — Unified avatar component (photo or initials
-  fallback). Used by ProfileAvatar, ProfileOverlay, chat SenderAvatar,
-  Hopperz page, and VoterProfileSheet.
-- `components/AvatarCropper.tsx` — Canvas-based avatar crop overlay. Pinch
-  to zoom, drag to pan, circular mask, exports 400x400 JPEG.
-- `components/ProfileAvatar.tsx` — top-right avatar button. Moderators
-  (not super admin) get a 500ms long-press → /plan/moderator via useAdminHold(500).
-- `components/TripSetupPanel.tsx` — shared trip setup UI (city, dates,
-  hotels, assignments). Props: canClear (true for admin, false for mod).
-  Used by both /plan/admin and /plan/moderator.
-- `components/ActiveLocationsPanel.tsx` — shared active locations list
-  with force-expire. Self-contained (own fetch). Used by admin + moderator.
-- `components/TripResetsPanel.tsx` — shared reset votes / availability
-  buttons with confirmation dialogs. Used by admin + moderator.
-- `lib/push.ts` — Client-side push notification helpers: isPushSupported,
-  getNotificationPermission, subscribeToPush, getExistingSubscription,
-  unsubscribeFromPush, extractSubscriptionKeys. VAPID key from env var.
-- `lib/pushServer.ts` — Server-side push utility stubs: sendPushToVoter,
-  sendPushToAll. Typed but not functional until VAPID keys are configured
-  and web-push is installed.
-- `hooks/usePushNotifications.ts` — React hook: supported, permission,
-  subscribed, requesting, requestPermission(), unsubscribe(). Saves/removes
-  subscriptions in v2_push_subscriptions via Supabase.
-- `components/ImageViewer.tsx` — full-screen image viewer overlay. Fixed
-  inset-0, close/download buttons, escape key, body scroll lock, fade-in.
-- `components/Toast.tsx` — ephemeral notification for upload errors.
-  Fixed above HopNav, auto-dismiss after duration, fade in/out.
+
+### File map — shared primitives
+- `components/FieldError.tsx` — inline error text (`<p role="alert">`).
+- `components/Switch.tsx` — toggle switch (checked, onToggle, ariaLabel, disabled).
+- `components/Stars.tsx` — star rating display (count, max 5).
+- `components/Icon.tsx` — Material Symbols icon wrapper.
+- `components/Avatar.tsx` — unified avatar (photo or initials fallback).
+- `components/AvatarCropper.tsx` — canvas-based avatar crop overlay (pinch,
+  drag, circular mask, 400x400 JPEG export).
+- `components/BottomSheet.tsx` — slide-up modal sheet.
+- `components/Dialog.tsx` — centered modal dialog.
+- `components/Toast.tsx` — ephemeral notification above HopNav.
+- `components/ImageViewer.tsx` — full-screen image viewer overlay.
+- `components/RoleBadge.tsx` — role badge pill (sm/md).
+- `components/ActionBar.tsx` — city detail action bar.
+
+### File map — profile components
+- `components/ProfileOverlay.tsx` — full-screen profile dialog (thin shell).
+- `components/ProfileAvatar.tsx` — top-right avatar button with moderator
+  long-press (500ms → /plan/moderator).
+- `components/profile/` — extracted profile sub-components:
+  - `ProfileBody.tsx` — main tabbed content (Me, Trip, About) + TabBar.
+  - `TripStatusCard.tsx`, `VoteCard.tsx`, `AvailabilityCard.tsx` — Trip tab cards.
+  - `LocationCard.tsx`, `NotificationsCard.tsx` — Trip tab cards.
+  - `IdentityCard.tsx` — Me tab identity edit (includes PinField).
+  - `RoleCard.tsx` — Me tab role permissions display.
+  - `NotesSection.tsx` — About tab notes CRUD.
+  - `IdentityGate.tsx` — create identity prompt.
+  - `SwitchIdentityRow.tsx` — sign-out confirmation.
+  - `index.ts` — barrel export.
+
+### File map — chat components
+- `components/chat/MessageBubble.tsx` — extracted chat bubble (avatar, reply
+  quote, image, reactions, read receipts, touch/mouse handlers).
+- `components/chat/index.ts` — barrel export.
+
+### File map — voter & admin
+- `components/VoterProfileSheet.tsx` — BottomSheet read-only voter profile
+  (avatar, name, role badge, locate, about notes, moderator toggle).
+- `components/ActiveLocationsPanel.tsx` — active locations list with
+  force-expire. Accepts `locations` prop (from useLocations).
+- `components/TripSetupPanel.tsx` — shared trip setup UI. Props: canClear.
+- `components/TripResetsPanel.tsx` — reset votes/availability buttons.
+
+### File map — hooks
+- `hooks/useGroupData.tsx` — GroupDataProvider + useGroupData context.
+  Shared provider for all voter data, votes, profiles.
+- `hooks/useLocations.ts` — live location sharing (module-scope shared state,
+  realtime subscription, auto-start, mute, session-guarded broadcast).
+- `hooks/useTripData.tsx` — TripDataProvider + useTripData context.
+- `hooks/useTrip.ts` — trip data hook (fetch, realtime, mutations, status).
+- `hooks/useVotes.ts` — city/hotel voting hook.
+- `hooks/useAvailability.ts` — date availability hook.
+- `hooks/useHopperz.ts` — Hopperz screen data (voters + locations + roles +
+  note counts → HopperzVoter[]). Sorted: you first, then by status, then A–Z.
+- `hooks/useVoterNotes.ts` — voter notes CRUD (optimistic add/delete, refetch).
+- `hooks/useChat.ts` — chat data hook (messages, reactions, reads, realtime,
+  optimistic sends, pagination, markRead).
+- `hooks/useCamera.ts` — camera hook (getUserMedia, flip, capture, retake).
+- `hooks/usePushNotifications.ts` — push notification permission + subscribe.
+- `hooks/useAdminHold.ts` — long-press timer hook (shared by PlanNav, HopNav,
+  ProfileAvatar). Accepts optional holdMs param.
+- `hooks/useVenues.ts` — venue data hook for city detail.
+
+### File map — lib
+- `lib/identity.ts` — localStorage identity (`bh2-voter-id`, `bh2-voter-name`,
+  `bh2-pin-color`, `bh2-avatar-url`). clearIdentity also clears auth cookie.
+- `lib/auth.ts` — soft-auth layer (isAuthenticated, getLastWing, setLastWing,
+  mirrorAuthCookie, clearAuthCookie).
+- `lib/supabase.ts` — Supabase client singleton, row types, `safeSelect`,
+  `LOCATION_COLUMNS` constant.
+- `lib/storage.ts` — localStorage helpers (`lsGet`, `lsSet`, `lsRemove`,
+  `lsGetJson`, `lsSetJson`); Supabase storage (`uploadChatImage`,
+  `uploadAvatar`).
+- `lib/chat.ts` — chat types (MessageRow, ReactionRow alias, ReadRow alias),
+  helpers (formatMessageTime, formatDayDivider, isDifferentDay, shouldGroup,
+  groupReactions), constants (CHAT_PAGE_SIZE, GALLERY_PAGE_SIZE, EMOJI_REACTIONS).
+- `lib/roles.ts` — role system (getRoleForVoter, isSuperAdmin, isModerator,
+  labels, badge icons, moderator permissions/restrictions).
+- `lib/colors.ts` — PIN_COLORS, contrastColor, getInitials.
+- `lib/format.ts` — formatMonthTitle, plural.
+- `lib/push.ts` — client-side push notification helpers.
+- `lib/maps.ts` — Google Maps loader.
+- `lib/venues.ts` — venue utilities.
+- `lib/scrollLock.ts` — lockBodyScroll / unlockBodyScroll.
 
 ---
 
@@ -143,7 +167,6 @@ Cold open hits `/` → client checks `isAuthenticated()`:
     + the 80px desktop rail at ≥840px. Hopp is a cross-wing link to `/social`
     (sports_bar icon, --ink-dim color) — it does not get active highlight on
     /plan/* routes. Admin long-press is on both the Results tab and the Hopp tab.
-    The wordmark bar (TopBar) has only the wordmark left and avatar right.
 - **Hopp wing — `/social/*`** (`social/layout.tsx` sets last wing = social):
   - `/social` (Chat), `/social/camera` (Camera — full-screen, own layout, no HopShell),
     `/social/gallery` (photo gallery — 3-col grid, day groups, jump-to-date),
@@ -252,22 +275,19 @@ mirroring. Tables (see `lib/supabase.ts` for row shapes):
   `emoji` text, `created_at` timestamptz. PK (message_id, voter_id).
 - `v2_push_subscriptions` — `id` uuid PK, `voter_id` FK→v2_voters (cascade),
   `endpoint` text (unique), `p256dh` text, `auth` text, `user_agent` text,
-  `created_at`/`updated_at` timestamptz. One subscription per endpoint; a voter
-  can have multiple devices.
+  `created_at`/`updated_at` timestamptz.
 - `v2_trip` — singleton row: `id`, `status` (planning/upcoming/active),
   `city_id` nullable FK to cities data, `start_date` / `end_date` (YYYY-MM-DD,
   nullable), `created_at`, `updated_at`. Status auto-transitions based on dates.
 - `v2_trip_hotels` — `id`, `trip_id` FK→v2_trip, `hotel_name`, `sort_order`,
   `created_at`. Confirmed hotels for the upcoming trip.
 - `v2_trip_hotel_assignments` — `voter_id`, `trip_hotel_id` FK→v2_trip_hotels.
-  One hotel per voter.
 - `v2_trip_members` — `voter_id` PK, `trip_status` (on_trip/remote/out),
   `updated_at`. Default "on_trip" when no row exists.
 
 Storage buckets:
 - `hoppz-media` — public bucket for chat image uploads. Path pattern:
-  `chat/{timestamp}-{uuid}.{ext}`. 10MB max per file. Used by
-  `lib/storage.ts` uploadChatImage.
+  `chat/{timestamp}-{uuid}.{ext}`. 10MB max per file.
 
 ---
 
@@ -302,12 +322,15 @@ Storage buckets:
 
 ## Current State
 Last updated: 2026-06-14
-Last change: **Full Polish Pass — Known Issues + UX Fixes.**
-- Verified and fixed all known UX issues across login, camera, chat, nav, and profile.
-- Login: Android install button opacity fixed (opacity-50 when disabled).
-- TopBar: trip status pip labels fixed ("Today!", "d away" suffix).
-- CONTEXT.md: localStorage contract updated (added bh2-hopperz-view).
-- All other items verified correct as-is (sign-in lookup, camera controls,
-  chat scroll, nav dividers, AppShell, profile tabs, avatar fallback, Supabase
-  voter select, moderator routing, Hopperz view persistence).
+Last change: **Audit 1 Remediation — code health refactoring.**
+- Deleted legacy v1 `index.html` and dead `lib/pushServer.ts` stub.
+- Extracted shared primitives: FieldError, Switch, Stars.
+- Centralized localStorage wrappers in `lib/storage.ts` (lsGet/lsSet/lsRemove/lsGetJson/lsSetJson).
+- Extracted `useVoterNotes` hook; updated ProfileOverlay and VoterProfileSheet to use it.
+- Extracted `MessageBubble` into `components/chat/`.
+- Split ProfileOverlay into `components/profile/` folder (11 sub-components + barrel).
+- `ActiveLocationsPanel` now accepts `locations` prop (passed from useLocations in admin/moderator).
+- Consolidated `LOCATION_COLUMNS` constant and `ReactionRow`/`ReadRow` type aliases.
+- Created ARCHITECTURE.md.
+- Build verified: typecheck, lint, and `next build` all pass (44 routes).
 Next up: Wire push notification triggers (new message, reaction, etc.).

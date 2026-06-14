@@ -61,7 +61,7 @@ export function MonthHeader({ year, month, onPrev, onNext }: MonthHeaderProps) {
   );
 }
 
-export function WeekdayRow() {
+function WeekdayRow() {
   return (
     <div className="mb-1 grid grid-cols-7 gap-1">
       {WEEKDAYS.map((d) => (
@@ -140,63 +140,3 @@ export function PersonalCalendar({ year, month }: { year: number; month: number 
   );
 }
 
-/**
- * Read-only heat map for The Board. Cells color by the share of respondents
- * who are available; tapping a cell with responses reports who's in and out.
- */
-export function HeatCalendar({
-  year,
-  month,
-  onDayTap,
-}: {
-  year: number;
-  month: number;
-  onDayTap: (dateKey: string) => void;
-}) {
-  const { breakdownFor } = useAvailability();
-
-  return (
-    <div>
-      <WeekdayRow />
-      <div className="grid grid-cols-7 gap-1">
-        {buildMonthGrid(year, month).map((cell) => {
-          if (!cell.inMonth) return <div key={cell.key} aria-hidden="true" />;
-          const { available, unavailable } = breakdownFor(cell.key);
-          const responded = available.length + unavailable.length;
-          const pct = responded === 0 ? null : (available.length / responded) * 100;
-          const heat =
-            pct === null
-              ? "bg-raised"
-              : pct <= 33
-                ? "bg-red-dim"
-                : pct <= 66
-                  ? "bg-accent-dim"
-                  : pct <= 89
-                    ? "bg-green-dim"
-                    : "bg-[rgba(52,211,153,0.30)]"; // --green at 30%
-          return (
-            <button
-              key={cell.key}
-              type="button"
-              disabled={responded === 0}
-              onClick={() => onDayTap(cell.key)}
-              aria-label={
-                responded === 0
-                  ? `${cell.key} — no responses`
-                  : `${cell.key} — ${available.length} of ${responded} available`
-              }
-              className={`flex h-14 min-h-11 flex-col items-center justify-center rounded-btn transition ${heat} ${
-                cell.isToday ? "border-[1.5px] border-accent" : ""
-              } ${cell.isPast ? "opacity-40" : ""}`}
-            >
-              <span className="text-base font-semibold text-ink">{cell.day}</span>
-              <span className="flex h-4 items-center text-[11px] font-medium text-ink-muted">
-                {responded > 0 ? `${available.length}/${responded}` : ""}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}

@@ -8,17 +8,14 @@ import { RoleBadge } from "@/components/RoleBadge";
 import { VoterProfileSheet } from "@/components/VoterProfileSheet";
 import { useHopperz, type HopperzVoter } from "@/hooks/useHopperz";
 import { setLastWing } from "@/lib/auth";
+import { lsGet, lsSet } from "@/lib/storage";
 
 type ViewMode = "list" | "grid";
 const VIEW_KEY = "bh2-hopperz-view";
 
 function readView(): ViewMode {
-  try {
-    const v = localStorage.getItem(VIEW_KEY);
-    return v === "grid" ? "grid" : "list";
-  } catch {
-    return "list";
-  }
+  const v = lsGet(VIEW_KEY);
+  return v === "grid" ? "grid" : "list";
 }
 
 export default function HopperzPage() {
@@ -34,7 +31,7 @@ export default function HopperzPage() {
   const toggleView = () => {
     const next: ViewMode = view === "list" ? "grid" : "list";
     setView(next);
-    try { localStorage.setItem(VIEW_KEY, next); } catch { /* silent */ }
+    lsSet(VIEW_KEY, next);
   };
 
   const handleLocate = useCallback((voterId: string) => {

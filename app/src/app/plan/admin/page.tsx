@@ -10,12 +10,14 @@ import { hash as hashPin } from "bcryptjs";
 import { ActiveLocationsPanel } from "@/components/ActiveLocationsPanel";
 import { BottomSheet } from "@/components/BottomSheet";
 import { Dialog } from "@/components/Dialog";
+import { FieldError } from "@/components/FieldError";
 import { Icon } from "@/components/Icon";
 import { RoleBadge } from "@/components/RoleBadge";
 import { TripResetsPanel } from "@/components/TripResetsPanel";
 import { TripSetupPanel } from "@/components/TripSetupPanel";
 import { cityById } from "@/data/cities";
 import { useGroupData } from "@/hooks/useGroupData";
+import { useLocations } from "@/hooks/useLocations";
 import { MAX_FIRST_NAME_LENGTH, buildDisplayName, isValidPin } from "@/lib/identity";
 import { getRoleForVoter } from "@/lib/roles";
 import { getSupabase, safeSelect } from "@/lib/supabase";
@@ -98,14 +100,6 @@ function IconButton({
     >
       <Icon name={name} size={22} />
     </button>
-  );
-}
-
-function FieldError({ children }: { children: string }) {
-  return (
-    <p className="text-[12px] font-medium text-red" role="alert">
-      {children}
-    </p>
   );
 }
 
@@ -254,6 +248,7 @@ function EditUserDialog({ voter, onClose, onChanged }: EditUserDialogProps) {
 export default function AdminPage() {
   const router = useRouter();
   const { voterId: myVoterId, voters: groupVoters } = useGroupData();
+  const { activeLocations } = useLocations();
   const myRow = groupVoters.find((v) => v.voter_id === myVoterId);
   const myRole = getRoleForVoter(myVoterId, myRow?.role ?? null);
   const canManageTrip = myRole === "super_admin" || myRole === "moderator";
@@ -497,7 +492,7 @@ export default function AdminPage() {
 
         <TripResetsPanel />
 
-        <ActiveLocationsPanel />
+        <ActiveLocationsPanel locations={activeLocations} />
 
         <section className="flex flex-col gap-3">
           <div className="flex items-center justify-between">

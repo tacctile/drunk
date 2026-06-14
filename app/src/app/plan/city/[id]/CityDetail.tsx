@@ -11,6 +11,7 @@ import { useVotes } from "@/hooks/useVotes";
 import type { Venue } from "@/lib/venues";
 import { ActionBar } from "@/components/ActionBar";
 import { CityList, loadSort, type CitySort } from "@/components/CityList";
+import { Stars } from "@/components/Stars";
 import { CityMap, type CityMapHandle } from "@/components/CityMap";
 import { Icon } from "@/components/Icon";
 import { useNameGate } from "@/components/NamePrompt";
@@ -26,19 +27,6 @@ const TABS: { kind: VenueKind; label: string }[] = [
 
 // A tapped venue row flashes --surface-raised this long to confirm the tap.
 const ROW_FLASH_MS = 300;
-
-/** Hotel class as filled accent stars — 3 stars = three filled glyphs. */
-function Stars({ count }: { count: number }) {
-  const n = Math.max(0, Math.min(5, Math.floor(count)));
-  if (n === 0) return null;
-  return (
-    <span className="flex items-center text-accent" aria-label={`${n}-star hotel`}>
-      {Array.from({ length: n }, (_, i) => (
-        <Icon key={i} name="star" filled size={14} />
-      ))}
-    </span>
-  );
-}
 
 export function CityDetail({ cityId }: { cityId: string }) {
   // The server wrapper 404s unknown ids before this component renders.

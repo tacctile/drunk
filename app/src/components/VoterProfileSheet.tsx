@@ -1,56 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { BottomSheet } from "@/components/BottomSheet";
 import { Avatar } from "@/components/Avatar";
+import { BottomSheet } from "@/components/BottomSheet";
 import { Icon } from "@/components/Icon";
 import { RoleBadge } from "@/components/RoleBadge";
+import { Switch } from "@/components/Switch";
 import { useGroupData } from "@/hooks/useGroupData";
 import { useTripData } from "@/hooks/useTripData";
+import { useVoterNotes } from "@/hooks/useVoterNotes";
 import { isSuperAdmin, getRoleForVoter } from "@/lib/roles";
-import { getSupabase, type VoterNoteRow, type TripMemberStatus } from "@/lib/supabase";
+import type { TripMemberStatus } from "@/lib/supabase";
 import type { HopperzVoter } from "@/hooks/useHopperz";
 
 interface VoterProfileSheetProps {
   voter: HopperzVoter | null;
   onClose: () => void;
   onLocate?: (voterId: string) => void;
-}
-
-function Switch({
-  checked,
-  onToggle,
-  ariaLabel,
-  disabled = false,
-}: {
-  checked: boolean;
-  onToggle: () => void;
-  ariaLabel: string;
-  disabled?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={ariaLabel}
-      disabled={disabled}
-      onClick={onToggle}
-      className="flex h-11 w-11 flex-none items-center justify-center disabled:opacity-50"
-    >
-      <span
-        className={`relative h-6 w-10 rounded-full border transition ${
-          checked ? "border-accent bg-accent" : "border-border-strong bg-raised"
-        }`}
-      >
-        <span
-          className={`absolute left-[2px] top-1/2 h-[18px] w-[18px] -translate-y-1/2 rounded-full transition ${
-            checked ? "translate-x-4 bg-bg" : "bg-ink-muted"
-          }`}
-        />
-      </span>
-    </button>
-  );
 }
 
 const TRIP_STATUS_CONFIG: Record<TripMemberStatus, { icon: string; color: string; label: string }> = {
@@ -100,40 +65,11 @@ function TripStatusButtons({
 export function VoterProfileSheet({ voter, onClose, onLocate }: VoterProfileSheetProps) {
   const { voterId, setModeratorRole, voters: groupVoters } = useGroupData();
   const { members, setMemberStatus } = useTripData();
-  const [notes, setNotes] = useState<VoterNoteRow[]>([]);
-  const [notesLoading, setNotesLoading] = useState(false);
+  const { notes, loading: notesLoading } = useVoterNotes(voter?.voter_id ?? null);
   const viewerIsSuperAdmin = isSuperAdmin(voterId);
   const viewerRow = groupVoters.find((v) => v.voter_id === voterId);
   const viewerRole = getRoleForVoter(voterId, viewerRow?.role ?? null);
   const canManageTrip = viewerRole === "super_admin" || viewerRole === "moderator";
-
-  useEffect(() => {
-    if (!voter) {
-      setNotes([]);
-      return;
-    }
-    let cancelled = false;
-    setNotesLoading(true);
-    (async () => {
-      const sb = getSupabase();
-      if (!sb) {
-        if (!cancelled) setNotesLoading(false);
-        return;
-      }
-      try {
-        const { data } = await sb
-          .from("v2_voter_notes")
-          .select("*")
-          .eq("voter_id", voter.voter_id)
-          .order("sort_order", { ascending: true });
-        if (!cancelled) setNotes(data ?? []);
-      } catch {
-        // silent
-      }
-      if (!cancelled) setNotesLoading(false);
-    })();
-    return () => { cancelled = true; };
-  }, [voter]);
 
   if (!voter) return null;
 
