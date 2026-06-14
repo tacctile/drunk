@@ -68,3 +68,28 @@ export function shouldGroup(a: MessageRow, b: MessageRow): boolean {
   );
   return diff < 120000;
 }
+
+export function groupReactions(
+  reactions: ReactionRow[]
+): { emoji: string; count: number; voterIds: string[] }[] {
+  const map = new Map<string, { voterIds: string[]; earliest: number }>();
+  for (const r of reactions) {
+    const entry = map.get(r.emoji);
+    const t = new Date(r.created_at).getTime();
+    if (entry) {
+      entry.voterIds.push(r.voter_id);
+      if (t < entry.earliest) entry.earliest = t;
+    } else {
+      map.set(r.emoji, { voterIds: [r.voter_id], earliest: t });
+    }
+  }
+  return Array.from(map.entries())
+    .map(([emoji, { voterIds, earliest }]) => ({
+      emoji,
+      count: voterIds.length,
+      voterIds,
+      earliest,
+    }))
+    .sort((a, b) => b.count - a.count || a.earliest - b.earliest)
+    .map(({ emoji, count, voterIds }) => ({ emoji, count, voterIds }));
+}

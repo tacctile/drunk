@@ -1,6 +1,26 @@
 # Hoppz — Progress
 > Feature checklist for the v2 Next.js app (`app/`). Newest phase on top.
 
+## Phase: Chat Session B — Reactions + Read Receipts + Reply (2026-06-14)
+- [x] Reactions: long-press (500ms) opens emoji picker (8 emojis from EMOJI_REACTIONS)
+- [x] Reaction pills below bubbles — grouped by emoji, count, own-reaction accent border
+- [x] One reaction per person per message (swap behavior via remove + add)
+- [x] Optimistic addReaction / removeReaction in useChat hook
+- [x] Read receipts: 1 reader → 16px avatar, 2 readers → overlapping avatars, 3+ → "Seen by X"
+- [x] "Seen by X" tap → BottomSheet with reader list (avatar + name + time)
+- [x] markRead fires optimistically (updates local reads state before server call)
+- [x] Reply: swipe right on mobile (40px threshold, 8px nudge animation)
+- [x] Reply: hover reply button on desktop (appears to side of bubble)
+- [x] Reply preview bar above input with close button
+- [x] Quoted reply preview inside message bubble with scroll-to-original on tap
+- [x] Long-press / swipe conflict resolution (10px movement cancels long-press timer)
+- [x] useChat reactions/reads refactored from flat arrays to Record<string, Row[]>
+- [x] groupReactions helper in lib/chat.ts
+- [x] sendMessage includes reply_to_id when replyingTo is set
+- [x] Realtime subscription updates Record-keyed state correctly
+- [x] All Session A features verified intact (grouping, day dividers, timestamps, etc.)
+- [x] typecheck and build pass clean
+
 ## Phase: Chat Session A — Fix Double TopBar + Chat Core (2026-06-14)
 - [x] Fixed double TopBar on /social/* routes (AppShell bypasses shell for social)
 - [x] Chat page at /social — full message list with grouping, day dividers, scroll behavior
@@ -18,7 +38,6 @@
 - [ ] Camera button placeholder (Session D)
 - [ ] Gallery button placeholder (Session C)
 - [ ] Image expand placeholder (Session C)
-- [ ] Reactions UI (Session B)
 
 ## Phase: Component Architecture Cleanup + Nav Refactor (2026-06-14)
 - [x] Extracted TopBar.tsx — sticky wordmark bar, hidden on city detail/admin
@@ -80,7 +99,6 @@
 
 ## Backlog
 - [ ] Real PNG app icons (192 / 512 / 180)
-- [ ] Session B: reactions UI (emoji picker, reaction badges under bubbles)
 - [ ] Session C: image gallery + image expand modal
 - [ ] Session D: camera capture
 - [ ] More cities in `data/cities.ts`

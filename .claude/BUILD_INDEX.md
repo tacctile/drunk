@@ -4,6 +4,35 @@
 
 ---
 
+## Chat Session B — Reactions + Read Receipts + Reply — 2026-06-14
+
+### Reactions
+- `app/src/hooks/useChat.ts` — addReaction (optimistic upsert with swap), removeReaction
+  (optimistic delete). reactions state refactored to Record<string, ReactionRow[]>.
+- `app/src/lib/chat.ts` — groupReactions helper (groups by emoji, returns count + voterIds).
+- `app/src/app/social/page.tsx` — reaction pills below bubbles (emoji + count, accent border
+  for own reaction, tap to toggle). Long-press (500ms) opens emoji picker overlay (8 emojis
+  from EMOJI_REACTIONS). Conflict resolution with swipe-to-reply.
+
+### Read receipts
+- `app/src/hooks/useChat.ts` — reads state refactored to Record<string, ReadRow[]>.
+  markRead fires optimistically (updates local state before server upsert).
+- `app/src/app/social/page.tsx` — read receipt display below timestamps: 1 reader → 16px
+  avatar circle, 2 readers → overlapping avatars, 3+ → "Seen by X" text → BottomSheet
+  with reader list (avatar + name + time, sorted by read_at asc).
+
+### Reply
+- `app/src/hooks/useChat.ts` — replyingTo state + setReplyingTo. sendMessage includes
+  reply_to_id when replyingTo is set.
+- `app/src/app/social/page.tsx` — swipe right on mobile (40px threshold, 8px nudge) to
+  trigger reply. Desktop hover reply button. Reply preview bar above input. Quoted reply
+  preview in bubble with scroll-to-original on tap. Handles deleted/image/missing originals.
+
+### Build task index
+- Fix reactions / read receipts / reply → read `src/hooks/useChat.ts`, `src/app/social/page.tsx`, `src/lib/chat.ts`
+
+---
+
 ## Chat Session A — Fix Double TopBar + Chat Core — 2026-06-14
 
 ### Double TopBar fix
