@@ -96,6 +96,21 @@ export interface LocationRow {
   session_id: string | null;
 }
 
+export type { MessageRow } from "./chat";
+
+export interface MessageReadRow {
+  message_id: string;
+  voter_id: string;
+  read_at: string;
+}
+
+export interface MessageReactionRow {
+  message_id: string;
+  voter_id: string;
+  emoji: string;
+  created_at: string;
+}
+
 /** Swallows all failures; returns null so callers can fall back silently. */
 export async function safeSelect<T>(table: string, columns: string): Promise<T[] | null> {
   const sb = getSupabase();

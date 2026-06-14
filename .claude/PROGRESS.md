@@ -1,6 +1,25 @@
 # Hoppz — Progress
 > Feature checklist for the v2 Next.js app (`app/`). Newest phase on top.
 
+## Phase: Chat Session A — Fix Double TopBar + Chat Core (2026-06-14)
+- [x] Fixed double TopBar on /social/* routes (AppShell bypasses shell for social)
+- [x] Chat page at /social — full message list with grouping, day dividers, scroll behavior
+- [x] useChat hook — messages, reactions, reads, realtime (channel "hoppz-chat")
+- [x] Optimistic sendMessage with temp id → server id swap
+- [x] deleteMessage — optimistic is_deleted flip + server update
+- [x] markRead via IntersectionObserver (fire-and-forget upsert)
+- [x] Pagination — loadMore when scrolled near top, scroll position preserved
+- [x] Input bar — auto-grow textarea, Enter to send (desktop), camera/gallery/send buttons
+- [x] Empty state — sports_bar icon + "No messages yet" + "Send the first one"
+- [x] "New message ↓" pill when scrolled up and new messages arrive
+- [x] lib/chat.ts — MessageRow, ReactionRow, ReadRow types; helpers; constants
+- [x] supabase.ts — re-exports MessageRow; adds MessageReadRow, MessageReactionRow
+- [x] typecheck and build pass clean
+- [ ] Camera button placeholder (Session D)
+- [ ] Gallery button placeholder (Session C)
+- [ ] Image expand placeholder (Session C)
+- [ ] Reactions UI (Session B)
+
 ## Phase: Component Architecture Cleanup + Nav Refactor (2026-06-14)
 - [x] Extracted TopBar.tsx — sticky wordmark bar, hidden on city detail/admin
 - [x] Extracted PlanNav.tsx — plan nav (Cities, Availability, Results, Hopp) + desktop rail
@@ -61,5 +80,7 @@
 
 ## Backlog
 - [ ] Real PNG app icons (192 / 512 / 180)
-- [ ] Hopp (social) wing — actual features
+- [ ] Session B: reactions UI (emoji picker, reaction badges under bubbles)
+- [ ] Session C: image gallery + image expand modal
+- [ ] Session D: camera capture
 - [ ] More cities in `data/cities.ts`
