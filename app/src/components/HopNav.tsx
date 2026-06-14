@@ -49,15 +49,12 @@ export function HopNav() {
             </Link>
           );
         })}
-        <div className="flex items-center">
-          <div className="h-6 w-px bg-border" />
-        </div>
         <button
           type="button"
           {...holdHandlers}
           onClick={planClick}
           aria-label="Plan"
-          className={`flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 text-label font-semibold text-ink-dim transition ${HOLD_CLASS} ${adminHold.holding ? "anim-hold" : ""}`}
+          className={`flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 bg-raised text-label font-semibold text-ink-dim transition ${HOLD_CLASS} ${adminHold.holding ? "anim-hold" : ""}`}
         >
           <Icon name="list_alt" size={24} />
           Plan

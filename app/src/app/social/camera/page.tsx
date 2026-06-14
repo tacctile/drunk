@@ -166,19 +166,17 @@ function CameraInner() {
       )}
 
       {/* Back button */}
-      {!capturedImage && (
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="absolute left-4 flex h-11 w-11 items-center justify-center"
-          style={{
-            top: "env(safe-area-inset-top, 16px)",
-            ...dropShadow,
-          }}
-        >
-          <Icon name="arrow_back" size={28} className="text-white" />
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={() => router.back()}
+        className="absolute left-4 flex h-11 w-11 items-center justify-center"
+        style={{
+          top: "env(safe-area-inset-top, 16px)",
+          ...dropShadow,
+        }}
+      >
+        <Icon name="arrow_back" size={28} className="text-white" />
+      </button>
 
       {/* Bottom scrim */}
       <div
