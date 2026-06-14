@@ -1,4 +1,4 @@
-// Bar Hoppers — city dataset.
+// Hoppz — city dataset.
 // Source of truth for the 27 candidate cities. walkScore / walkGrade /
 // district are hardcoded research, not math — never calculate them.
 //

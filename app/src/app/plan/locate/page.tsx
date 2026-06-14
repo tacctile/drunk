@@ -498,7 +498,7 @@ function LocationOptionsModal({ onClose, locations, voters, myId }: LocationOpti
         </p>
       )}
       <p className="text-meta font-normal text-ink-dim">
-        This only affects Bar Hoppers. Your device location settings are unchanged.
+        This only affects Hoppz. Your device location settings are unchanged.
       </p>
       {shareError && (
         <p className="mt-2 text-meta font-medium text-red" role="alert">

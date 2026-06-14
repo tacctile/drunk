@@ -1,6 +1,6 @@
 {
-  "name": "Bar Hoppers",
-  "short_name": "Bar Hoppers",
+  "name": "Hoppz",
+  "short_name": "Hoppz",
   "description": "Plan overnight bar-hop trips with your crew",
   "start_url": "/",
   "display": "standalone",

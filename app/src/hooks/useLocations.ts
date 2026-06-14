@@ -5,7 +5,7 @@
 // no stored preference, sharing starts automatically — turning it off is
 // always an explicit act, persisted in bh2-sharing-preference. Toggling on
 // writes a row that dies 72 hours later; toggling off deletes it. Only the
-// Bar Hoppers row is ever touched — device location settings never are.
+// Hoppz row is ever touched — device location settings never are.
 // Muting is one-directional and EMPTY by default (everyone can see you):
 // your muted_ids hides YOUR pin from those people, and they are never told.
 
@@ -382,7 +382,7 @@ export function useLocations(): LocationsValue {
     const sb = getSupabase();
 
     if (isSharingRef.current) {
-      // Stop sharing within Bar Hoppers only — delete the row, touch nothing
+      // Stop sharing within Hoppz only — delete the row, touch nothing
       // on the device.
       desiredSharing = false;
       sharedRows.set((prev) => prev.filter((r) => r.voter_id !== me));
