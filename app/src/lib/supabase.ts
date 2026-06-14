@@ -132,6 +132,38 @@ export interface PushSubscriptionRow {
   updated_at: string;
 }
 
+export type TripStatus = "planning" | "upcoming" | "active";
+export type TripMemberStatus = "on_trip" | "remote" | "out";
+
+export interface TripRow {
+  id: string;
+  status: TripStatus;
+  city_id: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TripHotelRow {
+  id: string;
+  trip_id: string;
+  hotel_name: string;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface TripHotelAssignmentRow {
+  voter_id: string;
+  trip_hotel_id: string;
+}
+
+export interface TripMemberRow {
+  voter_id: string;
+  trip_status: TripMemberStatus;
+  updated_at: string;
+}
+
 /** Swallows all failures; returns null so callers can fall back silently. */
 export async function safeSelect<T>(table: string, columns: string): Promise<T[] | null> {
   const sb = getSupabase();

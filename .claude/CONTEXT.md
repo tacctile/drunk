@@ -44,8 +44,9 @@ Key dirs:
 - `components/AppShell.tsx` — root-level shell (bare on `/login`/`/`/`/social/*`,
   TopBar + PlanNav on plan routes, TopBar-only elsewhere). Wraps all pages via
   root layout. Social routes bypass AppShell entirely — HopShell handles chrome.
-- `components/TopBar.tsx` — sticky wordmark bar: "Hoppz" left, ProfileAvatar
-  right. Hidden on `/plan/city/*` and `/plan/admin` (pages with own headers).
+- `components/TopBar.tsx` — sticky wordmark bar: "Hoppz" left, trip status
+  pill center (upcoming: countdown, active: "On Trip"), ProfileAvatar right.
+  Hidden on `/plan/city/*` and `/plan/admin` (pages with own headers).
   Rendered by both AppShell and HopShell.
 - `components/PlanNav.tsx` — plan-wing nav: Cities, Availability, Results,
   Hopperz, Hopp. Flex row with vertical divider before cross-wing Hopp tab.
@@ -66,7 +67,12 @@ Key dirs:
   ProfileAvatar. Accepts optional holdMs param (default 3000ms).
 - `hooks/useHopperz.ts` — data hook for Hopperz screen. Merges voters,
   locations, roles, and note counts into HopperzVoter[]. Sorted: you first,
-  then A–Z.
+  then A–Z. Trip status per voter (on_trip/remote/out), sorted by status group.
+- `hooks/useTrip.ts` — trip data hook: trip state, hotels, assignments,
+  members, realtime (channel "hoppz-trip"), mutations, date-based
+  status auto-transition. Single source of truth for all trip data.
+- `hooks/useTripData.tsx` — TripDataProvider + useTripData context hook.
+  Mounted in layout.tsx inside GroupDataProvider.
 - `hooks/useChat.ts` — chat data hook: messages, reactions, reads, realtime,
   optimistic sends, pagination, markRead. Channel "hoppz-chat".
 - `hooks/useCamera.ts` — camera hook: getUserMedia, flip, capture (canvas →
@@ -234,6 +240,15 @@ mirroring. Tables (see `lib/supabase.ts` for row shapes):
   `endpoint` text (unique), `p256dh` text, `auth` text, `user_agent` text,
   `created_at`/`updated_at` timestamptz. One subscription per endpoint; a voter
   can have multiple devices.
+- `v2_trip` — singleton row: `id`, `status` (planning/upcoming/active),
+  `city_id` nullable FK to cities data, `start_date` / `end_date` (YYYY-MM-DD,
+  nullable), `created_at`, `updated_at`. Status auto-transitions based on dates.
+- `v2_trip_hotels` — `id`, `trip_id` FK→v2_trip, `hotel_name`, `sort_order`,
+  `created_at`. Confirmed hotels for the upcoming trip.
+- `v2_trip_hotel_assignments` — `voter_id`, `trip_hotel_id` FK→v2_trip_hotels.
+  One hotel per voter.
+- `v2_trip_members` — `voter_id` PK, `trip_status` (on_trip/remote/out),
+  `updated_at`. Default "on_trip" when no row exists.
 
 Storage buckets:
 - `hoppz-media` — public bucket for chat image uploads. Path pattern:
@@ -273,16 +288,14 @@ Storage buckets:
 
 ## Current State
 Last updated: 2026-06-14
-Last change: **Hopperz Screen + Role Badges + Cross-Wing Locate Deep Link.**
-- Hopperz tab added to PlanNav (5th tab: Cities / Availability / Results / Hopperz / Hopp).
-- /plan/hopperz page: list/grid view toggle, member count, VoterProfileSheet on tap.
-- useHopperz hook: merges voters, locations, roles, note counts.
-- RoleBadge component (sm/md): inline role pill used in Hopperz, ProfileOverlay, admin.
-- VoterProfileSheet: read-only profile, locate button, about notes, moderator toggle.
-- Cross-wing locate deep link: ?focus=voter_id flies to a person on the map.
-- PlanNav and HopNav both use flex row with vertical divider before cross-wing tab.
-- Cross-wing tabs use --ink-dim color (dimmer than regular inactive tabs).
-- Moderator long-press (500ms) on ProfileAvatar → /plan/admin.
-- useAdminHold accepts optional holdMs parameter.
-- Admin page fetches and displays role field + RoleBadge on voter cards.
+Last change: **Trip Entity — Core System.**
+- v2_trip, v2_trip_hotels, v2_trip_hotel_assignments, v2_trip_members tables.
+- useTrip.ts hook: all trip data, realtime, mutations, date-based status transitions.
+- useTripData.tsx: TripDataProvider context, mounted in layout.tsx.
+- TopBar: trip status pill (upcoming countdown / active "On Trip") centered.
+- Admin page: Trip Setup section (city, dates, hotels, assignments, clear, lock banner).
+- Voting locked when trip status is upcoming or active (CityList + CityDetail).
+- VoterProfileSheet: trip status display + buttons (own, super admin, moderator).
+- Hopperz: trip status per voter (remote/out indicators), sorted by status group.
+- ProfileOverlay Trip tab: TripStatusCard with on_trip/remote/out buttons.
 Next up: Wire push notification triggers (new message, reaction, etc.).

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { cityById } from "@/data/cities";
 import type { VenueKind } from "@/data/types";
 import { useGroupData } from "@/hooks/useGroupData";
+import { useTripData } from "@/hooks/useTripData";
 import { useVenues } from "@/hooks/useVenues";
 import { useVotes } from "@/hooks/useVotes";
 import type { Venue } from "@/lib/venues";
@@ -44,8 +45,10 @@ export function CityDetail({ cityId }: { cityId: string }) {
   const city = cityById(cityId)!;
   const { venues, ready } = useVenues(city);
   const { setCityVote, setHotelPref } = useGroupData();
+  const { effectiveStatus } = useTripData();
   const { myCityId, myHotelPrefFor } = useVotes();
   const { requireName, prompt } = useNameGate();
+  const votingLocked = effectiveStatus === "upcoming" || effectiveStatus === "active";
 
   const [tab, setTab] = useState<VenueKind>("hotel");
   const [pinned, setPinned] = useState<Venue | null>(null);
@@ -216,7 +219,15 @@ export function CityDetail({ cityId }: { cityId: string }) {
 
         {/* Vote CTA — replaces the sort pill on this page only */}
         <ActionBar>
-          {voted ? (
+          {votingLocked ? (
+            <button
+              type="button"
+              disabled
+              className="h-11 w-full rounded-btn border bg-raised text-base font-bold text-ink-dim opacity-60 shadow-overlay"
+            >
+              Voting locked
+            </button>
+          ) : voted ? (
             <button
               type="button"
               onClick={toggleVote}

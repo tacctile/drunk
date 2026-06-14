@@ -4,6 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { IdentityWatcher } from "@/components/NamePrompt";
 import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
 import { GroupDataProvider } from "@/hooks/useGroupData";
+import { TripDataProvider } from "@/hooks/useTripData";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -42,11 +43,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body>
         <GroupDataProvider>
-          <AppShell>{children}</AppShell>
-          {/* Auto-opens the return-user flow when the stored identity can't be verified */}
-          <IdentityWatcher />
-          {/* Registers the PWA service worker after first load */}
-          <ServiceWorkerRegistrar />
+          <TripDataProvider>
+            <AppShell>{children}</AppShell>
+            <IdentityWatcher />
+            <ServiceWorkerRegistrar />
+          </TripDataProvider>
         </GroupDataProvider>
       </body>
     </html>

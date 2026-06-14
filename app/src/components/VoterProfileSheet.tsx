@@ -6,8 +6,9 @@ import { Avatar } from "@/components/Avatar";
 import { Icon } from "@/components/Icon";
 import { RoleBadge } from "@/components/RoleBadge";
 import { useGroupData } from "@/hooks/useGroupData";
-import { isSuperAdmin } from "@/lib/roles";
-import { getSupabase, type VoterNoteRow } from "@/lib/supabase";
+import { useTripData } from "@/hooks/useTripData";
+import { isSuperAdmin, getRoleForVoter } from "@/lib/roles";
+import { getSupabase, type VoterNoteRow, type TripMemberStatus } from "@/lib/supabase";
 import type { HopperzVoter } from "@/hooks/useHopperz";
 
 interface VoterProfileSheetProps {
@@ -52,11 +53,59 @@ function Switch({
   );
 }
 
+const TRIP_STATUS_CONFIG: Record<TripMemberStatus, { icon: string; color: string; label: string }> = {
+  on_trip: { icon: "check_circle", color: "var(--green)", label: "On the trip" },
+  remote: { icon: "wifi", color: "var(--accent)", label: "Joining remotely" },
+  out: { icon: "cancel", color: "var(--ink-dim)", label: "Not on this trip" },
+};
+
+function TripStatusButtons({
+  current,
+  onChange,
+}: {
+  current: TripMemberStatus;
+  onChange: (s: TripMemberStatus) => void;
+}) {
+  const statuses: { key: TripMemberStatus; label: string }[] = [
+    { key: "on_trip", label: "On Trip" },
+    { key: "remote", label: "Remote" },
+    { key: "out", label: "Out" },
+  ];
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      {statuses.map((s) => {
+        const active = current === s.key;
+        const cls = active
+          ? s.key === "on_trip"
+            ? "border bg-green-dim border-green text-green"
+            : s.key === "remote"
+              ? "border bg-accent-dim border-accent text-accent"
+              : "border bg-raised border-border text-ink-dim"
+          : "btn-ghost";
+        return (
+          <button
+            key={s.key}
+            type="button"
+            onClick={() => onChange(s.key)}
+            className={`btn text-[13px] px-2 ${cls}`}
+          >
+            {s.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export function VoterProfileSheet({ voter, onClose, onLocate }: VoterProfileSheetProps) {
-  const { voterId, setModeratorRole } = useGroupData();
+  const { voterId, setModeratorRole, voters: groupVoters } = useGroupData();
+  const { members, setMemberStatus } = useTripData();
   const [notes, setNotes] = useState<VoterNoteRow[]>([]);
   const [notesLoading, setNotesLoading] = useState(false);
   const viewerIsSuperAdmin = isSuperAdmin(voterId);
+  const viewerRow = groupVoters.find((v) => v.voter_id === voterId);
+  const viewerRole = getRoleForVoter(voterId, viewerRow?.role ?? null);
+  const canManageTrip = viewerRole === "super_admin" || viewerRole === "moderator";
 
   useEffect(() => {
     if (!voter) {
@@ -128,6 +177,35 @@ export function VoterProfileSheet({ voter, onClose, onLocate }: VoterProfileShee
           Locate on map
         </button>
       )}
+
+      {/* Trip status */}
+      {(() => {
+        const memberStatus: TripMemberStatus =
+          members.find((m) => m.voter_id === voter.voter_id)?.trip_status ?? "on_trip";
+        const cfg = TRIP_STATUS_CONFIG[memberStatus];
+        const isYou = voter.voter_id === voterId;
+        const showButtons = isYou || canManageTrip;
+
+        return (
+          <div className="mt-4 border-t border-border pt-4">
+            <p className="label">Trip Status</p>
+            <div className="mt-2 flex items-center gap-2" style={{ color: cfg.color }}>
+              <span className="ms flex-none" style={{ fontSize: 18 }} aria-hidden="true">{cfg.icon}</span>
+              <span className="text-base">
+                {cfg.label}
+              </span>
+            </div>
+            {showButtons && (
+              <div className="mt-3">
+                <TripStatusButtons
+                  current={memberStatus}
+                  onChange={(s) => void setMemberStatus(voter.voter_id, s)}
+                />
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       <div className="mt-4">
         <p className="label">About</p>
