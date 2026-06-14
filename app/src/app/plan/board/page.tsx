@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { BottomSheet } from "@/components/BottomSheet";
 import { Icon } from "@/components/Icon";
-import { NotYouLink } from "@/components/NamePrompt";
 import type { City } from "@/data/types";
 import { useAvailability } from "@/hooks/useAvailability";
 import { useGroupData } from "@/hooks/useGroupData";
@@ -77,7 +76,7 @@ function HotelSection({ city, prefs }: { city: City; prefs: { name: string; coun
 
   return (
     <section className="mt-6">
-      <h2 className="label pb-2 !text-ink-dim">Top Hotels in Top Voted City</h2>
+      <h2 className="pb-2 text-label font-semibold uppercase tracking-label text-ink-dim">Top Hotels in Top Voted City</h2>
       <ul className="flex flex-col gap-2">
         {rows.map((hotel) => (
           <li key={hotel.name} className={ROW_CLASS}>
@@ -142,7 +141,7 @@ export default function BoardPage() {
       {/* Section 1 — two columns, side by side at every width */}
       <div className="grid grid-cols-2 items-start gap-3">
         <section>
-          <h2 className="label pb-2 !text-ink-dim">Top Cities</h2>
+          <h2 className="pb-2 text-label font-semibold uppercase tracking-label text-ink-dim">Top Cities</h2>
           {topCities.length === 0 ? (
             <p className="py-10 text-center text-meta font-normal text-ink-dim">No votes yet.</p>
           ) : (
@@ -163,7 +162,7 @@ export default function BoardPage() {
         </section>
 
         <section>
-          <h2 className="label pb-2 !text-ink-dim">Hot Dates</h2>
+          <h2 className="pb-2 text-label font-semibold uppercase tracking-label text-ink-dim">Hot Dates</h2>
           {hotDates.length === 0 ? (
             <p className="py-10 text-center text-meta font-normal text-ink-dim">
               No dates marked yet.
@@ -192,10 +191,6 @@ export default function BoardPage() {
       {leading && leadingHotelPrefs.length > 0 && (
         <HotelSection city={leading.city} prefs={leadingHotelPrefs} />
       )}
-
-      <div className="flex justify-center py-4">
-        <NotYouLink />
-      </div>
 
       {/* City votes drill-down */}
       <BottomSheet
@@ -234,7 +229,7 @@ export default function BoardPage() {
             />
             {dateSheet.available.length > 0 && (
               <>
-                <h3 className="label pb-1 pt-2 !text-ink-dim">Available</h3>
+                <h3 className="pb-1 pt-2 text-label font-semibold uppercase tracking-label text-ink-dim">Available</h3>
                 <ul>
                   {dateSheet.available.map((person) => (
                     <li key={person.voterId} className="flex h-11 items-center text-base text-green">
@@ -246,7 +241,7 @@ export default function BoardPage() {
             )}
             {dateSheet.unavailable.length > 0 && (
               <>
-                <h3 className="label pb-1 pt-2 !text-ink-dim">Not available</h3>
+                <h3 className="pb-1 pt-2 text-label font-semibold uppercase tracking-label text-ink-dim">Not available</h3>
                 <ul>
                   {dateSheet.unavailable.map((person) => (
                     <li key={person.voterId} className="flex h-11 items-center text-base text-red">

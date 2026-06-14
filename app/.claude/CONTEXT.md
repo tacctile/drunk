@@ -1,6 +1,10 @@
 # BAR HOPPERS /app — CONTEXT (single source of truth)
 
-Last updated: 2026-06-12 · Phase: user disable/enable + group-view is_active filter + single-device location broadcast, pending first deploy (NEW SCHEMA SQL PENDING MANUAL RUN — see migration log)
+Last updated: 2026-06-14 · Phase: audit3-code-fixes (13 items), pending first deploy (NEW SCHEMA SQL PENDING MANUAL RUN — see migration log)
+
+### Audit 3 notes
+- `CITY_DETAIL_HEADER_HEIGHT = 57` is now a shared export from `components/CityMap.tsx` (not CityDetail, to avoid circular dependency — CityDetail imports CityMap)
+- Login PIN field now has show/hide toggle matching IdentityCard pattern (visibility/visibility_off icons, type password↔text)
 
 ## What this app is
 

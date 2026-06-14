@@ -220,8 +220,8 @@ export default function HomePage() {
                   className="flex flex-none flex-col items-center gap-1"
                 >
                   <Avatar voter={v} size={44} />
-                  <span className="max-w-[56px] truncate text-center text-[11px] text-ink-muted">
-                    {(v.display_name ?? v.name).slice(0, 8)}
+                  <span className="w-11 truncate text-center text-[11px] text-ink-muted">
+                    {v.display_name ?? v.name}
                   </span>
                 </button>
               ))}
@@ -248,8 +248,8 @@ export default function HomePage() {
                         <Icon name="wifi" size={10} className="text-accent" />
                       </span>
                     </span>
-                    <span className="max-w-[56px] truncate text-center text-[11px] text-ink-muted">
-                      {(v.display_name ?? v.name).slice(0, 8)}
+                    <span className="w-11 truncate text-center text-[11px] text-ink-muted">
+                      {v.display_name ?? v.name}
                     </span>
                   </button>
                 ))}

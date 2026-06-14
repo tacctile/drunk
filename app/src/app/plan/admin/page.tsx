@@ -13,6 +13,7 @@ import { Dialog } from "@/components/Dialog";
 import { FieldError } from "@/components/FieldError";
 import { Icon } from "@/components/Icon";
 import { RoleBadge } from "@/components/RoleBadge";
+import { Switch } from "@/components/Switch";
 import { TripResetsPanel } from "@/components/TripResetsPanel";
 import { TripSetupPanel } from "@/components/TripSetupPanel";
 import { cityById } from "@/data/cities";
@@ -456,19 +457,16 @@ export default function AdminPage() {
                     <p className="mt-1 text-meta font-normal text-ink-dim">
                       {city ? `Last voted: ${city}` : "No vote"}
                     </p>
-                    <button
-                      type="button"
-                      onClick={() => void toggleUserActive(voter.voter_id, !voter.is_active)}
-                      className="mt-3 flex h-9 items-center gap-2 rounded-chip px-3 text-[12px] font-semibold"
-                      style={{
-                        background: voter.is_active ? "var(--green-dim)" : "var(--red-dim)",
-                        color: voter.is_active ? "var(--green)" : "var(--red)",
-                        border: `1px solid ${voter.is_active ? "var(--green)" : "var(--red)"}`,
-                      }}
-                    >
-                      <Icon name={voter.is_active ? "check_circle" : "block"} size={14} />
-                      {voter.is_active ? "Active" : "Disabled"}
-                    </button>
+                    <div className="mt-3 flex items-center gap-2">
+                      <Switch
+                        checked={voter.is_active}
+                        onToggle={() => void toggleUserActive(voter.voter_id, !voter.is_active)}
+                        ariaLabel={voter.is_active ? "Disable user" : "Enable user"}
+                      />
+                      <span className={`text-[12px] font-semibold ${voter.is_active ? "text-green" : "text-red"}`}>
+                        {voter.is_active ? "Active" : "Disabled"}
+                      </span>
+                    </div>
                   </div>
                   <div className="flex flex-none">
                     <IconButton

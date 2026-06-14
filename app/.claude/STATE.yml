@@ -1,5 +1,7 @@
-last_updated: 2026-06-12
-last_session: >-
+last_updated: 2026-06-14
+last_session: "Audit 3 code fixes — 13 items"
+current_phase: audit3-code-fixes
+previous_session: >-
   Admin user disable/enable, disabled users excluded from all group views,
   single-device location broadcasting. SCHEMA SQL PENDING MANUAL RUN
   (v2_voters.is_active boolean NOT NULL DEFAULT true; v2_locations.
@@ -33,7 +35,7 @@ last_session: >-
   is_active, LocationRow + session_id. City detail map, walkability,
   AppShell, root index.html untouched. Build green (36 static pages),
   lint + strict typecheck clean.
-current_phase: user_disable_enable_session_broadcast
+previous_phase: user_disable_enable_session_broadcast
 build_complete: true
 supabase_schema_deployed: false # is_active + session_id SQL pending manual run
 vercel_deployed: false

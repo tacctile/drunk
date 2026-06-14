@@ -43,7 +43,8 @@ const LABEL_MIN_ZOOM = 15;
 const LABEL_GAP = 14;
 // The city-detail sticky header is 56px + hairline — scrollIntoView lands
 // the map just below it instead of underneath it.
-const HEADER_CLEARANCE = 57;
+export const CITY_DETAIL_HEADER_HEIGHT = 57;
+const HEADER_CLEARANCE = CITY_DETAIL_HEADER_HEIGHT;
 
 function venuePinIcon(kind: VenueKind, focused: boolean): google.maps.Symbol {
   return {

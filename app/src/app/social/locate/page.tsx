@@ -360,7 +360,7 @@ function PeoplePanel({ locations, myId, onShowAll, onRowTap }: PeoplePanelProps)
           type="button"
           onClick={() => setPanelCollapsed(false)}
           aria-label="Show people panel"
-          className="absolute right-0 top-1/2 z-10 flex h-14 w-7 -translate-y-1/2 items-center justify-center border"
+          className="absolute right-0 top-1/2 z-10 flex h-14 w-11 -translate-y-1/2 items-center justify-center border"
           style={{ background: "rgba(26, 31, 43, 0.9)", borderRadius: "6px 0 0 6px" }}
         >
           <Icon name="chevron_left" size={20} className="text-ink-dim" />
