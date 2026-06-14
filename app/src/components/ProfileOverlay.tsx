@@ -33,6 +33,7 @@ import { AvatarCropper } from "./AvatarCropper";
 import { BottomSheet } from "./BottomSheet";
 import { Icon } from "./Icon";
 import { NamePrompt } from "./NamePrompt";
+import { RoleBadge } from "./RoleBadge";
 
 const SWIPE_CLOSE_PX = 70;
 const SAVED_FLASH_MS = 1200;
@@ -1011,6 +1012,11 @@ function ProfileBody({
                 </button>
                 <p className="mt-1 text-meta text-ink-muted">Edit photo</p>
                 <p className="mt-2 text-display text-ink">{displayName}</p>
+                {role && (
+                  <div className="mt-1">
+                    <RoleBadge role={role} size="md" />
+                  </div>
+                )}
                 {memberSince && (
                   <p className="mt-1 text-meta font-normal text-ink-dim">
                     Member since {memberSince}

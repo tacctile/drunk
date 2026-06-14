@@ -4,6 +4,50 @@
 
 ---
 
+## Hopperz Screen + Role Badges + Cross-Wing Locate Deep Link — 2026-06-14
+
+### Hopperz tab & page
+- `app/src/components/PlanNav.tsx` — 5-tab flex row: Cities, Availability,
+  Results, Hopperz, Hopp. Vertical divider before cross-wing Hopp tab.
+  Hopp uses --ink-dim color.
+- `app/src/app/plan/hopperz/page.tsx` — member list/grid with view toggle,
+  tapping a member opens VoterProfileSheet.
+- `app/src/hooks/useHopperz.ts` — data hook: voters + locations + roles +
+  note counts → HopperzVoter[]. Sorted: you first, then A–Z.
+
+### Role badges
+- `app/src/components/RoleBadge.tsx` — pill badge (sm/md): crown/Admin for
+  super_admin, shield/Moderator for moderator. Used in Hopperz page,
+  ProfileOverlay Me tab hero, admin page user cards, VoterProfileSheet.
+
+### Voter profile sheet
+- `app/src/components/VoterProfileSheet.tsx` — BottomSheet: avatar, name,
+  role badge, locate button (if sharing), about notes (fetched on demand),
+  moderator toggle (super admin only).
+
+### Cross-wing locate deep link
+- `app/src/app/social/locate/page.tsx` — reads `?focus=voter_id` on mount,
+  flies to that person's pin (or silently ignores if not sharing).
+  Wrapped in Suspense for useSearchParams.
+
+### Nav dividers
+- `app/src/components/HopNav.tsx` — flex row with vertical divider before
+  cross-wing Plan tab. Plan tab uses --ink-dim color.
+
+### Moderator avatar long-press
+- `app/src/components/ProfileAvatar.tsx` — moderators get 500ms long-press
+  → /plan/admin via useAdminHold(500).
+- `app/src/hooks/useAdminHold.ts` — accepts optional holdMs parameter.
+
+### Admin page role display
+- `app/src/app/plan/admin/page.tsx` — AdminVoter includes role field;
+  fetch select updated; RoleBadge shown next to voter name.
+
+### Build task index
+- Fix Hopperz screen / voter profiles / role badges → read `src/hooks/useHopperz.ts`, `src/app/plan/hopperz/page.tsx`, `src/components/VoterProfileSheet.tsx`, `src/components/RoleBadge.tsx`, `src/lib/roles.ts`
+
+---
+
 ## Profile Overhaul — Avatar Upload + Notes + Tabbed Layout + Role Foundation — 2026-06-14
 
 ### Profile tabbed layout

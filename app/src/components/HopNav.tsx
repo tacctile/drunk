@@ -32,7 +32,7 @@ export function HopNav() {
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t bg-surface pb-[env(safe-area-inset-bottom)]">
-      <div className="grid h-16 grid-cols-5">
+      <div className="flex h-16 items-stretch">
         {NAV.map((tab) => {
           const active = pathname === tab.href;
           return (
@@ -40,7 +40,7 @@ export function HopNav() {
               key={tab.href}
               href={tab.href}
               aria-current={active ? "page" : undefined}
-              className={`flex min-h-11 flex-col items-center justify-center gap-0.5 text-label font-semibold transition ${
+              className={`flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 text-label font-semibold transition ${
                 active ? "text-accent" : "text-ink-muted"
               }`}
             >
@@ -49,12 +49,15 @@ export function HopNav() {
             </Link>
           );
         })}
+        <div className="flex items-center">
+          <div className="h-6 w-px bg-border" />
+        </div>
         <button
           type="button"
           {...holdHandlers}
           onClick={planClick}
           aria-label="Plan"
-          className={`flex min-h-11 flex-col items-center justify-center gap-0.5 text-label font-semibold text-ink-muted transition ${HOLD_CLASS} ${adminHold.holding ? "anim-hold" : ""}`}
+          className={`flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 text-label font-semibold text-ink-dim transition ${HOLD_CLASS} ${adminHold.holding ? "anim-hold" : ""}`}
         >
           <Icon name="list_alt" size={24} />
           Plan

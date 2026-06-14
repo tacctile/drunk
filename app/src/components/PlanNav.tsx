@@ -11,6 +11,7 @@ const NAV = [
   { href: "/plan/cities", icon: "location_city", label: "Cities" },
   { href: "/plan/calendar", icon: "event_available", label: "Availability" },
   { href: "/plan/board", icon: "leaderboard", label: "Results" },
+  { href: "/plan/hopperz", icon: "group", label: "Hopperz" },
 ] as const;
 
 const HOLD_CLASS = "select-none [-webkit-touch-callout:none]";
@@ -61,13 +62,14 @@ export function PlanNav() {
             </Link>
           );
         })}
+        <div className="mx-auto my-1 h-px w-6 bg-border" />
         <button
           type="button"
           title="Hopp"
           aria-label="Hopp"
           {...holdHandlers}
           onClick={hoppClick}
-          className={`flex h-11 w-11 items-center justify-center rounded-btn text-ink-muted transition hover:bg-raised hover:text-ink ${HOLD_CLASS} ${adminHold.holding ? "anim-hold" : ""}`}
+          className={`flex h-11 w-11 items-center justify-center rounded-btn text-ink-dim transition hover:bg-raised hover:text-ink ${HOLD_CLASS} ${adminHold.holding ? "anim-hold" : ""}`}
         >
           <Icon name="sports_bar" size={24} />
         </button>
@@ -75,8 +77,8 @@ export function PlanNav() {
 
       {/* Mobile bottom nav — plan wing only, 64px + safe area */}
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t bg-surface pb-[env(safe-area-inset-bottom)] min-[840px]:hidden">
-        <div className="grid h-16 grid-cols-4">
-          {NAV.map((item) => {
+        <div className="flex h-16 items-stretch">
+          {NAV.map((item, index) => {
             const active = isActive(pathname, item.href);
             const results = item.href === "/plan/board";
             return (
@@ -85,7 +87,7 @@ export function PlanNav() {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 {...(results ? adminHold.handlers : {})}
-                className={`flex min-h-11 flex-col items-center justify-center gap-0.5 text-label font-semibold transition ${
+                className={`flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 text-label font-semibold transition ${
                   active ? "text-accent" : "text-ink-muted"
                 } ${results ? HOLD_CLASS : ""} ${results && adminHold.holding ? "anim-hold" : ""}`}
               >
@@ -94,12 +96,15 @@ export function PlanNav() {
               </Link>
             );
           })}
+          <div className="flex items-center">
+            <div className="h-6 w-px bg-border" />
+          </div>
           <button
             type="button"
             onClick={hoppClick}
             aria-label="Hopp"
             {...holdHandlers}
-            className={`flex min-h-11 flex-col items-center justify-center gap-0.5 text-label font-semibold text-ink-muted transition ${HOLD_CLASS} ${adminHold.holding ? "anim-hold" : ""}`}
+            className={`flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 text-label font-semibold text-ink-dim transition ${HOLD_CLASS} ${adminHold.holding ? "anim-hold" : ""}`}
           >
             <Icon name="sports_bar" size={24} />
             Hopp

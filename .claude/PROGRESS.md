@@ -1,6 +1,47 @@
 # Hoppz — Progress
 > Feature checklist for the v2 Next.js app (`app/`). Newest phase on top.
 
+## Phase: Hopperz Screen + Role Badges + Cross-Wing Locate Deep Link (2026-06-14)
+- [x] PlanNav updated: 5-tab flex row (Cities, Availability, Results, Hopperz, Hopp)
+- [x] PlanNav vertical divider before cross-wing Hopp tab
+- [x] PlanNav Hopp tab uses --ink-dim color
+- [x] PlanNav desktop rail includes Hopperz tab + horizontal divider before Hopp
+- [x] /plan/hopperz page created (client component, uses AppShell via plan/layout)
+- [x] Hopperz list view: avatar, name, role badge, note count, sharing indicator, chevron
+- [x] Hopperz grid view: 3-col grid, avatar, name, role badge, sharing dot
+- [x] Hopperz view toggle persisted to localStorage (bh2-hopperz-view)
+- [x] Hopperz member count in page header
+- [x] Hopperz empty state (group icon + "No crew yet")
+- [x] Hopperz "You" row highlighted with bg-raised
+- [x] useHopperz hook: voters + locations + roles + note counts → HopperzVoter[]
+- [x] useHopperz fetches v2_voter_notes count per voter on mount
+- [x] useHopperz sorted: you first, then display_name A–Z
+- [x] RoleBadge component (sm: 14px icon + 11px text, md: 16px icon + 13px text)
+- [x] RoleBadge: super_admin = crown + bg-accent-dim, moderator = shield + bg-green-dim
+- [x] RoleBadge imported into Hopperz page (list + grid)
+- [x] RoleBadge imported into ProfileOverlay Me tab hero (md size, below display name)
+- [x] RoleBadge imported into admin page (sm size, next to voter name)
+- [x] VoterProfileSheet component (BottomSheet, read-only voter profile)
+- [x] VoterProfileSheet: avatar, name, role badge, "You" label
+- [x] VoterProfileSheet: "Locate on map" button (only if sharing && !isYou)
+- [x] VoterProfileSheet: about notes fetched on demand with loading skeleton
+- [x] VoterProfileSheet: moderator toggle (super admin only, disabled for own sheet)
+- [x] Cross-wing locate deep link: ?focus=voter_id on /social/locate
+- [x] Locate page reads focus param, flies to voter, clears URL
+- [x] Locate page wrapped in Suspense for useSearchParams
+- [x] Hopperz onLocate handler: setLastWing("social") + router.push
+- [x] HopNav updated: flex row with vertical divider before cross-wing Plan tab
+- [x] HopNav Plan tab uses --ink-dim color
+- [x] Moderator 500ms long-press on ProfileAvatar → /plan/admin
+- [x] useAdminHold accepts optional holdMs parameter (default 3000)
+- [x] Admin page AdminVoter interface includes role field
+- [x] Admin page fetch select includes role column
+- [x] Admin page voter cards show RoleBadge next to name
+- [x] TypeScript check passes clean
+- [x] ESLint passes (only pre-existing warnings)
+- [x] Next.js build passes clean
+- [x] .claude/ files updated (CONTEXT.md, BUILD_INDEX.md, STATE.yml, PROGRESS.md)
+
 ## Phase: Profile Overhaul — Avatar Upload + Notes + Tabbed Layout + Role Foundation (2026-06-14)
 - [x] ProfileOverlay rebuilt with 3-tab layout (Me / Trip / About)
 - [x] Tab bar: horizontal, full width, accent underline on active tab

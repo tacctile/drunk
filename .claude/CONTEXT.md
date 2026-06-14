@@ -47,14 +47,26 @@ Key dirs:
 - `components/TopBar.tsx` — sticky wordmark bar: "Hoppz" left, ProfileAvatar
   right. Hidden on `/plan/city/*` and `/plan/admin` (pages with own headers).
   Rendered by both AppShell and HopShell.
-- `components/PlanNav.tsx` — plan-wing nav: Cities, Availability, Results, Hopp.
+- `components/PlanNav.tsx` — plan-wing nav: Cities, Availability, Results,
+  Hopperz, Hopp. Flex row with vertical divider before cross-wing Hopp tab.
   Mobile bottom bar + desktop 80px rail (≥840px). Admin long-press on Results
   AND Hopp tabs. Only renders on `/plan/*`.
 - `components/HopNav.tsx` — hopp-wing nav: Chat, Camera, Gallery, Locate, Plan.
-  5-tab mobile bottom bar. Admin long-press on Plan tab.
+  Flex row with vertical divider before cross-wing Plan tab.
+  Admin long-press on Plan tab.
 - `components/HopShell.tsx` — hopp-wing shell: TopBar + children + HopNav.
   Used by `social/layout.tsx`.
-- `hooks/useAdminHold.ts` — 3s hold hook shared by PlanNav and HopNav.
+- `components/RoleBadge.tsx` — role badge pill (sm for inline lists, md for
+  profile hero). Renders crown/Admin for super_admin, shield/Moderator for
+  moderator. Returns null for null role.
+- `components/VoterProfileSheet.tsx` — BottomSheet showing read-only voter
+  profile: avatar, name, role badge, locate button (if sharing), about notes,
+  moderator toggle (super admin only).
+- `hooks/useAdminHold.ts` — hold hook shared by PlanNav, HopNav, and
+  ProfileAvatar. Accepts optional holdMs param (default 3000ms).
+- `hooks/useHopperz.ts` — data hook for Hopperz screen. Merges voters,
+  locations, roles, and note counts into HopperzVoter[]. Sorted: you first,
+  then A–Z.
 - `hooks/useChat.ts` — chat data hook: messages, reactions, reads, realtime,
   optimistic sends, pagination, markRead. Channel "hoppz-chat".
 - `hooks/useCamera.ts` — camera hook: getUserMedia, flip, capture (canvas →
@@ -69,9 +81,12 @@ Key dirs:
 - `lib/roles.ts` — Role system: getRoleForVoter, isSuperAdmin, isModerator,
   role labels/badges, moderator permissions/restrictions constants.
 - `components/Avatar.tsx` — Unified avatar component (photo or initials
-  fallback). Used by ProfileAvatar, ProfileOverlay, and chat SenderAvatar.
+  fallback). Used by ProfileAvatar, ProfileOverlay, chat SenderAvatar,
+  Hopperz page, and VoterProfileSheet.
 - `components/AvatarCropper.tsx` — Canvas-based avatar crop overlay. Pinch
   to zoom, drag to pan, circular mask, exports 400x400 JPEG.
+- `components/ProfileAvatar.tsx` — top-right avatar button. Moderators
+  (not super admin) get a 500ms long-press → /plan/admin via useAdminHold(500).
 - `lib/push.ts` — Client-side push notification helpers: isPushSupported,
   getNotificationPermission, subscribeToPush, getExistingSubscription,
   unsubscribeFromPush, extractSubscriptionKeys. VAPID key from env var.
@@ -103,17 +118,20 @@ Cold open hits `/` → client checks `isAuthenticated()`:
 - **Plan wing — `/plan/*`** (`plan/layout.tsx` sets last wing = plan):
   - `/plan` → redirects to `/plan/cities`.
   - `/plan/cities`, `/plan/city/[id]`, `/plan/calendar`, `/plan/board`,
-    `/plan/admin` (3s-hold Results or Hopp tab to reach admin).
-  - PlanNav renders 4 bottom tabs (Cities / Availability / Results / Hopp)
+    `/plan/hopperz`, `/plan/admin` (3s-hold Results or Hopp tab to reach admin).
+  - PlanNav renders 5 bottom tabs (Cities / Availability / Results / Hopperz / Hopp)
+    as a flex row with a vertical divider before the cross-wing Hopp tab.
     + the 80px desktop rail at ≥840px. Hopp is a cross-wing link to `/social`
-    (sports_bar icon) — it does not get active highlight on /plan/* routes.
-    Admin long-press is on both the Results tab and the Hopp tab.
+    (sports_bar icon, --ink-dim color) — it does not get active highlight on
+    /plan/* routes. Admin long-press is on both the Results tab and the Hopp tab.
     The wordmark bar (TopBar) has only the wordmark left and avatar right.
 - **Hopp wing — `/social/*`** (`social/layout.tsx` sets last wing = social):
   - `/social` (Chat), `/social/camera` (Camera — full-screen, own layout, no HopShell),
     `/social/gallery` (photo gallery — 3-col grid, day groups, jump-to-date),
-    `/social/locate` (live group map).
-  - HopShell renders TopBar + HopNav bottom bar (Chat / Camera / Gallery / Locate / Plan).
+    `/social/locate` (live group map — accepts `?focus=voter_id` deep link
+    from Hopperz page to fly to a specific person on mount).
+  - HopShell renders TopBar + HopNav bottom bar (Chat / Camera / Gallery / Locate / Plan)
+    as a flex row with a vertical divider before the cross-wing Plan tab.
     Camera route has its own layout.tsx that bypasses HopShell (full-bleed viewfinder).
   - Camera context: `?from=chat` param → post-capture uploads and navigates to
     `/social?pendingImage=...`. Standalone mode offers Send to Chat or Save to Device.
@@ -255,13 +273,16 @@ Storage buckets:
 
 ## Current State
 Last updated: 2026-06-14
-Last change: **Profile Overhaul — Avatar Upload + Notes + Tabbed Layout + Role Foundation.**
-- ProfileOverlay rebuilt with 3-tab layout (Me / Trip / About).
-- Avatar upload with canvas-based cropper (AvatarCropper.tsx).
-- Unified Avatar component used across the app (ProfileAvatar, chat, overlay).
-- Role system foundation (src/lib/roles.ts): super_admin via env var, moderator via DB.
-- Voter notes ("About me") on the About tab with add/delete.
-- v2_voters extended with avatar_url and role columns.
-- v2_voter_notes table for personal notes.
-- setModeratorRole mutation in useGroupData.
+Last change: **Hopperz Screen + Role Badges + Cross-Wing Locate Deep Link.**
+- Hopperz tab added to PlanNav (5th tab: Cities / Availability / Results / Hopperz / Hopp).
+- /plan/hopperz page: list/grid view toggle, member count, VoterProfileSheet on tap.
+- useHopperz hook: merges voters, locations, roles, note counts.
+- RoleBadge component (sm/md): inline role pill used in Hopperz, ProfileOverlay, admin.
+- VoterProfileSheet: read-only profile, locate button, about notes, moderator toggle.
+- Cross-wing locate deep link: ?focus=voter_id flies to a person on the map.
+- PlanNav and HopNav both use flex row with vertical divider before cross-wing tab.
+- Cross-wing tabs use --ink-dim color (dimmer than regular inactive tabs).
+- Moderator long-press (500ms) on ProfileAvatar → /plan/admin.
+- useAdminHold accepts optional holdMs parameter.
+- Admin page fetches and displays role field + RoleBadge on voter cards.
 Next up: Wire push notification triggers (new message, reaction, etc.).
