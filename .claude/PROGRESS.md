@@ -1,6 +1,36 @@
 # Hoppz — Progress
 > Feature checklist for the v2 Next.js app (`app/`). Newest phase on top.
 
+## Phase: Moderator Admin Screen (2026-06-14)
+- [x] /plan/moderator route created (client component)
+- [x] Moderator access guard: redirects non-moderators to /plan
+- [x] Sticky header: back arrow → /plan, title "Crew Management"
+- [x] Section 1: Your Role card (RoleBadge md, permissions/restrictions columns)
+- [x] Section 2: TripSetupPanel (shared) with canClear=false
+- [x] Section 3: Crew Members (active voters, A-Z sorted)
+- [x] Crew cards: Avatar(40), name, RoleBadge sm, trip status chip
+- [x] Crew: Edit Name inline expansion (first + initial, save/cancel)
+- [x] Crew: Reset PIN inline expansion (new PIN + confirm, bcrypt hash)
+- [x] Crew: Trip Status selector (on_trip/remote/out buttons)
+- [x] Crew: No pin_plain display, no is_active toggle, no delete
+- [x] Section 4: ActiveLocationsPanel (shared, self-contained)
+- [x] Section 5: TripResetsPanel (shared, reset votes + availability)
+- [x] TripSetupPanel extracted from admin/page.tsx (canClear prop)
+- [x] ActiveLocationsPanel extracted from admin/page.tsx (self-contained fetch)
+- [x] TripResetsPanel extracted from admin/page.tsx (ConfirmResetDialog included)
+- [x] Admin page refactored to use shared components
+- [x] Admin page retains: Registered Users, Data Health, Danger Zone
+- [x] ProfileAvatar routes moderators to /plan/moderator (not /plan/admin)
+- [x] useAdminHold accepts destination parameter (default /plan/admin)
+- [x] TopBar hides on /plan/moderator (page has own header)
+- [x] MODERATOR_PERMISSIONS updated: "Edit user display names", "Reset user PINs"
+- [x] RBAC system complete (super_admin → admin, moderator → moderator screen)
+- [x] Middleware /plan/:path* already covers /plan/moderator — verified
+- [x] TypeScript check passes clean
+- [x] ESLint passes (only pre-existing warnings)
+- [x] Next.js build passes clean
+- [x] .claude/ files updated (CONTEXT.md, BUILD_INDEX.md, STATE.yml, PROGRESS.md)
+
 ## Phase: Trip Entity — Core System (2026-06-14)
 - [x] TripRow, TripHotelRow, TripHotelAssignmentRow, TripMemberRow types in supabase.ts
 - [x] TripStatus, TripMemberStatus type enums in supabase.ts

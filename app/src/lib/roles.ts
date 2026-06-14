@@ -28,8 +28,8 @@ export const ROLE_BADGE_ICONS: Record<NonNullable<UserRole>, string> = {
 };
 
 export const MODERATOR_PERMISSIONS = [
-  "Edit user display names and PINs",
-  "View user PINs",
+  "Edit user display names",
+  "Reset user PINs",
   "Toggle trip status for any user",
   "Force-expire user locations",
   "Reset all votes",

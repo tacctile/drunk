@@ -4,6 +4,42 @@
 
 ---
 
+## Moderator Admin Screen — 2026-06-14
+
+### Moderator route
+- `app/src/app/plan/moderator/page.tsx` — moderator-only admin page:
+  Your Role card, TripSetupPanel (no clear), Crew Members (edit name,
+  reset PIN, trip status), ActiveLocationsPanel, TripResetsPanel.
+  Access guard redirects non-moderators to /plan.
+
+### Shared admin panels
+- `app/src/components/TripSetupPanel.tsx` — trip setup UI (city, dates,
+  hotels, assignments). Props: canClear. Used by admin + moderator.
+- `app/src/components/ActiveLocationsPanel.tsx` — active locations with
+  force-expire. Self-contained data fetching.
+- `app/src/components/TripResetsPanel.tsx` — reset votes/availability
+  buttons with confirmation dialogs.
+
+### Admin page refactor
+- `app/src/app/plan/admin/page.tsx` — inline Trip Setup, Locations, and
+  Resets sections replaced with shared panel components. Retains Registered
+  Users (full actions), Data Health, and Danger Zone.
+
+### Moderator routing
+- `app/src/components/ProfileAvatar.tsx` — moderator long-press now routes
+  to /plan/moderator instead of /plan/admin.
+- `app/src/hooks/useAdminHold.ts` — accepts optional destination parameter.
+- `app/src/components/TopBar.tsx` — hides on /plan/moderator (own header).
+
+### Role system
+- `app/src/lib/roles.ts` — MODERATOR_PERMISSIONS updated: "Edit user
+  display names", "Reset user PINs" (was "View user PINs").
+
+### Build task index
+- Fix moderator screen / role access → read `src/app/plan/moderator/page.tsx`, `src/lib/roles.ts`, `src/components/TripSetupPanel.tsx`, `src/components/ActiveLocationsPanel.tsx`, `src/components/TripResetsPanel.tsx`
+
+---
+
 ## Trip Entity — Core System — 2026-06-14
 
 ### Trip data layer

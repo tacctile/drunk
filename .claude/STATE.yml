@@ -1,21 +1,21 @@
 # Bar Hoppers — machine-readable session state.
 # Companion to CONTEXT.md / PROGRESS.md. Update at the end of every session.
 
-current_phase: trip-entity
+current_phase: moderator-admin-screen
 last_updated: 2026-06-14
 app_root: app/            # the live Next.js v2 app; root index.html is legacy v1
 
 last_change: >
-  Trip Entity — Core System.
-  v2_trip, v2_trip_hotels, v2_trip_hotel_assignments, v2_trip_members types
-  added to supabase.ts. useTrip.ts hook with realtime, mutations, date-based
-  status auto-transition. TripDataProvider context in useTripData.tsx, mounted
-  in layout.tsx. TopBar shows trip status pill (upcoming countdown / active
-  "On Trip"). Admin page: TripSetupSection (city, dates, hotels, assignments,
-  clear, lock banner) for super_admin + moderator. Voting locked when upcoming
-  or active (CityList + CityDetail). VoterProfileSheet: trip status display +
-  buttons. Hopperz: tripStatus per voter, sorted by status group. ProfileOverlay
-  Trip tab: TripStatusCard with on_trip/remote/out buttons.
+  Moderator Admin Screen.
+  Created /plan/moderator route for moderator-only admin access. Extracted
+  TripSetupPanel, ActiveLocationsPanel, TripResetsPanel as shared components
+  used by both /plan/admin and /plan/moderator. Moderator screen shows:
+  Your Role card (permissions/restrictions), TripSetupPanel (no clear dates),
+  Crew Members (edit name, reset PIN, trip status per voter),
+  ActiveLocationsPanel, TripResetsPanel. ProfileAvatar routes moderators
+  to /plan/moderator (500ms long-press). useAdminHold accepts destination
+  parameter. Admin page refactored to use shared components. RBAC complete:
+  super_admin → /plan/admin, moderator → /plan/moderator.
 
 verification:
   typecheck: pass        # tsc --noEmit

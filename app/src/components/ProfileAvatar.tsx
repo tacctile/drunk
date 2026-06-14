@@ -28,7 +28,7 @@ export function ProfileAvatar({
   const myRow = voters.find((v) => v.voter_id === voterId);
   const role = getRoleForVoter(voterId, myRow?.role ?? null);
   const isMod = role === "moderator";
-  const modHold = useAdminHold(500);
+  const modHold = useAdminHold(500, "/plan/moderator");
   const { onClick: holdClick, ...holdHandlers } = modHold.handlers;
 
   useEffect(() => {

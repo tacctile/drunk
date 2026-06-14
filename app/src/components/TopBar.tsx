@@ -14,7 +14,7 @@ export function TopBar() {
   const { effectiveStatus, daysUntil } = useTripData();
 
   const hasOwnHeader =
-    pathname.startsWith("/plan/city/") || pathname.startsWith("/plan/admin");
+    pathname.startsWith("/plan/city/") || pathname.startsWith("/plan/admin") || pathname.startsWith("/plan/moderator");
 
   if (hasOwnHeader) return null;
 

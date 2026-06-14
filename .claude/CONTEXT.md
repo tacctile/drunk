@@ -92,7 +92,14 @@ Key dirs:
 - `components/AvatarCropper.tsx` — Canvas-based avatar crop overlay. Pinch
   to zoom, drag to pan, circular mask, exports 400x400 JPEG.
 - `components/ProfileAvatar.tsx` — top-right avatar button. Moderators
-  (not super admin) get a 500ms long-press → /plan/admin via useAdminHold(500).
+  (not super admin) get a 500ms long-press → /plan/moderator via useAdminHold(500).
+- `components/TripSetupPanel.tsx` — shared trip setup UI (city, dates,
+  hotels, assignments). Props: canClear (true for admin, false for mod).
+  Used by both /plan/admin and /plan/moderator.
+- `components/ActiveLocationsPanel.tsx` — shared active locations list
+  with force-expire. Self-contained (own fetch). Used by admin + moderator.
+- `components/TripResetsPanel.tsx` — shared reset votes / availability
+  buttons with confirmation dialogs. Used by admin + moderator.
 - `lib/push.ts` — Client-side push notification helpers: isPushSupported,
   getNotificationPermission, subscribeToPush, getExistingSubscription,
   unsubscribeFromPush, extractSubscriptionKeys. VAPID key from env var.
@@ -124,7 +131,8 @@ Cold open hits `/` → client checks `isAuthenticated()`:
 - **Plan wing — `/plan/*`** (`plan/layout.tsx` sets last wing = plan):
   - `/plan` → redirects to `/plan/cities`.
   - `/plan/cities`, `/plan/city/[id]`, `/plan/calendar`, `/plan/board`,
-    `/plan/hopperz`, `/plan/admin` (3s-hold Results or Hopp tab to reach admin).
+    `/plan/hopperz`, `/plan/admin` (3s-hold Results or Hopp tab to reach admin),
+    `/plan/moderator` (500ms long-press on own avatar for moderators).
   - PlanNav renders 5 bottom tabs (Cities / Availability / Results / Hopperz / Hopp)
     as a flex row with a vertical divider before the cross-wing Hopp tab.
     + the 80px desktop rail at ≥840px. Hopp is a cross-wing link to `/social`
@@ -288,14 +296,13 @@ Storage buckets:
 
 ## Current State
 Last updated: 2026-06-14
-Last change: **Trip Entity — Core System.**
-- v2_trip, v2_trip_hotels, v2_trip_hotel_assignments, v2_trip_members tables.
-- useTrip.ts hook: all trip data, realtime, mutations, date-based status transitions.
-- useTripData.tsx: TripDataProvider context, mounted in layout.tsx.
-- TopBar: trip status pill (upcoming countdown / active "On Trip") centered.
-- Admin page: Trip Setup section (city, dates, hotels, assignments, clear, lock banner).
-- Voting locked when trip status is upcoming or active (CityList + CityDetail).
-- VoterProfileSheet: trip status display + buttons (own, super admin, moderator).
-- Hopperz: trip status per voter (remote/out indicators), sorted by status group.
-- ProfileOverlay Trip tab: TripStatusCard with on_trip/remote/out buttons.
+Last change: **Moderator Admin Screen.**
+- /plan/moderator route: limited admin for moderators (crew mgmt, trip setup,
+  locations, resets). Access via 500ms long-press on own avatar.
+- Shared panels: TripSetupPanel, ActiveLocationsPanel, TripResetsPanel extracted
+  from admin page and used by both admin and moderator screens.
+- Admin page refactored to use shared components.
+- ProfileAvatar routes moderators to /plan/moderator (not /plan/admin).
+- useAdminHold accepts destination parameter.
+- RBAC system complete: super_admin → /plan/admin, moderator → /plan/moderator.
 Next up: Wire push notification triggers (new message, reaction, etc.).
