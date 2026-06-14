@@ -2,20 +2,20 @@
 # Companion to CONTEXT.md / ARCHITECTURE.md / BUILD_INDEX.md.
 # Update at the end of every session.
 
-current_phase: audit1-remediation
+current_phase: audit2-remediation
 last_updated: 2026-06-14
 app_root: app/
 
 last_change: >
-  Audit 1 Remediation — code health refactoring.
-  Deleted legacy index.html and dead pushServer.ts. Extracted shared primitives
-  (FieldError, Switch, Stars). Centralized localStorage wrappers in lib/storage.ts.
-  Consolidated LOCATION_COLUMNS constant and ReactionRow/ReadRow type aliases.
-  Extracted useVoterNotes hook; updated ProfileOverlay and VoterProfileSheet.
-  Extracted MessageBubble into components/chat/. Split ProfileOverlay into
-  components/profile/ folder (11 sub-components + barrel). ActiveLocationsPanel
-  now accepts locations prop from useLocations. Created ARCHITECTURE.md. Rewrote
-  CONTEXT.md. Build verified (44 routes).
+  Audit 2 Remediation — architecture health fixes.
+  Middleware role protection (bh2-role cookie for admin/moderator routes).
+  ErrorBoundary wraps root providers and chat message list. Chat renderMessages
+  memoized with useMemo. Gallery page no longer mounts full useChat (direct
+  Supabase insert). useLocations derives voterColors from useGroupData voters
+  (removed redundant v2_voters fetch). useLocations exports resetLocationStore()
+  called on sign-out. useHopperz note count fetch stabilized (sorted voter ID
+  string dep). SeeButton tap target 44px. Admin back → /plan. aria-labels added.
+  autoCapitalize on name inputs. Build verified (44 routes).
 
 verification:
   typecheck: pass        # tsc --noEmit
@@ -25,9 +25,6 @@ verification:
 known_issues:
   - App icons are placeholders — public/icons/ needs real PNGs
     (icon-192.png, icon-512.png, apple-touch-icon.png) before install looks right.
-  - bh2-auth is a session cookie, so a cold direct deep-link to /plan/* in a new
-    browser session bounces through /login → /home once before the cookie is set.
-    Intended soft-guard behavior, not a bug.
   - VAPID keys not yet generated — run npx web-push generate-vapid-keys and add
     to .env.local + Vercel env vars before push notifications will work.
   - v2_voter_notes table needs to be created in Supabase (migration pending).

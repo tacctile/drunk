@@ -1,6 +1,31 @@
 # Hoppz — Progress
 > Feature checklist for the v2 Next.js app (`app/`). Newest phase on top.
 
+## Phase: Audit 2 Remediation — Architecture Health Fixes (2026-06-14)
+- [x] Middleware: bh2-role cookie check for /plan/admin (super_admin) and /plan/moderator (moderator|super_admin)
+- [x] auth.ts: setRoleCookie, clearRoleCookie functions
+- [x] useGroupData: sets role cookie after refetch, clears on sign-out
+- [x] identity.ts: clearIdentity calls clearRoleCookie
+- [x] Moderator page: removed client-side useEffect role guard (middleware handles it)
+- [x] ErrorBoundary component created (class-based, fallback prop, retry button)
+- [x] Root layout: ErrorBoundary wraps GroupDataProvider/TripDataProvider
+- [x] Chat page: message list wrapped in ErrorBoundary with chat-specific fallback
+- [x] Chat renderMessages replaced with useMemo (renderedMessages)
+- [x] Gallery page: removed useChat import, direct Supabase insert for uploads
+- [x] useLocations: voterColors derived from useGroupData voters (removed redundant v2_voters fetch)
+- [x] useLocations: resetLocationStore() export added, called on sign-out
+- [x] useHopperz: note count useEffect depends on stable voterIds string
+- [x] Board SeeButton: h-8 → h-11 (44px minimum tap target)
+- [x] Admin back button: /social/locate → /plan
+- [x] Admin EditUserDialog first name: autoCapitalize="words"
+- [x] Moderator CrewCard first name: autoCapitalize="words"
+- [x] Chat input bar: aria-label on camera, upload, send buttons
+- [x] Gallery refresh button: aria-label="Refresh gallery"
+- [x] TypeScript check passes clean
+- [x] ESLint passes (only pre-existing warnings)
+- [x] Next.js build passes clean (44 routes)
+- [x] .claude/ files updated (CONTEXT.md, BUILD_INDEX.md, STATE.yml, PROGRESS.md)
+
 ## Phase: Full Polish Pass — Known Issues + UX Fixes (2026-06-14)
 - [x] Login: sign-in lookup verified (case-insensitive, trimmed, generic error)
 - [x] Login: toggle links present with 44px tap targets

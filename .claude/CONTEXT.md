@@ -55,6 +55,8 @@ Key dirs:
   Used by `social/layout.tsx`.
 
 ### File map — shared primitives
+- `components/ErrorBoundary.tsx` — class-based error boundary (fallback prop,
+  retry button). Wraps root providers in layout.tsx and chat message list.
 - `components/FieldError.tsx` — inline error text (`<p role="alert">`).
 - `components/Switch.tsx` — toggle switch (checked, onToggle, ariaLabel, disabled).
 - `components/Stars.tsx` — star rating display (count, max 5).
@@ -121,7 +123,7 @@ Key dirs:
 - `lib/identity.ts` — localStorage identity (`bh2-voter-id`, `bh2-voter-name`,
   `bh2-pin-color`, `bh2-avatar-url`). clearIdentity also clears auth cookie.
 - `lib/auth.ts` — soft-auth layer (isAuthenticated, getLastWing, setLastWing,
-  mirrorAuthCookie, clearAuthCookie).
+  mirrorAuthCookie, clearAuthCookie, setRoleCookie, clearRoleCookie).
 - `lib/supabase.ts` — Supabase client singleton, row types, `safeSelect`,
   `LOCATION_COLUMNS` constant.
 - `lib/storage.ts` — localStorage helpers (`lsGet`, `lsSet`, `lsRemove`,
@@ -189,8 +191,10 @@ provides its own TopBar + HopNav — no double rendering.
 
 **Auth guard:** `src/middleware.ts` matches `/home`, `/plan/:path*`,
 `/social/:path*` and redirects to `/login` when the `bh2-auth` cookie is absent.
-It's a **soft guard** (prevents blank protected screens), not security — the real
-identity check stays localStorage-based.
+Admin routes (`/plan/admin`) require `bh2-role=super_admin`; moderator routes
+(`/plan/moderator`) require `bh2-role=moderator` or `super_admin` — middleware
+redirects to `/plan` otherwise. It's a **soft guard** (prevents blank protected
+screens), not security — the real identity check stays localStorage-based.
 
 ---
 
@@ -218,6 +222,9 @@ All keys are product contract:
 - **`bh2-auth`** — *cookie*, value `"1"`, session-scoped, `SameSite=Lax`. Set by
   `isAuthenticated()`/`mirrorAuthCookie()`, cleared by `clearIdentity()`. Read by
   the middleware (existence only).
+- **`bh2-role`** — *cookie*, value `"super_admin"` | `"moderator"`, `SameSite=Lax`.
+  Set by `setRoleCookie()` in `useGroupData` after refetch; cleared on sign-out.
+  Read by middleware for admin/moderator route protection.
 
 ---
 
@@ -322,15 +329,15 @@ Storage buckets:
 
 ## Current State
 Last updated: 2026-06-14
-Last change: **Audit 1 Remediation — code health refactoring.**
-- Deleted legacy v1 `index.html` and dead `lib/pushServer.ts` stub.
-- Extracted shared primitives: FieldError, Switch, Stars.
-- Centralized localStorage wrappers in `lib/storage.ts` (lsGet/lsSet/lsRemove/lsGetJson/lsSetJson).
-- Extracted `useVoterNotes` hook; updated ProfileOverlay and VoterProfileSheet to use it.
-- Extracted `MessageBubble` into `components/chat/`.
-- Split ProfileOverlay into `components/profile/` folder (11 sub-components + barrel).
-- `ActiveLocationsPanel` now accepts `locations` prop (passed from useLocations in admin/moderator).
-- Consolidated `LOCATION_COLUMNS` constant and `ReactionRow`/`ReadRow` type aliases.
-- Created ARCHITECTURE.md.
+Last change: **Audit 2 Remediation — architecture health fixes.**
+- Middleware role protection: admin/moderator routes guarded by bh2-role cookie.
+- ErrorBoundary wraps root providers and chat message list.
+- Chat renderMessages memoized with useMemo.
+- Gallery page no longer mounts full useChat (direct Supabase insert).
+- useLocations derives voterColors from useGroupData voters (removed redundant fetch).
+- useLocations exports resetLocationStore() — called on sign-out.
+- useHopperz note count fetch stabilized (depends on sorted voter ID string).
+- SeeButton tap target increased to 44px. Admin back → /plan. aria-labels added.
+- autoCapitalize="words" on admin/moderator first name inputs.
 - Build verified: typecheck, lint, and `next build` all pass (44 routes).
 Next up: Wire push notification triggers (new message, reaction, etc.).

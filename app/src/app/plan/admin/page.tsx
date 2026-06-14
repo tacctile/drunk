@@ -187,6 +187,7 @@ function EditUserDialog({ voter, onClose, onChanged }: EditUserDialogProps) {
             className="input"
             placeholder="First name"
             autoComplete="off"
+            autoCapitalize="words"
             value={first}
             maxLength={MAX_FIRST_NAME_LENGTH}
             onChange={(e) => setFirst(e.target.value)}
@@ -411,7 +412,7 @@ export default function AdminPage() {
         <div className="mx-auto flex h-14 max-w-2xl items-center gap-1 px-4">
           <button
             type="button"
-            onClick={() => router.push("/social/locate")}
+            onClick={() => router.push("/plan")}
             aria-label="Back"
             className="-ml-2 flex h-11 w-11 flex-none items-center justify-center text-ink-muted transition hover:text-ink"
           >

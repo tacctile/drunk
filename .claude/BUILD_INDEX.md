@@ -4,6 +4,57 @@
 
 ---
 
+## Audit 2 Remediation — Architecture Health Fixes — 2026-06-14
+
+### Route protection
+- `app/src/middleware.ts` — rewritten: checks bh2-auth + bh2-role cookies,
+  redirects /plan/admin (super_admin only) and /plan/moderator (moderator or
+  super_admin) to /plan when role mismatch.
+- `app/src/lib/auth.ts` — added setRoleCookie, clearRoleCookie.
+- `app/src/hooks/useGroupData.tsx` — sets role cookie after refetch; clears on
+  sign-out; calls resetLocationStore on sign-out.
+- `app/src/lib/identity.ts` — clearIdentity also calls clearRoleCookie.
+- `app/src/app/plan/moderator/page.tsx` — removed client-side role guard
+  (middleware handles it).
+
+### Error boundaries
+- `app/src/components/ErrorBoundary.tsx` — created: class-based, fallback prop,
+  retry button. Wraps root providers in layout.tsx.
+- `app/src/app/layout.tsx` — ErrorBoundary wraps GroupDataProvider/TripDataProvider.
+- `app/src/app/social/page.tsx` — chat message list wrapped in ErrorBoundary
+  with chat-specific fallback.
+
+### Performance fixes
+- `app/src/app/social/page.tsx` — renderMessages replaced with useMemo
+  (renderedMessages). deps: messages, reactions, reads, voterId, highlightedId,
+  nudgedMessageId, voters.
+- `app/src/app/social/gallery/page.tsx` — removed useChat import; gallery
+  upload now inserts directly via Supabase (no full chat subscription).
+- `app/src/hooks/useLocations.ts` — removed standalone v2_voters fetch for
+  voterColors; now derived from useGroupData().voters via useMemo.
+- `app/src/hooks/useLocations.ts` — added resetLocationStore() export; resets
+  module-scoped shared state on sign-out.
+- `app/src/hooks/useHopperz.ts` — note count useEffect now depends on stable
+  voterIds string (sorted, joined) instead of activeVoters array reference.
+
+### UX fixes
+- `app/src/app/plan/board/page.tsx` — SeeButton h-8 → h-11 (44px tap target).
+- `app/src/app/plan/admin/page.tsx` — back button navigates to /plan (was
+  /social/locate). First name input: autoCapitalize="words".
+- `app/src/app/plan/moderator/page.tsx` — first name input: autoCapitalize="words".
+- `app/src/app/social/page.tsx` — aria-label on camera, upload, send buttons.
+- `app/src/app/social/gallery/page.tsx` — aria-label on refresh button.
+
+### Build verification
+- TypeScript typecheck: pass
+- ESLint: pass (pre-existing warnings only)
+- `next build`: pass (44 routes)
+
+### Build task index
+- Fix auth / role protection / middleware → read middleware.ts, auth.ts, useGroupData.tsx
+
+---
+
 ## Audit 1 Remediation — Code Health Refactoring — 2026-06-14
 
 ### Deletions

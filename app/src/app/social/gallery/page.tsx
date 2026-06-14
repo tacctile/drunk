@@ -7,7 +7,7 @@ import { ImageViewer } from "@/components/ImageViewer";
 import { Toast } from "@/components/Toast";
 import { getSupabase } from "@/lib/supabase";
 import { uploadChatImage } from "@/lib/storage";
-import { useChat } from "@/hooks/useChat";
+import { useGroupData } from "@/hooks/useGroupData";
 import { formatDayDivider, GALLERY_PAGE_SIZE } from "@/lib/chat";
 
 interface GalleryImage {
@@ -50,7 +50,7 @@ export default function GalleryPage() {
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
-  const { sendMessage } = useChat();
+  const { voterId } = useGroupData();
 
   const fetchImages = useCallback(async (before?: string) => {
     const sb = getSupabase();
@@ -133,10 +133,24 @@ export default function GalleryPage() {
       setToastMsg("Couldn't upload image. Try again.");
       return;
     }
-    await sendMessage(null, result.url);
+    const sb = getSupabase();
+    if (sb && voterId) {
+      try {
+        await sb.from("v2_messages").insert({
+          voter_id: voterId,
+          content: null,
+          image_url: result.url,
+          reply_to_id: null,
+          is_deleted: false,
+          created_at: new Date().toISOString(),
+        });
+      } catch {
+        // silent
+      }
+    }
     setUploading(false);
     void handleRefresh();
-  }, [sendMessage, handleRefresh]);
+  }, [voterId, handleRefresh]);
 
   const days = groupByDay(images);
 
@@ -197,6 +211,7 @@ export default function GalleryPage() {
         <button
           type="button"
           onClick={() => void handleRefresh()}
+          aria-label="Refresh gallery"
           className="flex h-11 w-11 items-center justify-center text-ink-muted"
         >
           <Icon name="refresh" size={24} />

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/AppShell";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { IdentityWatcher } from "@/components/NamePrompt";
 import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
 import { GroupDataProvider } from "@/hooks/useGroupData";
@@ -42,13 +43,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
       </head>
       <body>
-        <GroupDataProvider>
-          <TripDataProvider>
-            <AppShell>{children}</AppShell>
-            <IdentityWatcher />
-            <ServiceWorkerRegistrar />
-          </TripDataProvider>
-        </GroupDataProvider>
+        <ErrorBoundary>
+          <GroupDataProvider>
+            <TripDataProvider>
+              <AppShell>{children}</AppShell>
+              <IdentityWatcher />
+              <ServiceWorkerRegistrar />
+            </TripDataProvider>
+          </GroupDataProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );
