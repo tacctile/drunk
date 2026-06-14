@@ -8,6 +8,8 @@
 // localStorage keys are part of the product contract: bh2-voter-id,
 // bh2-voter-name, bh2-pin-color (see CONTEXT.md).
 
+import { clearAuthCookie } from "@/lib/auth";
+
 const ID_KEY = "bh2-voter-id";
 const NAME_KEY = "bh2-voter-name";
 const PIN_COLOR_KEY = "bh2-pin-color";
@@ -69,6 +71,8 @@ export function clearIdentity() {
   safeRemove(ID_KEY);
   safeRemove(NAME_KEY);
   safeRemove(PIN_COLOR_KEY);
+  // Drop the soft-guard cookie so the middleware blocks the wings again.
+  clearAuthCookie();
 }
 
 /** Cached copy of this voter's auto-assigned v2_voters.pin_color. */

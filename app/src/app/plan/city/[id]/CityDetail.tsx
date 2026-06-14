@@ -101,7 +101,7 @@ export function CityDetail({ cityId }: { cityId: string }) {
             always. Voting lives in the ActionBar CTA below. */}
         <header className="sticky top-0 z-30 grid h-14 grid-cols-[44px_1fr_44px] items-center border-b bg-bg px-2">
           <Link
-            href="/cities"
+            href="/plan/cities"
             aria-label="Back to cities"
             className="flex h-11 w-11 items-center justify-center rounded-btn text-ink-muted transition hover:bg-raised hover:text-ink"
           >

@@ -674,8 +674,8 @@ function ProfileBody({
         )}
       </div>
 
-      <VoteCard onGoVote={() => onNavigate("/cities")} />
-      <AvailabilityCard onMarkDates={() => onNavigate("/calendar")} />
+      <VoteCard onGoVote={() => onNavigate("/plan/cities")} />
+      <AvailabilityCard onMarkDates={() => onNavigate("/plan/calendar")} />
       <LocationCard locations={locations} />
       <IdentityCard
         storedFirst={storedFirst}

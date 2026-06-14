@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/AppShell";
 import { IdentityWatcher } from "@/components/NamePrompt";
+import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
 import { GroupDataProvider } from "@/hooks/useGroupData";
 import "./globals.css";
 
@@ -32,12 +33,20 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,0&display=block"
           rel="stylesheet"
         />
+        {/* PWA */}
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Bar Hoppers" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
       </head>
       <body>
         <GroupDataProvider>
           <AppShell>{children}</AppShell>
           {/* Auto-opens the return-user flow when the stored identity can't be verified */}
           <IdentityWatcher />
+          {/* Registers the PWA service worker after first load */}
+          <ServiceWorkerRegistrar />
         </GroupDataProvider>
       </body>
     </html>
