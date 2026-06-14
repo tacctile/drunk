@@ -23,11 +23,13 @@ import { assignColor, PIN_COLORS } from "@/lib/colors";
 import {
   buildDisplayName,
   clearIdentity,
+  getStoredAvatarUrl,
   getStoredName,
   getStoredPinColor,
   getVoterId,
   isValidPin,
   newVoterId,
+  storeAvatarUrl,
   storeIdentity,
   storePinColor,
 } from "@/lib/identity";
@@ -87,8 +89,10 @@ interface GroupDataValue {
   createIdentity: (first: string, lastInitial: string, pin: string) => Promise<boolean>;
   /** Cross-device sign-in: verify PIN against the stored hash, adopt the identity. */
   signIn: (targetVoterId: string, pin: string) => Promise<SignInResult>;
-  /** Profile edits — rename and/or re-PIN the current voter in place. */
-  updateProfile: (changes: { displayName?: string; pin?: string }) => Promise<void>;
+  /** Profile edits — rename, re-PIN, or update avatar for the current voter. */
+  updateProfile: (changes: { displayName?: string; pin?: string; avatar_url?: string | null }) => Promise<void>;
+  /** Set or clear moderator role on a target voter. */
+  setModeratorRole: (targetVoterId: string, isModerator: boolean) => Promise<void>;
   /** Forget this device's identity. The voter row and their group data remain. */
   signOut: () => void;
   /** One city vote per person; null clears it. */
@@ -133,7 +137,9 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
           name: myName,
           display_name: myName,
           pin_color: getStoredPinColor() ?? PIN_COLORS[0],
-          is_active: true, // unknown offline = not disabled
+          is_active: true,
+          avatar_url: null,
+          role: null,
         });
       }
 
@@ -171,7 +177,7 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
 
   const refetch = useCallback(async () => {
     const [sv, sc, sh, sa] = await Promise.all([
-      safeSelect<VoterRow>("v2_voters", "voter_id,name,display_name,pin_color,is_active"),
+      safeSelect<VoterRow>("v2_voters", "voter_id,name,display_name,pin_color,is_active,avatar_url,role"),
       safeSelect<CityVoteRow>("v2_city_votes", "voter_id,city_id,updated_at"),
       safeSelect<HotelVoteRow>(
         "v2_hotel_votes",
@@ -191,6 +197,7 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
     if (sv) {
       const mine = sv.find((r) => r.voter_id === me);
       if (mine?.pin_color) storePinColor(mine.pin_color);
+      if (mine?.avatar_url !== undefined) storeAvatarUrl(mine.avatar_url ?? null);
     }
     if (sc) {
       const mine = sc.find((r) => r.voter_id === me);
@@ -269,7 +276,9 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
         name: displayName,
         display_name: displayName,
         pin_color: getStoredPinColor() ?? PIN_COLORS[0],
-        is_active: true, // server truth lands on the next refetch
+        is_active: true,
+        avatar_url: getStoredAvatarUrl(),
+        role: null,
       });
       return next;
     });
@@ -356,13 +365,11 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
   );
 
   const updateProfile = useCallback(
-    async (changes: { displayName?: string; pin?: string }) => {
+    async (changes: { displayName?: string; pin?: string; avatar_url?: string | null }) => {
       const me = voterIdRef.current;
       if (!me) return;
       const dn = changes.displayName;
       if (dn) {
-        // Same person, same voter_id — the identity caches just rename, and
-        // the optimistic roster row keeps every avatar/name in sync at once.
         nameRef.current = dn;
         setName(dn);
         storeIdentity(me, dn);
@@ -370,17 +377,15 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
           prev.map((v) => (v.voter_id === me ? { ...v, name: dn, display_name: dn } : v)),
         );
       }
+      if (changes.avatar_url !== undefined) {
+        setVoters((prev) =>
+          prev.map((v) => (v.voter_id === me ? { ...v, avatar_url: changes.avatar_url ?? null } : v)),
+        );
+      }
       const sb = getSupabase();
       if (!sb) return;
       try {
-        const payload: {
-          voter_id: string;
-          name: string;
-          display_name: string | null;
-          updated_at: string;
-          pin_hash?: string;
-          pin_plain?: string;
-        } = {
+        const payload: Record<string, unknown> = {
           voter_id: me,
           name: nameRef.current || "Someone",
           display_name: nameRef.current || null,
@@ -388,12 +393,11 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
         };
         if (changes.pin && isValidPin(changes.pin)) {
           payload.pin_hash = await hashPin(changes.pin, 10);
-          // Stored alongside the hash per the profile spec so an admin can
-          // recover a forgotten PIN. Never read for verification.
           payload.pin_plain = changes.pin;
         }
-        // Upsert (not update) so a row created offline still lands whole.
-        // pin_color is omitted on purpose — the assigned color is preserved.
+        if (changes.avatar_url !== undefined) {
+          payload.avatar_url = changes.avatar_url;
+        }
         await sb.from("v2_voters").upsert(payload);
       } catch {
         // offline — the rename converges via ensureVoter on the next write;
@@ -402,6 +406,27 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
       void refetch();
     },
     [refetch],
+  );
+
+  const setModeratorRole = useCallback(
+    async (targetVoterId: string, isMod: boolean) => {
+      setVoters((prev) =>
+        prev.map((v) =>
+          v.voter_id === targetVoterId ? { ...v, role: isMod ? "moderator" : null } : v,
+        ),
+      );
+      const sb = getSupabase();
+      if (!sb) return;
+      try {
+        await sb
+          .from("v2_voters")
+          .update({ role: isMod ? "moderator" : null, updated_at: new Date().toISOString() })
+          .eq("voter_id", targetVoterId);
+      } catch {
+        // silent
+      }
+    },
+    [],
   );
 
   const signOut = useCallback(() => {
@@ -547,8 +572,9 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
       setCityVote,
       setHotelPref,
       setAvailability: setAvailabilityFor,
+      setModeratorRole,
     }),
-    [ready, voterId, name, voters, cityVotes, hotelVotes, availability, identityInvalid, createIdentity, signIn, updateProfile, signOut, setCityVote, setHotelPref, setAvailabilityFor],
+    [ready, voterId, name, voters, cityVotes, hotelVotes, availability, identityInvalid, createIdentity, signIn, updateProfile, signOut, setCityVote, setHotelPref, setAvailabilityFor, setModeratorRole],
   );
 
   return <GroupDataContext.Provider value={value}>{children}</GroupDataContext.Provider>;

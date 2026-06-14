@@ -1,6 +1,31 @@
 # Hoppz — Progress
 > Feature checklist for the v2 Next.js app (`app/`). Newest phase on top.
 
+## Phase: Profile Overhaul — Avatar Upload + Notes + Tabbed Layout + Role Foundation (2026-06-14)
+- [x] ProfileOverlay rebuilt with 3-tab layout (Me / Trip / About)
+- [x] Tab bar: horizontal, full width, accent underline on active tab
+- [x] Me tab: avatar upload + role card + identity edit + switch identity
+- [x] Trip tab: vote card + availability card + location card + notifications card
+- [x] About tab: voter notes with add/delete (v2_voter_notes)
+- [x] Avatar component (src/components/Avatar.tsx) — photo or initials fallback
+- [x] AvatarCropper component (src/components/AvatarCropper.tsx) — canvas crop overlay
+- [x] Avatar upload flow: file picker → cropper → uploadAvatar → updateProfile
+- [x] ProfileAvatar updated to use Avatar component with avatar_url support
+- [x] Chat SenderAvatar updated to use Avatar component with avatar_url
+- [x] src/lib/roles.ts — role system foundation (super_admin, moderator)
+- [x] RoleCard in ProfileOverlay (admin crown / moderator shield + permissions)
+- [x] VoterRow extended with avatar_url and role fields
+- [x] VoterNoteRow type added to supabase.ts
+- [x] useGroupData: select string updated, updateProfile supports avatar_url
+- [x] useGroupData: setModeratorRole mutation added
+- [x] useGroupData: refetch syncs avatar_url to localStorage
+- [x] identity.ts: getStoredAvatarUrl, storeAvatarUrl, clearIdentity clears avatar
+- [x] storage.ts: uploadAvatar function added
+- [x] .env.example: NEXT_PUBLIC_SUPER_ADMIN_ID added
+- [x] .claude/ files updated (CONTEXT.md, BUILD_INDEX.md, STATE.yml, PROGRESS.md)
+- [x] TypeScript check passes clean
+- [x] Next.js build passes clean
+
 ## Phase: Camera + Chat + Gallery Polish Pass (2026-06-14)
 - [x] Chat scroll jitter fix — scrollTop instead of scrollIntoView, requestAnimationFrame
 - [x] Chat scroll container — overflow-y-scroll, flex-col justify-start with spacer div

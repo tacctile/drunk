@@ -4,6 +4,47 @@
 
 ---
 
+## Profile Overhaul — Avatar Upload + Notes + Tabbed Layout + Role Foundation — 2026-06-14
+
+### Profile tabbed layout
+- `app/src/components/ProfileOverlay.tsx` — rebuilt with 3-tab structure:
+  Me (avatar upload, role card, identity edit, switch identity),
+  Trip (vote, availability, location, notifications),
+  About (voter notes with add/delete).
+
+### Avatar system
+- `app/src/components/Avatar.tsx` — unified avatar component (photo or
+  initials fallback). Used by ProfileAvatar, ProfileOverlay, and chat.
+- `app/src/components/AvatarCropper.tsx` — canvas-based crop overlay:
+  pinch to zoom, drag to pan, circular mask, 400x400 JPEG export.
+- `app/src/components/ProfileAvatar.tsx` — updated to use Avatar component,
+  reads avatar_url from voters array and localStorage cache.
+
+### Role foundation
+- `app/src/lib/roles.ts` — role system: getRoleForVoter, isSuperAdmin,
+  isModerator, role labels/badge icons, moderator permissions/restrictions.
+- RoleCard in ProfileOverlay: admin crown or moderator shield with
+  permissions/restrictions columns.
+
+### Data layer updates
+- `app/src/lib/supabase.ts` — VoterRow extended with avatar_url, role;
+  VoterNoteRow type added.
+- `app/src/hooks/useGroupData.tsx` — select string updated for avatar_url
+  and role; updateProfile supports avatar_url; setModeratorRole mutation;
+  refetch syncs avatar_url to localStorage.
+- `app/src/lib/identity.ts` — avatar URL localStorage cache
+  (getStoredAvatarUrl, storeAvatarUrl); clearIdentity clears it.
+- `app/src/lib/storage.ts` — uploadAvatar(blob, voterId) function.
+
+### Chat avatar integration
+- `app/src/app/social/page.tsx` — SenderAvatar updated to use Avatar
+  component; voterMap includes avatar_url.
+
+### Build task index
+- Fix profile / avatar / notes → read `src/components/ProfileOverlay.tsx`, `src/components/AvatarCropper.tsx`, `src/components/Avatar.tsx`, `src/lib/storage.ts`, `src/lib/roles.ts`
+
+---
+
 ## Chat Session E — Push Notification Foundation — 2026-06-14
 
 ### Push notification infrastructure
