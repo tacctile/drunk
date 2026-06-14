@@ -50,8 +50,8 @@ Key dirs:
 - `components/PlanNav.tsx` — plan-wing nav: Cities, Availability, Results, Hopp.
   Mobile bottom bar + desktop 80px rail (≥840px). Admin long-press on Results
   AND Hopp tabs. Only renders on `/plan/*`.
-- `components/HopNav.tsx` — hopp-wing nav: Chat, Camera, Locate, Plan.
-  Mobile bottom bar only. Admin long-press on Plan tab.
+- `components/HopNav.tsx` — hopp-wing nav: Chat, Camera, Gallery, Locate, Plan.
+  5-tab mobile bottom bar. Admin long-press on Plan tab.
 - `components/HopShell.tsx` — hopp-wing shell: TopBar + children + HopNav.
   Used by `social/layout.tsx`.
 - `hooks/useAdminHold.ts` — 3s hold hook shared by PlanNav and HopNav.
@@ -59,7 +59,14 @@ Key dirs:
   optimistic sends, pagination, markRead. Channel "hoppz-chat".
 - `lib/chat.ts` — chat types (MessageRow, ReactionRow, ReadRow), helpers
   (formatMessageTime, formatDayDivider, isDifferentDay, shouldGroup),
-  constants (CHAT_PAGE_SIZE = 50, EMOJI_REACTIONS).
+  constants (CHAT_PAGE_SIZE = 50, GALLERY_PAGE_SIZE = 30, EMOJI_REACTIONS).
+- `lib/storage.ts` — Supabase storage helper. uploadChatImage(file) uploads
+  to hoppz-media bucket (path: chat/{timestamp}-{uuid}.{ext}), returns
+  UploadResult (ok+url or error). 10MB max, never throws.
+- `components/ImageViewer.tsx` — full-screen image viewer overlay. Fixed
+  inset-0, close/download buttons, escape key, body scroll lock, fade-in.
+- `components/Toast.tsx` — ephemeral notification for upload errors.
+  Fixed above HopNav, auto-dismiss after duration, fade in/out.
 
 ---
 
@@ -85,9 +92,10 @@ Cold open hits `/` → client checks `isAuthenticated()`:
     Admin long-press is on both the Results tab and the Hopp tab.
     The wordmark bar (TopBar) has only the wordmark left and avatar right.
 - **Hopp wing — `/social/*`** (`social/layout.tsx` sets last wing = social):
-  - `/social` (Chat placeholder), `/social/camera` (Camera placeholder),
+  - `/social` (Chat), `/social/camera` (Camera placeholder),
+    `/social/gallery` (photo gallery — 3-col grid, day groups, jump-to-date),
     `/social/locate` (live group map).
-  - HopShell renders TopBar + HopNav bottom bar (Chat / Camera / Locate / Plan).
+  - HopShell renders TopBar + HopNav bottom bar (Chat / Camera / Gallery / Locate / Plan).
     Plan is a cross-wing link to `/plan` (list_alt icon) — it does not get
     active highlight on /social/* routes. Admin long-press is on the Plan tab.
 
@@ -180,7 +188,9 @@ mirroring. Tables (see `lib/supabase.ts` for row shapes):
   `emoji` text, `created_at` timestamptz. PK (message_id, voter_id).
 
 Storage buckets:
-- `hoppz-media` — public bucket for chat image uploads.
+- `hoppz-media` — public bucket for chat image uploads. Path pattern:
+  `chat/{timestamp}-{uuid}.{ext}`. 10MB max per file. Used by
+  `lib/storage.ts` uploadChatImage.
 
 ---
 
@@ -200,17 +210,15 @@ Storage buckets:
 
 ## Current State
 Last updated: 2026-06-14
-Last change: **Chat Session B — reactions, read receipts, reply.**
-- Reactions: long-press (500ms) opens emoji picker (8 emojis from EMOJI_REACTIONS in
-  lib/chat.ts), pills below bubbles show grouped reactions with counts, one reaction
-  per person per message (swap behavior), optimistic add/remove.
-- Read receipts: avatar circles below timestamps (1-2 readers), "Seen by X" tappable
-  for 3+ readers → BottomSheet with reader list. markRead fires optimistically.
-- Reply: swipe right (mobile) or hover reply button (desktop) → reply preview bar
-  above input, quoted preview inside bubble with scroll-to-original on tap.
-- useChat hook: reactions/reads refactored to Record<string, Row[]> keyed by message_id.
-  Added addReaction, removeReaction, replyingTo, setReplyingTo. sendMessage includes
-  reply_to_id when replying.
-- lib/chat.ts: groupReactions helper added.
-- Placeholders: camera button, gallery button, image expand (Sessions C/D).
-Next up: image gallery + expand (Session C), camera (Session D).
+Last change: **Chat Session C — image upload, gallery, ImageViewer.**
+- Image upload: file picker (add_photo_alternate icon in input bar), 10MB cap,
+  optimistic uploading bubble, uploadChatImage → sendMessage(null, imageUrl).
+- Image display: lazy-loaded in chat bubbles, aspect-ratio 4/3 placeholder,
+  tap to expand in full-screen ImageViewer (close, download, escape, scroll lock).
+- Gallery page (/social/gallery): 3-col square grid, day grouping with sticky headers,
+  cursor-based pagination (30/page), jump-to-date BottomSheet, refresh button.
+- HopNav: 5 tabs (Chat, Camera, Gallery, Locate, Plan) — grid-cols-5.
+- Toast component for upload error messages (ephemeral, auto-dismiss).
+- sendMessage signature updated: (content: string | null, imageUrl?: string | null).
+- Placeholders: camera button (Session D).
+Next up: camera capture (Session D).

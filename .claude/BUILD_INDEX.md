@@ -4,6 +4,45 @@
 
 ---
 
+## Chat Session C — Image Upload + Gallery + ImageViewer — 2026-06-14
+
+### Storage helper
+- `app/src/lib/storage.ts` — uploadChatImage: uploads to hoppz-media bucket,
+  10MB cap, returns UploadResult (ok+url or error). Never throws.
+
+### Image upload from input bar
+- `app/src/app/social/page.tsx` — hidden file input (accept image/video/heic/heif/webp),
+  add_photo_alternate icon triggers picker. handleImageUpload: validates size, shows
+  optimistic uploading bubble, calls uploadChatImage, on success sendMessage(null, url),
+  on error shows Toast.
+- `app/src/hooks/useChat.ts` — sendMessage signature updated to
+  (content: string | null, imageUrl?: string | null). At least one must be non-null.
+
+### Image display + viewer
+- `app/src/app/social/page.tsx` — image in bubble: lazy loading, aspect-ratio 4/3
+  placeholder, tap expands to ImageViewer. Both image+text: image above, text below pt-1.
+- `app/src/components/ImageViewer.tsx` — full-screen viewer: fixed inset-0 z-50,
+  close (top-left), download (bottom-right), escape key, body scroll lock, fade-in.
+
+### Gallery page
+- `app/src/app/social/gallery/page.tsx` — 3-col square grid, day grouping with
+  sticky headers, cursor pagination (30/page via GALLERY_PAGE_SIZE), jump-to-date
+  BottomSheet, refresh button, empty/loading states, tap opens ImageViewer.
+- `app/src/lib/chat.ts` — added GALLERY_PAGE_SIZE = 30.
+
+### HopNav 5 tabs
+- `app/src/components/HopNav.tsx` — added Gallery tab (photo_library icon,
+  /social/gallery), grid-cols-5.
+
+### Toast
+- `app/src/components/Toast.tsx` — ephemeral notification above HopNav,
+  auto-dismiss, fade in/out.
+
+### Build task index
+- Fix gallery / image upload / storage → read `src/lib/storage.ts`, `src/app/social/gallery/page.tsx`, `src/hooks/useChat.ts`
+
+---
+
 ## Chat Session B — Reactions + Read Receipts + Reply — 2026-06-14
 
 ### Reactions

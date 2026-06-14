@@ -246,17 +246,18 @@ export function useChat() {
   }, [loadingMore, hasMore, messages, fetchReactionsForMessages, fetchReadsForMessages]);
 
   const sendMessage = useCallback(
-    async (content: string) => {
+    async (content: string | null, imageUrl?: string | null) => {
       const me = voterIdRef.current;
-      if (!me || !content.trim()) return;
+      const trimmed = content?.trim() || null;
+      if (!me || (!trimmed && !imageUrl)) return;
       const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const now = new Date().toISOString();
       const replyId = replyingTo?.id ?? null;
       const optimistic: MessageRow = {
         id: tempId,
         voter_id: me,
-        content: content.trim(),
-        image_url: null,
+        content: trimmed,
+        image_url: imageUrl ?? null,
         reply_to_id: replyId,
         is_deleted: false,
         created_at: now,
@@ -271,8 +272,9 @@ export function useChat() {
       try {
         const insertPayload: Record<string, unknown> = {
           voter_id: me,
-          content: content.trim(),
         };
+        if (trimmed) insertPayload.content = trimmed;
+        if (imageUrl) insertPayload.image_url = imageUrl;
         if (replyId) insertPayload.reply_to_id = replyId;
         const { data, error } = await sb
           .from("v2_messages")
