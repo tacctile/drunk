@@ -1,25 +1,21 @@
 # Bar Hoppers — machine-readable session state.
 # Companion to CONTEXT.md / PROGRESS.md. Update at the end of every session.
 
-current_phase: camera-chat-gallery-polish
+current_phase: profile-overhaul
 last_updated: 2026-06-14
 app_root: app/            # the live Next.js v2 app; root index.html is legacy v1
 
 last_change: >
-  Camera + Chat + Gallery Polish Pass. Fixed chat scroll jitter (scrollTop
-  instead of scrollIntoView, overflow-y-scroll, flex-start with spacer div,
-  requestAnimationFrame wrapper). Fixed camera shutter centering (absolute
-  positioned independently, 72px ring + 60px fill). Fixed post-capture
-  controls (clean icon + label only, no gray circles, drop shadows). Fixed
-  camera retake black screen (video always mounted, captured image overlays
-  on top, stream never stopped). Unified send flow (always uploads + saves
-  to device simultaneously). Added gallery upload button (floating
-  bottom-left, uploads via useChat sendMessage). Supabase Storage policies
-  corrected externally (storage.objects scope).
+  Profile Overhaul — Avatar Upload + Notes + Tabbed Layout + Role Foundation.
+  ProfileOverlay rebuilt with 3-tab layout (Me / Trip / About). Avatar upload
+  with canvas-based cropper. Unified Avatar component across the app. Role
+  system foundation (super_admin via env var, moderator via DB). Voter notes
+  on About tab. v2_voters extended with avatar_url and role. setModeratorRole
+  mutation added. Chat SenderAvatar uses Avatar component.
 
 verification:
   typecheck: pass        # tsc --noEmit
-  lint: pass             # next lint (pre-existing useChat warning only)
+  lint: pending
   build: pass            # next build — all routes compiled
 
 known_issues:
@@ -30,6 +26,9 @@ known_issues:
     Intended soft-guard behavior, not a bug.
   - VAPID keys not yet generated — run npx web-push generate-vapid-keys and add
     to .env.local + Vercel env vars before push notifications will work.
+  - v2_voter_notes table needs to be created in Supabase (migration pending).
+  - v2_voters avatar_url and role columns need to be added in Supabase (migration pending).
 
 next_up:
+  - Apply Supabase migrations for avatar_url, role, v2_voter_notes
   - Wire push notification triggers (new message, reaction, etc.)

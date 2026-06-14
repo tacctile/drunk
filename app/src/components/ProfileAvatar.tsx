@@ -2,19 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useGroupData } from "@/hooks/useGroupData";
-import { contrastColor, getInitials } from "@/lib/colors";
-import { getStoredName, getStoredPinColor } from "@/lib/identity";
+import { getStoredName, getStoredPinColor, getStoredAvatarUrl } from "@/lib/identity";
+import { PIN_COLORS } from "@/lib/colors";
+import { Avatar } from "./Avatar";
 import { Icon } from "./Icon";
 
-/**
- * The profile avatar: initials on the auto-assigned pin color once
- * registered, a quiet person icon before that. Shared by the AppShell
- * wordmark bar and the city detail header so the avatar persists on every
- * screen. localStorage is re-read whenever the identity layer moves
- * (registration, sign-in, roster re-sync, profile rename, sign-out) so it
- * updates without a reload; the storage listener covers other tabs.
- * Tapping it opens the profile overlay.
- */
 export function ProfileAvatar({
   onClick,
   className = "",
@@ -22,17 +14,24 @@ export function ProfileAvatar({
   onClick: () => void;
   className?: string;
 }) {
-  const { name, voters } = useGroupData();
-  const [profile, setProfile] = useState<{ name: string; color: string | null }>({
-    name: "",
-    color: null,
-  });
+  const { name, voters, voterId } = useGroupData();
+  const [profile, setProfile] = useState<{
+    name: string;
+    color: string | null;
+    avatarUrl: string | null;
+  }>({ name: "", color: null, avatarUrl: null });
 
   useEffect(() => {
     const read = () => {
-      const next = { name: getStoredName(), color: getStoredPinColor() };
+      const next = {
+        name: getStoredName(),
+        color: getStoredPinColor(),
+        avatarUrl: getStoredAvatarUrl(),
+      };
       setProfile((prev) =>
-        prev.name === next.name && prev.color === next.color ? prev : next,
+        prev.name === next.name && prev.color === next.color && prev.avatarUrl === next.avatarUrl
+          ? prev
+          : next,
       );
     };
     read();
@@ -41,7 +40,8 @@ export function ProfileAvatar({
   }, [name, voters]);
 
   const registered = profile.name.length > 0;
-  const color = profile.color;
+  const myRow = voters.find((v) => v.voter_id === voterId);
+  const avatarUrl = myRow?.avatar_url ?? profile.avatarUrl;
 
   return (
     <button
@@ -50,20 +50,28 @@ export function ProfileAvatar({
       onClick={onClick}
       className={`flex h-11 w-11 flex-none items-center justify-center ${className}`}
     >
-      <span
-        className="flex h-9 w-9 items-center justify-center rounded-full text-meta font-bold"
-        style={{
-          background: color ?? "var(--surface-raised)",
-          border: `1.5px solid ${color ? `${color}4D` : "var(--border)"}`,
-          color: color ? contrastColor(color) : "var(--ink)",
-        }}
-      >
-        {registered ? (
-          getInitials(profile.name)
-        ) : (
+      {registered ? (
+        <Avatar
+          voter={{
+            display_name: profile.name,
+            name: profile.name,
+            pin_color: profile.color ?? PIN_COLORS[0],
+            avatar_url: avatarUrl,
+          }}
+          size={36}
+        />
+      ) : (
+        <span
+          className="flex h-9 w-9 items-center justify-center rounded-full text-meta font-bold"
+          style={{
+            background: "var(--surface-raised)",
+            border: "1.5px solid var(--border)",
+            color: "var(--ink)",
+          }}
+        >
           <Icon name="person" size={20} className="text-ink-dim" />
-        )}
-      </span>
+        </span>
+      )}
     </button>
   );
 }

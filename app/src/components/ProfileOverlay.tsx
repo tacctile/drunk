@@ -1,12 +1,5 @@
 "use client";
 
-// PROFILE — full-screen overlay over everything (including the tab bar),
-// opened from the avatar in the wordmark bar. Slides up like a bottom sheet
-// but takes the whole screen: votes, availability summary, location toggle,
-// identity edit (confirm-then-change, double entry for changed fields), and
-// the switch-identity escape hatch. It is an overlay component only — there
-// is no /profile route.
-
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { compare as comparePin } from "bcryptjs";
@@ -16,19 +9,36 @@ import { useGroupData } from "@/hooks/useGroupData";
 import { useLocations, type LocationsValue } from "@/hooks/useLocations";
 import { useVotes } from "@/hooks/useVotes";
 import { contrastColor, getInitials, PIN_COLORS } from "@/lib/colors";
-import { buildDisplayName, getStoredPinColor, isValidPin } from "@/lib/identity";
+import {
+  buildDisplayName,
+  getStoredPinColor,
+  isValidPin,
+  storeAvatarUrl,
+} from "@/lib/identity";
 import { formatMonthTitle, plural } from "@/lib/format";
 import { lockBodyScroll, unlockBodyScroll } from "@/lib/scrollLock";
-import { getSupabase } from "@/lib/supabase";
+import { getSupabase, type VoterNoteRow } from "@/lib/supabase";
+import { uploadAvatar } from "@/lib/storage";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import {
+  getRoleForVoter,
+  ROLE_LABELS,
+  ROLE_BADGE_ICONS,
+  MODERATOR_PERMISSIONS,
+  MODERATOR_RESTRICTIONS,
+  type UserRole,
+} from "@/lib/roles";
+import { Avatar } from "./Avatar";
+import { AvatarCropper } from "./AvatarCropper";
 import { BottomSheet } from "./BottomSheet";
 import { Icon } from "./Icon";
 import { NamePrompt } from "./NamePrompt";
 
-const SWIPE_CLOSE_PX = 70; // drag the header down this far to dismiss
-const SAVED_FLASH_MS = 1200; // green checkmark dwell on the save button
+const SWIPE_CLOSE_PX = 70;
+const SAVED_FLASH_MS = 1200;
 
-/** Identity fields compare case-insensitively, whitespace trimmed. */
+type ProfileTab = "me" | "trip" | "about";
+
 function norm(s: string): string {
   return s.trim().toLowerCase();
 }
@@ -41,7 +51,6 @@ function FieldError({ children }: { children: string }) {
   );
 }
 
-/** Hand-built toggle — 44px tap target around a 40x24 track. */
 function Switch({
   checked,
   onToggle,
@@ -78,7 +87,6 @@ function Switch({
   );
 }
 
-/** Masked PIN input — always dots by default, the eyeball reveals it. */
 function PinField({
   value,
   onChange,
@@ -115,6 +123,40 @@ function PinField({
     </div>
   );
 }
+
+function TabBar({
+  active,
+  onChange,
+}: {
+  active: ProfileTab;
+  onChange: (tab: ProfileTab) => void;
+}) {
+  const tabs: { key: ProfileTab; label: string }[] = [
+    { key: "me", label: "Me" },
+    { key: "trip", label: "Trip" },
+    { key: "about", label: "About" },
+  ];
+  return (
+    <div className="flex w-full border-b border-border bg-bg">
+      {tabs.map((t) => (
+        <button
+          key={t.key}
+          type="button"
+          onClick={() => onChange(t.key)}
+          className={`flex h-11 flex-1 items-center justify-center text-label font-semibold transition ${
+            active === t.key
+              ? "border-b-2 border-accent text-accent"
+              : "text-ink-muted"
+          }`}
+        >
+          {t.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─── Tab 2: Trip ───
 
 function VoteCard({ onGoVote }: { onGoVote: () => void }) {
   const { voterId, hotelVotes } = useGroupData();
@@ -223,7 +265,6 @@ function LocationCard({ locations }: { locations: LocationsValue }) {
       <div className="card mt-2">
         <div className="flex items-center justify-between gap-3">
           <p className="text-base text-ink">Share my location</p>
-          {/* Locked off while admin-disabled — grayed out, untappable. */}
           <span style={amDisabled ? { pointerEvents: "none", opacity: 0.4 } : undefined}>
             <Switch
               checked={isSharing}
@@ -294,20 +335,15 @@ function NotificationsCard() {
   );
 }
 
+// ─── Tab 1: Me — Identity ───
+
 interface IdentityCardProps {
   storedFirst: string;
   storedInitial: string;
-  /** undefined = still loading; null = no hash on the row (legacy or offline). */
   pinHash: string | null | undefined;
   onSave: (changes: { displayName?: string; pin?: string }) => Promise<void>;
 }
 
-/**
- * Confirm-then-change. The three confirmation fields must match the stored
- * identity (case-insensitive, trimmed; the PIN via bcrypt compare) before
- * "Update my profile" activates; tapping it reveals the change fields. Each
- * changed field needs double entry; untouched fields are left alone on save.
- */
 function IdentityCard({ storedFirst, storedInitial, pinHash, onSave }: IdentityCardProps) {
   const [confirmFirst, setConfirmFirst] = useState("");
   const [confirmInitial, setConfirmInitial] = useState("");
@@ -331,9 +367,6 @@ function IdentityCard({ storedFirst, storedInitial, pinHash, onSave }: IdentityC
     [],
   );
 
-  // The stored PIN exists only as a bcrypt hash, so confirming it is async.
-  // A row without a hash (legacy voter, or offline) accepts any valid PIN —
-  // the same adoption rule the sign-in flow uses.
   useEffect(() => {
     if (!isValidPin(confirmPin) || pinHash === undefined) {
       setPinOk(false);
@@ -356,8 +389,6 @@ function IdentityCard({ storedFirst, storedInitial, pinHash, onSave }: IdentityC
   const initialOk = norm(confirmInitial) === norm(storedInitial);
   const unlocked = firstOk && initialOk && pinOk;
 
-  // A filled change pair must be a valid value entered identically twice;
-  // an empty pair means "leave that field alone".
   const firstFilled = newFirst.trim() !== "";
   const initialFilled = newInitial.trim() !== "";
   const pinFilled = newPin !== "";
@@ -386,8 +417,6 @@ function IdentityCard({ storedFirst, storedInitial, pinHash, onSave }: IdentityC
     !saving &&
     !saved;
 
-  // Saving rewrites the stored values, which breaks the confirmation match —
-  // `saved` holds the section open so the checkmark gets its moment.
   const showChanges = (unlocked && editOpen) || saved;
 
   const resetForm = () => {
@@ -615,7 +644,230 @@ function SwitchIdentityRow({
   );
 }
 
-/** Avatar taps before registration land here instead of an empty profile. */
+// ─── Tab 1: Me — Role Card ───
+
+function RoleCard({ role }: { role: NonNullable<UserRole> }) {
+  const isSA = role === "super_admin";
+  const colorClass = isSA ? "text-accent" : "text-green";
+
+  return (
+    <section className="mt-4">
+      <div className="card">
+        <div className="flex items-center gap-2">
+          <Icon name={ROLE_BADGE_ICONS[role]} size={20} className={colorClass} />
+          <span className={`text-title ${colorClass}`}>{ROLE_LABELS[role]}</span>
+        </div>
+        {isSA ? (
+          <p className="mt-2 text-meta font-normal text-ink-muted">Full access</p>
+        ) : (
+          <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1">
+            <div>
+              <p className="text-meta font-semibold text-green">Can do</p>
+              {MODERATOR_PERMISSIONS.map((p) => (
+                <div key={p} className="mt-1 flex items-start gap-1.5">
+                  <Icon name="check" size={14} className="mt-0.5 flex-none text-green" />
+                  <span className="text-meta font-normal text-ink-muted">{p}</span>
+                </div>
+              ))}
+            </div>
+            <div>
+              <p className="text-meta font-semibold text-red">Cannot do</p>
+              {MODERATOR_RESTRICTIONS.map((r) => (
+                <div key={r} className="mt-1 flex items-start gap-1.5">
+                  <Icon name="close" size={14} className="mt-0.5 flex-none text-red" />
+                  <span className="text-meta font-normal text-ink-muted">{r}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+// ─── Tab 3: About — Notes ───
+
+function NotesSection({ voterId }: { voterId: string }) {
+  const [notes, setNotes] = useState<VoterNoteRow[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const deleteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (deleteTimer.current) clearTimeout(deleteTimer.current);
+    };
+  }, []);
+
+  const fetchNotes = useCallback(async () => {
+    const sb = getSupabase();
+    if (!sb) return;
+    try {
+      const { data, error } = await sb
+        .from("v2_voter_notes")
+        .select("id,voter_id,content,sort_order,created_at")
+        .eq("voter_id", voterId)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true });
+      if (!error && data) setNotes(data as VoterNoteRow[]);
+    } catch {
+      // silent
+    }
+    setLoaded(true);
+  }, [voterId]);
+
+  useEffect(() => {
+    void fetchNotes();
+  }, [fetchNotes]);
+
+  const addNote = async (content: string) => {
+    const sb = getSupabase();
+    if (!sb) return;
+    const id = crypto.randomUUID();
+    const row: VoterNoteRow = {
+      id,
+      voter_id: voterId,
+      content,
+      sort_order: notes.length,
+      created_at: new Date().toISOString(),
+    };
+    setNotes((prev) => [...prev, row]);
+    setDraft("");
+    setAdding(false);
+    try {
+      await sb.from("v2_voter_notes").insert(row);
+    } catch {
+      // silent
+    }
+  };
+
+  const deleteNote = async (id: string) => {
+    setNotes((prev) => prev.filter((n) => n.id !== id));
+    setDeletingId(null);
+    const sb = getSupabase();
+    if (!sb) return;
+    try {
+      await sb.from("v2_voter_notes").delete().eq("id", id);
+    } catch {
+      // silent
+    }
+  };
+
+  const startDelete = (id: string) => {
+    setDeletingId(id);
+    if (deleteTimer.current) clearTimeout(deleteTimer.current);
+    deleteTimer.current = setTimeout(() => setDeletingId(null), 2000);
+  };
+
+  const charCount = draft.length;
+  const canSave = charCount > 0 && charCount <= 280;
+
+  return (
+    <section>
+      <div className="flex items-center justify-between">
+        <h2 className="text-title text-ink">About me</h2>
+        <button
+          type="button"
+          onClick={() => setAdding(true)}
+          className="flex h-11 w-11 items-center justify-center text-accent"
+          aria-label="Add note"
+        >
+          <Icon name="add_circle" size={24} />
+        </button>
+      </div>
+
+      {adding && (
+        <div className="mt-2 flex flex-col gap-2">
+          <textarea
+            className="input min-h-[80px] resize-none"
+            placeholder="Write something about yourself..."
+            maxLength={280}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            autoFocus
+          />
+          <p className="text-right text-meta text-ink-dim">{charCount} / 280</p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setDraft("");
+                setAdding(false);
+              }}
+              className="flex h-11 items-center text-base text-ink-muted"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={!canSave}
+              onClick={() => void addNote(draft)}
+              className="btn-accent flex-1"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      )}
+
+      {loaded && notes.length === 0 && !adding && (
+        <p className="mt-2 text-base text-ink-dim">No notes yet</p>
+      )}
+
+      <div className="mt-3 flex flex-col gap-3">
+        {notes.map((note) => (
+          <div key={note.id} className="card relative">
+            <p className="text-base text-ink" style={{ wordBreak: "break-word" }}>
+              {note.content}
+            </p>
+            <p className="mt-1 text-meta text-ink-dim">
+              {new Date(note.created_at).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </p>
+            <div className="absolute right-2 top-2">
+              {deletingId === note.id ? (
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => void deleteNote(note.id)}
+                    className="text-meta font-semibold text-red"
+                  >
+                    Delete?
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeletingId(null)}
+                    className="flex h-11 w-11 items-center justify-center text-ink-dim"
+                  >
+                    <Icon name="close" size={16} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => startDelete(note.id)}
+                  className="flex h-11 w-11 items-center justify-center text-ink-dim"
+                  aria-label="Delete note"
+                >
+                  <Icon name="close" size={16} />
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ─── Identity gate ───
+
 function IdentityGate() {
   const [open, setOpen] = useState(false);
   return (
@@ -633,6 +885,8 @@ function IdentityGate() {
   );
 }
 
+// ─── Profile body (tabbed) ───
+
 function ProfileBody({
   onClose,
   onNavigate,
@@ -642,10 +896,11 @@ function ProfileBody({
 }) {
   const { voterId, name, voters, updateProfile, signOut } = useGroupData();
   const locations = useLocations();
+  const [activeTab, setActiveTab] = useState<ProfileTab>("me");
+  const [cropFile, setCropFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // pin_hash and created_at aren't part of the roster select — one quiet
-  // fetch per open. Failure (offline) degrades silently: no member-since
-  // line, and the PIN confirmation accepts any valid PIN.
   const [secure, setSecure] = useState<{ pinHash: string | null; createdAt: string | null } | null>(
     null,
   );
@@ -678,7 +933,6 @@ function ProfileBody({
   const handleSave = useCallback(
     async (changes: { displayName?: string; pin?: string }) => {
       await updateProfile(changes);
-      // A PIN change invalidates the cached hash the confirmation checks.
       if (changes.pin) await loadSecure();
     },
     [updateProfile, loadSecure],
@@ -700,68 +954,135 @@ function ProfileBody({
       })
     : null;
 
+  const role = getRoleForVoter(voterId, myRow?.role ?? null);
+
+  const handleAvatarTap = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) setCropFile(file);
+    if (e.target) e.target.value = "";
+  };
+
+  const handleCropConfirm = async (blob: Blob) => {
+    setCropFile(null);
+    setUploading(true);
+    const result = await uploadAvatar(blob, voterId);
+    if (result.ok) {
+      storeAvatarUrl(result.url);
+      await updateProfile({ avatar_url: result.url });
+    }
+    setUploading(false);
+  };
+
   return (
     <>
-      <div className="flex flex-col items-center text-center">
-        <span
-          className="flex h-16 w-16 items-center justify-center rounded-full text-[24px] font-extrabold"
-          style={{ background: pinColor, color: contrastColor(pinColor) }}
-        >
-          {getInitials(displayName)}
-        </span>
-        <p className="mt-3 text-display text-ink">{displayName}</p>
-        {memberSince && (
-          <p className="mt-1 text-meta font-normal text-ink-dim">Member since {memberSince}</p>
-        )}
+      <TabBar active={activeTab} onChange={setActiveTab} />
+
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 pb-[calc(24px+env(safe-area-inset-bottom))] pt-6">
+          {activeTab === "me" && (
+            <>
+              {/* Avatar section */}
+              <div className="flex flex-col items-center text-center">
+                <button
+                  type="button"
+                  onClick={handleAvatarTap}
+                  className="relative"
+                  aria-label="Change profile photo"
+                  disabled={uploading}
+                >
+                  <Avatar
+                    voter={{
+                      display_name: displayName,
+                      name: displayName,
+                      pin_color: pinColor,
+                      avatar_url: myRow?.avatar_url,
+                    }}
+                    size={80}
+                  />
+                  {uploading && (
+                    <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50">
+                      <Icon name="hourglass_empty" size={24} className="animate-pulse text-white" />
+                    </span>
+                  )}
+                </button>
+                <p className="mt-1 text-meta text-ink-muted">Edit photo</p>
+                <p className="mt-2 text-display text-ink">{displayName}</p>
+                {memberSince && (
+                  <p className="mt-1 text-meta font-normal text-ink-dim">
+                    Member since {memberSince}
+                  </p>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileSelected}
+                />
+              </div>
+
+              {role && <RoleCard role={role} />}
+
+              <IdentityCard
+                storedFirst={storedFirst}
+                storedInitial={storedInitial}
+                pinHash={secure === null ? undefined : secure.pinHash}
+                onSave={handleSave}
+              />
+
+              <SwitchIdentityRow
+                displayName={displayName}
+                onConfirm={() => {
+                  signOut();
+                  onClose();
+                }}
+              />
+            </>
+          )}
+
+          {activeTab === "trip" && (
+            <>
+              <VoteCard onGoVote={() => onNavigate("/plan/cities")} />
+              <AvailabilityCard onMarkDates={() => onNavigate("/plan/calendar")} />
+              <LocationCard locations={locations} />
+              <NotificationsCard />
+            </>
+          )}
+
+          {activeTab === "about" && <NotesSection voterId={voterId} />}
+        </div>
       </div>
 
-      <VoteCard onGoVote={() => onNavigate("/plan/cities")} />
-      <AvailabilityCard onMarkDates={() => onNavigate("/plan/calendar")} />
-      <LocationCard locations={locations} />
-      <NotificationsCard />
-      <IdentityCard
-        storedFirst={storedFirst}
-        storedInitial={storedInitial}
-        pinHash={secure === null ? undefined : secure.pinHash}
-        onSave={handleSave}
-      />
-      <SwitchIdentityRow
-        displayName={displayName}
-        onConfirm={() => {
-          signOut();
-          onClose();
-        }}
-      />
+      {cropFile && (
+        <AvatarCropper
+          imageFile={cropFile}
+          onConfirm={(blob) => void handleCropConfirm(blob)}
+          onCancel={() => setCropFile(null)}
+        />
+      )}
     </>
   );
 }
+
+// ─── Overlay shell ───
 
 interface ProfileOverlayProps {
   open: boolean;
   onClose: () => void;
 }
 
-/**
- * The full-height sheet itself: slides up from the bottom over the whole
- * screen (tab bar included), own opaque header (back arrow / "Profile"),
- * scrollable content. Closes on the back arrow, Escape, a downward swipe on
- * the header, or the device/browser back button. Content mounts only while
- * open so the data hooks (and the locations realtime channel) live only as
- * long as the overlay does.
- */
 export function ProfileOverlay({ open, onClose }: ProfileOverlayProps) {
   const router = useRouter();
   const dragY = useRef<number | null>(null);
-  // Latest onClose without retriggering the history effect below (AppShell
-  // recreates the prop every render).
   const onCloseRef = useRef(onClose);
   useEffect(() => {
     onCloseRef.current = onClose;
   });
 
-  // Device/browser back button closes the overlay instead of leaving the
-  // app: opening pushes a dummy history entry, so pressing back pops it and
-  // the popstate closes the overlay with the URL unchanged.
   useEffect(() => {
     if (!open) return;
     window.history.pushState({ profile: true }, "");
@@ -772,9 +1093,6 @@ export function ProfileOverlay({ open, onClose }: ProfileOverlayProps) {
     };
   }, [open]);
 
-  // In-app closes (back arrow, Escape, header swipe, sign-out) pop the dummy
-  // entry instead of closing directly — the popstate above then closes the
-  // overlay, keeping the history stack clean.
   const requestClose = useCallback(() => {
     if (window.history.state?.profile) {
       window.history.back();
@@ -783,9 +1101,6 @@ export function ProfileOverlay({ open, onClose }: ProfileOverlayProps) {
     }
   }, []);
 
-  // Deep links (Go vote / Mark dates) replace the dummy entry with the
-  // destination — popping it first would race the push and could swallow the
-  // navigation, and Back from there should return to the opening page.
   const navTo = useCallback(
     (path: string) => {
       onCloseRef.current();
@@ -850,11 +1165,7 @@ export function ProfileOverlay({ open, onClose }: ProfileOverlayProps) {
         <span className="h-11 w-11" aria-hidden="true" />
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 pb-[calc(24px+env(safe-area-inset-bottom))] pt-6">
-          <ProfileBody onClose={requestClose} onNavigate={navTo} />
-        </div>
-      </div>
+      <ProfileBody onClose={requestClose} onNavigate={navTo} />
     </div>
   );
 }

@@ -64,7 +64,14 @@ Key dirs:
   constants (CHAT_PAGE_SIZE = 50, GALLERY_PAGE_SIZE = 30, EMOJI_REACTIONS).
 - `lib/storage.ts` — Supabase storage helper. uploadChatImage(file) uploads
   to hoppz-media bucket (path: chat/{timestamp}-{uuid}.{ext}), returns
-  UploadResult (ok+url or error). 10MB max, never throws.
+  UploadResult (ok+url or error). 10MB max, never throws. uploadAvatar(blob,
+  voterId) uploads to avatars/{voterId}.jpg with upsert.
+- `lib/roles.ts` — Role system: getRoleForVoter, isSuperAdmin, isModerator,
+  role labels/badges, moderator permissions/restrictions constants.
+- `components/Avatar.tsx` — Unified avatar component (photo or initials
+  fallback). Used by ProfileAvatar, ProfileOverlay, and chat SenderAvatar.
+- `components/AvatarCropper.tsx` — Canvas-based avatar crop overlay. Pinch
+  to zoom, drag to pan, circular mask, exports 400x400 JPEG.
 - `lib/push.ts` — Client-side push notification helpers: isPushSupported,
   getNotificationPermission, subscribeToPush, getExistingSubscription,
   unsubscribeFromPush, extractSubscriptionKeys. VAPID key from env var.
@@ -130,8 +137,8 @@ identity check stays localStorage-based.
 ## Identity & Auth
 - Per-device identity in localStorage, backed by a `v2_voters` row whose 2-digit
   PIN (bcrypt hash) lets the same person sign in from any device.
-- `lib/identity.ts` owns `bh2-voter-id` / `bh2-voter-name` / `bh2-pin-color`.
-  `clearIdentity()` (sign-out) also clears the `bh2-auth` cookie.
+- `lib/identity.ts` owns `bh2-voter-id` / `bh2-voter-name` / `bh2-pin-color` /
+  `bh2-avatar-url`. `clearIdentity()` (sign-out) also clears the `bh2-auth` cookie.
 - `lib/auth.ts` is the soft-auth layer: `isAuthenticated()` (true when id + name
   are stored; mirrors the `bh2-auth` presence cookie as a side effect),
   `getLastWing()` / `setLastWing()`, `mirrorAuthCookie()`, `clearAuthCookie()`.
@@ -141,6 +148,7 @@ All keys are product contract:
 - `bh2-voter-id` — voter uuid.
 - `bh2-voter-name` — display name ("Nick B").
 - `bh2-pin-color` — cached auto-assigned avatar color.
+- `bh2-avatar-url` — cached avatar image URL for fast initial render.
 - `bh2-last-wing` — `"plan"` | `"social"`; written on entering either wing.
 - `bh2-city-sort` — cities sort preference.
 - `bh2-city-vote-cache` / `bh2-hotel-vote-cache` / `bh2-avail-cache` — silent
@@ -185,7 +193,10 @@ Shared data only; all reads via `safeSelect`, all writes optimistic with cache
 mirroring. Tables (see `lib/supabase.ts` for row shapes):
 - `v2_voters` — `voter_id`, `name`, `display_name`, `pin_hash` (bcrypt),
   `pin_plain` (admin recovery, never verified against), `pin_color`,
-  `is_active` (admin soft-disable), `updated_at`.
+  `is_active` (admin soft-disable), `avatar_url` (profile photo URL),
+  `role` ('moderator' | null), `updated_at`.
+- `v2_voter_notes` — `id` uuid PK, `voter_id` FK→v2_voters, `content` text,
+  `sort_order` integer, `created_at` timestamptz. Personal "about me" notes.
 - `v2_city_votes` — one row per voter (`voter_id`, `city_id`, `updated_at`).
 - `v2_hotel_votes` — one per voter per city (`hotel_place_id`, `hotel_name`, …).
 - `v2_hotels` / `v2_bars` / `v2_food` — curated venue rows (`DbVenueRow`), the
@@ -233,6 +244,7 @@ Storage buckets:
 - `NEXT_PUBLIC_VAPID_PUBLIC_KEY` — VAPID public key for Web Push (client-side)
 - `VAPID_PRIVATE_KEY` — VAPID private key (server-side only)
 - `VAPID_MAILTO` — VAPID contact email (server-side only)
+- `NEXT_PUBLIC_SUPER_ADMIN_ID` — voter_id of the permanent super admin
 
 ---
 
@@ -243,13 +255,13 @@ Storage buckets:
 
 ## Current State
 Last updated: 2026-06-14
-Last change: **Chat Session E — Push notification foundation.**
-- Push notification infrastructure (no triggers wired yet — infrastructure only).
-- Client push library (src/lib/push.ts): permission check, subscribe, unsubscribe.
-- Server push stubs (src/lib/pushServer.ts): sendPushToVoter, sendPushToAll.
-- usePushNotifications hook: manages permission, subscription, Supabase storage.
-- Service worker push + notificationclick handlers in public/sw.js.
-- NotificationsCard in ProfileOverlay: toggle switch, permission states.
-- v2_push_subscriptions table in Supabase.
-- VAPID keys not yet generated — run `npx web-push generate-vapid-keys`.
+Last change: **Profile Overhaul — Avatar Upload + Notes + Tabbed Layout + Role Foundation.**
+- ProfileOverlay rebuilt with 3-tab layout (Me / Trip / About).
+- Avatar upload with canvas-based cropper (AvatarCropper.tsx).
+- Unified Avatar component used across the app (ProfileAvatar, chat, overlay).
+- Role system foundation (src/lib/roles.ts): super_admin via env var, moderator via DB.
+- Voter notes ("About me") on the About tab with add/delete.
+- v2_voters extended with avatar_url and role columns.
+- v2_voter_notes table for personal notes.
+- setModeratorRole mutation in useGroupData.
 Next up: Wire push notification triggers (new message, reaction, etc.).

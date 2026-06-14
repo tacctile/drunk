@@ -6,13 +6,14 @@
 // auto-assigned pin color (v2_voters.pin_color — never user-selectable);
 // bh2-pin-color caches it for instant avatar rendering without a query.
 // localStorage keys are part of the product contract: bh2-voter-id,
-// bh2-voter-name, bh2-pin-color (see CONTEXT.md).
+// bh2-voter-name, bh2-pin-color, bh2-avatar-url (see CONTEXT.md).
 
 import { clearAuthCookie } from "@/lib/auth";
 
 const ID_KEY = "bh2-voter-id";
 const NAME_KEY = "bh2-voter-name";
 const PIN_COLOR_KEY = "bh2-pin-color";
+const AVATAR_URL_KEY = "bh2-avatar-url";
 
 export const MAX_FIRST_NAME_LENGTH = 15;
 
@@ -71,8 +72,18 @@ export function clearIdentity() {
   safeRemove(ID_KEY);
   safeRemove(NAME_KEY);
   safeRemove(PIN_COLOR_KEY);
+  safeRemove(AVATAR_URL_KEY);
   // Drop the soft-guard cookie so the middleware blocks the wings again.
   clearAuthCookie();
+}
+
+export function getStoredAvatarUrl(): string | null {
+  return safeGet(AVATAR_URL_KEY);
+}
+
+export function storeAvatarUrl(url: string | null) {
+  if (url) safeSet(AVATAR_URL_KEY, url);
+  else safeRemove(AVATAR_URL_KEY);
 }
 
 /** Cached copy of this voter's auto-assigned v2_voters.pin_color. */

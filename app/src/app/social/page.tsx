@@ -2,6 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Avatar as ChatAvatar } from "@/components/Avatar";
 import { Icon } from "@/components/Icon";
 import { BottomSheet } from "@/components/BottomSheet";
 import { ImageViewer } from "@/components/ImageViewer";
@@ -17,32 +18,24 @@ import {
   EMOJI_REACTIONS,
   type MessageRow,
 } from "@/lib/chat";
-import { contrastColor, getInitials } from "@/lib/colors";
 import { uploadChatImage } from "@/lib/storage";
 
 function SenderAvatar({
   name,
   color,
+  avatarUrl,
   size = 24,
-  textSize = "text-[10px]",
 }: {
   name: string;
   color: string;
+  avatarUrl?: string | null;
   size?: number;
-  textSize?: string;
 }) {
   return (
-    <span
-      className={`flex flex-none items-center justify-center rounded-full font-bold ${textSize}`}
-      style={{
-        background: color,
-        color: contrastColor(color),
-        width: size,
-        height: size,
-      }}
-    >
-      {getInitials(name)}
-    </span>
+    <ChatAvatar
+      voter={{ display_name: name, name, pin_color: color, avatar_url: avatarUrl }}
+      size={size}
+    />
   );
 }
 
@@ -225,22 +218,23 @@ function ChatInner() {
     ta.style.height = `${Math.min(ta.scrollHeight, 96)}px`;
   }, []);
 
-  const voterMap = useRef<Map<string, { name: string; color: string }>>(
+  const voterMap = useRef<Map<string, { name: string; color: string; avatarUrl: string | null }>>(
     new Map()
   );
   useEffect(() => {
-    const m = new Map<string, { name: string; color: string }>();
+    const m = new Map<string, { name: string; color: string; avatarUrl: string | null }>();
     for (const v of voters) {
       m.set(v.voter_id, {
         name: v.display_name ?? v.name,
         color: v.pin_color,
+        avatarUrl: v.avatar_url ?? null,
       });
     }
     voterMap.current = m;
   }, [voters]);
 
   const getVoter = (vid: string) =>
-    voterMap.current.get(vid) ?? { name: "Someone", color: "#4A5468" };
+    voterMap.current.get(vid) ?? { name: "Someone", color: "#4A5468", avatarUrl: null };
 
   const readSet = useRef(new Set<string>());
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -762,7 +756,7 @@ function ChatInner() {
                 key={r.voter_id}
                 className="flex h-11 items-center gap-3"
               >
-                <SenderAvatar name={v.name} color={v.color} />
+                <SenderAvatar name={v.name} color={v.color} avatarUrl={v.avatarUrl} />
                 <span className="min-w-0 flex-1 truncate text-base text-ink">
                   {v.name}
                 </span>
@@ -798,14 +792,14 @@ interface MessageBubbleProps {
   isOwn: boolean;
   grouped: boolean;
   isLast: boolean;
-  voter: { name: string; color: string };
+  voter: { name: string; color: string; avatarUrl: string | null };
   groupedReactions: ReturnType<typeof groupReactions>;
   msgReads: { voter_id: string; read_at: string; message_id: string }[];
   replyMsg: MessageRow | null;
   voterId: string;
   highlighted: boolean;
   nudged: boolean;
-  getVoter: (vid: string) => { name: string; color: string };
+  getVoter: (vid: string) => { name: string; color: string; avatarUrl: string | null };
   onObserve: (node: HTMLDivElement | null, msg: MessageRow) => void;
   onTouchStart: (
     e: React.TouchEvent,
@@ -877,7 +871,7 @@ function MessageBubble({
     >
       {!grouped && !isOwn && (
         <div className="mb-1 flex items-center gap-1.5">
-          <SenderAvatar name={voter.name} color={voter.color} />
+          <SenderAvatar name={voter.name} color={voter.color} avatarUrl={voter.avatarUrl} />
           <span className="text-meta text-ink-muted">{voter.name}</span>
         </div>
       )}
@@ -1026,8 +1020,8 @@ function MessageBubble({
             <SenderAvatar
               name={getVoter(msgReads[0].voter_id).name}
               color={getVoter(msgReads[0].voter_id).color}
+              avatarUrl={getVoter(msgReads[0].voter_id).avatarUrl}
               size={16}
-              textSize="text-[9px]"
             />
           )}
           {msgReads.length === 2 && (
@@ -1035,15 +1029,15 @@ function MessageBubble({
               <SenderAvatar
                 name={getVoter(msgReads[0].voter_id).name}
                 color={getVoter(msgReads[0].voter_id).color}
+                avatarUrl={getVoter(msgReads[0].voter_id).avatarUrl}
                 size={16}
-                textSize="text-[9px]"
               />
               <div className="-ml-1 relative z-10">
                 <SenderAvatar
                   name={getVoter(msgReads[1].voter_id).name}
                   color={getVoter(msgReads[1].voter_id).color}
+                  avatarUrl={getVoter(msgReads[1].voter_id).avatarUrl}
                   size={16}
-                  textSize="text-[9px]"
                 />
               </div>
             </div>

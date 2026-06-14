@@ -41,6 +41,16 @@ export interface VoterRow {
   /** Admin soft-disable. false = excluded from every group-facing view;
    *  the person can still use the app and their data is never deleted. */
   is_active: boolean;
+  avatar_url: string | null;
+  role: string | null;
+}
+
+export interface VoterNoteRow {
+  id: string;
+  voter_id: string;
+  content: string;
+  sort_order: number;
+  created_at: string;
 }
 
 export interface CityVoteRow {
