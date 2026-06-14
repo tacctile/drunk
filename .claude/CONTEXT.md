@@ -1,4 +1,4 @@
-# Bar Hoppers — Project Context
+# Hoppz — Project Context
 > Single source of truth for all Claude Code sessions. Read this before starting.
 >
 > NOTE: This documents **v2 — the Next.js app under `app/`** (the live product).
@@ -45,10 +45,12 @@ Key dirs:
 Cold open hits `/` → client checks `isAuthenticated()`:
 - **not authenticated → `/login`** · **authenticated → `/home`** (always).
 
-- `/login` — full-screen create/sign-in screen. No AppShell chrome. Shares the
-  identity form with the NamePrompt modal (`IdentityForm`). Has an "Install App"
-  section (Android `beforeinstallprompt` button + iOS instructions, hidden in
-  standalone). On success → `setLastWing("plan")` → `/plan`.
+- `/login` — full-screen sign-in / create screen. No AppShell chrome. Sign In is
+  the default mode (free-form first name + last initial + PIN, matched
+  case-insensitively against v2_voters.display_name). Create new account is the
+  secondary option. "Add to Home Screen" section below a divider: Android
+  (`beforeinstallprompt`) + iOS (inline Safari instructions), both hidden in
+  standalone mode. On success → `setLastWing("plan")` → `/home`.
 - `/home` — wing picker. AppShell header only (no bottom nav). Two cards:
   **Plan a Trip → `/plan`**, **Night Out → `/social`** (placeholder).
 - **Plan wing — `/plan/*`** (`plan/layout.tsx` sets last wing = plan):
@@ -101,10 +103,10 @@ All keys are product contract:
 ---
 
 ## PWA
-- `public/manifest.json` — name/short_name "Bar Hoppers", `start_url` "/",
+- `public/manifest.json` — name/short_name "Hoppz", `start_url` "/",
   `display` standalone, portrait, bg/theme `#0A0D14`, icon placeholders
   (192/512/180; drop real PNGs in `public/icons/`, see its README).
-- `public/sw.js` — cache `bar-hoppers-v1`. Navigations network-first with
+- `public/sw.js` — cache `hoppz-v1`. Navigations network-first with
   `/offline.html` fallback; fonts + `/_next/static/` + icons cache-first;
   supabase.co / googleapis.com network-first; `skipWaiting` + `clients.claim`.
 - `public/offline.html` — standalone dark page, no app-shell deps.
@@ -150,7 +152,8 @@ mirroring. Tables (see `lib/supabase.ts` for row shapes):
    functionality working. Mobile-first; think at 375px first.
 2. Supabase is shared data only; everything else is localStorage. Supabase
    failures fall back silently — never an error toast.
-3. Material Symbols + Manrope only. No emoji, no SVG icons.
+3. Material Symbols + Manrope only. No emoji. Inline SVG icons only for platform
+   logos (Android/Apple on the login install section).
 4. Dark only. Use the semantic tokens; no inline hex, no new radii.
 5. `cities` array is variable in length — never hardcode a count.
 6. The plan-wing pages and their hooks/lib are stable; don't refactor them
@@ -160,10 +163,11 @@ mirroring. Tables (see `lib/supabase.ts` for row shapes):
 
 ## Current State
 Last updated: 2026-06-14
-Last change: **PWA foundation + auth flow + home screen + dual-wing navigation.**
-- Added the PWA layer (manifest, `sw.js`, `offline.html`, registrar, head tags).
-- Added `lib/auth.ts` (soft-auth + last-wing), `/login` (inline `IdentityForm`
-  extracted from NamePrompt), `/home` wing picker, and `src/middleware.ts`.
-- Moved the plan pages under `/plan/*` and split off a placeholder `/social/*`
-  wing with its own bottom nav. AppShell is now pathname-aware.
+Last change: **Rebrand to Hoppz + login screen overhaul + install buttons.**
+- Renamed all "Bar Hoppers" string references to "Hoppz" across the app.
+- Login screen now defaults to Sign In (free-form name + initial + PIN lookup
+  against v2_voters.display_name). Create new account is the secondary toggle.
+- Install section replaced with side-by-side Android/iOS buttons (SVG logos,
+  platform-aware: Android uses beforeinstallprompt, iOS shows Safari instructions).
+  Hidden in standalone mode.
 Next up: real PNG app icons; flesh out the Night Out (social) wing.
