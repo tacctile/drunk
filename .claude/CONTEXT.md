@@ -65,6 +65,15 @@ Key dirs:
 - `lib/storage.ts` — Supabase storage helper. uploadChatImage(file) uploads
   to hoppz-media bucket (path: chat/{timestamp}-{uuid}.{ext}), returns
   UploadResult (ok+url or error). 10MB max, never throws.
+- `lib/push.ts` — Client-side push notification helpers: isPushSupported,
+  getNotificationPermission, subscribeToPush, getExistingSubscription,
+  unsubscribeFromPush, extractSubscriptionKeys. VAPID key from env var.
+- `lib/pushServer.ts` — Server-side push utility stubs: sendPushToVoter,
+  sendPushToAll. Typed but not functional until VAPID keys are configured
+  and web-push is installed.
+- `hooks/usePushNotifications.ts` — React hook: supported, permission,
+  subscribed, requesting, requestPermission(), unsubscribe(). Saves/removes
+  subscriptions in v2_push_subscriptions via Supabase.
 - `components/ImageViewer.tsx` — full-screen image viewer overlay. Fixed
   inset-0, close/download buttons, escape key, body scroll lock, fade-in.
 - `components/Toast.tsx` — ephemeral notification for upload errors.
@@ -192,6 +201,10 @@ mirroring. Tables (see `lib/supabase.ts` for row shapes):
   `read_at` timestamptz. PK (message_id, voter_id).
 - `v2_message_reactions` — `message_id` FK→v2_messages, `voter_id` FK→v2_voters,
   `emoji` text, `created_at` timestamptz. PK (message_id, voter_id).
+- `v2_push_subscriptions` — `id` uuid PK, `voter_id` FK→v2_voters (cascade),
+  `endpoint` text (unique), `p256dh` text, `auth` text, `user_agent` text,
+  `created_at`/`updated_at` timestamptz. One subscription per endpoint; a voter
+  can have multiple devices.
 
 Storage buckets:
 - `hoppz-media` — public bucket for chat image uploads. Path pattern:
@@ -214,14 +227,29 @@ Storage buckets:
 
 ---
 
+## Environment Variables
+- `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase client
+- `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` — Google Maps
+- `NEXT_PUBLIC_VAPID_PUBLIC_KEY` — VAPID public key for Web Push (client-side)
+- `VAPID_PRIVATE_KEY` — VAPID private key (server-side only)
+- `VAPID_MAILTO` — VAPID contact email (server-side only)
+
+---
+
+## Migrations Log
+- `create_v2_push_subscriptions` — v2_push_subscriptions table with RLS + index (Session E)
+
+---
+
 ## Current State
 Last updated: 2026-06-14
-Last change: **Chat Session D — Camera capture + send.**
-- Camera page (/social/camera): full-screen viewfinder, own layout (no HopShell),
-  capture photo, retake, flip camera, permission/error states.
-- useCamera hook: getUserMedia, canvas capture to JPEG, flip, retake, cleanup.
-- Post-capture: from chat → upload + navigate to /social?pendingImage=...;
-  standalone → Send to Chat or Save to Device options.
-- Chat page handles pendingImage query param (auto-sends uploaded camera photo).
-- Camera icon in chat input bar navigates to /social/camera?from=chat.
-Next up: TBD.
+Last change: **Chat Session E — Push notification foundation.**
+- Push notification infrastructure (no triggers wired yet — infrastructure only).
+- Client push library (src/lib/push.ts): permission check, subscribe, unsubscribe.
+- Server push stubs (src/lib/pushServer.ts): sendPushToVoter, sendPushToAll.
+- usePushNotifications hook: manages permission, subscription, Supabase storage.
+- Service worker push + notificationclick handlers in public/sw.js.
+- NotificationsCard in ProfileOverlay: toggle switch, permission states.
+- v2_push_subscriptions table in Supabase.
+- VAPID keys not yet generated — run `npx web-push generate-vapid-keys`.
+Next up: Wire push notification triggers (new message, reaction, etc.).

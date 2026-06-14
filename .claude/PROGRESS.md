@@ -1,6 +1,21 @@
 # Hoppz — Progress
 > Feature checklist for the v2 Next.js app (`app/`). Newest phase on top.
 
+## Phase: Chat Session E — Push Notification Foundation (2026-06-14)
+- [x] v2_push_subscriptions Supabase table (migration applied, RLS, index)
+- [x] PushSubscriptionRow type added to src/lib/supabase.ts
+- [x] src/lib/push.ts — client push helpers (isPushSupported, subscribeToPush, etc.)
+- [x] src/lib/pushServer.ts — server stubs (sendPushToVoter, sendPushToAll)
+- [x] src/hooks/usePushNotifications.ts — React hook (permission, subscribe, unsubscribe)
+- [x] public/sw.js — push event handler + notificationclick handler appended
+- [x] NotificationsCard in ProfileOverlay (Switch toggle, permission states)
+- [x] .env.example updated with VAPID key placeholders
+- [x] VAPID comment added to sw.js header
+- [x] No auto-prompt — permission requested only via profile toggle
+- [x] All Session A/B/C/D features verified intact (typecheck + lint + build pass clean)
+- [x] .claude/ files updated (CONTEXT.md, BUILD_INDEX.md, STATE.yml, PROGRESS.md)
+- [x] Chat foundation complete (Sessions A–E)
+
 ## Phase: Chat Session D — Camera Capture + Send (2026-06-14)
 - [x] src/hooks/useCamera.ts — getUserMedia, flip, canvas capture, retake, permission/error
 - [x] src/app/social/camera/layout.tsx — bare layout (no HopShell, full-bleed camera)
@@ -136,4 +151,7 @@
 ## Backlog
 - [ ] Real PNG app icons (192 / 512 / 180)
 - [x] Session D: camera capture
+- [x] Session E: push notification foundation
+- [ ] Wire push notification triggers (new message, reaction, etc.)
+- [ ] Generate VAPID keys and configure env vars
 - [ ] More cities in `data/cities.ts`

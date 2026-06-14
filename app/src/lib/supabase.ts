@@ -111,6 +111,17 @@ export interface MessageReactionRow {
   created_at: string;
 }
 
+export interface PushSubscriptionRow {
+  id: string;
+  voter_id: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  user_agent: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 /** Swallows all failures; returns null so callers can fall back silently. */
 export async function safeSelect<T>(table: string, columns: string): Promise<T[] | null> {
   const sb = getSupabase();

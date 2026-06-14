@@ -20,6 +20,7 @@ import { buildDisplayName, getStoredPinColor, isValidPin } from "@/lib/identity"
 import { formatMonthTitle, plural } from "@/lib/format";
 import { lockBodyScroll, unlockBodyScroll } from "@/lib/scrollLock";
 import { getSupabase } from "@/lib/supabase";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { BottomSheet } from "./BottomSheet";
 import { Icon } from "./Icon";
 import { NamePrompt } from "./NamePrompt";
@@ -248,6 +249,46 @@ function LocationCard({ locations }: { locations: LocationsValue }) {
           </p>
         )}
         <p className="mt-1 text-meta font-normal text-ink-dim">This only affects Hoppz.</p>
+      </div>
+    </section>
+  );
+}
+
+function NotificationsCard() {
+  const { supported, permission, subscribed, requesting, requestPermission, unsubscribe } =
+    usePushNotifications();
+
+  if (!supported) return null;
+
+  return (
+    <section>
+      <h2 className="label">Notifications</h2>
+      <div className="card mt-2">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-base text-ink">Push notifications</p>
+          <Switch
+            checked={subscribed}
+            disabled={requesting || permission === "denied"}
+            onToggle={() => (subscribed ? void unsubscribe() : void requestPermission())}
+            ariaLabel="Enable push notifications"
+          />
+        </div>
+        {permission === "denied" && (
+          <p className="text-meta font-normal text-ink-dim">
+            Notifications blocked. Enable them in your browser settings.
+          </p>
+        )}
+        {permission === "default" && !subscribed && (
+          <p className="text-meta font-normal text-ink-dim">
+            Get notified when your crew sends messages.
+          </p>
+        )}
+        {subscribed && (
+          <p className="text-meta font-normal text-green">Notifications enabled</p>
+        )}
+        <p className="mt-1 text-meta font-normal text-ink-dim">
+          This only affects Hoppz notifications.
+        </p>
       </div>
     </section>
   );
@@ -677,6 +718,7 @@ function ProfileBody({
       <VoteCard onGoVote={() => onNavigate("/plan/cities")} />
       <AvailabilityCard onMarkDates={() => onNavigate("/plan/calendar")} />
       <LocationCard locations={locations} />
+      <NotificationsCard />
       <IdentityCard
         storedFirst={storedFirst}
         storedInitial={storedInitial}
