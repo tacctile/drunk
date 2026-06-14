@@ -103,11 +103,13 @@ export function useCamera() {
     }
     ctx.drawImage(video, 0, 0);
     const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+    // Stream stays active — video keeps running under the captured image overlay
     setState((s) => ({ ...s, capturedImage: dataUrl }));
     return dataUrl;
   }, []);
 
   const retake = useCallback(() => {
+    // Video element was never unmounted — stream is still active
     setState((s) => ({ ...s, capturedImage: null }));
   }, []);
 

@@ -86,8 +86,7 @@ function ChatInner() {
     removeReaction,
   } = useChat();
 
-  const listRef = useRef<HTMLDivElement>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [showNewPill, setShowNewPill] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -132,22 +131,24 @@ function ChatInner() {
   }, [searchParams, sendMessage, router]);
 
   const isNearBottom = useCallback(() => {
-    const el = listRef.current;
+    const el = scrollRef.current;
     if (!el) return true;
     return el.scrollHeight - el.scrollTop - el.clientHeight < 100;
   }, []);
 
-  const scrollToBottom = useCallback((smooth = false) => {
-    bottomRef.current?.scrollIntoView(
-      smooth ? { behavior: "smooth" } : undefined
-    );
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "auto") => {
+    requestAnimationFrame(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+    });
   }, []);
 
   useEffect(() => {
     if (loading || messages.length === 0) return;
     if (!initialScrollDone.current) {
       initialScrollDone.current = true;
-      scrollToBottom(false);
+      scrollToBottom("auto");
       prevMessageCount.current = messages.length;
       return;
     }
@@ -157,7 +158,7 @@ function ChatInner() {
       const hasOwnNew = newMessages.some((m) => m.voter_id === voterId);
 
       if (hasOwnNew || isNearBottom()) {
-        scrollToBottom(true);
+        scrollToBottom("smooth");
         setShowNewPill(false);
       } else {
         setShowNewPill(true);
@@ -168,13 +169,13 @@ function ChatInner() {
 
   useEffect(() => {
     if (!loadingMore) return;
-    const el = listRef.current;
+    const el = scrollRef.current;
     if (el) prevScrollHeight.current = el.scrollHeight;
   }, [loadingMore]);
 
   useEffect(() => {
     if (loadingMore) return;
-    const el = listRef.current;
+    const el = scrollRef.current;
     if (el && prevScrollHeight.current > 0) {
       const diff = el.scrollHeight - prevScrollHeight.current;
       el.scrollTop += diff;
@@ -183,7 +184,7 @@ function ChatInner() {
   }, [loadingMore, messages]);
 
   const handleScroll = useCallback(() => {
-    const el = listRef.current;
+    const el = scrollRef.current;
     if (!el) return;
     if (el.scrollTop < 100 && hasMore && !loadingMore) {
       void loadMore();
@@ -201,7 +202,7 @@ function ChatInner() {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
-    scrollToBottom(true);
+    scrollToBottom("smooth");
   }, [inputValue, sendMessage, scrollToBottom]);
 
   const handleKeyDown = useCallback(
@@ -447,7 +448,7 @@ function ChatInner() {
         return;
       }
       await sendMessage(null, result.url);
-      scrollToBottom(true);
+      scrollToBottom("smooth");
     },
     [sendMessage, scrollToBottom]
   );
@@ -567,9 +568,9 @@ function ChatInner() {
   return (
     <div className="flex h-[calc(100dvh-3.5rem-64px-env(safe-area-inset-bottom))] flex-col">
       <div
-        ref={listRef}
+        ref={scrollRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-4"
+        className="flex flex-1 flex-col justify-start overflow-y-scroll px-4"
       >
         {loadingMore && (
           <div className="flex justify-center py-3">
@@ -587,6 +588,8 @@ function ChatInner() {
           </div>
         )}
 
+        <div className="flex-1 min-h-0" />
+
         {renderMessages()}
 
         {uploadingId && (
@@ -597,8 +600,6 @@ function ChatInner() {
             </div>
           </div>
         )}
-
-        <div ref={bottomRef} />
       </div>
 
       {showNewPill && (
@@ -606,7 +607,7 @@ function ChatInner() {
           <button
             type="button"
             onClick={() => {
-              scrollToBottom(true);
+              scrollToBottom("smooth");
               setShowNewPill(false);
             }}
             className="pointer-events-auto rounded-full bg-accent px-4 py-1.5 text-meta font-semibold text-bg shadow-overlay"

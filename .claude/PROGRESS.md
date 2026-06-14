@@ -1,6 +1,25 @@
 # Hoppz — Progress
 > Feature checklist for the v2 Next.js app (`app/`). Newest phase on top.
 
+## Phase: Camera + Chat + Gallery Polish Pass (2026-06-14)
+- [x] Chat scroll jitter fix — scrollTop instead of scrollIntoView, requestAnimationFrame
+- [x] Chat scroll container — overflow-y-scroll, flex-col justify-start with spacer div
+- [x] Chat initial scroll uses "auto", new messages use "smooth" only if near bottom
+- [x] Camera shutter centering — absolute positioned independently (left:50% translateX)
+- [x] Camera shutter style — 72px ring (4px white border) + 60px white fill
+- [x] Camera flip button — absolute right:32px, icon + "Flip" label, drop shadow, no bg
+- [x] Camera post-capture controls — clean icon + label only, no gray circles
+- [x] Camera retake fix — video always mounted, captured image overlays, stream never stopped
+- [x] Camera send flow unified — always uploads to Supabase + saves to device simultaneously
+- [x] Camera standalone two-option flow removed — single Send button does both actions
+- [x] Camera send loading state — animate-pulse on icon, non-interactive during upload
+- [x] Gallery upload button — floating bottom-left, btn-ghost style, triggers file picker
+- [x] Gallery upload flow — validates size, uploads via uploadChatImage, sends via useChat
+- [x] Gallery Toast for upload errors
+- [x] Supabase Storage policies corrected externally (storage.objects scope)
+- [x] All Session A/B/C/D/E features verified intact (typecheck + lint + build pass clean)
+- [x] .claude/ files updated (STATE.yml, PROGRESS.md)
+
 ## Phase: Chat Session E — Push Notification Foundation (2026-06-14)
 - [x] v2_push_subscriptions Supabase table (migration applied, RLS, index)
 - [x] PushSubscriptionRow type added to src/lib/supabase.ts
