@@ -1,10 +1,10 @@
-/* Bar Hoppers service worker — minimal offline shell.
+/* Hoppz service worker — minimal offline shell.
    - Cache-first for the static app shell (CSS/JS/fonts).
    - Network-first for live data (supabase.co, googleapis.com).
    - Navigations fall back to /offline.html when the network is gone and
      nothing is cached.
    The cache name is bumped to invalidate the whole shell on release. */
-const CACHE = "bar-hoppers-v1";
+const CACHE = "hoppz-v1";
 
 // Precached so the offline fallback is always available, even cold.
 const PRECACHE = ["/offline.html", "/manifest.json"];

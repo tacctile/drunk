@@ -140,7 +140,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <header className="sticky top-0 z-30 border-b bg-bg">
             <div className="mx-auto flex h-14 max-w-2xl items-center justify-between px-4">
               <Link href="/home" className="flex h-11 items-center text-title font-extrabold tracking-tight">
-                Bar Hoppers
+                Hoppz
               </Link>
               <div className="flex items-center">
                 {inPlan && (

@@ -247,7 +247,7 @@ function LocationCard({ locations }: { locations: LocationsValue }) {
             {error}
           </p>
         )}
-        <p className="mt-1 text-meta font-normal text-ink-dim">This only affects Bar Hoppers.</p>
+        <p className="mt-1 text-meta font-normal text-ink-dim">This only affects Hoppz.</p>
       </div>
     </section>
   );

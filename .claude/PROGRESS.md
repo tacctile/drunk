@@ -1,5 +1,16 @@
-# Bar Hoppers — Progress
+# Hoppz — Progress
 > Feature checklist for the v2 Next.js app (`app/`). Newest phase on top.
+
+## Phase: Hoppz Rebrand + Login Overhaul (2026-06-14)
+- [x] Rebrand all "Bar Hoppers" → "Hoppz" (manifest, sw, offline page, layout,
+      AppShell header, locate page, profile overlay, comments)
+- [x] Login screen defaults to Sign In (free-form name + initial + PIN lookup)
+- [x] Create account is now the secondary toggle option
+- [x] Sign-in lookup matches display_name case-insensitively, generic error message
+- [x] Add to Home Screen section: Android + iOS buttons (SVG logos, side-by-side)
+- [x] Android button uses beforeinstallprompt, disabled when ineligible
+- [x] iOS button toggles inline Safari instructions with max-height transition
+- [x] Install section hidden in standalone mode
 
 ## Phase: PWA + Auth + Dual-Wing (2026-06-14)
 - [x] PWA manifest (`public/manifest.json`) + icon placeholders + README

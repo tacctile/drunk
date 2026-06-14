@@ -7,7 +7,7 @@ import { GroupDataProvider } from "@/hooks/useGroupData";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Bar Hoppers",
+  title: "Hoppz",
   description:
     "Plan the next overnight bar-hop from Ralston: pick a city, pick a hotel steps from the bars, find the weekend everyone's free.",
 };
@@ -37,7 +37,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <link rel="manifest" href="/manifest.json" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="Bar Hoppers" />
+        <meta name="apple-mobile-web-app-title" content="Hoppz" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
       </head>
       <body>
