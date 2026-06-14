@@ -6,6 +6,7 @@ import { useGroupData } from "@/hooks/useGroupData";
 import { isAuthenticated, mirrorAuthCookie, setLastWing } from "@/lib/auth";
 import { isValidPin, MAX_FIRST_NAME_LENGTH } from "@/lib/identity";
 import { FieldError } from "@/components/FieldError";
+import { Icon } from "@/components/Icon";
 
 interface InstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -25,6 +26,7 @@ export default function LoginPage() {
   const [siErrors, setSiErrors] = useState<{ first?: string; initial?: string; pin?: string }>({});
   const [siAuthError, setSiAuthError] = useState("");
   const [siBusy, setSiBusy] = useState(false);
+  const [siShowPin, setSiShowPin] = useState(false);
 
   // Create fields
   const [crFirst, setCrFirst] = useState("");
@@ -32,6 +34,7 @@ export default function LoginPage() {
   const [crPin, setCrPin] = useState("");
   const [crErrors, setCrErrors] = useState<{ first?: string; initial?: string; pin?: string }>({});
   const [crBusy, setCrBusy] = useState(false);
+  const [crShowPin, setCrShowPin] = useState(false);
 
   // Install section
   const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
@@ -176,17 +179,27 @@ export default function LoginPage() {
               {siErrors.initial && <FieldError>{siErrors.initial}</FieldError>}
             </div>
             <div className="flex flex-col gap-1">
-              <input
-                className="input"
-                type="text"
-                inputMode="numeric"
-                autoComplete="off"
-                placeholder="PIN"
-                value={siPin}
-                maxLength={2}
-                onChange={(e) => setSiPin(e.target.value.replace(/\D/g, "").slice(0, 2))}
-                aria-label="PIN"
-              />
+              <div className="relative">
+                <input
+                  className="input pr-12"
+                  type={siShowPin ? "text" : "password"}
+                  inputMode="numeric"
+                  autoComplete="off"
+                  placeholder="PIN"
+                  value={siPin}
+                  maxLength={2}
+                  onChange={(e) => setSiPin(e.target.value.replace(/\D/g, "").slice(0, 2))}
+                  aria-label="PIN"
+                />
+                <button
+                  type="button"
+                  aria-label={siShowPin ? "Hide PIN" : "Reveal PIN"}
+                  onClick={() => setSiShowPin((s) => !s)}
+                  className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center text-ink-muted"
+                >
+                  <Icon name={siShowPin ? "visibility_off" : "visibility"} size={20} />
+                </button>
+              </div>
               {siErrors.pin && <FieldError>{siErrors.pin}</FieldError>}
               {siAuthError && <FieldError>{siAuthError}</FieldError>}
             </div>
@@ -238,17 +251,27 @@ export default function LoginPage() {
               {crErrors.initial && <FieldError>{crErrors.initial}</FieldError>}
             </div>
             <div className="flex flex-col gap-1">
-              <input
-                className="input"
-                type="text"
-                inputMode="numeric"
-                autoComplete="off"
-                placeholder="2-digit PIN"
-                value={crPin}
-                maxLength={2}
-                onChange={(e) => setCrPin(e.target.value.replace(/\D/g, "").slice(0, 2))}
-                aria-label="2-digit PIN"
-              />
+              <div className="relative">
+                <input
+                  className="input pr-12"
+                  type={crShowPin ? "text" : "password"}
+                  inputMode="numeric"
+                  autoComplete="off"
+                  placeholder="2-digit PIN"
+                  value={crPin}
+                  maxLength={2}
+                  onChange={(e) => setCrPin(e.target.value.replace(/\D/g, "").slice(0, 2))}
+                  aria-label="2-digit PIN"
+                />
+                <button
+                  type="button"
+                  aria-label={crShowPin ? "Hide PIN" : "Reveal PIN"}
+                  onClick={() => setCrShowPin((s) => !s)}
+                  className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center text-ink-muted"
+                >
+                  <Icon name={crShowPin ? "visibility_off" : "visibility"} size={20} />
+                </button>
+              </div>
               {crErrors.pin && <FieldError>{crErrors.pin}</FieldError>}
               <p className="text-meta font-normal text-ink-dim">
                 Name, initial, and PIN let you vote from another device.

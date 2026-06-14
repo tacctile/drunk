@@ -220,7 +220,7 @@ export default function GalleryPage() {
 
       {days.map((day) => (
         <div key={day.key} id={`gallery-day-${day.key}`}>
-          <div className="sticky top-14 z-10 bg-bg px-4 py-2">
+          <div className="sticky top-0 z-10 bg-bg px-4 py-2">
             <span className="text-label text-ink-muted">
               {formatDayDivider(day.iso)}
             </span>

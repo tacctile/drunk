@@ -44,11 +44,11 @@ function SenderAvatar({
 function DayDivider({ iso }: { iso: string }) {
   return (
     <div className="flex items-center gap-3 py-3">
-      <div className="h-px flex-1 bg-ink-dim" />
+      <div className="h-px flex-1 bg-border" />
       <span className="text-meta font-normal text-ink-dim">
         {formatDayDivider(iso)}
       </span>
-      <div className="h-px flex-1 bg-ink-dim" />
+      <div className="h-px flex-1 bg-border" />
     </div>
   );
 }
@@ -304,8 +304,11 @@ function ChatInner() {
         const rect = bubbleEl.getBoundingClientRect();
         const viewH = window.innerHeight;
         const isTopArea = rect.top < viewH * 0.2;
+        const PICKER_HALF_WIDTH = 140;
+        const rawX = rect.left + rect.width / 2;
+        const clampedX = Math.max(PICKER_HALF_WIDTH, Math.min(rawX, window.innerWidth - PICKER_HALF_WIDTH));
         setPickerPos({
-          x: rect.left + rect.width / 2,
+          x: clampedX,
           y: isTopArea ? rect.bottom + 8 : rect.top - 8,
           above: !isTopArea,
         });
@@ -367,8 +370,11 @@ function ChatInner() {
         const rect = bubbleEl.getBoundingClientRect();
         const viewH = window.innerHeight;
         const isTopArea = rect.top < viewH * 0.2;
+        const PICKER_HALF_WIDTH = 140;
+        const rawX = rect.left + rect.width / 2;
+        const clampedX = Math.max(PICKER_HALF_WIDTH, Math.min(rawX, window.innerWidth - PICKER_HALF_WIDTH));
         setPickerPos({
-          x: rect.left + rect.width / 2,
+          x: clampedX,
           y: isTopArea ? rect.bottom + 8 : rect.top - 8,
           above: !isTopArea,
         });
@@ -735,7 +741,7 @@ function ChatInner() {
             onClick={handleSend}
             disabled={!hasContent}
             aria-label="Send message"
-            className={`flex h-10 w-10 flex-none items-center justify-center ${
+            className={`flex h-10 w-10 flex-none items-center justify-center disabled:opacity-50 ${
               hasContent ? "text-accent" : "text-ink-dim"
             }`}
           >

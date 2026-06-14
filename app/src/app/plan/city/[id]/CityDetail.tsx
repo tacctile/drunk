@@ -12,7 +12,7 @@ import type { Venue } from "@/lib/venues";
 import { ActionBar } from "@/components/ActionBar";
 import { CityList, loadSort, type CitySort } from "@/components/CityList";
 import { Stars } from "@/components/Stars";
-import { CityMap, type CityMapHandle } from "@/components/CityMap";
+import { CITY_DETAIL_HEADER_HEIGHT, CityMap, type CityMapHandle } from "@/components/CityMap";
 import { Icon } from "@/components/Icon";
 import { useNameGate } from "@/components/NamePrompt";
 import { ProfileAvatar } from "@/components/ProfileAvatar";
@@ -108,7 +108,7 @@ export function CityDetail({ cityId }: { cityId: string }) {
         <CityMap ref={mapRef} city={city} venues={venues} onPinTap={setPinned} />
 
         {/* Hotels / Bars / Food */}
-        <div className="sticky top-[57px] z-20 flex h-11 border-b bg-surface">
+        <div className="sticky z-20 flex h-11 border-b bg-surface" style={{ top: CITY_DETAIL_HEADER_HEIGHT }}>
           {TABS.map(({ kind, label }) => {
             const active = tab === kind;
             return (
@@ -184,15 +184,12 @@ export function CityDetail({ cityId }: { cityId: string }) {
                     className="flex h-11 w-11 flex-none flex-col items-center justify-center gap-1"
                     aria-label={myHotel === venue.id ? "Remove hotel preference" : "Prefer this hotel"}
                   >
-                    <span
-                      className="ms text-xl"
-                      style={{
-                        fontVariationSettings: myHotel === venue.id ? "'FILL' 1" : "'FILL' 0",
-                        color: myHotel === venue.id ? "var(--accent)" : "var(--ink-dim)",
-                      }}
-                    >
-                      star
-                    </span>
+                    <Icon
+                      name="star"
+                      size={20}
+                      filled={myHotel === venue.id}
+                      className={myHotel === venue.id ? "text-accent" : "text-ink-dim"}
+                    />
                     {myHotel !== venue.id && (
                       <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-dim">
                         Prefer
