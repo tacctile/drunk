@@ -4,6 +4,30 @@
 
 ---
 
+## Chat Session D — Camera Capture + Send — 2026-06-14
+
+### Camera hook
+- `app/src/hooks/useCamera.ts` — getUserMedia with ideal facingMode, flip between
+  environment/user, canvas capture to JPEG data URL (0.92 quality), retake,
+  permission denied / error states. Mirrors front camera in both viewfinder and capture.
+
+### Camera page
+- `app/src/app/social/camera/page.tsx` — full-screen camera: viewfinder with shutter
+  and flip controls, post-capture with retake/send, permission denied and error states.
+  Context detection via `?from=chat` param. From chat: uploads → navigates to
+  `/social?pendingImage=...`. Standalone: Send to Chat or Save to Device options.
+- `app/src/app/social/camera/layout.tsx` — bare layout (no HopShell), full-bleed camera.
+
+### Chat page camera integration
+- `app/src/app/social/page.tsx` — camera icon wired to `/social/camera?from=chat`.
+  Handles `pendingImage` query param on mount (auto-sends uploaded camera photo via
+  sendMessage, then clears param from URL).
+
+### Build task index
+- Fix camera / capture / send → read `src/hooks/useCamera.ts`, `src/app/social/camera/page.tsx`, `src/app/social/camera/layout.tsx`
+
+---
+
 ## Chat Session C — Image Upload + Gallery + ImageViewer — 2026-06-14
 
 ### Storage helper

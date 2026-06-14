@@ -1,6 +1,23 @@
 # Hoppz — Progress
 > Feature checklist for the v2 Next.js app (`app/`). Newest phase on top.
 
+## Phase: Chat Session D — Camera Capture + Send (2026-06-14)
+- [x] src/hooks/useCamera.ts — getUserMedia, flip, canvas capture, retake, permission/error
+- [x] src/app/social/camera/layout.tsx — bare layout (no HopShell, full-bleed camera)
+- [x] src/app/social/camera/page.tsx — full-screen camera: viewfinder, shutter, flip, post-capture
+- [x] Camera context detection via ?from=chat search param
+- [x] Post-capture from chat: upload → navigate /social?pendingImage=...
+- [x] Post-capture standalone: Send to Chat + Save to Device options
+- [x] Chat page handles pendingImage query param (auto-sends, clears URL)
+- [x] Camera icon in chat input bar wired to /social/camera?from=chat
+- [x] Permission denied state: icon, message, Go back button
+- [x] Error state: icon, error message, Try again + Go back buttons
+- [x] Front camera mirroring (viewfinder scaleX(-1) + canvas mirrored capture)
+- [x] Multiple camera detection via enumerateDevices (flip button hidden if single camera)
+- [x] Suspense boundaries for useSearchParams on camera and chat pages
+- [x] All Session A/B/C features verified intact (typecheck + build pass clean)
+- [x] .claude/ files updated (CONTEXT.md, BUILD_INDEX.md, STATE.yml, PROGRESS.md)
+
 ## Phase: Chat Session C — Image Upload + Gallery (2026-06-14)
 - [x] src/lib/storage.ts — uploadChatImage (hoppz-media bucket, 10MB cap, never throws)
 - [x] Image upload from input bar — file picker, optimistic uploading bubble, error toast
@@ -56,7 +73,7 @@
 - [x] typecheck and build pass clean
 - [x] Gallery button → file upload picker (Session C)
 - [x] Image expand → ImageViewer overlay (Session C)
-- [ ] Camera button placeholder (Session D)
+- [x] Camera button wired to /social/camera?from=chat (Session D)
 
 ## Phase: Component Architecture Cleanup + Nav Refactor (2026-06-14)
 - [x] Extracted TopBar.tsx — sticky wordmark bar, hidden on city detail/admin
@@ -118,5 +135,5 @@
 
 ## Backlog
 - [ ] Real PNG app icons (192 / 512 / 180)
-- [ ] Session D: camera capture
+- [x] Session D: camera capture
 - [ ] More cities in `data/cities.ts`

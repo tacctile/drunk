@@ -57,6 +57,8 @@ Key dirs:
 - `hooks/useAdminHold.ts` — 3s hold hook shared by PlanNav and HopNav.
 - `hooks/useChat.ts` — chat data hook: messages, reactions, reads, realtime,
   optimistic sends, pagination, markRead. Channel "hoppz-chat".
+- `hooks/useCamera.ts` — camera hook: getUserMedia, flip, capture (canvas →
+  JPEG data URL), retake, permission/error states. Returns videoRef.
 - `lib/chat.ts` — chat types (MessageRow, ReactionRow, ReadRow), helpers
   (formatMessageTime, formatDayDivider, isDifferentDay, shouldGroup),
   constants (CHAT_PAGE_SIZE = 50, GALLERY_PAGE_SIZE = 30, EMOJI_REACTIONS).
@@ -92,10 +94,14 @@ Cold open hits `/` → client checks `isAuthenticated()`:
     Admin long-press is on both the Results tab and the Hopp tab.
     The wordmark bar (TopBar) has only the wordmark left and avatar right.
 - **Hopp wing — `/social/*`** (`social/layout.tsx` sets last wing = social):
-  - `/social` (Chat), `/social/camera` (Camera placeholder),
+  - `/social` (Chat), `/social/camera` (Camera — full-screen, own layout, no HopShell),
     `/social/gallery` (photo gallery — 3-col grid, day groups, jump-to-date),
     `/social/locate` (live group map).
   - HopShell renders TopBar + HopNav bottom bar (Chat / Camera / Gallery / Locate / Plan).
+    Camera route has its own layout.tsx that bypasses HopShell (full-bleed viewfinder).
+  - Camera context: `?from=chat` param → post-capture uploads and navigates to
+    `/social?pendingImage=...`. Standalone mode offers Send to Chat or Save to Device.
+  - Chat page reads `pendingImage` query param on mount to auto-send camera photos.
     Plan is a cross-wing link to `/plan` (list_alt icon) — it does not get
     active highlight on /social/* routes. Admin long-press is on the Plan tab.
 
@@ -210,15 +216,12 @@ Storage buckets:
 
 ## Current State
 Last updated: 2026-06-14
-Last change: **Chat Session C — image upload, gallery, ImageViewer.**
-- Image upload: file picker (add_photo_alternate icon in input bar), 10MB cap,
-  optimistic uploading bubble, uploadChatImage → sendMessage(null, imageUrl).
-- Image display: lazy-loaded in chat bubbles, aspect-ratio 4/3 placeholder,
-  tap to expand in full-screen ImageViewer (close, download, escape, scroll lock).
-- Gallery page (/social/gallery): 3-col square grid, day grouping with sticky headers,
-  cursor-based pagination (30/page), jump-to-date BottomSheet, refresh button.
-- HopNav: 5 tabs (Chat, Camera, Gallery, Locate, Plan) — grid-cols-5.
-- Toast component for upload error messages (ephemeral, auto-dismiss).
-- sendMessage signature updated: (content: string | null, imageUrl?: string | null).
-- Placeholders: camera button (Session D).
-Next up: camera capture (Session D).
+Last change: **Chat Session D — Camera capture + send.**
+- Camera page (/social/camera): full-screen viewfinder, own layout (no HopShell),
+  capture photo, retake, flip camera, permission/error states.
+- useCamera hook: getUserMedia, canvas capture to JPEG, flip, retake, cleanup.
+- Post-capture: from chat → upload + navigate to /social?pendingImage=...;
+  standalone → Send to Chat or Save to Device options.
+- Chat page handles pendingImage query param (auto-sends uploaded camera photo).
+- Camera icon in chat input bar navigates to /social/camera?from=chat.
+Next up: TBD.
