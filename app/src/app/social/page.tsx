@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Icon } from "@/components/Icon";
 import { BottomSheet } from "@/components/BottomSheet";
 import { ImageViewer } from "@/components/ImageViewer";
@@ -58,6 +59,16 @@ function DayDivider({ iso }: { iso: string }) {
 }
 
 export default function ChatPage() {
+  return (
+    <Suspense fallback={null}>
+      <ChatInner />
+    </Suspense>
+  );
+}
+
+function ChatInner() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { voterId, voters } = useGroupData();
   const {
     messages,
@@ -107,6 +118,18 @@ export default function ChatPage() {
   const [viewerUrl, setViewerUrl] = useState<string | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const pendingImageHandled = useRef(false);
+
+  useEffect(() => {
+    if (pendingImageHandled.current) return;
+    const pendingImage = searchParams.get("pendingImage");
+    if (pendingImage) {
+      pendingImageHandled.current = true;
+      const url = decodeURIComponent(pendingImage);
+      void sendMessage(null, url);
+      router.replace("/social", { scroll: false });
+    }
+  }, [searchParams, sendMessage, router]);
 
   const isNearBottom = useCallback(() => {
     const el = listRef.current;
@@ -662,7 +685,7 @@ export default function ChatPage() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => console.log("open camera")}
+            onClick={() => router.push("/social/camera?from=chat")}
             className="flex h-11 w-11 flex-none items-center justify-center text-ink-muted"
           >
             <Icon name="photo_camera" size={24} />
