@@ -222,9 +222,7 @@ function ChatInner() {
     const ta = textareaRef.current;
     if (!ta) return;
     ta.style.height = "auto";
-    const lineHeight = 22;
-    const maxHeight = lineHeight * 4 + 16;
-    ta.style.height = `${Math.min(ta.scrollHeight, maxHeight)}px`;
+    ta.style.height = `${Math.min(ta.scrollHeight, 96)}px`;
   }, []);
 
   const voterMap = useRef<Map<string, { name: string; color: string }>>(
@@ -654,7 +652,7 @@ function ChatInner() {
         </div>
       )}
 
-      <div className="flex-none border-t border-border bg-bg px-3 py-2 pb-[env(safe-area-inset-bottom)]">
+      <div className="flex-none border-t border-border bg-bg py-0 pb-[env(safe-area-inset-bottom)]">
         {/* Reply preview bar */}
         <div
           className="overflow-hidden transition-all duration-[160ms] ease-out"
@@ -683,11 +681,11 @@ function ChatInner() {
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 py-2 px-2">
           <button
             type="button"
             onClick={() => router.push("/social/camera?from=chat")}
-            className="flex h-11 w-11 flex-none items-center justify-center text-ink-muted"
+            className="flex h-10 w-10 flex-none items-center justify-center text-ink-muted"
           >
             <Icon name="photo_camera" size={24} />
           </button>
@@ -702,7 +700,7 @@ function ChatInner() {
             onKeyDown={handleKeyDown}
             placeholder="Message..."
             rows={1}
-            className="input flex-1 resize-none !h-auto min-h-[44px] py-2.5"
+            className="input flex-1 resize-none !h-auto min-h-[36px] max-h-[96px] overflow-y-auto py-2"
           />
 
           <input
@@ -719,7 +717,7 @@ function ChatInner() {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex h-11 w-11 flex-none items-center justify-center text-ink-muted"
+            className="flex h-10 w-10 flex-none items-center justify-center text-ink-muted"
           >
             <Icon name="add_photo_alternate" size={24} />
           </button>
@@ -728,11 +726,11 @@ function ChatInner() {
             type="button"
             onClick={handleSend}
             disabled={!hasContent}
-            className={`flex h-11 w-11 flex-none items-center justify-center ${
+            className={`flex h-10 w-10 flex-none items-center justify-center ${
               hasContent ? "text-accent" : "text-ink-dim"
             }`}
           >
-            <Icon name="send" size={24} />
+            <Icon name="send" size={22} />
           </button>
         </div>
       </div>
