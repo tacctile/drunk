@@ -35,14 +35,14 @@ export default function HomePage() {
           </span>
         </button>
 
-        {/* Night Out — placeholder */}
+        {/* Hopp — placeholder */}
         <button
           type="button"
           onClick={() => go("social")}
           className="flex min-h-[160px] flex-1 flex-col justify-center gap-2 rounded-card border bg-surface p-5 text-left opacity-60 transition hover:bg-raised"
         >
           <Icon name="local_bar" size={40} className="text-ink-muted" />
-          <span className="text-title font-bold text-ink">Night Out</span>
+          <span className="text-title font-bold text-ink">Hopp</span>
           <span className="text-meta font-normal text-ink-dim">Coming soon</span>
         </button>
       </div>
