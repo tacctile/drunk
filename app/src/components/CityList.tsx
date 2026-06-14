@@ -94,7 +94,7 @@ function CityRow({ city, active, voted, onVote }: CityRowProps) {
     <li className={`border-b ${active ? "bg-raised" : ""}`}>
       <div className="flex min-h-[72px] items-center gap-2 pl-4 pr-2">
         <Link
-          href={`/city/${city.id}`}
+          href={`/plan/city/${city.id}`}
           className="flex min-h-[72px] min-w-0 flex-1 items-center gap-3 py-2"
         >
           <span className="min-w-0 flex-1">

@@ -1,0 +1,30 @@
+# Bar Hoppers — machine-readable session state.
+# Companion to CONTEXT.md / PROGRESS.md. Update at the end of every session.
+
+current_phase: pwa-auth-dual-wing
+last_updated: 2026-06-14
+app_root: app/            # the live Next.js v2 app; root index.html is legacy v1
+
+last_change: >
+  Added the PWA layer (manifest, service worker, offline page, registrar, head
+  tags), a soft auth flow (lib/auth.ts + bh2-auth cookie + src/middleware.ts),
+  the /login screen (inline IdentityForm), the /home wing picker, and the
+  dual-wing shell — plan routes moved under /plan/*, a placeholder /social/*
+  wing with its own bottom nav, and a pathname-aware AppShell.
+
+verification:
+  typecheck: pass        # tsc --noEmit
+  lint: pass             # next lint
+  build: pass            # next build — 41 routes, middleware compiled
+
+known_issues:
+  - App icons are placeholders — public/icons/ needs real PNGs
+    (icon-192.png, icon-512.png, apple-touch-icon.png) before install looks right.
+  - bh2-auth is a session cookie, so a cold direct deep-link to /plan/* in a new
+    browser session bounces through /login → /home once before the cookie is set.
+    Intended soft-guard behavior, not a bug.
+  - Social wing (Night Out / Camera) is placeholder-only.
+
+next_up:
+  - Add real PNG app icons.
+  - Build out the Night Out (social) wing.

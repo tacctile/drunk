@@ -7,15 +7,6 @@ import { Dialog } from "./Dialog";
 
 export type IdentityFlow = "new" | "return";
 
-interface NamePromptProps {
-  open: boolean;
-  /** Which form the modal opens on — each links to the other. */
-  flow?: IdentityFlow;
-  onCancel: () => void;
-  /** Identity established — account created or signed in. */
-  onDone: () => void;
-}
-
 function FieldError({ children }: { children: string }) {
   return (
     <p className="text-[12px] font-medium text-red" role="alert">
@@ -24,17 +15,27 @@ function FieldError({ children }: { children: string }) {
   );
 }
 
+interface IdentityFormProps {
+  /** Which form to open on — each links to the other. */
+  flow?: IdentityFlow;
+  /** Focus the first field on mount (off for the inline login screen). */
+  autoFocus?: boolean;
+  /** Identity established — account created or signed in. */
+  onDone: () => void;
+}
+
 /**
- * Identity modal — ONE screen, no steps. New users enter first name + last
- * initial + 2-digit PIN and hit Save; "Sign in as existing user" swaps the
- * same modal to a roster dropdown + PIN check. PINs are stored bcrypt-hashed
- * in v2_voters, never plain text. Triggers on the first identifying write
- * (vote, calendar tap) via useNameGate, and auto-opens in sign-in mode when
- * localStorage holds an identity the server can't verify.
+ * The identity form body — ONE screen, no steps. New users enter first name +
+ * last initial + 2-digit PIN and hit Save; "Sign in as existing user" swaps
+ * the same form to a roster dropdown + PIN check. PINs are stored bcrypt-hashed
+ * in v2_voters, never plain text. Shared verbatim by the NamePrompt modal and
+ * the inline login screen so both entry points behave identically. The
+ * component mounts fresh each time it appears, so its state needs no reset
+ * effect.
  */
-export function NamePrompt({ open, flow = "new", onCancel, onDone }: NamePromptProps) {
+export function IdentityForm({ flow = "new", autoFocus = true, onDone }: IdentityFormProps) {
   const { voters, createIdentity, signIn } = useGroupData();
-  const [mode, setMode] = useState<"create" | "signin">("create");
+  const [mode, setMode] = useState<"create" | "signin">(flow === "return" ? "signin" : "create");
   const [first, setFirst] = useState("");
   const [initial, setInitial] = useState("");
   const [pin, setPin] = useState("");
@@ -43,19 +44,6 @@ export function NamePrompt({ open, flow = "new", onCancel, onDone }: NamePromptP
   const [signInPin, setSignInPin] = useState("");
   const [signInError, setSignInError] = useState("");
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    if (!open) return;
-    setMode(flow === "return" ? "signin" : "create");
-    setFirst("");
-    setInitial("");
-    setPin("");
-    setErrors({});
-    setSelectedId("");
-    setSignInPin("");
-    setSignInError("");
-    setBusy(false);
-  }, [open, flow]);
 
   const roster = useMemo(
     () =>
@@ -104,129 +92,153 @@ export function NamePrompt({ open, flow = "new", onCancel, onDone }: NamePromptP
     );
   };
 
+  if (mode === "create") {
+    return (
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void submitSave();
+        }}
+        className="flex flex-col gap-3"
+      >
+        <div className="flex flex-col gap-1">
+          <input
+            autoFocus={autoFocus}
+            className="input"
+            placeholder="First name"
+            autoComplete="off"
+            value={first}
+            maxLength={MAX_FIRST_NAME_LENGTH}
+            onChange={(e) => setFirst(e.target.value)}
+            aria-label="First name"
+          />
+          {errors.first && <FieldError>{errors.first}</FieldError>}
+        </div>
+        <div className="flex flex-col gap-1">
+          <input
+            className="input"
+            placeholder="Initial"
+            autoComplete="off"
+            autoCapitalize="characters"
+            value={initial}
+            maxLength={1}
+            onChange={(e) =>
+              setInitial(e.target.value.replace(/[^A-Za-z]/g, "").slice(0, 1).toUpperCase())
+            }
+            aria-label="Last initial"
+          />
+          {errors.initial && <FieldError>{errors.initial}</FieldError>}
+        </div>
+        <div className="flex flex-col gap-1">
+          <input
+            className="input"
+            type="text"
+            inputMode="numeric"
+            autoComplete="off"
+            placeholder="2-digit PIN"
+            value={pin}
+            maxLength={2}
+            onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 2))}
+            aria-label="2-digit PIN"
+          />
+          {errors.pin && <FieldError>{errors.pin}</FieldError>}
+          <p className="text-meta font-normal text-ink-dim">
+            Name, initial, and PIN let you vote from another device.
+          </p>
+        </div>
+        <button type="submit" className="btn-accent w-full" disabled={busy}>
+          Save
+        </button>
+        <button
+          type="button"
+          onClick={() => swapMode("signin")}
+          className="h-11 text-meta font-semibold text-accent"
+        >
+          Sign in as existing user
+        </button>
+      </form>
+    );
+  }
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        void submitSignIn();
+      }}
+      className="flex flex-col gap-3"
+    >
+      <select
+        autoFocus={autoFocus}
+        className="input"
+        value={selectedId}
+        onChange={(e) => {
+          setSelectedId(e.target.value);
+          setSignInError("");
+        }}
+        aria-label="Choose your name"
+      >
+        <option value="" disabled>
+          {roster.length === 0 ? "No names yet" : "Choose your name"}
+        </option>
+        {roster.map((r) => (
+          <option key={r.id} value={r.id}>
+            {r.label}
+          </option>
+        ))}
+      </select>
+      <div className="flex flex-col gap-1">
+        <input
+          className="input"
+          type="text"
+          inputMode="numeric"
+          autoComplete="off"
+          placeholder="2-digit PIN"
+          value={signInPin}
+          maxLength={2}
+          onChange={(e) => setSignInPin(e.target.value.replace(/\D/g, "").slice(0, 2))}
+          aria-label="Your 2-digit PIN"
+        />
+        {signInError && <FieldError>{signInError}</FieldError>}
+      </div>
+      <button
+        type="submit"
+        className="btn-accent w-full"
+        disabled={!selectedId || !isValidPin(signInPin) || busy}
+      >
+        Sign in
+      </button>
+      <button
+        type="button"
+        onClick={() => swapMode("create")}
+        className="h-11 text-meta font-semibold text-accent"
+      >
+        Never mind, create new
+      </button>
+    </form>
+  );
+}
+
+interface NamePromptProps {
+  open: boolean;
+  /** Which form the modal opens on — each links to the other. */
+  flow?: IdentityFlow;
+  onCancel: () => void;
+  /** Identity established — account created or signed in. */
+  onDone: () => void;
+}
+
+/**
+ * Identity modal — the shared IdentityForm in a centered Dialog. Triggers on
+ * the first identifying write (vote, calendar tap) via useNameGate, and
+ * auto-opens in sign-in mode when localStorage holds an identity the server
+ * can't verify. Closed → the Dialog unmounts the form, so the next open starts
+ * clean.
+ */
+export function NamePrompt({ open, flow = "new", onCancel, onDone }: NamePromptProps) {
   return (
     <Dialog open={open} onClose={onCancel} title="Who are you?">
-      {mode === "create" ? (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            void submitSave();
-          }}
-          className="flex flex-col gap-3"
-        >
-          <div className="flex flex-col gap-1">
-            <input
-              autoFocus
-              className="input"
-              placeholder="First name"
-              autoComplete="off"
-              value={first}
-              maxLength={MAX_FIRST_NAME_LENGTH}
-              onChange={(e) => setFirst(e.target.value)}
-              aria-label="First name"
-            />
-            {errors.first && <FieldError>{errors.first}</FieldError>}
-          </div>
-          <div className="flex flex-col gap-1">
-            <input
-              className="input"
-              placeholder="Initial"
-              autoComplete="off"
-              autoCapitalize="characters"
-              value={initial}
-              maxLength={1}
-              onChange={(e) =>
-                setInitial(e.target.value.replace(/[^A-Za-z]/g, "").slice(0, 1).toUpperCase())
-              }
-              aria-label="Last initial"
-            />
-            {errors.initial && <FieldError>{errors.initial}</FieldError>}
-          </div>
-          <div className="flex flex-col gap-1">
-            <input
-              className="input"
-              type="text"
-              inputMode="numeric"
-              autoComplete="off"
-              placeholder="2-digit PIN"
-              value={pin}
-              maxLength={2}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 2))}
-              aria-label="2-digit PIN"
-            />
-            {errors.pin && <FieldError>{errors.pin}</FieldError>}
-            <p className="text-meta font-normal text-ink-dim">
-              Name, initial, and PIN let you vote from another device.
-            </p>
-          </div>
-          <button type="submit" className="btn-accent w-full" disabled={busy}>
-            Save
-          </button>
-          <button
-            type="button"
-            onClick={() => swapMode("signin")}
-            className="h-11 text-meta font-semibold text-accent"
-          >
-            Sign in as existing user
-          </button>
-        </form>
-      ) : (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            void submitSignIn();
-          }}
-          className="flex flex-col gap-3"
-        >
-          <select
-            autoFocus
-            className="input"
-            value={selectedId}
-            onChange={(e) => {
-              setSelectedId(e.target.value);
-              setSignInError("");
-            }}
-            aria-label="Choose your name"
-          >
-            <option value="" disabled>
-              {roster.length === 0 ? "No names yet" : "Choose your name"}
-            </option>
-            {roster.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.label}
-              </option>
-            ))}
-          </select>
-          <div className="flex flex-col gap-1">
-            <input
-              className="input"
-              type="text"
-              inputMode="numeric"
-              autoComplete="off"
-              placeholder="2-digit PIN"
-              value={signInPin}
-              maxLength={2}
-              onChange={(e) => setSignInPin(e.target.value.replace(/\D/g, "").slice(0, 2))}
-              aria-label="Your 2-digit PIN"
-            />
-            {signInError && <FieldError>{signInError}</FieldError>}
-          </div>
-          <button
-            type="submit"
-            className="btn-accent w-full"
-            disabled={!selectedId || !isValidPin(signInPin) || busy}
-          >
-            Sign in
-          </button>
-          <button
-            type="button"
-            onClick={() => swapMode("create")}
-            className="h-11 text-meta font-semibold text-accent"
-          >
-            Never mind, create new
-          </button>
-        </form>
-      )}
+      <IdentityForm flow={flow} onDone={onDone} />
     </Dialog>
   );
 }

@@ -1,137 +1,169 @@
 # Bar Hoppers — Project Context
-> Single source of truth for all Claude Code sessions.
-> Read this + index.html at the start of every session. Nothing else required unless specified.
+> Single source of truth for all Claude Code sessions. Read this before starting.
+>
+> NOTE: This documents **v2 — the Next.js app under `app/`** (the live product).
+> The root `index.html` is the legacy v1 single-file app, kept for reference only;
+> both share the same Supabase project. When this doc and `index.html` disagree,
+> `app/` wins.
 
 ---
 
 ## What This Is
-A single-page HTML app for planning overnight bar-hop trips from Ralston, NE.
-A group of friends use it to browse destinations, read trip details, vote on where to go, and mark the dates they're available.
-Personal project — built solid and well-structured, not overcomplicated.
+A PWA for planning overnight bar-hop trips from Ralston, NE. A group of friends
+browse destinations, vote on cities/hotels/dates, mark availability, and share
+live locations. Personal project — built solid, not overcomplicated.
 
-The perfect trip: drive to a city, check into a hotel steps from the bar district, walk to dinner, bar hop on foot, walk back to the hotel. Never touch the car. Every city is measured against that standard.
+The perfect trip: drive to a city, check into a hotel steps from the bar
+district, walk to dinner, bar hop on foot, walk back. Never touch the car.
+Every city is measured against that standard.
 
-90%+ of usage is on a mobile phone. Desktop is a power-user upgrade — same data, more breathing room.
-
----
-
-## Repo & Deploy
-- GitHub: https://github.com/tacctile/drunk
-- Deploy: GitHub Pages
-- Supabase: https://tszssadgsxjoymcttlwd.supabase.co
+90%+ of usage is on a mobile phone. Desktop is a power-user upgrade.
 
 ---
 
-## Architecture — Non-Negotiable Rules
-1. ONE FILE — index.html contains all HTML, CSS, and JS. Never split into separate files.
-2. No frameworks, no npm, no build step. Plain HTML/CSS/JS only. External resources via CDN only (Manrope, Material Symbols, Supabase JS client).
-3. City data lives in the `const cities = [...]` array in index.html. The number of cities is variable — never hardcode counts or assume a fixed number.
-4. Supabase is used for shared data only (votes, availability). All other state is localStorage. Supabase failures fall back to localStorage silently — never show errors for it.
-5. Never break existing features — every session ends with all prior functionality still working.
-6. Mobile-first. Think at 375px before finalizing any layout decision.
-7. All user-provided strings (names) are escaped via `esc()` before any innerHTML use.
+## Stack & Structure
+- **Next.js 14 (App Router)** + React 18 + TypeScript, in `app/`.
+- **Tailwind** with semantic tokens on `:root` (see Design System). Dark only.
+- **Supabase** (`@supabase/supabase-js`) for shared data; every call falls back
+  to localStorage silently on failure — never surface a Supabase error.
+- **bcryptjs** for PIN hashing. **@googlemaps/js-api-loader** for maps.
+- Material Symbols Outlined + Manrope via Google Fonts CDN. Icons only — no emoji.
+- Repo: https://github.com/tacctile/drunk · Supabase:
+  https://tszssadgsxjoymcttlwd.supabase.co · deploy: Vercel-style (server runtime;
+  middleware + `redirects()` are in use, so this is **not** a static export).
+
+Key dirs:
+- `app/src/app/` — routes (App Router). `app/src/components/` — UI.
+- `app/src/hooks/` — data hooks (`useGroupData` is the shared provider).
+- `app/src/lib/` — `identity`, `auth`, `supabase`, `maps`, `venues`, `colors`, …
+- `app/src/data/` — `cities.ts` (the walkability index) + `types.ts`.
+- `app/public/` — PWA assets (manifest, service worker, offline page, icons).
 
 ---
 
-## Design System — Material 3
-- **Font:** Manrope (Google Fonts CDN, weights 400/500/600/700/800)
-- **Icons:** Material Symbols Outlined (Google Fonts CDN) — the ONLY icon system. No emoji, no SVG icons.
-- **Color:** Full M3 color role set as CSS custom properties (`--primary`, `--on-primary`, `--primary-container`, `--secondary`, `--tertiary`, `--surface` + container ladder, `--on-surface`, `--surface-variant`, `--outline`, `--outline-variant`, `--error`, `--background`, etc.), amber/gold seed.
-  - Dark (default): deep warm charcoal surfaces (`#15130e` family), amber primary `#f6c453`.
-  - Light: warm off-whites (`#faf3e5` family), darker amber primary `#7a5900`.
-  - `color-scheme: dark/light` set on `:root` per theme.
-- **Theme:** dark default; light via header toggle; persisted to localStorage key `bh-theme` (raw string `dark`/`light`, applied pre-paint by an inline head script).
-- **Radius scale (tighter than M3 defaults — the ONLY radii allowed):**
-  `--radius-xs: 4px` (inputs, chips, calendar cells) · `--radius-sm: 6px` (buttons, text fields) · `--radius-md: 10px` (cards) · `--radius-lg: 14px` (dialogs, desktop detail panel) · `--radius-full: 9999px` (pills/circles only).
-- **Pixel-perfect rules:**
-  - Every interactive element (buttons, icon buttons, segmented buttons, nav items, text field, calendar day cells, FAB) is exactly `--control-h: 44px` tall.
-  - 4px spacing grid — every padding/margin/gap is a multiple of 4px.
-  - Type scale defined once as `font:` shorthand custom props (`--type-display/headline/title-lg/title/body-lg/body/label-lg/label/label-sm`). No inline font sizes.
-  - Icon sizes via tokens: `--icon-nav: 24px`, `--icon-btn: 20px`, `--icon-meta: 16px`, `--icon-hero: 40px`.
-- M3 state layers on buttons (hover 8% / press 12% overlays), elevation via `--shadow-1/2/3`.
-- 160–200ms transitions; `prefers-reduced-motion` respected.
-- Breakpoint: 840px — bottom nav bar becomes a left nav rail, cities view becomes two-pane (list + sticky detail panel).
+## Routes & Navigation (dual-wing shell)
+Cold open hits `/` → client checks `isAuthenticated()`:
+- **not authenticated → `/login`** · **authenticated → `/home`** (always).
+
+- `/login` — full-screen create/sign-in screen. No AppShell chrome. Shares the
+  identity form with the NamePrompt modal (`IdentityForm`). Has an "Install App"
+  section (Android `beforeinstallprompt` button + iOS instructions, hidden in
+  standalone). On success → `setLastWing("plan")` → `/plan`.
+- `/home` — wing picker. AppShell header only (no bottom nav). Two cards:
+  **Plan a Trip → `/plan`**, **Night Out → `/social`** (placeholder).
+- **Plan wing — `/plan/*`** (`plan/layout.tsx` sets last wing = plan):
+  - `/plan` → redirects to `/plan/cities`.
+  - `/plan/cities`, `/plan/city/[id]`, `/plan/calendar`, `/plan/board`,
+    `/plan/locate`, `/plan/admin` (3s-hold the Locate tab to reach admin).
+  - AppShell renders the 4 bottom tabs (Cities / Availability / Results /
+    Locate) + the 80px desktop rail at ≥840px. A subtle Night Out icon button
+    (`local_bar`) sits left of the avatar in the wordmark bar to cross wings.
+- **Social wing — `/social/*`** (`social/layout.tsx` sets last wing = social):
+  - `/social` (Chat placeholder), `/social/camera` (Camera placeholder).
+  - AppShell header still renders, but its plan nav/rail is **suppressed**; the
+    social layout supplies its own bottom nav (Chat / Camera / Switch-to-Plan),
+    matched to the plan nav's 64px + safe-area dimensions.
+
+AppShell (`components/AppShell.tsx`) is global (root layout) and pathname-aware:
+bare on `/login` and `/`; header everywhere else except pages with their own
+sticky header (`/plan/city/*`, `/plan/admin`); plan nav + rail only on `/plan/*`.
+
+**Auth guard:** `src/middleware.ts` matches `/home`, `/plan/:path*`,
+`/social/:path*` and redirects to `/login` when the `bh2-auth` cookie is absent.
+It's a **soft guard** (prevents blank protected screens), not security — the real
+identity check stays localStorage-based.
 
 ---
 
-## Supabase Schema
-> Updated here whenever a table is created or modified. Also kept as a comment block at the top of the JS in index.html.
+## Identity & Auth
+- Per-device identity in localStorage, backed by a `v2_voters` row whose 2-digit
+  PIN (bcrypt hash) lets the same person sign in from any device.
+- `lib/identity.ts` owns `bh2-voter-id` / `bh2-voter-name` / `bh2-pin-color`.
+  `clearIdentity()` (sign-out) also clears the `bh2-auth` cookie.
+- `lib/auth.ts` is the soft-auth layer: `isAuthenticated()` (true when id + name
+  are stored; mirrors the `bh2-auth` presence cookie as a side effect),
+  `getLastWing()` / `setLastWing()`, `mirrorAuthCookie()`, `clearAuthCookie()`.
 
-```sql
-CREATE TABLE bh_votes (
-  trip_id    text not null default 'current',
-  voter_id   uuid not null,
-  name       text not null check (char_length(name) between 1 and 20),
-  city_id    text not null,
-  updated_at timestamptz not null default now(),
-  primary key (trip_id, voter_id)
-);
-ALTER TABLE bh_votes ENABLE ROW LEVEL SECURITY;
-CREATE POLICY bh_votes_read   ON bh_votes FOR SELECT TO anon USING (true);
-CREATE POLICY bh_votes_write  ON bh_votes FOR INSERT TO anon WITH CHECK (true);
-CREATE POLICY bh_votes_update ON bh_votes FOR UPDATE TO anon USING (true);
-CREATE POLICY bh_votes_delete ON bh_votes FOR DELETE TO anon USING (true);
-
-CREATE TABLE bh_availability (
-  id         uuid default gen_random_uuid() primary key,
-  voter_id   uuid not null,
-  name       text not null check (char_length(name) between 1 and 20),
-  date       date not null,
-  created_at timestamptz not null default now(),
-  unique(voter_id, date)
-);
-ALTER TABLE bh_availability ENABLE ROW LEVEL SECURITY;
-CREATE POLICY bh_avail_read   ON bh_availability FOR SELECT TO anon USING (true);
-CREATE POLICY bh_avail_write  ON bh_availability FOR INSERT TO anon WITH CHECK (true);
-CREATE POLICY bh_avail_delete ON bh_availability FOR DELETE TO anon USING (true);
-
--- Availability status (2026-06): tri-state calendar — no row means no answer.
--- The update policy is required so the status upsert can flip available ↔ unavailable.
-ALTER TABLE bh_availability ADD COLUMN IF NOT EXISTS
-  status text not null default 'available'
-  check (status in ('available', 'unavailable'));
-CREATE POLICY bh_avail_update ON bh_availability FOR UPDATE TO anon USING (true);
-```
-
-**Identity model:** `crypto.randomUUID()` generated on first visit → localStorage `bh-voter-id` (used as `voter_id` in both tables). Display name → localStorage `bh-voter-name` (asked once via dialog, changeable from the results view).
-
-**localStorage keys:** `bh-theme`, `bh-voter-id`, `bh-voter-name`, `bh-cache-votes`, `bh-avail-cache` (the two caches double as the silent offline fallback store). `bh-avail-cache` replaced the old `bh-cache-avail` key; the old key is still read once as a migration fallback when the new one is empty. Availability cache rows carry `status` ('available'/'unavailable'); rows without it are normalized to 'available'.
+### localStorage / cookie contract
+All keys are product contract:
+- `bh2-voter-id` — voter uuid.
+- `bh2-voter-name` — display name ("Nick B").
+- `bh2-pin-color` — cached auto-assigned avatar color.
+- `bh2-last-wing` — `"plan"` | `"social"`; written on entering either wing.
+- `bh2-city-sort` — cities sort preference.
+- `bh2-city-vote-cache` / `bh2-hotel-vote-cache` / `bh2-avail-cache` — silent
+  offline fallback caches mirroring this voter's writes.
+- `bh2-muted-ids` / `bh2-sharing-preference` / `bh2-session-id` — location sharing.
+- **`bh2-auth`** — *cookie*, value `"1"`, session-scoped, `SameSite=Lax`. Set by
+  `isAuthenticated()`/`mirrorAuthCookie()`, cleared by `clearIdentity()`. Read by
+  the middleware (existence only).
 
 ---
 
-## Data Model
-Each entry in `const cities = [...]` follows this exact shape (Sioux City is the reference implementation):
-`{ id, name, state, miles, drive, mapCenter: { lat, lng }, mapZoom, hotels: [{ name, address, stars, priceRange, distanceNote, onSite, website, coords: { lat, lng } }], bars: [{ name, address, description, distance, coords }], food: [{ name, address, description, hours, coords }] }`
-Bars render sorted by parsed `distance` (feet). Food renders in array order.
-- The city-level `description` and `parking` fields have been REMOVED from the model and all rendering code. Do not add them back.
-- `coords` were added to every hotel/bar/food entry (used for Google Maps pins). `mapCenter`/`mapZoom` set the initial map view (Sioux City: Fourth Street Historic District, zoom 15).
-- `address` field added to every hotel/bar/food entry. Currently all set to `''`. Displayed under the name (smaller, muted, `--on-surface-variant`) when non-empty; renders nothing when empty. Awaiting population in a future session.
+## PWA
+- `public/manifest.json` — name/short_name "Bar Hoppers", `start_url` "/",
+  `display` standalone, portrait, bg/theme `#0A0D14`, icon placeholders
+  (192/512/180; drop real PNGs in `public/icons/`, see its README).
+- `public/sw.js` — cache `bar-hoppers-v1`. Navigations network-first with
+  `/offline.html` fallback; fonts + `/_next/static/` + icons cache-first;
+  supabase.co / googleapis.com network-first; `skipWaiting` + `clients.claim`.
+- `public/offline.html` — standalone dark page, no app-shell deps.
+- Registered by `components/ServiceWorkerRegistrar.tsx` (mounted in the root
+  layout). `<head>` carries the manifest link + apple-mobile-web-app meta tags.
 
 ---
 
-## Features — Current State
+## Design System — dark only
+Tokens live on `:root` in `app/src/app/globals.css` and map 1:1 in
+`tailwind.config.ts`. Blue-black surfaces, one warm accent.
+- `--bg #0A0D14` · `--surface #12161F` · `--surface-raised #1A1F2B`
+- `--border #252B3A` · `--border-strong #323A4F`
+- `--ink #E8ECF4` · `--ink-muted #8892A4` · `--ink-dim #4A5468`
+- `--accent #FF8C42` (+ `--accent-dim`) · `--green` / `--red` (+ dims) · grade A–F.
+- Type voices: Display 28/800, Title 17/700, Body 15/500, Meta 13/400, Label
+  12/600/uppercase/+0.06em. Radius: 12px cards, 8px buttons/inputs, 6px chips.
+- Every interactive element ≥ 44px tall. 4px spacing grid. 160ms ease transitions;
+  `prefers-reduced-motion` respected. Breakpoint 840px (bottom nav → left rail).
+- Component classes: `card`, `btn`/`btn-accent`/`btn-ghost`, `input`, `label`.
 
-### Built
-- [x] City list — card list with name, state, miles, drive time, live vote count; sort by distance (default) or A–Z
-- [x] City detail — hero (name/state/miles/drive only — no description/parking), HOTELS (cards: stars, price, distance note, on-site, website link), BARS (distance-sorted list), FOOD (list with hours); full-screen with back button on mobile, sticky side panel on desktop
-- [x] Google Maps integration — map below the hero (320px mobile / 420px ≥600px), custom dark + light map style JSON synced to the theme toggle, `gestureHandling: 'cooperative'` (no custom gesture overlay), default UI disabled, colored circle pins (hotels #E8A030 / bars #4CAF50 / food #2196F3) with white borders, three 44px filter chips above the map + Show All button, pin tap → M3 bottom sheet (`#poiScrim`/`#poiSheet`) with per-category content + hotel Visit Website button + Open in Maps button (all categories), list item tap (`data-poi="cat-idx"`) → map pans/zooms to pin + opens sheet without page scroll. Map only initializes in the visible container (panel on desktop, body on mobile); re-renders of the same city preserve center/zoom/filters; async Maps script handled by retry polling in `initCityMap`. On load: `fitBounds` auto-zooms to all pins with a `bounds_changed` listener that reduces zoom by 0.5 once for padding. Pin tap: shows dark semi-transparent overlay (`.map-dim-overlay`), selected pin scales up (scale 12), others dimmed (opacity 0.25); overlay and pin states reset on sheet close. `isFractionalZoomEnabled: true` on map instance.
-- [x] Map pin name labels — at zoom ≥ 15 every visible pin shows its location name in a small pill (`.map-pin-label`: 11px white text on rgba(0,0,0,0.65), 4px radius, 2px 6px padding) drawn by a custom `OverlayView` (`mapState.labelOverlay`, labels in `floatPane`, pointer-events none). Hidden below zoom 15 via a `zoom_changed` listener. Labels sit right of the pin, flip left when they'd leave the map; colliding labels resolve in favor of the most recently tapped/hovered pin (`stamp` per marker, bumped on click/mouseover/`focusPoi`). Filter chips hide labels with their pins (`refreshPinLabels()` on toggle/show-all).
-- [x] Voting — one vote per person per trip (`trip_id: 'current'`); first vote prompts for name once; vote stored to Supabase `bh_votes` with silent localStorage fallback; changing city moves the vote; ranked results view with voter names, leader highlight, meters; name changeable from results view (updates both tables + caches)
-- [x] ~~Vote tally FAB~~ — removed (redundant with Results nav tab)
-- [x] Availability calendar (rebuilt 2026-06) — two-tab Dates screen, M3 tab bar (44px tabs, amber indicator) sticky below the header. Tab 1 "My Dates" (`calendar_today`): personal month calendar, tap cycles neutral → available (green tertiary fill + check) → unavailable (red error fill + X) → neutral; past dates disabled + dimmed (opacity .45); today has an amber border. Tab 2 "Group View" (`groups`): heat-map calendar colored by % of respondents available (none = neutral, ≤33% error-container, 34–66% primary-container, 67–89% tertiary-container, 90%+ tertiary), cells show `yes/total`; tapping a date with responses opens a bottom sheet (`#dayScrim`/`#daySheet`, same pattern as the POI sheet — covers nav, locks scroll, X/outside dismiss) with the full date, green Available names, red Unavailable names, and a response-rate line; below the calendar a chronological "All Responses" list (oldest first, only dates with ≥1 response) with bold "Sat, Jun 14" dates, a green/red row per person, and a `yes/total available` indicator. Month state (`state.cal`) is shared so both tabs stay in sync. Writes: upsert `{voter_id,name,date,status}` on `onConflict: 'voter_id,date'`, clear = row delete; reads fetch fresh on view open and on switching to Group View; silent fallback to `bh-avail-cache`. Name prompt reuses the voting flow dialog.
-- [x] Theme toggle — dark default / light, persisted to `bh-theme`, pre-paint application
-- [x] Empty states (no cities, no votes, no city selected on desktop), skeleton loading on results, dialog validation
-- [x] Mobile bottom nav (Cities / Results / Dates) → desktop left rail at 840px; two-pane cities view on desktop with auto-selected first city
+---
 
-### Backlog
-- [ ] Replace placeholder Supabase anon key with the real key (current key's signature is `.placeholder` — all remote calls 401 and the app runs on localStorage fallback until then)
-- [ ] Run the schema SQL above in the Supabase dashboard (now includes the `bh_availability.status` ALTER + `bh_avail_update` policy — required for the two-tab calendar's remote writes)
-- [ ] Add more cities to the `cities` array
+## Supabase Schema (v2 tables)
+Shared data only; all reads via `safeSelect`, all writes optimistic with cache
+mirroring. Tables (see `lib/supabase.ts` for row shapes):
+- `v2_voters` — `voter_id`, `name`, `display_name`, `pin_hash` (bcrypt),
+  `pin_plain` (admin recovery, never verified against), `pin_color`,
+  `is_active` (admin soft-disable), `updated_at`.
+- `v2_city_votes` — one row per voter (`voter_id`, `city_id`, `updated_at`).
+- `v2_hotel_votes` — one per voter per city (`hotel_place_id`, `hotel_name`, …).
+- `v2_hotels` / `v2_bars` / `v2_food` — curated venue rows (`DbVenueRow`), the
+  canonical venue source per `city_id`.
+- `v2_availability` — `voter_id`, `date` (YYYY-MM-DD), `status`
+  available/unavailable; no row = no answer.
+- `v2_locations` — live shares, 72h lifetime, `muted_ids[]`, `session_id`
+  broadcast lock.
+
+---
+
+## Non-Negotiable Rules
+1. Never break existing features — every session ends with all prior
+   functionality working. Mobile-first; think at 375px first.
+2. Supabase is shared data only; everything else is localStorage. Supabase
+   failures fall back silently — never an error toast.
+3. Material Symbols + Manrope only. No emoji, no SVG icons.
+4. Dark only. Use the semantic tokens; no inline hex, no new radii.
+5. `cities` array is variable in length — never hardcode a count.
+6. The plan-wing pages and their hooks/lib are stable; don't refactor them
+   without cause.
 
 ---
 
 ## Current State
-Last updated: 2026-06-11
-Last change: Dates screen rebuilt as a two-tab experience + zoom-based map pin labels — (1) Old single availability calendar + day panel replaced by "My Dates" (personal tri-state calendar: tap cycles available → unavailable → clear, stored as `bh_availability.status`, row delete on clear) and "Group View" (heat-map calendar by % available, tap-for-detail bottom sheet `#dayScrim`/`#daySheet`, chronological All Responses list); month nav synced across tabs via shared `state.cal`; removed `state.selectedDate`, `renderCalendar`, `renderDayPanel`, `.day-panel`/`.person-tag` CSS. (2) Schema comment in index.html gained the `status` ALTER + `bh_avail_update` policy (NOT yet run in Supabase). (3) Availability cache key renamed `bh-cache-avail` → `bh-avail-cache` (old key read once as fallback). (4) City detail map: pin name labels at zoom ≥ 15 via custom OverlayView — dark pill, right of pin with left flip at the map edge, collision resolved by most recent interaction, synced to filter chips, hidden below zoom 15.
-Note: `distanceNote` and `hours` fields retained in data objects — just not rendered anywhere. Address fields awaiting population.
-Next up: run the updated schema SQL (status ALTER + update policy) in Supabase, populate address fields, paste real anon key, then add city #2 (must include coords/mapCenter/mapZoom)
+Last updated: 2026-06-14
+Last change: **PWA foundation + auth flow + home screen + dual-wing navigation.**
+- Added the PWA layer (manifest, `sw.js`, `offline.html`, registrar, head tags).
+- Added `lib/auth.ts` (soft-auth + last-wing), `/login` (inline `IdentityForm`
+  extracted from NamePrompt), `/home` wing picker, and `src/middleware.ts`.
+- Moved the plan pages under `/plan/*` and split off a placeholder `/social/*`
+  wing with its own bottom nav. AppShell is now pathname-aware.
+Next up: real PNG app icons; flesh out the Night Out (social) wing.
