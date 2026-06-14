@@ -1,6 +1,16 @@
 # Hoppz — Progress
 > Feature checklist for the v2 Next.js app (`app/`). Newest phase on top.
 
+## Phase: Nav Restructure — Cross-Wing Switching (2026-06-14)
+- [x] Plan nav: Cities, Availability, Results, Night Out (cross-wing to /social)
+- [x] Removed Locate from plan nav
+- [x] Removed local_bar cross-wing button from wordmark bar header
+- [x] Night Out nav: Chat, Camera, Locate (cross-wing), Plan (cross-wing) — 4-tab grid
+- [x] Cross-wing tabs: router.push + setLastWing, no active highlight
+- [x] Admin 3s long-press moved from Locate tab to Results tab
+- [x] All nav icons use Icon component with filled/unfilled active state
+- [x] Night Out nav matches plan nav dimensions (64px + safe-area, grid-cols-4)
+
 ## Phase: Hoppz Rebrand + Login Overhaul (2026-06-14)
 - [x] Rebrand all "Bar Hoppers" → "Hoppz" (manifest, sw, offline page, layout,
       AppShell header, locate page, profile overlay, comments)
