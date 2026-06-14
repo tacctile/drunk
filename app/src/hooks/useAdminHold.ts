@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react
 
 const ADMIN_HOLD_MS = 3000;
 
-export function useAdminHold(holdMs = ADMIN_HOLD_MS) {
+export function useAdminHold(holdMs = ADMIN_HOLD_MS, destination = "/plan/admin") {
   const router = useRouter();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const firedRef = useRef(false);
@@ -27,9 +27,9 @@ export function useAdminHold(holdMs = ADMIN_HOLD_MS) {
       timerRef.current = null;
       firedRef.current = true;
       setHolding(false);
-      router.push("/plan/admin");
+      router.push(destination);
     }, holdMs);
-  }, [router, holdMs]);
+  }, [router, holdMs, destination]);
 
   useEffect(() => cancel, [cancel]);
 

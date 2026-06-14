@@ -5,19 +5,20 @@
 // location oversight, and data health counts.
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { hash as hashPin } from "bcryptjs";
-import { Avatar } from "@/components/Avatar";
+import { ActiveLocationsPanel } from "@/components/ActiveLocationsPanel";
 import { BottomSheet } from "@/components/BottomSheet";
 import { Dialog } from "@/components/Dialog";
 import { Icon } from "@/components/Icon";
 import { RoleBadge } from "@/components/RoleBadge";
-import { cities, cityById } from "@/data/cities";
+import { TripResetsPanel } from "@/components/TripResetsPanel";
+import { TripSetupPanel } from "@/components/TripSetupPanel";
+import { cityById } from "@/data/cities";
 import { useGroupData } from "@/hooks/useGroupData";
-import { useTripData } from "@/hooks/useTripData";
 import { MAX_FIRST_NAME_LENGTH, buildDisplayName, isValidPin } from "@/lib/identity";
 import { getRoleForVoter } from "@/lib/roles";
-import { getSupabase, safeSelect, type LocationRow, type TripMemberStatus } from "@/lib/supabase";
+import { getSupabase, safeSelect } from "@/lib/supabase";
 
 interface AdminVoter {
   voter_id: string;
@@ -54,29 +55,12 @@ const EMPTY_STATS: Stats = {
   food: null,
 };
 
-const LOCATION_COLUMNS =
-  "voter_id,display_name,lat,lng,pin_color,sharing_since,expires_at,updated_at,muted_ids,session_id";
-
-// PostgREST refuses an unfiltered DELETE — every row matches this instead.
-const ALL_ROWS = "1970-01-01";
-
 // The wipe-all deletes hit every real row by excluding the nil uuid.
 const NIL_UUID = "00000000-0000-0000-0000-000000000000";
 const WIPED_FLASH_MS = 4000; // "All users wiped." dwell in the users section
 
 function voterLabel(v: AdminVoter): string {
   return v.display_name ?? v.name;
-}
-
-function hoursAgo(iso: string, nowMs: number): string {
-  const hrs = Math.floor((nowMs - new Date(iso).getTime()) / 3_600_000);
-  if (hrs < 1) return "less than an hour ago";
-  return `${hrs} hour${hrs === 1 ? "" : "s"} ago`;
-}
-
-function hoursLeft(iso: string, nowMs: number): string {
-  const hrs = Math.max(0, Math.ceil((new Date(iso).getTime() - nowMs) / 3_600_000));
-  return `${hrs} hour${hrs === 1 ? "" : "s"}`;
 }
 
 async function countRows(table: string, onlyActive = false): Promise<number | null> {
@@ -267,303 +251,6 @@ function EditUserDialog({ voter, onClose, onChanged }: EditUserDialogProps) {
   );
 }
 
-interface ConfirmResetDialogProps {
-  title: string;
-  body: string;
-  onCancel: () => void;
-  onConfirm: () => void;
-}
-
-function ConfirmResetDialog({ title, body, onCancel, onConfirm }: ConfirmResetDialogProps) {
-  return (
-    <Dialog open onClose={onCancel} title={title}>
-      <p className="text-base font-normal text-ink-muted">{body}</p>
-      <div className="mt-4 flex gap-3">
-        <button type="button" className="btn-ghost flex-1" onClick={onCancel}>
-          Cancel
-        </button>
-        <button
-          type="button"
-          className="btn flex-1 bg-red text-bg hover:brightness-110"
-          onClick={onConfirm}
-        >
-          Reset
-        </button>
-      </div>
-    </Dialog>
-  );
-}
-
-function TripSetupSection() {
-  const { voters: groupVoters, voterId } = useGroupData();
-  const {
-    trip,
-    hotels,
-    effectiveStatus,
-    cityName,
-    setTripDates,
-    setTripCity,
-    clearTripDates,
-    addHotel,
-    removeHotel,
-    assignVoterToHotel,
-    unassignVoterFromHotel,
-  } = useTripData();
-  const [hotelInput, setHotelInput] = useState("");
-  const [expandedHotelId, setExpandedHotelId] = useState<string | null>(null);
-  const [dateError, setDateError] = useState("");
-  const [confirmClear, setConfirmClear] = useState(false);
-
-  const today = new Date().toISOString().split("T")[0];
-  const startVal = trip?.start_date ?? "";
-  const endVal = trip?.end_date ?? "";
-
-  const handleStartChange = (v: string) => {
-    setDateError("");
-    const end = endVal || v;
-    if (v > end) {
-      setDateError("End date must be after start date");
-      return;
-    }
-    void setTripDates(v, end);
-  };
-  const handleEndChange = (v: string) => {
-    setDateError("");
-    const start = startVal || v;
-    if (v < start) {
-      setDateError("End date must be after start date");
-      return;
-    }
-    void setTripDates(start, v);
-  };
-
-  const handleAddHotel = () => {
-    const name = hotelInput.trim();
-    if (!name) return;
-    void addHotel(name);
-    setHotelInput("");
-  };
-
-  const activeVoters = groupVoters.filter((v) => v.is_active);
-
-  const statusDot =
-    effectiveStatus === "active"
-      ? "var(--green)"
-      : effectiveStatus === "upcoming"
-        ? "var(--accent)"
-        : "var(--ink-dim)";
-
-  return (
-    <section className="flex flex-col gap-3">
-      <h2 className="label">Trip setup</h2>
-
-      <div className="rounded-card border bg-surface p-4">
-        <div className="flex items-center gap-2">
-          <span
-            className="h-2.5 w-2.5 rounded-full"
-            style={{ background: statusDot }}
-          />
-          <span className="text-base font-semibold text-ink">
-            Status: {effectiveStatus === "active" ? "Active" : effectiveStatus === "upcoming" ? "Upcoming" : "Planning"}
-          </span>
-        </div>
-        {(effectiveStatus === "upcoming" || effectiveStatus === "active") && (
-          <div className="mt-2 flex flex-col gap-1 text-meta font-normal text-ink-muted">
-            {cityName && <p>City: {cityName}</p>}
-            {trip?.start_date && <p>Start: {trip.start_date}</p>}
-            {trip?.end_date && <p>End: {trip.end_date}</p>}
-          </div>
-        )}
-      </div>
-
-      {(effectiveStatus === "planning" || effectiveStatus === "upcoming") && (
-        <>
-          <div className="flex flex-col gap-1">
-            <p className="label">Destination City</p>
-            <select
-              className="input w-full"
-              value={trip?.city_id ?? ""}
-              onChange={(e) => {
-                if (e.target.value) void setTripCity(e.target.value);
-              }}
-            >
-              <option value="">Select a city</option>
-              {cities.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}, {c.state}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <p className="label">Trip dates</p>
-            <div className="grid grid-cols-2 gap-3">
-              <input
-                type="date"
-                className="input"
-                min={today}
-                value={startVal}
-                onChange={(e) => handleStartChange(e.target.value)}
-                aria-label="Start date"
-              />
-              <input
-                type="date"
-                className="input"
-                min={today}
-                value={endVal}
-                onChange={(e) => handleEndChange(e.target.value)}
-                aria-label="End date"
-              />
-            </div>
-            {dateError && (
-              <p className="text-meta text-red">{dateError}</p>
-            )}
-          </div>
-        </>
-      )}
-
-      <div className="flex flex-col gap-2">
-        <p className="label">Confirmed Hotels</p>
-        {hotels.map((hotel) => (
-          <div key={hotel.id} className="rounded-card border bg-surface">
-            <div className="flex items-center justify-between px-4 py-3">
-              <button
-                type="button"
-                className="min-w-0 flex-1 text-left"
-                onClick={() =>
-                  setExpandedHotelId((prev) => (prev === hotel.id ? null : hotel.id))
-                }
-              >
-                <span className="text-base text-ink">{hotel.hotel_name}</span>
-                {hotel.assignedVoterIds.length > 0 && (
-                  <div className="mt-1 flex items-center">
-                    {hotel.assignedVoterIds.slice(0, 5).map((vid, i) => {
-                      const v = groupVoters.find((gv) => gv.voter_id === vid);
-                      if (!v) return null;
-                      return (
-                        <span key={vid} style={{ marginLeft: i > 0 ? -4 : 0 }}>
-                          <Avatar
-                            voter={{
-                              display_name: v.display_name ?? v.name,
-                              name: v.name,
-                              pin_color: v.pin_color,
-                              avatar_url: v.avatar_url,
-                            }}
-                            size={20}
-                          />
-                        </span>
-                      );
-                    })}
-                  </div>
-                )}
-              </button>
-              <button
-                type="button"
-                aria-label={`Remove ${hotel.hotel_name}`}
-                onClick={() => void removeHotel(hotel.id)}
-                className="flex h-11 w-11 flex-none items-center justify-center text-red"
-              >
-                <Icon name="close" size={20} />
-              </button>
-            </div>
-            {expandedHotelId === hotel.id && (
-              <div className="border-t px-4 py-3">
-                {activeVoters.map((v) => {
-                  const assigned = hotel.assignedVoterIds.includes(v.voter_id);
-                  return (
-                    <label
-                      key={v.voter_id}
-                      className="flex h-11 items-center gap-3"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={assigned}
-                        onChange={() => {
-                          if (assigned) void unassignVoterFromHotel(v.voter_id, hotel.id);
-                          else void assignVoterToHotel(v.voter_id, hotel.id);
-                        }}
-                        className="h-5 w-5 rounded accent-accent"
-                      />
-                      <span className="text-base text-ink">
-                        {v.display_name ?? v.name}
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        ))}
-        <div className="flex gap-2">
-          <input
-            className="input min-w-0 flex-1"
-            placeholder="Hotel name"
-            value={hotelInput}
-            onChange={(e) => setHotelInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleAddHotel();
-            }}
-          />
-          <button
-            type="button"
-            onClick={handleAddHotel}
-            className="flex h-11 w-11 flex-none items-center justify-center text-accent"
-            aria-label="Add hotel"
-          >
-            <Icon name="add" size={24} />
-          </button>
-        </div>
-      </div>
-
-      {(effectiveStatus === "upcoming" || effectiveStatus === "active" || startVal) && (
-        <>
-          {!confirmClear ? (
-            <button
-              type="button"
-              onClick={() => setConfirmClear(true)}
-              className="btn w-full border border-red bg-raised text-red"
-            >
-              Clear Trip Dates
-            </button>
-          ) : (
-            <div className="rounded-card border border-red bg-raised p-4">
-              <p className="text-meta font-normal text-ink-muted">
-                This will return the trip to planning mode. Votes will unlock.
-              </p>
-              <div className="mt-3 flex gap-3">
-                <button
-                  type="button"
-                  className="btn-ghost flex-1"
-                  onClick={() => setConfirmClear(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="btn flex-1 bg-red text-bg"
-                  onClick={() => {
-                    void clearTripDates();
-                    setConfirmClear(false);
-                  }}
-                >
-                  Confirm
-                </button>
-              </div>
-            </div>
-          )}
-        </>
-      )}
-
-      {(effectiveStatus === "upcoming" || effectiveStatus === "active") && (
-        <div className="rounded-card bg-raised p-3 text-meta font-normal text-ink-muted">
-          Voting is locked — trip is confirmed.
-        </div>
-      )}
-    </section>
-  );
-}
-
 export default function AdminPage() {
   const router = useRouter();
   const { voterId: myVoterId, voters: groupVoters } = useGroupData();
@@ -572,12 +259,10 @@ export default function AdminPage() {
   const canManageTrip = myRole === "super_admin" || myRole === "moderator";
   const [voters, setVoters] = useState<AdminVoter[]>([]);
   const [cityVotes, setCityVotes] = useState<CityVoteLite[]>([]);
-  const [locations, setLocations] = useState<LocationRow[]>([]);
   const [stats, setStats] = useState<Stats>(EMPTY_STATS);
   const [editing, setEditing] = useState<AdminVoter | null>(null);
   const [deleting, setDeleting] = useState<AdminVoter | null>(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
-  const [confirmReset, setConfirmReset] = useState<"votes" | "availability" | null>(null);
   const [wipeOpen, setWipeOpen] = useState(false);
   const [wipeText, setWipeText] = useState("");
   const [wipeBusy, setWipeBusy] = useState(false);
@@ -590,8 +275,6 @@ export default function AdminPage() {
     },
     [],
   );
-
-  const nowMs = Date.now();
 
   const refreshStats = useCallback(async () => {
     const [v, cv, av, al, h, b, f] = await Promise.all([
@@ -615,13 +298,12 @@ export default function AdminPage() {
   }, []);
 
   const refreshAll = useCallback(async () => {
-    const [v, cv, loc] = await Promise.all([
+    const [v, cv] = await Promise.all([
       safeSelect<AdminVoter>(
         "v2_voters",
         "voter_id,name,display_name,pin_plain,created_at,is_active,role",
       ),
       safeSelect<CityVoteLite>("v2_city_votes", "voter_id,city_id"),
-      safeSelect<LocationRow>("v2_locations", LOCATION_COLUMNS),
     ]);
     if (v) {
       setVoters(
@@ -629,18 +311,12 @@ export default function AdminPage() {
       );
     }
     if (cv) setCityVotes(cv);
-    if (loc) setLocations(loc);
     await refreshStats();
   }, [refreshStats]);
 
   useEffect(() => {
     void refreshAll();
   }, [refreshAll]);
-
-  const activeLocations = useMemo(
-    () => locations.filter((l) => new Date(l.expires_at).getTime() > nowMs),
-    [locations, nowMs],
-  );
 
   const lastVoted = useCallback(
     (voterId: string): string | null => {
@@ -651,35 +327,6 @@ export default function AdminPage() {
     [cityVotes],
   );
 
-  const resetVotes = async () => {
-    setConfirmReset(null);
-    const sb = getSupabase();
-    if (!sb) return;
-    try {
-      await sb.from("v2_city_votes").delete().gte("updated_at", ALL_ROWS);
-      await sb.from("v2_hotel_votes").delete().gte("updated_at", ALL_ROWS);
-    } catch {
-      // partial reset surfaces in the refreshed counts
-    }
-    void refreshAll();
-  };
-
-  const resetAvailability = async () => {
-    setConfirmReset(null);
-    const sb = getSupabase();
-    if (!sb) return;
-    try {
-      await sb.from("v2_availability").delete().gte("updated_at", ALL_ROWS);
-    } catch {
-      // partial reset surfaces in the refreshed counts
-    }
-    void refreshAll();
-  };
-
-  // Soft disable/enable — reversible, no confirmation. Disabling also tears
-  // down any live location row (their map pin must vanish immediately and the
-  // sharing toggle is locked off for them); every other table is untouched,
-  // so re-enabling restores all their contributions to group views instantly.
   const toggleUserActive = async (voterId: string, newState: boolean) => {
     setVoters((prev) =>
       prev.map((u) => (u.voter_id === voterId ? { ...u, is_active: newState } : u)),
@@ -690,31 +337,12 @@ export default function AdminPage() {
       await sb.from("v2_voters").update({ is_active: newState }).eq("voter_id", voterId);
       if (!newState) {
         await sb.from("v2_locations").delete().eq("voter_id", voterId);
-        setLocations((prev) => prev.filter((l) => l.voter_id !== voterId));
       }
     } catch {
       // a failed toggle surfaces on the next refresh
     }
   };
 
-  const forceExpire = async (voterId: string) => {
-    const nowIso = new Date().toISOString();
-    setLocations((prev) =>
-      prev.map((l) => (l.voter_id === voterId ? { ...l, expires_at: nowIso } : l)),
-    );
-    try {
-      await getSupabase()
-        ?.from("v2_locations")
-        .update({ expires_at: nowIso })
-        .eq("voter_id", voterId);
-    } catch {
-      // refetch below restores the truth either way
-    }
-    void refreshAll();
-  };
-
-  // Cascade delete, child tables first in FK-dependency order, each step
-  // awaited before the next, v2_voters last — never a single cascade call.
   const deleteUser = useCallback(
     async (voterId: string) => {
       const sb = getSupabase();
@@ -748,7 +376,6 @@ export default function AdminPage() {
     setWipeText("");
   };
 
-  // The nuclear option — same table order as deleteUser, but every row goes.
   const wipeAllUsers = async () => {
     if (wipeBusy || wipeText !== "DELETE") return;
     setWipeBusy(true);
@@ -785,7 +412,6 @@ export default function AdminPage() {
 
   return (
     <>
-      {/* Own sticky header — the global wordmark bar hides on /admin */}
       <header className="sticky top-0 z-30 border-b bg-bg">
         <div className="mx-auto flex h-14 max-w-2xl items-center gap-1 px-4">
           <button
@@ -801,8 +427,6 @@ export default function AdminPage() {
       </header>
 
       <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 pb-32 pt-4">
-        {/* Section 1 — Registered users. Name, PIN, and last vote are always
-            plain visible text — no masking, no reveal toggle. */}
         <section className="flex flex-col gap-3">
           <h2 className="label">Registered users</h2>
           {voters.length === 0 &&
@@ -836,9 +460,6 @@ export default function AdminPage() {
                     <p className="mt-1 text-meta font-normal text-ink-dim">
                       {city ? `Last voted: ${city}` : "No vote"}
                     </p>
-                    {/* Disable/enable — reversible soft toggle, no confirm.
-                        Disabled users keep using the app; their data just
-                        stops counting in group views until re-enabled. */}
                     <button
                       type="button"
                       onClick={() => void toggleUserActive(voter.voter_id, !voter.is_active)}
@@ -872,58 +493,12 @@ export default function AdminPage() {
           })}
         </section>
 
-        {/* Section 2 — Trip setup (Super Admin + Moderator) */}
-        {canManageTrip && <TripSetupSection />}
+        {canManageTrip && <TripSetupPanel canClear={true} />}
 
-        {/* Section 2b — Trip resets */}
-        <section className="flex flex-col gap-3">
-          <h2 className="label">Trip resets</h2>
-          <button
-            type="button"
-            onClick={() => setConfirmReset("votes")}
-            className="btn w-full border bg-raised text-red"
-          >
-            Reset All Votes
-          </button>
-          <button
-            type="button"
-            onClick={() => setConfirmReset("availability")}
-            className="btn w-full border bg-raised text-red"
-          >
-            Reset All Availability
-          </button>
-        </section>
+        <TripResetsPanel />
 
-        {/* Section 3 — Location overview */}
-        <section className="flex flex-col gap-3">
-          <h2 className="label">Active locations</h2>
-          {activeLocations.length === 0 && (
-            <p className="text-meta font-normal text-ink-dim">No active locations.</p>
-          )}
-          {activeLocations.map((loc) => (
-            <div
-              key={loc.voter_id}
-              className="flex min-h-[56px] items-center justify-between gap-3 rounded-card border bg-surface px-4 py-2"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-title text-ink">{loc.display_name}</p>
-                <p className="text-meta font-normal text-ink-dim">
-                  Sharing since {hoursAgo(loc.sharing_since, nowMs)} · expires in{" "}
-                  {hoursLeft(loc.expires_at, nowMs)}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => void forceExpire(loc.voter_id)}
-                className="h-11 flex-none rounded-btn border bg-raised px-3 text-meta font-semibold text-red transition hover:brightness-110"
-              >
-                Force expire
-              </button>
-            </div>
-          ))}
-        </section>
+        <ActiveLocationsPanel />
 
-        {/* Section 4 — App health */}
         <section className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <h2 className="label">Data health</h2>
@@ -939,7 +514,6 @@ export default function AdminPage() {
           </div>
         </section>
 
-        {/* Section 5 — Danger zone */}
         <section className="flex flex-col gap-3">
           <h2 className="label text-red">Danger zone</h2>
           <button
@@ -1032,23 +606,6 @@ export default function AdminPage() {
           </button>
         </div>
       </BottomSheet>
-
-      {confirmReset === "votes" && (
-        <ConfirmResetDialog
-          title="Reset all votes?"
-          body="This clears every city and hotel vote. Cannot be undone."
-          onCancel={() => setConfirmReset(null)}
-          onConfirm={() => void resetVotes()}
-        />
-      )}
-      {confirmReset === "availability" && (
-        <ConfirmResetDialog
-          title="Reset all availability?"
-          body="This clears all availability dates for everyone. Cannot be undone."
-          onCancel={() => setConfirmReset(null)}
-          onConfirm={() => void resetAvailability()}
-        />
-      )}
     </>
   );
 }
