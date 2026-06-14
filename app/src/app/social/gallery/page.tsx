@@ -4,8 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/Icon";
 import { BottomSheet } from "@/components/BottomSheet";
 import { ImageViewer } from "@/components/ImageViewer";
+import { Toast } from "@/components/Toast";
 import { getSupabase } from "@/lib/supabase";
-import { formatDayDivider, GALLERY_PAGE_SIZE, type MessageRow } from "@/lib/chat";
+import { uploadChatImage } from "@/lib/storage";
+import { useChat } from "@/hooks/useChat";
+import { formatDayDivider, GALLERY_PAGE_SIZE } from "@/lib/chat";
 
 interface GalleryImage {
   id: string;
@@ -43,7 +46,11 @@ export default function GalleryPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [viewerUrl, setViewerUrl] = useState<string | null>(null);
   const [jumpSheetOpen, setJumpSheetOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
+  const { sendMessage } = useChat();
 
   const fetchImages = useCallback(async (before?: string) => {
     const sb = getSupabase();
@@ -114,6 +121,23 @@ export default function GalleryPage() {
     setLoading(false);
   }, [fetchImages]);
 
+  const handleUpload = useCallback(async (file: File) => {
+    if (file.size > 10 * 1024 * 1024) {
+      setToastMsg("Image must be under 10MB");
+      return;
+    }
+    setUploading(true);
+    const result = await uploadChatImage(file);
+    if (!result.ok) {
+      setUploading(false);
+      setToastMsg("Couldn't upload image. Try again.");
+      return;
+    }
+    await sendMessage(null, result.url);
+    setUploading(false);
+    void handleRefresh();
+  }, [sendMessage, handleRefresh]);
+
   const days = groupByDay(images);
 
   if (loading) {
@@ -139,6 +163,29 @@ export default function GalleryPage() {
         <p className="text-meta font-normal text-ink-muted">
           Photos shared in chat will appear here
         </p>
+        <input
+          ref={uploadInputRef}
+          type="file"
+          accept="image/*,.heic,.heif,.webp"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) void handleUpload(file);
+            e.target.value = "";
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => uploadInputRef.current?.click()}
+          disabled={uploading}
+          className={`btn-ghost rounded-btn h-11 px-4 flex items-center gap-2 ${uploading ? "animate-pulse opacity-50" : ""}`}
+        >
+          <Icon name="add_photo_alternate" size={20} />
+          Upload
+        </button>
+        {toastMsg && (
+          <Toast message={toastMsg} onDismiss={() => setToastMsg(null)} />
+        )}
       </div>
     );
   }
@@ -192,7 +239,29 @@ export default function GalleryPage() {
 
       <div ref={sentinelRef} className="h-1" />
 
-      {/* Jump to date pill */}
+      {/* Upload button — bottom-left */}
+      <input
+        ref={uploadInputRef}
+        type="file"
+        accept="image/*,.heic,.heif,.webp"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) void handleUpload(file);
+          e.target.value = "";
+        }}
+      />
+      <button
+        type="button"
+        onClick={() => uploadInputRef.current?.click()}
+        disabled={uploading}
+        className={`fixed bottom-[calc(80px+env(safe-area-inset-bottom))] left-4 z-20 flex items-center gap-1.5 rounded-btn bg-surface-raised border border-border px-3 py-2 text-meta font-semibold text-ink shadow-overlay ${uploading ? "animate-pulse opacity-50" : ""}`}
+      >
+        <Icon name="add_photo_alternate" size={18} />
+        Upload
+      </button>
+
+      {/* Jump to date pill — bottom-right */}
       <button
         type="button"
         onClick={() => setJumpSheetOpen(true)}
@@ -246,6 +315,10 @@ export default function GalleryPage() {
 
       {viewerUrl && (
         <ImageViewer url={viewerUrl} onClose={() => setViewerUrl(null)} />
+      )}
+
+      {toastMsg && (
+        <Toast message={toastMsg} onDismiss={() => setToastMsg(null)} />
       )}
     </div>
   );
