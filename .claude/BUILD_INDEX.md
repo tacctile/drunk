@@ -4,6 +4,23 @@
 
 ---
 
+## Home Screen Dashboard Overhaul — 2026-06-14
+
+### Home page rebuild
+- `app/src/app/home/page.tsx` — full trip dashboard: trip status hero
+  (planning/upcoming/active), quick stats row (4 chips), who's in section
+  (avatar scroll with on_trip + remote), quick actions 2x2 grid,
+  home bottom bar (Plan | Hopp entry points).
+
+### AppShell update
+- `app/src/components/AppShell.tsx` — suppressNav on `/home`: renders
+  TopBar only, no PlanNav, no desktop flex layout.
+
+### Build task index
+- Fix home screen / dashboard → read `src/app/home/page.tsx`, `src/hooks/useTripData.tsx`, `src/hooks/useVotes.ts`, `src/hooks/useAvailability.ts`
+
+---
+
 ## Moderator Admin Screen — 2026-06-14
 
 ### Moderator route

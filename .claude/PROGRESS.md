@@ -1,6 +1,33 @@
 # Hoppz — Progress
 > Feature checklist for the v2 Next.js app (`app/`). Newest phase on top.
 
+## Phase: Home Screen Dashboard Overhaul (2026-06-14)
+- [x] AppShell suppressNav: /home gets TopBar only (no PlanNav, no desktop flex)
+- [x] Trip status hero: planning mode (edit_location_alt icon, CTA → /plan/cities)
+- [x] Trip status hero: upcoming mode (city name, dates, countdown, hotels link)
+- [x] Trip status hero: active mode (green bg, city, dates, Open Hopp CTA)
+- [x] Countdown: "N days away" / "Tomorrow!" / "Today!" with accent/green coloring
+- [x] Quick stats row: 4 chips (votes cast, leading city, best date, on-trip count)
+- [x] Stats row: horizontal scroll, scrollbar hidden, flex-none chips
+- [x] Who's In section: header with count, avatar row of on_trip members
+- [x] Who's In: remote sub-row with wifi icon overlay (14px, bottom-right)
+- [x] Who's In: empty state ("No crew yet — share the app with your crew.")
+- [x] Who's In: tap avatar → /plan/hopperz
+- [x] Who's In: if no members set status, all active voters shown as on_trip
+- [x] Quick actions: 2x2 grid (Vote, Availability, Chat, Locate)
+- [x] Quick actions: Vote completion state (green icon + "Vote Cast ✓")
+- [x] Quick actions: Availability completion state (green icon + "Dates Marked ✓")
+- [x] Quick actions: hover:bg-raised transition on all cards
+- [x] Home bottom bar: fixed, 64px + safe area, bg-surface, border-t
+- [x] Home bottom bar: Plan (map icon) + Hopp (sports_bar icon) with divider
+- [x] Home bottom bar: setLastWing + router.push on tap
+- [x] Loading state: skeleton hero (h-48), stats (4x h-20), avatars (5x h-16)
+- [x] Old wing picker cards removed
+- [x] TypeScript check passes clean
+- [x] ESLint passes (only pre-existing warnings)
+- [x] Next.js build passes clean
+- [x] .claude/ files updated (CONTEXT.md, BUILD_INDEX.md, STATE.yml, PROGRESS.md)
+
 ## Phase: Moderator Admin Screen (2026-06-14)
 - [x] /plan/moderator route created (client component)
 - [x] Moderator access guard: redirects non-moderators to /plan
