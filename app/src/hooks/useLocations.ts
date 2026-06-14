@@ -13,7 +13,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGroupData } from "@/hooks/useGroupData";
 import { PIN_COLORS } from "@/lib/colors";
 import { getStoredPinColor, newVoterId } from "@/lib/identity";
-import { getSupabase, safeSelect, type LocationRow } from "@/lib/supabase";
+import { lsGet, lsSet } from "@/lib/storage";
+import { getSupabase, safeSelect, LOCATION_COLUMNS, type LocationRow } from "@/lib/supabase";
 
 const MUTED_IDS_KEY = "bh2-muted-ids";
 const SHARING_PREF_KEY = "bh2-sharing-preference";
@@ -25,33 +26,15 @@ const SESSION_ID_KEY = "bh2-session-id";
 // coexist (the locate page + the profile overlay) — a shared topic would make
 // the second join close the first and silently kill its realtime feed.
 let channelSeq = 0;
-const LOCATION_COLUMNS =
-  "voter_id,display_name,lat,lng,pin_color,sharing_since,expires_at,updated_at,muted_ids,session_id";
 const UPDATE_MS = 60_000; // sharer re-sends coords every minute
 const CLOCK_MS = 30_000; // expiry filter + "min ago" labels re-evaluate
 const EXPIRY_MS = 72 * 60 * 60 * 1000;
 
 export type ToggleSharingResult = "on" | "off" | "denied" | "error";
 
-function readStorage(key: string): string | null {
-  try {
-    return window.localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
-function writeStorage(key: string, value: string) {
-  try {
-    window.localStorage.setItem(key, value);
-  } catch {
-    // storage unavailable — prefs live for the session only
-  }
-}
-
 function readStoredMutedIds(): string[] {
   try {
-    const parsed: unknown = JSON.parse(readStorage(MUTED_IDS_KEY) ?? "[]");
+    const parsed: unknown = JSON.parse(lsGet(MUTED_IDS_KEY) ?? "[]");
     return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === "string") : [];
   } catch {
     return [];
@@ -208,7 +191,7 @@ export function useLocations(): LocationsValue {
       mutedSyncedFromServerFor = me;
       const muted = Array.isArray(serverMine.muted_ids) ? serverMine.muted_ids : [];
       sharedMutedIds.set(muted);
-      writeStorage(MUTED_IDS_KEY, JSON.stringify(muted));
+      lsSet(MUTED_IDS_KEY, JSON.stringify(muted));
     }
     setInitialFetchDone(true);
   }, []);
@@ -302,7 +285,7 @@ export function useLocations(): LocationsValue {
       // device can never overwrite a newer device's position. Rows from
       // before the session system (session_id NULL) pair with devices that
       // never stored a session id.
-      const session = readStorage(SESSION_ID_KEY);
+      const session = lsGet(SESSION_ID_KEY);
       let query = sb
         .from("v2_locations")
         .update({ lat, lng, updated_at: nowIso })
@@ -342,7 +325,7 @@ export function useLocations(): LocationsValue {
             !cancelled &&
             !error &&
             data &&
-            (data.session_id ?? null) !== readStorage(SESSION_ID_KEY)
+            (data.session_id ?? null) !== lsGet(SESSION_ID_KEY)
           ) {
             stop(); // another device took over — stop broadcasting from this one
             return;
@@ -391,7 +374,7 @@ export function useLocations(): LocationsValue {
       } catch {
         // offline — the row dies on its own at expires_at
       }
-      writeStorage(SHARING_PREF_KEY, "false");
+      lsSet(SHARING_PREF_KEY, "false");
       return "off";
     }
 
@@ -405,7 +388,7 @@ export function useLocations(): LocationsValue {
     // Fresh session id per activation — this device becomes THE broadcaster;
     // any other device's next takeover check sees the mismatch and stops.
     const sessionId = newVoterId();
-    writeStorage(SESSION_ID_KEY, sessionId);
+    lsSet(SESSION_ID_KEY, sessionId);
 
     const nowIso = new Date().toISOString();
     const row: LocationRow = {
@@ -430,7 +413,7 @@ export function useLocations(): LocationsValue {
     } catch {
       // offline — sharing shows locally; converges when we're back
     }
-    writeStorage(SHARING_PREF_KEY, "true");
+    lsSet(SHARING_PREF_KEY, "true");
     return "on";
   }, [ensureVoter]);
 
@@ -450,11 +433,11 @@ export function useLocations(): LocationsValue {
     if (amDisabled) return;
     if (!initialFetchDone || isSharing) return;
     if (autoStartAttemptedFor === voterId) return;
-    if (readStorage(SHARING_PREF_KEY) !== null) return;
+    if (lsGet(SHARING_PREF_KEY) !== null) return;
     autoStartAttemptedFor = voterId;
     void toggleSharing().then((result) => {
       if (result === "denied" || result === "error") {
-        writeStorage(SHARING_PREF_KEY, "false");
+        lsSet(SHARING_PREF_KEY, "false");
       }
     });
   }, [voterId, name, identityInvalid, amDisabled, initialFetchDone, isSharing, toggleSharing]);
@@ -476,7 +459,7 @@ export function useLocations(): LocationsValue {
         : [...current, targetId]
       : current.filter((id) => id !== targetId);
     sharedMutedIds.set(next);
-    writeStorage(MUTED_IDS_KEY, JSON.stringify(next));
+    lsSet(MUTED_IDS_KEY, JSON.stringify(next));
     if (!isSharingRef.current) return; // applies when sharing starts
     const me = voterIdRef.current;
     const nowIso = new Date().toISOString();

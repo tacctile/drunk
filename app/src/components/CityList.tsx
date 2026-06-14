@@ -6,6 +6,7 @@ import type { City } from "@/data/types";
 import { useGroupData } from "@/hooks/useGroupData";
 import { useTripData } from "@/hooks/useTripData";
 import { useVotes } from "@/hooks/useVotes";
+import { lsGet, lsSet } from "@/lib/storage";
 import { useNameGate } from "./NamePrompt";
 import { Icon } from "./Icon";
 
@@ -21,21 +22,13 @@ export const SORT_OPTIONS: { value: CitySort; label: string; pillLabel: string }
 const SORT_KEY = "bh2-city-sort";
 
 export function loadSort(): CitySort {
-  try {
-    const raw = window.localStorage.getItem(SORT_KEY);
-    if (raw === "distance" || raw === "walk" || raw === "name" || raw === "state") return raw;
-  } catch {
-    // storage unavailable — default below
-  }
+  const raw = lsGet(SORT_KEY);
+  if (raw === "distance" || raw === "walk" || raw === "name" || raw === "state") return raw;
   return "distance";
 }
 
 export function storeSort(sort: CitySort) {
-  try {
-    window.localStorage.setItem(SORT_KEY, sort);
-  } catch {
-    // storage unavailable — sort lives for the session only
-  }
+  lsSet(SORT_KEY, sort);
 }
 
 function sortCities(sort: CitySort): City[] {

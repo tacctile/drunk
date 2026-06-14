@@ -10,6 +10,7 @@ import { useGroupData } from "@/hooks/useGroupData";
 import { useVenues } from "@/hooks/useVenues";
 import { useVotes } from "@/hooks/useVotes";
 import { formatShortDate, plural } from "@/lib/format";
+import { Stars } from "@/components/Stars";
 
 /** Shared card row for every Board list — 56px floor, surface, hairline. */
 const ROW_CLASS =
@@ -42,19 +43,6 @@ function SheetHeader({ title, onClose }: { title: string; onClose: () => void })
         <Icon name="close" size={22} />
       </button>
     </div>
-  );
-}
-
-/** Hotel class as filled accent stars — 3 stars = three filled glyphs. */
-function Stars({ count }: { count: number }) {
-  const n = Math.max(0, Math.min(5, Math.floor(count)));
-  if (n === 0) return null;
-  return (
-    <span className="flex flex-none items-center text-accent" aria-label={`${n}-star hotel`}>
-      {Array.from({ length: n }, (_, i) => (
-        <Icon key={i} name="star" filled size={14} />
-      ))}
-    </span>
   );
 }
 

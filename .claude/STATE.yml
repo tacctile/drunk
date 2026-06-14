@@ -1,20 +1,21 @@
-# Bar Hoppers — machine-readable session state.
-# Companion to CONTEXT.md / PROGRESS.md. Update at the end of every session.
+# Hoppz — machine-readable session state.
+# Companion to CONTEXT.md / ARCHITECTURE.md / BUILD_INDEX.md.
+# Update at the end of every session.
 
-current_phase: full-polish-pass
+current_phase: audit1-remediation
 last_updated: 2026-06-14
-app_root: app/            # the live Next.js v2 app; root index.html is legacy v1
+app_root: app/
 
 last_change: >
-  Full Polish Pass — Known Issues + UX Fixes.
-  Verified all 13 task items against codebase. Fixed: Android install button
-  opacity (disabled:opacity-50 instead of disabled:opacity-100), TopBar trip
-  status pip labels (added "Today!" case and "d away" suffix), CONTEXT.md
-  localStorage contract (added bh2-hopperz-view key). All other items verified
-  correct as-is: login sign-in lookup, camera controls/retake/send, chat scroll,
-  PlanNav/HopNav dividers and ink-dim colors, AppShell suppressNav, profile
-  overlay tabs, Hopperz view persistence, Avatar fallback, Supabase voter
-  select, moderator routing.
+  Audit 1 Remediation — code health refactoring.
+  Deleted legacy index.html and dead pushServer.ts. Extracted shared primitives
+  (FieldError, Switch, Stars). Centralized localStorage wrappers in lib/storage.ts.
+  Consolidated LOCATION_COLUMNS constant and ReactionRow/ReadRow type aliases.
+  Extracted useVoterNotes hook; updated ProfileOverlay and VoterProfileSheet.
+  Extracted MessageBubble into components/chat/. Split ProfileOverlay into
+  components/profile/ folder (11 sub-components + barrel). ActiveLocationsPanel
+  now accepts locations prop from useLocations. Created ARCHITECTURE.md. Rewrote
+  CONTEXT.md. Build verified (44 routes).
 
 verification:
   typecheck: pass        # tsc --noEmit

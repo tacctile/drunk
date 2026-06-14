@@ -4,16 +4,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useGroupData } from "@/hooks/useGroupData";
 import { MAX_FIRST_NAME_LENGTH, isValidPin } from "@/lib/identity";
 import { Dialog } from "./Dialog";
+import { FieldError } from "./FieldError";
 
 export type IdentityFlow = "new" | "return";
-
-function FieldError({ children }: { children: string }) {
-  return (
-    <p className="text-[12px] font-medium text-red" role="alert">
-      {children}
-    </p>
-  );
-}
 
 interface IdentityFormProps {
   /** Which form to open on — each links to the other. */

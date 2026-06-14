@@ -164,6 +164,9 @@ export interface TripMemberRow {
   updated_at: string;
 }
 
+export const LOCATION_COLUMNS =
+  "voter_id,display_name,lat,lng,pin_color,sharing_since,expires_at,updated_at,muted_ids,session_id";
+
 /** Swallows all failures; returns null so callers can fall back silently. */
 export async function safeSelect<T>(table: string, columns: string): Promise<T[] | null> {
   const sb = getSupabase();

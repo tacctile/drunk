@@ -1,6 +1,69 @@
-# Bar Hoppers — Build Index
+# Hoppz — Build Index
 > A log of what's been built and where it lives, newest first. Companion to
-> CONTEXT.md (the why/how). v2 = the Next.js app under `app/`.
+> CONTEXT.md (the why/how) and ARCHITECTURE.md (the structure).
+
+---
+
+## Audit 1 Remediation — Code Health Refactoring — 2026-06-14
+
+### Deletions
+- Deleted legacy `index.html` (v1 single-file app, no longer needed).
+- Deleted `app/src/lib/pushServer.ts` (dead stub, zero call sites).
+- Removed unused `HeatCalendar` export from `app/src/components/Calendar.tsx`.
+- Unexported `WeekdayRow` in Calendar.tsx (internal helper only).
+
+### Shared primitive extraction
+- `app/src/components/FieldError.tsx` — extracted from 5 consumers (NamePrompt,
+  ProfileOverlay, admin, moderator, login).
+- `app/src/components/Switch.tsx` — extracted from 3 consumers (ProfileOverlay,
+  VoterProfileSheet, locate page).
+- `app/src/components/Stars.tsx` — extracted from 2 consumers (board, CityDetail).
+
+### localStorage centralization
+- `app/src/lib/storage.ts` — added `lsGet`, `lsSet`, `lsRemove`, `lsGetJson`,
+  `lsSetJson` wrappers. Updated consumers: useGroupData, useLocations,
+  CityList, hopperz page.
+
+### Constants & types consolidation
+- `app/src/lib/supabase.ts` — added `LOCATION_COLUMNS` constant. Consumers:
+  useLocations, ActiveLocationsPanel.
+- `app/src/lib/chat.ts` — `ReactionRow` and `ReadRow` re-exported as type
+  aliases from supabase types.
+
+### Hook extraction
+- `app/src/hooks/useVoterNotes.ts` — extracted from ProfileOverlay NotesSection
+  and VoterProfileSheet. Optimistic add/delete with rollback.
+- Updated consumers: ProfileOverlay NotesSection, VoterProfileSheet.
+
+### Component extractions
+- `app/src/components/chat/MessageBubble.tsx` — extracted from social/page.tsx
+  (~230 lines). Barrel export via `chat/index.ts`.
+- `app/src/components/profile/` — split ProfileOverlay.tsx into 11 sub-components:
+  TripStatusCard, VoteCard, AvailabilityCard, LocationCard, NotificationsCard,
+  IdentityCard, RoleCard, NotesSection, IdentityGate, SwitchIdentityRow,
+  ProfileBody. Barrel export via `profile/index.ts`. ProfileOverlay.tsx reduced
+  to thin dialog shell (~100 lines, was ~1180).
+
+### ActiveLocationsPanel prop change
+- `app/src/components/ActiveLocationsPanel.tsx` — now accepts `locations` prop
+  instead of self-fetching. Updated admin/page.tsx and moderator/page.tsx to
+  pass `activeLocations` from useLocations.
+
+### Documentation
+- `.claude/CONTEXT.md` — rewritten: removed legacy v1 references, updated file
+  map with all new components/hooks/libs, current state section updated.
+- `.claude/ARCHITECTURE.md` — created: stack decisions, data flow, component
+  hierarchy, hook responsibilities, import rules, file naming.
+- `.claude/BUILD_INDEX.md` — added this session entry, updated header.
+- `.claude/STATE.yml` — updated phase, last_change, verification.
+
+### Build verification
+- TypeScript typecheck: pass
+- ESLint: pass (pre-existing warnings only)
+- `next build`: pass (44 routes)
+
+### Build task index
+- Fix code health / refactoring → read `src/components/profile/index.ts`, `src/components/chat/index.ts`, `src/hooks/useVoterNotes.ts`, `src/lib/storage.ts`
 
 ---
 
