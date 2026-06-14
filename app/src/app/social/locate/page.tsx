@@ -476,7 +476,7 @@ function LocationOptionsModal({ onClose, locations, voters, myId }: LocationOpti
 
       {pendingSharing && (
         <div className="mt-5">
-          <h3 className="label">Who can see me</h3>
+          <h3 className="label">Hide from</h3>
           {others.length === 0 ? (
             <p className="py-2 text-meta font-normal text-ink-dim">
               No one else is registered yet.
@@ -484,7 +484,7 @@ function LocationOptionsModal({ onClose, locations, voters, myId }: LocationOpti
           ) : (
             <div className="max-h-[35vh] overflow-y-auto">
               {others.map((person) => {
-                const canSeeMe = !pendingMuted.includes(person.id);
+                const isHidden = pendingMuted.includes(person.id);
                 return (
                   <div key={person.id} className="flex min-h-11 items-center gap-3">
                     <span
@@ -493,17 +493,17 @@ function LocationOptionsModal({ onClose, locations, voters, myId }: LocationOpti
                       style={{ width: 20, height: 20, background: person.color }}
                     />
                     <span className="min-w-0 flex-1 truncate text-base text-ink">
-                      {person.label}
+                      Hide from {person.label}
                     </span>
                     <Switch
-                      checked={canSeeMe}
+                      checked={isHidden}
                       disabled={busy}
                       onToggle={() =>
                         setPendingMuted((prev) =>
-                          canSeeMe ? [...prev, person.id] : prev.filter((id) => id !== person.id),
+                          isHidden ? prev.filter((id) => id !== person.id) : [...prev, person.id],
                         )
                       }
-                      ariaLabel={`${person.label} can see me`}
+                      ariaLabel={`Hide from ${person.label}`}
                     />
                   </div>
                 );

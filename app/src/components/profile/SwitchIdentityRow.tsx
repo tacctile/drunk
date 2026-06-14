@@ -18,7 +18,7 @@ export function SwitchIdentityRow({
         onClick={() => setConfirmOpen(true)}
         className="flex h-11 w-full items-center justify-center text-base font-semibold text-ink-dim"
       >
-        Not {displayName}? Switch identity
+        Sign out
       </button>
       <BottomSheet open={confirmOpen} onClose={() => setConfirmOpen(false)} label="Switch identity">
         <p className="px-1 pb-3 pt-1 text-base text-ink">

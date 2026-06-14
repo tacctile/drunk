@@ -8,10 +8,6 @@ import { Icon } from "@/components/Icon";
 
 const SAVED_FLASH_MS = 1200;
 
-function norm(s: string): string {
-  return s.trim().toLowerCase();
-}
-
 function PinField({
   value,
   onChange,
@@ -57,17 +53,12 @@ export interface IdentityCardProps {
 }
 
 export function IdentityCard({ storedFirst, storedInitial, pinHash, onSave }: IdentityCardProps) {
-  const [confirmFirst, setConfirmFirst] = useState("");
-  const [confirmInitial, setConfirmInitial] = useState("");
-  const [confirmPin, setConfirmPin] = useState("");
+  const [unlockPin, setUnlockPin] = useState("");
   const [pinOk, setPinOk] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
+  const [pinError, setPinError] = useState("");
   const [newFirst, setNewFirst] = useState("");
-  const [newFirstConfirm, setNewFirstConfirm] = useState("");
   const [newInitial, setNewInitial] = useState("");
-  const [newInitialConfirm, setNewInitialConfirm] = useState("");
   const [newPin, setNewPin] = useState("");
-  const [newPinConfirm, setNewPinConfirm] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -80,37 +71,33 @@ export function IdentityCard({ storedFirst, storedInitial, pinHash, onSave }: Id
   );
 
   useEffect(() => {
-    if (!isValidPin(confirmPin) || pinHash === undefined) {
+    if (!isValidPin(unlockPin) || pinHash === undefined) {
       setPinOk(false);
+      setPinError("");
       return;
     }
     if (pinHash === null) {
       setPinOk(true);
+      setPinError("");
       return;
     }
     let cancelled = false;
-    void comparePin(confirmPin, pinHash).then((ok) => {
-      if (!cancelled) setPinOk(ok);
+    void comparePin(unlockPin, pinHash).then((ok) => {
+      if (cancelled) return;
+      setPinOk(ok);
+      setPinError(ok ? "" : "Incorrect PIN");
     });
     return () => {
       cancelled = true;
     };
-  }, [confirmPin, pinHash]);
-
-  const firstOk = norm(confirmFirst) !== "" && norm(confirmFirst) === norm(storedFirst);
-  const initialOk = norm(confirmInitial) === norm(storedInitial);
-  const unlocked = firstOk && initialOk && pinOk;
+  }, [unlockPin, pinHash]);
 
   const firstFilled = newFirst.trim() !== "";
   const initialFilled = newInitial.trim() !== "";
   const pinFilled = newPin !== "";
-  const firstValid = /^[A-Za-z]{1,15}$/.test(newFirst.trim());
-  const initialValid = /^[A-Za-z]$/.test(newInitial.trim());
-  const pinValid = isValidPin(newPin);
-  const firstPairOk = !firstFilled || (firstValid && norm(newFirstConfirm) === norm(newFirst));
-  const initialPairOk =
-    !initialFilled || (initialValid && norm(newInitialConfirm) === norm(newInitial));
-  const pinPairOk = !pinFilled || (pinValid && newPinConfirm === newPin);
+  const firstValid = !firstFilled || /^[A-Za-z]{1,15}$/.test(newFirst.trim());
+  const initialValid = !initialFilled || /^[A-Za-z]$/.test(newInitial.trim());
+  const pinValid = !pinFilled || isValidPin(newPin);
   const anyFilled = firstFilled || initialFilled || pinFilled;
   const nameTouched = firstFilled || initialFilled;
 
@@ -120,28 +107,22 @@ export function IdentityCard({ storedFirst, storedInitial, pinHash, onSave }: Id
   );
 
   const canSave =
-    unlocked &&
+    pinOk &&
     anyFilled &&
-    firstPairOk &&
-    initialPairOk &&
-    pinPairOk &&
+    firstValid &&
+    initialValid &&
+    pinValid &&
     (!nameTouched || nextDisplayName !== null) &&
     !saving &&
     !saved;
 
-  const showChanges = (unlocked && editOpen) || saved;
-
   const resetForm = () => {
-    setConfirmFirst("");
-    setConfirmInitial("");
-    setConfirmPin("");
-    setEditOpen(false);
+    setUnlockPin("");
+    setPinOk(false);
+    setPinError("");
     setNewFirst("");
-    setNewFirstConfirm("");
     setNewInitial("");
-    setNewInitialConfirm("");
     setNewPin("");
-    setNewPinConfirm("");
   };
 
   const submit = async () => {
@@ -159,143 +140,62 @@ export function IdentityCard({ storedFirst, storedInitial, pinHash, onSave }: Id
     }, SAVED_FLASH_MS);
   };
 
+  const showEditFields = pinOk || saved;
+
   return (
     <section>
       <h2 className="label">My identity</h2>
       <div className="card mt-2 flex flex-col gap-3">
-        <p className="text-meta font-normal italic text-ink-dim">
-          To make changes, confirm your current info first. Changed fields must be entered twice.
-        </p>
-        <input
-          className="input"
-          placeholder="Confirm first name"
-          autoComplete="off"
-          value={confirmFirst}
-          onChange={(e) => setConfirmFirst(e.target.value)}
-          aria-label="Confirm first name"
-        />
-        <input
-          className="input"
-          placeholder="Confirm initial"
-          autoComplete="off"
-          autoCapitalize="characters"
-          maxLength={1}
-          value={confirmInitial}
-          onChange={(e) =>
-            setConfirmInitial(e.target.value.replace(/[^A-Za-z]/g, "").slice(0, 1).toUpperCase())
-          }
-          aria-label="Confirm last initial"
-        />
-        <PinField
-          placeholder="Confirm PIN"
-          value={confirmPin}
-          onChange={setConfirmPin}
-          ariaLabel="Confirm PIN"
-        />
-        <button
-          type="button"
-          disabled={!unlocked}
-          onClick={() => setEditOpen(true)}
-          className={`btn w-full ${
-            unlocked
-              ? "bg-accent text-bg hover:brightness-110 active:brightness-95"
-              : "border bg-raised text-ink-dim disabled:opacity-100"
-          }`}
-        >
-          Update my profile
-        </button>
+        {!showEditFields ? (
+          <>
+            <p className="text-meta font-normal italic text-ink-dim">
+              Enter your PIN to make changes.
+            </p>
+            <PinField
+              placeholder="Current PIN"
+              value={unlockPin}
+              onChange={setUnlockPin}
+              ariaLabel="Current PIN"
+            />
+            {pinError && <FieldError>{pinError}</FieldError>}
+          </>
+        ) : (
+          <div className="anim-rise flex flex-col gap-3">
+            <input
+              className="input"
+              placeholder="New first name"
+              autoComplete="off"
+              maxLength={15}
+              value={newFirst}
+              onChange={(e) => setNewFirst(e.target.value)}
+              aria-label="New first name"
+            />
+            {firstFilled && !firstValid && (
+              <FieldError>Letters only, 1–15 characters.</FieldError>
+            )}
 
-        {showChanges && (
-          <div className="anim-rise flex flex-col gap-3 border-t pt-3">
-            <div className="flex flex-col gap-2">
-              <input
-                className="input"
-                placeholder="New first name"
-                autoComplete="off"
-                maxLength={15}
-                value={newFirst}
-                onChange={(e) => setNewFirst(e.target.value)}
-                aria-label="New first name"
-              />
-              {firstFilled && (
-                <>
-                  <input
-                    className="input"
-                    placeholder="Confirm new first name"
-                    autoComplete="off"
-                    maxLength={15}
-                    value={newFirstConfirm}
-                    onChange={(e) => setNewFirstConfirm(e.target.value)}
-                    aria-label="Confirm new first name"
-                  />
-                  {!firstValid ? (
-                    <FieldError>Letters only, 1–15 characters.</FieldError>
-                  ) : newFirstConfirm !== "" && !firstPairOk ? (
-                    <FieldError>Entries don&apos;t match.</FieldError>
-                  ) : null}
-                </>
-              )}
-            </div>
+            <input
+              className="input"
+              placeholder="New last initial"
+              autoComplete="off"
+              autoCapitalize="characters"
+              maxLength={1}
+              value={newInitial}
+              onChange={(e) =>
+                setNewInitial(e.target.value.replace(/[^A-Za-z]/g, "").slice(0, 1).toUpperCase())
+              }
+              aria-label="New last initial"
+            />
 
-            <div className="flex flex-col gap-2">
-              <input
-                className="input"
-                placeholder="New last initial"
-                autoComplete="off"
-                autoCapitalize="characters"
-                maxLength={1}
-                value={newInitial}
-                onChange={(e) =>
-                  setNewInitial(e.target.value.replace(/[^A-Za-z]/g, "").slice(0, 1).toUpperCase())
-                }
-                aria-label="New last initial"
-              />
-              {initialFilled && (
-                <>
-                  <input
-                    className="input"
-                    placeholder="Confirm new last initial"
-                    autoComplete="off"
-                    autoCapitalize="characters"
-                    maxLength={1}
-                    value={newInitialConfirm}
-                    onChange={(e) =>
-                      setNewInitialConfirm(
-                        e.target.value.replace(/[^A-Za-z]/g, "").slice(0, 1).toUpperCase(),
-                      )
-                    }
-                    aria-label="Confirm new last initial"
-                  />
-                  {newInitialConfirm !== "" && !initialPairOk && (
-                    <FieldError>Entries don&apos;t match.</FieldError>
-                  )}
-                </>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <PinField
-                placeholder="New PIN"
-                value={newPin}
-                onChange={setNewPin}
-                ariaLabel="New PIN"
-              />
-              {pinFilled && (
-                <>
-                  <PinField
-                    placeholder="Confirm new PIN"
-                    value={newPinConfirm}
-                    onChange={setNewPinConfirm}
-                    ariaLabel="Confirm new PIN"
-                  />
-                  {!pinValid ? (
-                    <FieldError>Exactly 2 digits (00–99).</FieldError>
-                  ) : newPinConfirm !== "" && !pinPairOk ? (
-                    <FieldError>Entries don&apos;t match.</FieldError>
-                  ) : null}
-                </>
-              )}
-            </div>
+            <PinField
+              placeholder="New PIN"
+              value={newPin}
+              onChange={setNewPin}
+              ariaLabel="New PIN"
+            />
+            {pinFilled && !pinValid && (
+              <FieldError>Exactly 2 digits (00–99).</FieldError>
+            )}
 
             <button
               type="button"

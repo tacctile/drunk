@@ -2,20 +2,22 @@
 # Companion to CONTEXT.md / ARCHITECTURE.md / BUILD_INDEX.md.
 # Update at the end of every session.
 
-current_phase: audit2-remediation
+current_phase: audit3-design-changes
 last_updated: 2026-06-14
 app_root: app/
 
 last_change: >
-  Audit 2 Remediation — architecture health fixes.
-  Middleware role protection (bh2-role cookie for admin/moderator routes).
-  ErrorBoundary wraps root providers and chat message list. Chat renderMessages
-  memoized with useMemo. Gallery page no longer mounts full useChat (direct
-  Supabase insert). useLocations derives voterColors from useGroupData voters
-  (removed redundant v2_voters fetch). useLocations exports resetLocationStore()
-  called on sign-out. useHopperz note count fetch stabilized (sorted voter ID
-  string dep). SeeButton tap target 44px. Admin back → /plan. aria-labels added.
-  autoCapitalize on name inputs. Build verified (44 routes).
+  Audit 3 design changes — 7 items.
+  IdentityCard simplified: PIN-only unlock (removed name + initial confirm fields
+  and all double-entry confirmation). SwitchIdentityRow trigger label changed to
+  "Sign out". Camera back button always visible (pre- and post-capture). Read
+  receipt avatars (1–2 readers) now tappable to open seen-by sheet. Location mute
+  toggle flipped to "Hide from [name]" (checked = muted). Cross-wing tabs (Hopp
+  in PlanNav, Plan in HopNav) use bg-raised background instead of divider. Home
+  screen Open Chat card shows unread message count badge (lightweight fetch, no
+  realtime subscription).
+
+last_session: "Audit 3 design changes — 7 items"
 
 verification:
   typecheck: pass        # tsc --noEmit

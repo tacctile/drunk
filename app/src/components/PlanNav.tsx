@@ -62,14 +62,13 @@ export function PlanNav() {
             </Link>
           );
         })}
-        <div className="mx-auto my-1 h-px w-6 bg-border" />
         <button
           type="button"
           title="Hopp"
           aria-label="Hopp"
           {...holdHandlers}
           onClick={hoppClick}
-          className={`flex h-11 w-11 items-center justify-center rounded-btn text-ink-dim transition hover:bg-raised hover:text-ink ${HOLD_CLASS} ${adminHold.holding ? "anim-hold" : ""}`}
+          className={`flex h-11 w-11 items-center justify-center rounded-btn bg-raised text-ink-dim transition hover:text-ink ${HOLD_CLASS} ${adminHold.holding ? "anim-hold" : ""}`}
         >
           <Icon name="sports_bar" size={24} />
         </button>
@@ -96,15 +95,12 @@ export function PlanNav() {
               </Link>
             );
           })}
-          <div className="flex items-center">
-            <div className="h-6 w-px bg-border" />
-          </div>
           <button
             type="button"
             onClick={hoppClick}
             aria-label="Hopp"
             {...holdHandlers}
-            className={`flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 text-label font-semibold text-ink-dim transition ${HOLD_CLASS} ${adminHold.holding ? "anim-hold" : ""}`}
+            className={`flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 bg-raised text-label font-semibold text-ink-dim transition ${HOLD_CLASS} ${adminHold.holding ? "anim-hold" : ""}`}
           >
             <Icon name="sports_bar" size={24} />
             Hopp

@@ -329,15 +329,17 @@ Storage buckets:
 
 ## Current State
 Last updated: 2026-06-14
-Last change: **Audit 2 Remediation — architecture health fixes.**
-- Middleware role protection: admin/moderator routes guarded by bh2-role cookie.
-- ErrorBoundary wraps root providers and chat message list.
-- Chat renderMessages memoized with useMemo.
-- Gallery page no longer mounts full useChat (direct Supabase insert).
-- useLocations derives voterColors from useGroupData voters (removed redundant fetch).
-- useLocations exports resetLocationStore() — called on sign-out.
-- useHopperz note count fetch stabilized (depends on sorted voter ID string).
-- SeeButton tap target increased to 44px. Admin back → /plan. aria-labels added.
-- autoCapitalize="words" on admin/moderator first name inputs.
-- Build verified: typecheck, lint, and `next build` all pass (44 routes).
+Last change: **Audit 3 design changes — 7 items.**
+- IdentityCard unlock now requires PIN only (not name + initial + PIN). No
+  double-entry confirmation for new values — single field per change.
+- SwitchIdentityRow trigger label is now "Sign out" (was "Not {name}? Switch identity").
+- Camera back button always visible in both pre-capture and post-capture states.
+- Read receipt avatars (1–2 readers) are now tappable to open the seen-by sheet.
+- Location mute toggle is now "Hide from [name]" (checked = muted). Was "who can
+  see me" with checked = visible. Heading changed to "Hide from".
+- Cross-wing tabs use bg-raised background instead of 1px divider (PlanNav Hopp,
+  HopNav Plan, PlanNav desktop rail).
+- Home screen fetches unread chat count (lightweight one-time query against
+  v2_message_reads + v2_messages, no realtime subscription). Badge shown on Open
+  Chat card when count > 0.
 Next up: Wire push notification triggers (new message, reaction, etc.).

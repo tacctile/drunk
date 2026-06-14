@@ -258,15 +258,17 @@ export function MessageBubble({
           }`}
         >
           {msgReads.length === 1 && (
-            <SenderAvatar
-              name={getVoter(msgReads[0].voter_id).name}
-              color={getVoter(msgReads[0].voter_id).color}
-              avatarUrl={getVoter(msgReads[0].voter_id).avatarUrl}
-              size={16}
-            />
+            <button type="button" onClick={onSeenByTap}>
+              <SenderAvatar
+                name={getVoter(msgReads[0].voter_id).name}
+                color={getVoter(msgReads[0].voter_id).color}
+                avatarUrl={getVoter(msgReads[0].voter_id).avatarUrl}
+                size={16}
+              />
+            </button>
           )}
           {msgReads.length === 2 && (
-            <div className="flex">
+            <button type="button" onClick={onSeenByTap} className="flex">
               <SenderAvatar
                 name={getVoter(msgReads[0].voter_id).name}
                 color={getVoter(msgReads[0].voter_id).color}
@@ -281,7 +283,7 @@ export function MessageBubble({
                   size={16}
                 />
               </div>
-            </div>
+            </button>
           )}
           {msgReads.length >= 3 && (
             <button

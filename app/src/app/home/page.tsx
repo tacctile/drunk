@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Icon } from "@/components/Icon";
 import { Avatar } from "@/components/Avatar";
 import { setLastWing } from "@/lib/auth";
+import { getSupabase } from "@/lib/supabase";
 import { formatShortDate } from "@/lib/format";
 import { useTripData } from "@/hooks/useTripData";
 import { useVotes } from "@/hooks/useVotes";
@@ -17,7 +18,38 @@ export default function HomePage() {
     useTripData();
   const { totalVotes, ranking, hasVoted } = useVotes();
   const { bestDate, hasMarkedDates } = useAvailability();
-  const { voters } = useGroupData();
+  const { voterId, voters } = useGroupData();
+
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!voterId) return;
+    const sb = getSupabase();
+    if (!sb) return;
+
+    async function fetchUnread() {
+      const { data: readData } = await sb!
+        .from("v2_message_reads")
+        .select("read_at")
+        .eq("voter_id", voterId)
+        .order("read_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      const lastRead = readData?.read_at ?? new Date(0).toISOString();
+
+      const { count } = await sb!
+        .from("v2_messages")
+        .select("*", { count: "exact", head: true })
+        .eq("is_deleted", false)
+        .neq("voter_id", voterId)
+        .gt("created_at", lastRead);
+
+      setUnreadCount(count ?? 0);
+    }
+
+    void fetchUnread();
+  }, [voterId]);
 
   const { onTripVoters, remoteVoters, onTripCount } = useMemo(() => {
     const activeVoters = voters.filter((v) => v.is_active !== false);
@@ -302,9 +334,16 @@ export default function HomePage() {
           <button
             type="button"
             onClick={() => router.push("/social")}
-            className="card flex min-h-[88px] flex-col items-center justify-center gap-2 transition hover:bg-raised"
+            className="card relative flex min-h-[88px] flex-col items-center justify-center gap-2 transition hover:bg-raised"
           >
-            <Icon name="chat_bubble" size={28} className="text-accent" />
+            <span className="relative">
+              <Icon name="chat_bubble" size={28} className="text-accent" />
+              {unreadCount > 0 && (
+                <span className="absolute -right-2.5 -top-1.5 flex min-w-[18px] items-center justify-center rounded-full bg-accent px-1 text-[11px] font-bold text-bg">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </span>
             <span className="text-meta font-semibold text-ink">Open Chat</span>
           </button>
 
