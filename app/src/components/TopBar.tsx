@@ -32,7 +32,7 @@ export function TopBar() {
             {effectiveStatus === "upcoming" && daysUntil !== null && (
               <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold" style={{ background: "var(--accent-dim)", color: "var(--accent)" }}>
                 <Icon name="calendar_month" size={14} />
-                {daysUntil === 1 ? "Tomorrow" : `${daysUntil}d`}
+                {daysUntil === 0 ? "Today!" : daysUntil === 1 ? "Tomorrow" : `${daysUntil}d away`}
               </span>
             )}
             {effectiveStatus === "active" && (

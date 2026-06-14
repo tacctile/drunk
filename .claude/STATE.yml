@@ -1,25 +1,25 @@
 # Bar Hoppers — machine-readable session state.
 # Companion to CONTEXT.md / PROGRESS.md. Update at the end of every session.
 
-current_phase: home-screen-dashboard
+current_phase: full-polish-pass
 last_updated: 2026-06-14
 app_root: app/            # the live Next.js v2 app; root index.html is legacy v1
 
 last_change: >
-  Home Screen Dashboard Overhaul.
-  Rebuilt /home from wing picker to full trip dashboard. Trip status hero
-  card (planning/upcoming/active) with contextual CTAs. Quick stats row
-  (votes cast, leading city, best date, on-trip count). Who's In section
-  (avatar row of on_trip members, remote sub-row with wifi icon overlay).
-  Quick actions 2x2 grid (vote, availability, chat, locate) with completion
-  states (green ✓). Home bottom bar (Plan | Hopp) replaces old card picker.
-  AppShell suppressNav on /home (TopBar only, no PlanNav/desktop rail).
-  Loading skeleton state while useTripData loads.
+  Full Polish Pass — Known Issues + UX Fixes.
+  Verified all 13 task items against codebase. Fixed: Android install button
+  opacity (disabled:opacity-50 instead of disabled:opacity-100), TopBar trip
+  status pip labels (added "Today!" case and "d away" suffix), CONTEXT.md
+  localStorage contract (added bh2-hopperz-view key). All other items verified
+  correct as-is: login sign-in lookup, camera controls/retake/send, chat scroll,
+  PlanNav/HopNav dividers and ink-dim colors, AppShell suppressNav, profile
+  overlay tabs, Hopperz view persistence, Avatar fallback, Supabase voter
+  select, moderator routing.
 
 verification:
   typecheck: pass        # tsc --noEmit
   lint: pass             # next lint (only pre-existing warnings)
-  build: pass            # next build — all routes compiled
+  build: pass            # next build — 44 routes compiled
 
 known_issues:
   - App icons are placeholders — public/icons/ needs real PNGs

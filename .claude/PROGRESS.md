@@ -1,6 +1,40 @@
 # Hoppz — Progress
 > Feature checklist for the v2 Next.js app (`app/`). Newest phase on top.
 
+## Phase: Full Polish Pass — Known Issues + UX Fixes (2026-06-14)
+- [x] Login: sign-in lookup verified (case-insensitive, trimmed, generic error)
+- [x] Login: toggle links present with 44px tap targets
+- [x] Login: Android install button opacity fixed (disabled:opacity-50)
+- [x] Login: iOS instruction panel verified (max-height transition, correct text)
+- [x] Login: install section hidden in standalone mode
+- [x] Camera: shutter centering verified (absolute left:50% translateX(-50%))
+- [x] Camera: icon styling verified (white + drop shadow, no bg fills)
+- [x] Camera: retake verified (video always mounted, overlay pattern)
+- [x] Camera: send + auto-save verified (upload → save → navigate)
+- [x] Camera: flip label verified ("Flip" below cameraswitch icon)
+- [x] Camera: back button verified (pre-capture top-left, post-capture absent)
+- [x] Chat: scroll implementation verified (rAF + scrollTop, overflow-y-scroll)
+- [x] Chat: input bar dimensions verified (py-0, border-t, safe area, h-10 buttons)
+- [x] TopBar: three-column flex layout verified (wordmark, pip, avatar)
+- [x] TopBar: trip status pip labels fixed (added "Today!" and "d away")
+- [x] PlanNav: flex row with divider verified (not grid)
+- [x] PlanNav: Hopp tab ink-dim color verified
+- [x] HopNav: divider before Plan tab verified
+- [x] HopNav: Plan tab ink-dim color verified
+- [x] AppShell: suppressNav on /home verified
+- [x] ProfileOverlay: three-tab structure verified (Me, Trip, About)
+- [x] Hopperz: view toggle persistence to localStorage verified
+- [x] Avatar: image fallback (onLoad/onError, initials circle) verified
+- [x] Supabase: voter select includes avatar_url and role verified
+- [x] Supabase: overlayLocal includes both fields verified
+- [x] Supabase: refetch syncs avatar_url to localStorage verified
+- [x] ProfileAvatar: moderator 500ms long-press → /plan/moderator verified
+- [x] CONTEXT.md: localStorage contract updated (added bh2-hopperz-view)
+- [x] TypeScript check passes clean
+- [x] ESLint passes (only pre-existing warnings)
+- [x] Next.js build passes clean (44 routes)
+- [x] .claude/ files updated (STATE.yml, PROGRESS.md, CONTEXT.md)
+
 ## Phase: Home Screen Dashboard Overhaul (2026-06-14)
 - [x] AppShell suppressNav: /home gets TopBar only (no PlanNav, no desktop flex)
 - [x] Trip status hero: planning mode (edit_location_alt icon, CTA → /plan/cities)
