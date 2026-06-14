@@ -1,21 +1,20 @@
 # Bar Hoppers — machine-readable session state.
 # Companion to CONTEXT.md / PROGRESS.md. Update at the end of every session.
 
-current_phase: moderator-admin-screen
+current_phase: home-screen-dashboard
 last_updated: 2026-06-14
 app_root: app/            # the live Next.js v2 app; root index.html is legacy v1
 
 last_change: >
-  Moderator Admin Screen.
-  Created /plan/moderator route for moderator-only admin access. Extracted
-  TripSetupPanel, ActiveLocationsPanel, TripResetsPanel as shared components
-  used by both /plan/admin and /plan/moderator. Moderator screen shows:
-  Your Role card (permissions/restrictions), TripSetupPanel (no clear dates),
-  Crew Members (edit name, reset PIN, trip status per voter),
-  ActiveLocationsPanel, TripResetsPanel. ProfileAvatar routes moderators
-  to /plan/moderator (500ms long-press). useAdminHold accepts destination
-  parameter. Admin page refactored to use shared components. RBAC complete:
-  super_admin → /plan/admin, moderator → /plan/moderator.
+  Home Screen Dashboard Overhaul.
+  Rebuilt /home from wing picker to full trip dashboard. Trip status hero
+  card (planning/upcoming/active) with contextual CTAs. Quick stats row
+  (votes cast, leading city, best date, on-trip count). Who's In section
+  (avatar row of on_trip members, remote sub-row with wifi icon overlay).
+  Quick actions 2x2 grid (vote, availability, chat, locate) with completion
+  states (green ✓). Home bottom bar (Plan | Hopp) replaces old card picker.
+  AppShell suppressNav on /home (TopBar only, no PlanNav/desktop rail).
+  Loading skeleton state while useTripData loads.
 
 verification:
   typecheck: pass        # tsc --noEmit
@@ -37,3 +36,4 @@ known_issues:
 
 next_up:
   - Wire push notification triggers (new message, reaction, etc.)
+  - Real PNG app icons (192 / 512 / 180)

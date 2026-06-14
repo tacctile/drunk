@@ -42,8 +42,9 @@ Key dirs:
 
 ### File map — shell & nav components
 - `components/AppShell.tsx` — root-level shell (bare on `/login`/`/`/`/social/*`,
-  TopBar + PlanNav on plan routes, TopBar-only elsewhere). Wraps all pages via
-  root layout. Social routes bypass AppShell entirely — HopShell handles chrome.
+  TopBar-only on `/home` (suppressNav), TopBar + PlanNav on plan routes,
+  TopBar-only elsewhere). Wraps all pages via root layout. Social routes
+  bypass AppShell entirely — HopShell handles chrome.
 - `components/TopBar.tsx` — sticky wordmark bar: "Hoppz" left, trip status
   pill center (upcoming: countdown, active: "On Trip"), ProfileAvatar right.
   Hidden on `/plan/city/*` and `/plan/admin` (pages with own headers).
@@ -126,8 +127,12 @@ Cold open hits `/` → client checks `isAuthenticated()`:
   secondary option. "Add to Home Screen" section below a divider: Android
   (`beforeinstallprompt`) + iOS (inline Safari instructions), both hidden in
   standalone mode. On success → `setLastWing("plan")` → `/home`.
-- `/home` — wing picker. AppShell header only (no bottom nav). Two cards:
-  **Plan a Trip → `/plan`**, **Hopp → `/social`** (placeholder).
+- `/home` — trip dashboard. AppShell header only (no bottom nav, suppressed
+  explicitly). Four sections: trip status hero (planning/upcoming/active),
+  quick stats row (votes, leading city, best date, on-trip count), who's in
+  (avatar row of on_trip members + remote sub-row), quick actions (2x2 grid:
+  vote, availability, chat, locate). Own bottom bar with Plan and Hopp entry
+  points (fixed, same dimensions as wing nav bars).
 - **Plan wing — `/plan/*`** (`plan/layout.tsx` sets last wing = plan):
   - `/plan` → redirects to `/plan/cities`.
   - `/plan/cities`, `/plan/city/[id]`, `/plan/calendar`, `/plan/board`,
@@ -296,13 +301,12 @@ Storage buckets:
 
 ## Current State
 Last updated: 2026-06-14
-Last change: **Moderator Admin Screen.**
-- /plan/moderator route: limited admin for moderators (crew mgmt, trip setup,
-  locations, resets). Access via 500ms long-press on own avatar.
-- Shared panels: TripSetupPanel, ActiveLocationsPanel, TripResetsPanel extracted
-  from admin page and used by both admin and moderator screens.
-- Admin page refactored to use shared components.
-- ProfileAvatar routes moderators to /plan/moderator (not /plan/admin).
-- useAdminHold accepts destination parameter.
-- RBAC system complete: super_admin → /plan/admin, moderator → /plan/moderator.
+Last change: **Home Screen Dashboard Overhaul.**
+- /home route rebuilt from wing picker to full trip dashboard.
+- Trip status hero card (planning/upcoming/active) with contextual CTAs.
+- Quick stats row (votes cast, leading city, best date, on-trip count).
+- Who's In section (avatar row of on_trip members, remote sub-row with wifi icon).
+- Quick actions 2x2 grid (vote, availability, chat, locate) with completion states.
+- Home bottom bar (Plan | Hopp) replaces old card-based wing picker.
+- AppShell suppressNav on /home (TopBar only, no PlanNav).
 Next up: Wire push notification triggers (new message, reaction, etc.).
