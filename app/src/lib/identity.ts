@@ -8,7 +8,7 @@
 // localStorage keys are part of the product contract: bh2-voter-id,
 // bh2-voter-name, bh2-pin-color, bh2-avatar-url (see CONTEXT.md).
 
-import { clearAuthCookie } from "@/lib/auth";
+import { clearAuthCookie, clearRoleCookie } from "@/lib/auth";
 
 const ID_KEY = "bh2-voter-id";
 const NAME_KEY = "bh2-voter-name";
@@ -75,6 +75,7 @@ export function clearIdentity() {
   safeRemove(AVATAR_URL_KEY);
   // Drop the soft-guard cookie so the middleware blocks the wings again.
   clearAuthCookie();
+  clearRoleCookie();
 }
 
 export function getStoredAvatarUrl(): string | null {

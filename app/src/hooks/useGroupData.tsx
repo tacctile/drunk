@@ -33,7 +33,10 @@ import {
   storeIdentity,
   storePinColor,
 } from "@/lib/identity";
+import { setRoleCookie, clearRoleCookie } from "@/lib/auth";
+import { getRoleForVoter } from "@/lib/roles";
 import { lsGetJson, lsSetJson, lsRemove } from "@/lib/storage";
+import { resetLocationStore } from "@/hooks/useLocations";
 
 const CITY_VOTE_CACHE = "bh2-city-vote-cache";
 const HOTEL_VOTE_CACHE = "bh2-hotel-vote-cache";
@@ -177,6 +180,10 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
       const mine = sv.find((r) => r.voter_id === me);
       if (mine?.pin_color) storePinColor(mine.pin_color);
       if (mine?.avatar_url !== undefined) storeAvatarUrl(mine.avatar_url ?? null);
+      if (mine) {
+        const role = getRoleForVoter(me, mine.role ?? null);
+        setRoleCookie(role);
+      }
     }
     if (sc) {
       const mine = sc.find((r) => r.voter_id === me);
@@ -413,6 +420,8 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
     // the cached writes belong to the departing identity. Server rows stay.
     clearIdentity();
     clearWriteCaches();
+    clearRoleCookie();
+    resetLocationStore();
     adoptedRef.current = false;
     voterIdRef.current = "";
     nameRef.current = "";

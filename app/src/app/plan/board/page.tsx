@@ -22,7 +22,7 @@ function SeeButton({ label, onClick }: { label: string; onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="h-8 flex-none rounded-chip bg-raised px-2 text-label font-semibold text-ink-muted transition hover:text-ink"
+      className="h-11 flex-none rounded-chip bg-raised px-2 text-label font-semibold text-ink-muted transition hover:text-ink"
     >
       {label}
     </button>

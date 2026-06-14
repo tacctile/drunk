@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { hash as hashPin } from "bcryptjs";
 import { ActiveLocationsPanel } from "@/components/ActiveLocationsPanel";
 import { Avatar } from "@/components/Avatar";
@@ -229,6 +229,7 @@ function CrewCard({ voter, tripStatus, onTripStatusChange, onNameSaved }: CrewCa
                 className="input"
                 placeholder="First name"
                 autoComplete="off"
+                autoCapitalize="words"
                 value={first}
                 maxLength={MAX_FIRST_NAME_LENGTH}
                 onChange={(e) => setFirst(e.target.value)}
@@ -341,12 +342,6 @@ export default function ModeratorPage() {
   const myRow = voters.find((v) => v.voter_id === voterId);
   const myRole = getRoleForVoter(voterId, myRow?.role ?? null);
   const [, forceUpdate] = useState(0);
-
-  useEffect(() => {
-    if (myRole !== "moderator") router.replace("/plan");
-  }, [myRole, router]);
-
-  if (myRole !== "moderator") return null;
 
   const activeVoters = voters
     .filter((v) => v.is_active)

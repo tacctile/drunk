@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Avatar as ChatAvatar } from "@/components/Avatar";
 import { MessageBubble } from "@/components/chat";
@@ -8,6 +8,7 @@ import { Icon } from "@/components/Icon";
 import { BottomSheet } from "@/components/BottomSheet";
 import { ImageViewer } from "@/components/ImageViewer";
 import { Toast } from "@/components/Toast";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useGroupData } from "@/hooks/useGroupData";
 import { useChat } from "@/hooks/useChat";
 import {
@@ -446,7 +447,7 @@ function ChatInner() {
     [sendMessage, scrollToBottom]
   );
 
-  const renderMessages = () => {
+  const renderedMessages = useMemo(() => {
     const elements: React.ReactNode[] = [];
 
     for (let i = 0; i < messages.length; i++) {
@@ -471,7 +472,6 @@ function ChatInner() {
         (r) => r.voter_id !== msg.voter_id
       );
 
-      // Reply-to data
       const replyMsg = msg.reply_to_id
         ? messages.find((m) => m.id === msg.reply_to_id) ?? null
         : null;
@@ -541,7 +541,8 @@ function ChatInner() {
     }
 
     return elements;
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- voters updates voterMap ref; including it ensures name/color changes re-render
+  }, [messages, reactions, reads, voterId, highlightedId, nudgedMessageId, voters, observeMessage, handleTouchStart, handleTouchMove, handleTouchEnd, handleMouseDown, handleMouseUp, handleMouseLeave, handleContextMenu, addReaction, removeReaction, setReplyingTo, scrollToMessage]);
 
   const hasContent = inputValue.trim().length > 0;
 
@@ -583,7 +584,17 @@ function ChatInner() {
 
         <div className="flex-1 min-h-0" />
 
-        {renderMessages()}
+        <ErrorBoundary
+          fallback={
+            <div className="flex flex-1 items-center justify-center">
+              <p className="text-meta text-ink-muted">
+                Couldn&apos;t load messages. Pull to refresh.
+              </p>
+            </div>
+          }
+        >
+          {renderedMessages}
+        </ErrorBoundary>
 
         {uploadingId && (
           <div className="mt-3 flex justify-end">
@@ -680,6 +691,7 @@ function ChatInner() {
           <button
             type="button"
             onClick={() => router.push("/social/camera?from=chat")}
+            aria-label="Take a photo"
             className="flex h-10 w-10 flex-none items-center justify-center text-ink-muted"
           >
             <Icon name="photo_camera" size={24} />
@@ -712,6 +724,7 @@ function ChatInner() {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
+            aria-label="Upload an image"
             className="flex h-10 w-10 flex-none items-center justify-center text-ink-muted"
           >
             <Icon name="add_photo_alternate" size={24} />
@@ -721,6 +734,7 @@ function ChatInner() {
             type="button"
             onClick={handleSend}
             disabled={!hasContent}
+            aria-label="Send message"
             className={`flex h-10 w-10 flex-none items-center justify-center ${
               hasContent ? "text-accent" : "text-ink-dim"
             }`}

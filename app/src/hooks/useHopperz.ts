@@ -33,13 +33,18 @@ export function useHopperz() {
     [voters],
   );
 
+  const voterIds = useMemo(
+    () => activeVoters.map((v) => v.voter_id).sort().join(","),
+    [activeVoters],
+  );
+
   useEffect(() => {
-    const ids = activeVoters.map((v) => v.voter_id);
-    if (ids.length === 0) {
+    if (!voterIds) {
       setNoteCounts(new Map());
       setLoading(false);
       return;
     }
+    const ids = voterIds.split(",");
     let cancelled = false;
     (async () => {
       const sb = getSupabase();
@@ -66,7 +71,7 @@ export function useHopperz() {
       if (!cancelled) setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [activeVoters]);
+  }, [voterIds]);
 
   const sharingSet = useMemo(
     () => new Set(activeLocations.map((l) => l.voter_id)),

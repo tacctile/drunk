@@ -96,6 +96,14 @@ function currentMutedIds(): string[] {
   return sharedMutedIds.get() ?? [];
 }
 
+export function resetLocationStore(): void {
+  sharedRows.set([]);
+  sharedMutedIds.set(null);
+  desiredSharing = null;
+  mutedSyncedFromServerFor = null;
+  autoStartAttemptedFor = null;
+}
+
 export interface LocationsValue {
   /** Everyone visible to this user — unexpired, not hiding from you, you first. */
   activeLocations: LocationRow[];
@@ -121,7 +129,6 @@ export function useLocations(): LocationsValue {
   const [rows, setRows] = useState<LocationRow[]>(sharedRows.get);
   const [now, setNow] = useState(() => Date.now());
   const [mutedIds, setMutedIds] = useState<string[]>(currentMutedIds);
-  const [voterColors, setVoterColors] = useState<Record<string, string>>({});
   const [initialFetchDone, setInitialFetchDone] = useState(false);
 
   const voterIdRef = useRef(voterId);
@@ -156,20 +163,13 @@ export function useLocations(): LocationsValue {
     };
   }, []);
 
-  // Fetch pin_colors for all voters once so the mute list can show colored dots
-  // even for people who are not currently sharing.
-  useEffect(() => {
-    void (async () => {
-      const data = await safeSelect<{ voter_id: string; pin_color: string | null }>(
-        "v2_voters",
-        "voter_id,pin_color",
-      );
-      if (!data) return;
-      const map: Record<string, string> = {};
-      for (const v of data) if (v.pin_color) map[v.voter_id] = v.pin_color;
-      setVoterColors(map);
-    })();
-  }, []);
+  const voterColors = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const v of voters) {
+      if (v.pin_color) map[v.voter_id] = v.pin_color;
+    }
+    return map;
+  }, [voters]);
 
   const refetch = useCallback(async () => {
     const data = await safeSelect<LocationRow>("v2_locations", LOCATION_COLUMNS);

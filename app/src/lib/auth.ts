@@ -60,6 +60,22 @@ export function isAuthenticated(): boolean {
   return ok;
 }
 
+export function setRoleCookie(role: "super_admin" | "moderator" | null): void {
+  try {
+    if (role) {
+      document.cookie = `bh2-role=${role};path=/;SameSite=Lax`;
+    } else {
+      document.cookie = "bh2-role=;path=/;SameSite=Lax;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    }
+  } catch {
+    // cookie unavailable
+  }
+}
+
+export function clearRoleCookie(): void {
+  setRoleCookie(null);
+}
+
 /** Which wing to resume into; defaults to the plan wing. */
 export function getLastWing(): Wing {
   return safeGet(LAST_WING_KEY) === "social" ? "social" : "plan";
