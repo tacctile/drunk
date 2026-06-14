@@ -9,7 +9,8 @@
 // an explicit, persisted choice), expires after 72 hours, and only ever
 // touches the v2_locations row — never device settings.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Dialog } from "@/components/Dialog";
 import { Icon } from "@/components/Icon";
 import { NamePrompt } from "@/components/NamePrompt";
@@ -598,8 +599,36 @@ function LocateGate() {
 function LocateScreen() {
   const { voterId, voters } = useGroupData();
   const locations = useLocations();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const focusVoterId = searchParams.get("focus");
   const [command, setCommand] = useState<MapCommand | null>(null);
   const [optionsOpen, setOptionsOpen] = useState(false);
+  const focusHandledRef = useRef(false);
+
+  useEffect(() => {
+    if (!focusVoterId || focusHandledRef.current) return;
+    const tryFocus = () => {
+      const target = locations.activeLocations.find((l) => l.voter_id === focusVoterId);
+      if (target) {
+        focusHandledRef.current = true;
+        setCommand((prev) => ({ type: "fly", id: focusVoterId, tick: (prev?.tick ?? 0) + 1 }));
+        router.replace("/social/locate", { scroll: false });
+      }
+    };
+    if (locations.activeLocations.length > 0) {
+      tryFocus();
+      if (focusHandledRef.current) return;
+    }
+    const timer = setTimeout(() => {
+      if (!focusHandledRef.current) {
+        focusHandledRef.current = true;
+        tryFocus();
+        router.replace("/social/locate", { scroll: false });
+      }
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [focusVoterId, locations.activeLocations, router]);
 
   const handleRowTap = useCallback((id: string) => {
     setCommand((prev) => ({ type: "fly", id, tick: (prev?.tick ?? 0) + 1 }));
@@ -646,14 +675,19 @@ function LocateScreen() {
   );
 }
 
-export default function LocatePage() {
+function LocatePageInner() {
   const { ready, name, identityInvalid } = useGroupData();
-  // Registered = an identity on this device the live roster doesn't reject.
-  // identityInvalid is the "stored id not found in v2_voters" signal; it
-  // stays false offline so the screen keeps working from caches.
   const registered = Boolean(name) && !identityInvalid;
 
-  if (!ready) return null; // settle silently — never a spinner
+  if (!ready) return null;
   if (!registered) return <LocateGate />;
   return <LocateScreen />;
+}
+
+export default function LocatePage() {
+  return (
+    <Suspense>
+      <LocatePageInner />
+    </Suspense>
+  );
 }

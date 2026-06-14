@@ -1,21 +1,23 @@
 # Bar Hoppers — machine-readable session state.
 # Companion to CONTEXT.md / PROGRESS.md. Update at the end of every session.
 
-current_phase: profile-overhaul
+current_phase: hopperz-screen-roles
 last_updated: 2026-06-14
 app_root: app/            # the live Next.js v2 app; root index.html is legacy v1
 
 last_change: >
-  Profile Overhaul — Avatar Upload + Notes + Tabbed Layout + Role Foundation.
-  ProfileOverlay rebuilt with 3-tab layout (Me / Trip / About). Avatar upload
-  with canvas-based cropper. Unified Avatar component across the app. Role
-  system foundation (super_admin via env var, moderator via DB). Voter notes
-  on About tab. v2_voters extended with avatar_url and role. setModeratorRole
-  mutation added. Chat SenderAvatar uses Avatar component.
+  Hopperz Screen + Role Badges + Cross-Wing Locate Deep Link.
+  Hopperz tab added to PlanNav (5-tab flex row with divider). /plan/hopperz
+  page with list/grid view, VoterProfileSheet on tap. RoleBadge component
+  (sm/md) used in Hopperz, ProfileOverlay, admin. VoterProfileSheet with
+  locate button, about notes, moderator toggle. Cross-wing deep link via
+  ?focus=voter_id on /social/locate. HopNav updated with divider before
+  cross-wing Plan tab. Moderator 500ms long-press on ProfileAvatar.
+  useAdminHold accepts holdMs param. Admin page shows role badges.
 
 verification:
   typecheck: pass        # tsc --noEmit
-  lint: pending
+  lint: pass             # next lint (only pre-existing warnings)
   build: pass            # next build — all routes compiled
 
 known_issues:
@@ -30,5 +32,4 @@ known_issues:
   - v2_voters avatar_url and role columns need to be added in Supabase (migration pending).
 
 next_up:
-  - Apply Supabase migrations for avatar_url, role, v2_voter_notes
   - Wire push notification triggers (new message, reaction, etc.)

@@ -2,10 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useGroupData } from "@/hooks/useGroupData";
+import { useAdminHold } from "@/hooks/useAdminHold";
 import { getStoredName, getStoredPinColor, getStoredAvatarUrl } from "@/lib/identity";
+import { getRoleForVoter } from "@/lib/roles";
 import { PIN_COLORS } from "@/lib/colors";
 import { Avatar } from "./Avatar";
 import { Icon } from "./Icon";
+
+const HOLD_CLASS = "select-none [-webkit-touch-callout:none]";
 
 export function ProfileAvatar({
   onClick,
@@ -20,6 +24,12 @@ export function ProfileAvatar({
     color: string | null;
     avatarUrl: string | null;
   }>({ name: "", color: null, avatarUrl: null });
+
+  const myRow = voters.find((v) => v.voter_id === voterId);
+  const role = getRoleForVoter(voterId, myRow?.role ?? null);
+  const isMod = role === "moderator";
+  const modHold = useAdminHold(500);
+  const { onClick: holdClick, ...holdHandlers } = modHold.handlers;
 
   useEffect(() => {
     const read = () => {
@@ -40,15 +50,24 @@ export function ProfileAvatar({
   }, [name, voters]);
 
   const registered = profile.name.length > 0;
-  const myRow = voters.find((v) => v.voter_id === voterId);
   const avatarUrl = myRow?.avatar_url ?? profile.avatarUrl;
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (isMod) {
+      holdClick(e);
+      if (!e.defaultPrevented) onClick();
+    } else {
+      onClick();
+    }
+  };
 
   return (
     <button
       type="button"
       aria-label="Your profile"
-      onClick={onClick}
-      className={`flex h-11 w-11 flex-none items-center justify-center ${className}`}
+      {...(isMod ? holdHandlers : {})}
+      onClick={handleClick}
+      className={`flex h-11 w-11 flex-none items-center justify-center ${isMod ? HOLD_CLASS : ""} ${className}`}
     >
       {registered ? (
         <Avatar

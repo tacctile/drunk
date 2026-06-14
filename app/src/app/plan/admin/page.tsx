@@ -10,20 +10,20 @@ import { hash as hashPin } from "bcryptjs";
 import { BottomSheet } from "@/components/BottomSheet";
 import { Dialog } from "@/components/Dialog";
 import { Icon } from "@/components/Icon";
+import { RoleBadge } from "@/components/RoleBadge";
 import { cityById } from "@/data/cities";
 import { MAX_FIRST_NAME_LENGTH, buildDisplayName, isValidPin } from "@/lib/identity";
+import { getRoleForVoter } from "@/lib/roles";
 import { getSupabase, safeSelect, type LocationRow } from "@/lib/supabase";
 
 interface AdminVoter {
   voter_id: string;
   name: string;
   display_name: string | null;
-  /** Recovery copy of the 2-digit PIN — null until a profile/admin PIN change writes it. */
   pin_plain: string | null;
   created_at: string | null;
-  /** Soft-disable flag — false hides this voter from every group-facing view.
-   *  Nothing is deleted; re-enabling restores their contributions instantly. */
   is_active: boolean;
+  role: string | null;
 }
 
 interface CityVoteLite {
@@ -341,7 +341,7 @@ export default function AdminPage() {
     const [v, cv, loc] = await Promise.all([
       safeSelect<AdminVoter>(
         "v2_voters",
-        "voter_id,name,display_name,pin_plain,created_at,is_active",
+        "voter_id,name,display_name,pin_plain,created_at,is_active,role",
       ),
       safeSelect<CityVoteLite>("v2_city_votes", "voter_id,city_id"),
       safeSelect<LocationRow>("v2_locations", LOCATION_COLUMNS),
@@ -547,7 +547,12 @@ export default function AdminPage() {
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-title text-ink">{voterLabel(voter)}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="truncate text-title text-ink">{voterLabel(voter)}</p>
+                      {getRoleForVoter(voter.voter_id, voter.role) && (
+                        <RoleBadge role={getRoleForVoter(voter.voter_id, voter.role)} size="sm" />
+                      )}
+                    </div>
                     <p className="mt-1 text-meta font-normal text-ink-dim">
                       {voter.pin_plain ? `PIN: ${voter.pin_plain}` : "PIN not set"}
                     </p>
