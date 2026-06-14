@@ -4,6 +4,28 @@
 
 ---
 
+## Chat Session A — Fix Double TopBar + Chat Core — 2026-06-14
+
+### Double TopBar fix
+- `app/src/components/AppShell.tsx` — social routes now bypass AppShell entirely
+  (bare passthrough like /login). HopShell renders the only TopBar on /social/*.
+
+### Chat page + hook + types
+- `app/src/app/social/page.tsx` — full chat interface: message list with grouping,
+  day dividers, scroll behavior, input bar with auto-grow textarea, send button,
+  camera/gallery placeholders.
+- `app/src/hooks/useChat.ts` — chat data hook: initial load, pagination (loadMore),
+  realtime (channel "hoppz-chat"), optimistic sendMessage, deleteMessage, markRead.
+- `app/src/lib/chat.ts` — MessageRow, ReactionRow, ReadRow types; formatMessageTime,
+  formatDayDivider, isDifferentDay, shouldGroup helpers; CHAT_PAGE_SIZE, EMOJI_REACTIONS.
+- `app/src/lib/supabase.ts` — re-exports MessageRow from chat.ts; adds MessageReadRow,
+  MessageReactionRow types.
+
+### Build task index
+- Fix chat / messages / realtime → read `src/hooks/useChat.ts`, `src/app/social/page.tsx`, `src/lib/chat.ts`
+
+---
+
 ## Component Architecture Cleanup + Hopp Wing Locate + Nav Refactor — 2026-06-14
 
 ### Nav components extracted from AppShell

@@ -9,9 +9,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   const bare = pathname === "/login" || pathname === "/";
+  const inSocial = pathname.startsWith("/social");
   const inPlan = pathname.startsWith("/plan");
 
-  if (bare) return <>{children}</>;
+  if (bare || inSocial) return <>{children}</>;
 
   return (
     <div className="min-h-dvh min-[840px]:flex">

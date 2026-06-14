@@ -41,8 +41,9 @@ Key dirs:
 - `app/public/` — PWA assets (manifest, service worker, offline page, icons).
 
 ### File map — shell & nav components
-- `components/AppShell.tsx` — root-level shell (bare on `/login`/`/`, TopBar +
-  PlanNav on plan routes, TopBar-only elsewhere). Wraps all pages via root layout.
+- `components/AppShell.tsx` — root-level shell (bare on `/login`/`/`/`/social/*`,
+  TopBar + PlanNav on plan routes, TopBar-only elsewhere). Wraps all pages via
+  root layout. Social routes bypass AppShell entirely — HopShell handles chrome.
 - `components/TopBar.tsx` — sticky wordmark bar: "Hoppz" left, ProfileAvatar
   right. Hidden on `/plan/city/*` and `/plan/admin` (pages with own headers).
   Rendered by both AppShell and HopShell.
@@ -54,6 +55,11 @@ Key dirs:
 - `components/HopShell.tsx` — hopp-wing shell: TopBar + children + HopNav.
   Used by `social/layout.tsx`.
 - `hooks/useAdminHold.ts` — 3s hold hook shared by PlanNav and HopNav.
+- `hooks/useChat.ts` — chat data hook: messages, reactions, reads, realtime,
+  optimistic sends, pagination, markRead. Channel "hoppz-chat".
+- `lib/chat.ts` — chat types (MessageRow, ReactionRow, ReadRow), helpers
+  (formatMessageTime, formatDayDivider, isDifferentDay, shouldGroup),
+  constants (CHAT_PAGE_SIZE = 50, EMOJI_REACTIONS).
 
 ---
 
@@ -86,9 +92,10 @@ Cold open hits `/` → client checks `isAuthenticated()`:
     active highlight on /social/* routes. Admin long-press is on the Plan tab.
 
 AppShell (`components/AppShell.tsx`) is global (root layout) and pathname-aware:
-bare on `/login` and `/`; TopBar everywhere else except pages with their own
-sticky header (`/plan/city/*`, `/plan/admin`); PlanNav only on `/plan/*`.
-On `/social/*`, the HopShell (via social layout) provides its own nav.
+bare on `/login`, `/`, and `/social/*`; TopBar everywhere else except pages with
+their own sticky header (`/plan/city/*`, `/plan/admin`); PlanNav only on `/plan/*`.
+On `/social/*`, AppShell passes children through; the HopShell (via social layout)
+provides its own TopBar + HopNav — no double rendering.
 
 **Auth guard:** `src/middleware.ts` matches `/home`, `/plan/:path*`,
 `/social/:path*` and redirects to `/login` when the `bh2-auth` cookie is absent.
@@ -164,6 +171,16 @@ mirroring. Tables (see `lib/supabase.ts` for row shapes):
   available/unavailable; no row = no answer.
 - `v2_locations` — live shares, 72h lifetime, `muted_ids[]`, `session_id`
   broadcast lock.
+- `v2_messages` — `id` uuid PK, `voter_id` FK→v2_voters, `content` text
+  (nullable), `image_url` text (nullable), `reply_to_id` FK→v2_messages
+  (nullable), `is_deleted` boolean default false, `created_at` timestamptz.
+- `v2_message_reads` — `message_id` FK→v2_messages, `voter_id` FK→v2_voters,
+  `read_at` timestamptz. PK (message_id, voter_id).
+- `v2_message_reactions` — `message_id` FK→v2_messages, `voter_id` FK→v2_voters,
+  `emoji` text, `created_at` timestamptz. PK (message_id, voter_id).
+
+Storage buckets:
+- `hoppz-media` — public bucket for chat image uploads.
 
 ---
 
@@ -183,14 +200,10 @@ mirroring. Tables (see `lib/supabase.ts` for row shapes):
 
 ## Current State
 Last updated: 2026-06-14
-Last change: **Component architecture cleanup + Hopp wing locate + nav refactor.**
-- Extracted TopBar, PlanNav, HopNav, HopShell, useAdminHold into discrete files.
-- AppShell now composes TopBar + PlanNav, renders no inline nav markup.
-- social/layout.tsx uses HopShell (TopBar + HopNav), renders no inline nav.
-- Plan nav: Cities, Availability, Results, Hopp (cross-wing to /social).
-  Admin 3s long-press on both Results and Hopp tabs.
-- Hopp nav: Chat, Camera, Locate, Plan (cross-wing to /plan).
-  Admin 3s long-press on Plan tab.
-- Locate moved from /plan/locate to /social/locate (zero logic changes).
-- All "Night Out" UI strings replaced with "Hopp".
-Next up: real PNG app icons; flesh out the Hopp (social) wing.
+Last change: **Chat Session A — fix double TopBar + chat core.**
+- Fixed double TopBar on /social/* routes (AppShell now bypasses shell for social).
+- Chat page at /social with full message list, input bar, realtime, optimistic sends.
+- useChat hook: messages, reactions, reads, pagination, realtime channel "hoppz-chat".
+- lib/chat.ts: types, helpers, constants (CHAT_PAGE_SIZE = 50, EMOJI_REACTIONS).
+- Placeholders: camera button, gallery button, image expand (Sessions C/D).
+Next up: reactions UI (Session B), image gallery + expand (Session C), camera (Session D).
