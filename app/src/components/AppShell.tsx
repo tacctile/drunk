@@ -12,7 +12,6 @@ const NAV = [
   { href: "/plan/cities", icon: "location_city", label: "Cities" },
   { href: "/plan/calendar", icon: "event_available", label: "Availability" },
   { href: "/plan/board", icon: "leaderboard", label: "Results" },
-  { href: "/plan/locate", icon: "person_pin", label: "Locate" },
 ] as const;
 
 const ADMIN_HOLD_MS = 3000;
@@ -24,10 +23,10 @@ function isActive(pathname: string, href: string): boolean {
 }
 
 /**
- * 3-second hold on the Locate tab opens /plan/admin — the only way in. A
- * normal tap still navigates to /plan/locate. While the hold runs, the item
+ * 3-second hold on the Results tab opens /plan/admin — the only way in. A
+ * normal tap still navigates to /plan/board. While the hold runs, the item
  * pulses (opacity 1 → 0.5 → 1 over the full 3s); once it fires, the click that
- * follows the release is swallowed so it can't bounce back to /plan/locate.
+ * follows the release is swallowed so it can't bounce back to /plan/board.
  */
 function useAdminHold() {
   const router = useRouter();
@@ -88,11 +87,10 @@ const HOLD_CLASS = "select-none [-webkit-touch-callout:none]";
  *   - /login and the transient / redirect render bare (no chrome).
  *   - The wordmark bar shows everywhere else except pages with their own
  *     sticky header (plan city detail + admin).
- *   - The four plan tabs (bottom nav on mobile, 80px rail at >= 840px) show
- *     only inside the plan wing; the social wing brings its own bottom nav,
- *     and /home has neither.
- * A subtle Night Out icon button sits left of the avatar in the plan wing to
- * cross over to the social wing.
+ *   - Plan nav: Cities, Availability, Results + a Night Out cross-wing tab
+ *     (bottom nav on mobile, 80px rail at >= 840px) only inside the plan wing;
+ *     the social wing brings its own bottom nav, and /home has neither.
+ *   - 3-second hold on the Results tab opens /plan/admin.
  */
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -114,7 +112,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <aside className="sticky top-0 hidden h-dvh w-20 flex-col items-center gap-2 border-r bg-surface pt-4 min-[840px]:flex">
           {NAV.map((item) => {
             const active = isActive(pathname, item.href);
-            const locate = item.href === "/plan/locate";
+            const results = item.href === "/plan/board";
             return (
               <Link
                 key={item.href}
@@ -122,15 +120,24 @@ export function AppShell({ children }: { children: ReactNode }) {
                 title={item.label}
                 aria-label={item.label}
                 aria-current={active ? "page" : undefined}
-                {...(locate ? adminHold.handlers : {})}
+                {...(results ? adminHold.handlers : {})}
                 className={`flex h-11 w-11 items-center justify-center rounded-btn transition ${
                   active ? "bg-accent-dim text-accent" : "text-ink-muted hover:bg-raised hover:text-ink"
-                } ${locate ? HOLD_CLASS : ""} ${locate && adminHold.holding ? "anim-hold" : ""}`}
+                } ${results ? HOLD_CLASS : ""} ${results && adminHold.holding ? "anim-hold" : ""}`}
               >
                 <Icon name={item.icon} filled={active} size={24} />
               </Link>
             );
           })}
+          <button
+            type="button"
+            title="Night Out"
+            aria-label="Night Out"
+            onClick={() => { setLastWing("social"); router.push("/social"); }}
+            className="flex h-11 w-11 items-center justify-center rounded-btn text-ink-muted transition hover:bg-raised hover:text-ink"
+          >
+            <Icon name="sports_bar" size={24} />
+          </button>
         </aside>
       )}
 
@@ -142,22 +149,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link href="/home" className="flex h-11 items-center text-title font-extrabold tracking-tight">
                 Hoppz
               </Link>
-              <div className="flex items-center">
-                {inPlan && (
-                  <button
-                    type="button"
-                    aria-label="Switch to Night Out"
-                    onClick={() => {
-                      setLastWing("social");
-                      router.push("/social");
-                    }}
-                    className="flex h-11 w-11 items-center justify-center text-ink-dim transition hover:text-ink"
-                  >
-                    <Icon name="local_bar" size={22} />
-                  </button>
-                )}
-                <ProfileAvatar className="-mr-1" onClick={() => setProfileOpen(true)} />
-              </div>
+              <ProfileAvatar className="-mr-1" onClick={() => setProfileOpen(true)} />
             </div>
           </header>
         )}
@@ -177,22 +169,31 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="grid h-16 grid-cols-4">
             {NAV.map((item) => {
               const active = isActive(pathname, item.href);
-              const locate = item.href === "/plan/locate";
+              const results = item.href === "/plan/board";
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  {...(locate ? adminHold.handlers : {})}
+                  {...(results ? adminHold.handlers : {})}
                   className={`flex min-h-11 flex-col items-center justify-center gap-0.5 text-label font-semibold transition ${
                     active ? "text-accent" : "text-ink-muted"
-                  } ${locate ? HOLD_CLASS : ""} ${locate && adminHold.holding ? "anim-hold" : ""}`}
+                  } ${results ? HOLD_CLASS : ""} ${results && adminHold.holding ? "anim-hold" : ""}`}
                 >
                   <Icon name={item.icon} filled={active} size={24} />
                   {item.label}
                 </Link>
               );
             })}
+            <button
+              type="button"
+              onClick={() => { setLastWing("social"); router.push("/social"); }}
+              aria-label="Night Out"
+              className="flex min-h-11 flex-col items-center justify-center gap-0.5 text-label font-semibold text-ink-muted transition"
+            >
+              <Icon name="sports_bar" size={24} />
+              Night Out
+            </button>
           </div>
         </nav>
       )}

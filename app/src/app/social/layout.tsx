@@ -11,12 +11,17 @@ const TABS = [
   { href: "/social/camera", icon: "photo_camera", label: "Camera" },
 ] as const;
 
+const CROSS_TABS = [
+  { href: "/plan/locate", icon: "person_pin", label: "Locate" },
+  { href: "/plan", icon: "list_alt", label: "Plan" },
+] as const;
+
 /**
  * Social-wing wrapper. The AppShell header (wordmark + avatar) still renders,
  * but the AppShell suppresses its plan nav on /social/* — so this layout
  * brings its own bottom nav (same 64px + safe-area dimensions and surface /
- * hairline styling as the plan nav): Chat, Camera, and a Switch-to-Plan tab
- * that crosses back to the plan wing.
+ * hairline styling as the plan nav): Chat, Camera, Locate (cross-wing),
+ * Plan (cross-wing).
  */
 export default function SocialLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -27,17 +32,12 @@ export default function SocialLayout({ children }: { children: ReactNode }) {
     isAuthenticated();
   }, []);
 
-  const switchToPlan = () => {
-    setLastWing("plan");
-    router.push("/plan");
-  };
-
   return (
     <>
       {children}
 
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t bg-surface pb-[env(safe-area-inset-bottom)]">
-        <div className="grid h-16 grid-cols-3">
+        <div className="grid h-16 grid-cols-4">
           {TABS.map((tab) => {
             const active = pathname === tab.href;
             return (
@@ -54,15 +54,18 @@ export default function SocialLayout({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
-          <button
-            type="button"
-            onClick={switchToPlan}
-            aria-label="Switch to trip planning"
-            className="flex min-h-11 flex-col items-center justify-center gap-0.5 text-label font-semibold text-ink-muted transition hover:text-ink"
-          >
-            <Icon name="map" size={24} />
-            Plan
-          </button>
+          {CROSS_TABS.map((tab) => (
+            <button
+              key={tab.href}
+              type="button"
+              onClick={() => { setLastWing("plan"); router.push(tab.href); }}
+              aria-label={tab.label}
+              className="flex min-h-11 flex-col items-center justify-center gap-0.5 text-label font-semibold text-ink-muted transition"
+            >
+              <Icon name={tab.icon} size={24} />
+              {tab.label}
+            </button>
+          ))}
         </div>
       </nav>
     </>

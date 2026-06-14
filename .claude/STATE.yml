@@ -1,16 +1,15 @@
 # Bar Hoppers — machine-readable session state.
 # Companion to CONTEXT.md / PROGRESS.md. Update at the end of every session.
 
-current_phase: hoppz-rebrand-login-overhaul
+current_phase: nav-restructure-cross-wing
 last_updated: 2026-06-14
 app_root: app/            # the live Next.js v2 app; root index.html is legacy v1
 
 last_change: >
-  Rebranded from "Bar Hoppers" to "Hoppz" across all string references.
-  Overhauled the login screen: Sign In is now the default mode with free-form
-  name/initial/PIN lookup (no dropdown). Create account is the secondary toggle.
-  Replaced the install section with side-by-side Android/iOS buttons with
-  platform SVG logos and inline Safari instructions.
+  Nav bar restructure with cross-wing switching. Plan nav: Cities, Availability,
+  Results, Night Out (cross-wing). Removed Locate from plan nav and local_bar
+  button from header. Night Out nav: Chat, Camera, Locate (cross-wing), Plan
+  (cross-wing). Admin long-press moved from Locate to Results tab.
 
 verification:
   typecheck: pass        # tsc --noEmit
