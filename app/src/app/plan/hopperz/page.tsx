@@ -102,6 +102,17 @@ export default function HopperzPage() {
                       <span className="text-meta text-green">Sharing location</span>
                     </div>
                   )}
+                  {v.tripStatus === "remote" && (
+                    <div className="flex items-center gap-1.5">
+                      <Icon name="wifi" size={16} className="text-accent" />
+                      <span className="text-meta text-accent">Remote</span>
+                    </div>
+                  )}
+                  {v.tripStatus === "out" && (
+                    <span className="mt-1 inline-flex rounded-full bg-raised px-2 text-meta text-ink-dim">
+                      Out
+                    </span>
+                  )}
                 </div>
                 <Icon name="chevron_right" size={20} className="flex-none text-ink-dim" />
               </button>
@@ -114,7 +125,9 @@ export default function HopperzPage() {
                 key={v.voter_id}
                 type="button"
                 onClick={() => setSelectedVoter(v)}
-                className="flex flex-col items-center gap-2 rounded-card border bg-surface p-3"
+                className={`flex flex-col items-center gap-2 rounded-card border bg-surface p-3 ${
+                  v.tripStatus === "out" ? "opacity-50" : ""
+                }`}
               >
                 <Avatar
                   voter={{
@@ -130,6 +143,9 @@ export default function HopperzPage() {
                 </span>
                 {v.role && <RoleBadge role={v.role} size="sm" />}
                 {v.isSharing && <span className="h-2 w-2 rounded-full bg-green" />}
+                {v.tripStatus === "remote" && (
+                  <Icon name="wifi" size={16} className="text-accent" />
+                )}
               </button>
             ))}
           </div>

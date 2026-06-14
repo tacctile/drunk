@@ -4,6 +4,48 @@
 
 ---
 
+## Trip Entity — Core System — 2026-06-14
+
+### Trip data layer
+- `app/src/lib/supabase.ts` — TripRow, TripHotelRow, TripHotelAssignmentRow,
+  TripMemberRow types; TripStatus, TripMemberStatus enums.
+- `app/src/hooks/useTrip.ts` — trip hook: fetch all 4 tables, realtime
+  (channel "hoppz-trip"), syncTripStatus, effectiveStatus, daysUntil,
+  all mutations (dates, city, hotels, assignments, member status).
+- `app/src/hooks/useTripData.tsx` — TripDataProvider context + useTripData hook.
+- `app/src/app/layout.tsx` — TripDataProvider mounted inside GroupDataProvider.
+
+### Trip status indicator
+- `app/src/components/TopBar.tsx` — three-column flex: wordmark, trip pill
+  (upcoming countdown / active "On Trip"), avatar. Uses useTripData.
+
+### Trip management (admin)
+- `app/src/app/plan/admin/page.tsx` — TripSetupSection component: status
+  display, city selector, date pickers, hotels with assignments, clear trip,
+  votes lock banner. Visible to super_admin + moderator.
+
+### Vote locking
+- `app/src/components/CityList.tsx` — vote button disabled when effectiveStatus
+  is upcoming/active. Uses useTripData.
+- `app/src/app/plan/city/[id]/CityDetail.tsx` — ActionBar vote button shows
+  "Voting locked" when locked. Uses useTripData.
+
+### Trip status in profiles
+- `app/src/components/VoterProfileSheet.tsx` — trip status section: status
+  pill + buttons (own / super admin / moderator can change).
+- `app/src/components/ProfileOverlay.tsx` — TripStatusCard at top of Trip tab:
+  on_trip/remote/out buttons.
+
+### Trip status in Hopperz
+- `app/src/hooks/useHopperz.ts` — tripStatus field on HopperzVoter, sorted
+  by status group (on_trip → remote → out).
+- `app/src/app/plan/hopperz/page.tsx` — remote/out indicators in list + grid.
+
+### Build task index
+- Fix trip / dates / status → read `src/hooks/useTrip.ts`, `src/hooks/useTripData.tsx`, `src/app/plan/admin/page.tsx`
+
+---
+
 ## Hopperz Screen + Role Badges + Cross-Wing Locate Deep Link — 2026-06-14
 
 ### Hopperz tab & page

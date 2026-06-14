@@ -1,6 +1,49 @@
 # Hoppz — Progress
 > Feature checklist for the v2 Next.js app (`app/`). Newest phase on top.
 
+## Phase: Trip Entity — Core System (2026-06-14)
+- [x] TripRow, TripHotelRow, TripHotelAssignmentRow, TripMemberRow types in supabase.ts
+- [x] TripStatus, TripMemberStatus type enums in supabase.ts
+- [x] useTrip.ts hook: fetch all 4 trip tables, realtime channel "hoppz-trip"
+- [x] useTrip.ts: syncTripStatus auto-transitions based on date comparison
+- [x] useTrip.ts: effectiveStatus, daysUntil, cityName derivations
+- [x] useTrip.ts: setTripDates, setTripCity, clearTripDates mutations
+- [x] useTrip.ts: addHotel, removeHotel, assignVoterToHotel, unassignVoterFromHotel mutations
+- [x] useTrip.ts: setMemberStatus mutation (upsert with optimistic update)
+- [x] useTripData.tsx: TripDataProvider context + useTripData hook
+- [x] layout.tsx: TripDataProvider mounted inside GroupDataProvider
+- [x] TopBar.tsx: three-column flex (wordmark, trip pill, avatar)
+- [x] TopBar.tsx: upcoming pill (calendar_month + days count / "Tomorrow")
+- [x] TopBar.tsx: active pill (sports_bar + "On Trip")
+- [x] TopBar.tsx: planning renders empty center
+- [x] admin/page.tsx: TripSetupSection component (Super Admin + Moderator only)
+- [x] admin/page.tsx: status display with colored dot
+- [x] admin/page.tsx: city selector dropdown (cities data)
+- [x] admin/page.tsx: date pickers with validation (end >= start)
+- [x] admin/page.tsx: hotels list with remove + assignment panel
+- [x] admin/page.tsx: hotel assignment checkboxes (auto-unassign from other hotels)
+- [x] admin/page.tsx: add hotel input
+- [x] admin/page.tsx: clear trip dates with inline confirmation
+- [x] admin/page.tsx: votes lock info banner
+- [x] admin/page.tsx: existing "Trip management" renamed to "Trip resets"
+- [x] CityList.tsx: vote button disabled + opacity-40 when voting locked
+- [x] CityDetail.tsx: ActionBar shows "Voting locked" when locked
+- [x] VoterProfileSheet.tsx: trip status section (on_trip/remote/out display)
+- [x] VoterProfileSheet.tsx: status change buttons for own sheet
+- [x] VoterProfileSheet.tsx: status change buttons for super admin + moderator viewing others
+- [x] useHopperz.ts: tripStatus field on HopperzVoter
+- [x] useHopperz.ts: sort by status group (on_trip → remote → out, then A-Z)
+- [x] hopperz/page.tsx: remote indicator (wifi icon + "Remote") in list view
+- [x] hopperz/page.tsx: out chip in list view
+- [x] hopperz/page.tsx: remote wifi icon in grid view
+- [x] hopperz/page.tsx: opacity-50 on out voters in grid view
+- [x] ProfileOverlay.tsx: TripStatusCard at top of Trip tab
+- [x] ProfileOverlay.tsx: on_trip/remote/out toggle buttons
+- [x] TypeScript check passes clean
+- [x] ESLint passes (only pre-existing warnings)
+- [x] Next.js build passes clean
+- [x] .claude/ files updated (CONTEXT.md, BUILD_INDEX.md, STATE.yml, PROGRESS.md)
+
 ## Phase: Hopperz Screen + Role Badges + Cross-Wing Locate Deep Link (2026-06-14)
 - [x] PlanNav updated: 5-tab flex row (Cities, Availability, Results, Hopperz, Hopp)
 - [x] PlanNav vertical divider before cross-wing Hopp tab

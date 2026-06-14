@@ -4,6 +4,7 @@ import Link from "next/link";
 import { cities } from "@/data/cities";
 import type { City } from "@/data/types";
 import { useGroupData } from "@/hooks/useGroupData";
+import { useTripData } from "@/hooks/useTripData";
 import { useVotes } from "@/hooks/useVotes";
 import { useNameGate } from "./NamePrompt";
 import { Icon } from "./Icon";
@@ -84,10 +85,11 @@ interface CityRowProps {
   city: City;
   active: boolean;
   voted: boolean;
+  locked: boolean;
   onVote: (city: City, voted: boolean) => void;
 }
 
-function CityRow({ city, active, voted, onVote }: CityRowProps) {
+function CityRow({ city, active, voted, locked, onVote }: CityRowProps) {
   const k = gradeKey(city.walkGrade);
 
   return (
@@ -121,11 +123,16 @@ function CityRow({ city, active, voted, onVote }: CityRowProps) {
         </Link>
         <button
           type="button"
-          aria-label={voted ? `Remove your vote for ${city.name}` : `Vote for ${city.name}`}
+          aria-label={locked ? "Voting locked" : voted ? `Remove your vote for ${city.name}` : `Vote for ${city.name}`}
           aria-pressed={voted}
+          disabled={locked}
           onClick={() => onVote(city, voted)}
           className={`flex h-11 w-11 flex-none items-center justify-center rounded-btn transition ${
-            voted ? "text-accent" : "text-ink-dim hover:text-ink-muted"
+            locked
+              ? "opacity-40 pointer-events-none"
+              : voted
+                ? "text-accent"
+                : "text-ink-dim hover:text-ink-muted"
           }`}
         >
           <Icon name="how_to_vote" filled={voted} size={22} />
@@ -167,8 +174,10 @@ interface CityListProps {
 export function CityList({ sort, activeCityId, withHeader = false }: CityListProps) {
   const { setCityVote } = useGroupData();
   const { myCityId } = useVotes();
+  const { effectiveStatus } = useTripData();
   const { requireName, prompt } = useNameGate();
   const sorted = sortCities(sort);
+  const votingLocked = effectiveStatus === "upcoming" || effectiveStatus === "active";
 
   const handleVote = (city: City, voted: boolean) =>
     requireName(() => void setCityVote(voted ? null : city.id));
@@ -179,6 +188,7 @@ export function CityList({ sort, activeCityId, withHeader = false }: CityListPro
       city={city}
       active={city.id === activeCityId}
       voted={city.id === myCityId}
+      locked={votingLocked}
       onVote={handleVote}
     />
   );

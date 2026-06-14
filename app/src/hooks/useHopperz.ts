@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useGroupData } from "@/hooks/useGroupData";
 import { useLocations } from "@/hooks/useLocations";
+import { useTripData } from "@/hooks/useTripData";
 import { getRoleForVoter, type UserRole } from "@/lib/roles";
 import { getSupabase } from "@/lib/supabase";
+import type { TripMemberStatus } from "@/lib/supabase";
 
 export interface HopperzVoter {
   voter_id: string;
@@ -15,13 +17,16 @@ export interface HopperzVoter {
   isYou: boolean;
   isSharing: boolean;
   noteCount: number;
+  tripStatus: TripMemberStatus;
 }
 
 export function useHopperz() {
   const { voters, voterId } = useGroupData();
   const { activeLocations } = useLocations();
+  const { members } = useTripData();
   const [noteCounts, setNoteCounts] = useState<Map<string, number>>(new Map());
   const [loading, setLoading] = useState(true);
+
 
   const activeVoters = useMemo(
     () => voters.filter((v) => v.is_active),
@@ -78,14 +83,19 @@ export function useHopperz() {
       isYou: v.voter_id === voterId,
       isSharing: sharingSet.has(v.voter_id),
       noteCount: noteCounts.get(v.voter_id) ?? 0,
+      tripStatus: members.find((m) => m.voter_id === v.voter_id)?.trip_status ?? "on_trip",
     }));
+    const statusOrder: Record<TripMemberStatus, number> = { on_trip: 0, remote: 1, out: 2 };
     list.sort((a, b) => {
       if (a.isYou) return -1;
       if (b.isYou) return 1;
+      const sa = statusOrder[a.tripStatus];
+      const sb = statusOrder[b.tripStatus];
+      if (sa !== sb) return sa - sb;
       return a.display_name.localeCompare(b.display_name);
     });
     return list;
-  }, [activeVoters, voterId, sharingSet, noteCounts]);
+  }, [activeVoters, voterId, sharingSet, noteCounts, members]);
 
   return { voters: hopperzVoters, loading };
 }
