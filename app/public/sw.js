@@ -4,6 +4,8 @@
    - Navigations fall back to /offline.html when the network is gone and
      nothing is cached.
    The cache name is bumped to invalidate the whole shell on release. */
+// VAPID_PUBLIC_KEY is injected at build time via next.config.mjs
+// See .env.example for setup instructions
 const CACHE = "hoppz-v1";
 
 // Precached so the offline fallback is always available, even cold.
@@ -103,4 +105,54 @@ self.addEventListener("fetch", (event) => {
   // Everything else (RSC payloads, data fetches, third parties): network-first
   // so client-side navigations never go stale, cache only as an offline net.
   event.respondWith(networkFirst(request));
+});
+
+// ---------------------------------------------------------------------------
+// PUSH NOTIFICATION HANDLER
+// ---------------------------------------------------------------------------
+
+self.addEventListener("push", (event) => {
+  if (!event.data) return;
+
+  let payload;
+  try {
+    payload = event.data.json();
+  } catch {
+    payload = { title: "Hoppz", body: event.data.text() };
+  }
+
+  const title = payload.title ?? "Hoppz";
+  const options = {
+    body: payload.body ?? "",
+    icon: "/icons/icon-192.png",
+    badge: "/icons/icon-192.png",
+    tag: payload.tag ?? "hoppz-default",
+    renotify: payload.renotify ?? false,
+    data: {
+      url: payload.url ?? "/social",
+      ...payload.data,
+    },
+    actions: payload.actions ?? [],
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url ?? "/social";
+  event.waitUntil(
+    clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        for (const client of clientList) {
+          if (client.url.includes(self.location.origin) && "focus" in client) {
+            client.focus();
+            if ("navigate" in client) client.navigate(url);
+            return;
+          }
+        }
+        if (clients.openWindow) return clients.openWindow(url);
+      }),
+  );
 });

@@ -4,6 +4,33 @@
 
 ---
 
+## Chat Session E — Push Notification Foundation — 2026-06-14
+
+### Push notification infrastructure
+- `app/src/lib/push.ts` — client push helpers: isPushSupported, subscribeToPush,
+  getExistingSubscription, unsubscribeFromPush, extractSubscriptionKeys.
+- `app/src/lib/pushServer.ts` — server-side stubs: sendPushToVoter, sendPushToAll.
+  Typed but no-op until VAPID keys configured + web-push installed.
+- `app/src/hooks/usePushNotifications.ts` — React hook: permission, subscribed,
+  requestPermission, unsubscribe. Saves to v2_push_subscriptions via Supabase.
+
+### Service worker push handler
+- `app/public/sw.js` — push event handler (parse JSON payload, showNotification)
+  + notificationclick handler (focus existing window or open new one).
+
+### Profile overlay notifications card
+- `app/src/components/ProfileOverlay.tsx` — NotificationsCard inline component:
+  Switch toggle, permission denied/default/granted states.
+
+### Supabase migration
+- `v2_push_subscriptions` table: voter_id, endpoint (unique), p256dh, auth,
+  user_agent, timestamps. RLS anon_all policy. Index on voter_id.
+
+### Build task index
+- Wire push notification trigger → read `src/lib/push.ts`, `src/lib/pushServer.ts`, `src/hooks/usePushNotifications.ts`, `public/sw.js`
+
+---
+
 ## Chat Session D — Camera Capture + Send — 2026-06-14
 
 ### Camera hook
