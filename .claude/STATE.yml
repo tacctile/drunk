@@ -1,16 +1,18 @@
 # Bar Hoppers — machine-readable session state.
 # Companion to CONTEXT.md / PROGRESS.md. Update at the end of every session.
 
-current_phase: chat-session-a
+current_phase: chat-session-b
 last_updated: 2026-06-14
 app_root: app/            # the live Next.js v2 app; root index.html is legacy v1
 
 last_change: >
-  Chat Session A — fix double TopBar + chat core. AppShell now bypasses
-  shell for /social/* routes (HopShell is the sole shell). Chat page at
-  /social with message list, input bar, realtime, optimistic sends,
-  pagination, day dividers, message grouping, markRead via IntersectionObserver.
-  useChat hook and lib/chat.ts types/helpers created.
+  Chat Session B — reactions, read receipts, reply. Reactions: long-press
+  emoji picker (8 emojis), reaction pills below bubbles, one per person
+  (swap), optimistic. Read receipts: avatar circles (1-2) or "Seen by X"
+  (3+) → BottomSheet. Reply: swipe right (mobile) / hover button (desktop),
+  reply preview bar, quoted preview in bubble, scroll-to-original.
+  useChat reactions/reads refactored to Record<string, Row[]>.
+  groupReactions helper added to lib/chat.ts.
 
 verification:
   typecheck: pass        # tsc --noEmit
@@ -26,10 +28,7 @@ known_issues:
   - Camera button is a placeholder (console.log "open camera") — Session D.
   - Gallery button is a placeholder (console.log "open gallery") — Session C.
   - Image expand is a placeholder (console.log "expand image") — Session C.
-  - Reactions UI not yet built — Session B.
-  - Read receipts display not yet built (markRead fires, but no UI shows who read).
 
 next_up:
-  - Session B: reactions UI (emoji picker, reaction badges under bubbles)
   - Session C: image gallery + image expand modal
   - Session D: camera capture

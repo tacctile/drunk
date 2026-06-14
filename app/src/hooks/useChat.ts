@@ -13,11 +13,12 @@ import {
 export function useChat() {
   const { voterId } = useGroupData();
   const [messages, setMessages] = useState<MessageRow[]>([]);
-  const [reactions, setReactions] = useState<ReactionRow[]>([]);
-  const [reads, setReads] = useState<ReadRow[]>([]);
+  const [reactions, setReactions] = useState<Record<string, ReactionRow[]>>({});
+  const [reads, setReads] = useState<Record<string, ReadRow[]>>({});
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<MessageRow | null>(null);
   const voterIdRef = useRef(voterId);
   voterIdRef.current = voterId;
 
@@ -32,13 +33,16 @@ export function useChat() {
         .in("message_id", ids);
       if (data) {
         setReactions((prev) => {
-          const existing = new Set(
-            prev.map((r) => `${r.message_id}:${r.voter_id}:${r.emoji}`)
-          );
-          const next = [...prev];
+          const next = { ...prev };
           for (const row of data as ReactionRow[]) {
-            const key = `${row.message_id}:${row.voter_id}:${row.emoji}`;
-            if (!existing.has(key)) next.push(row);
+            const arr = next[row.message_id] ?? [];
+            if (
+              !arr.some(
+                (r) => r.voter_id === row.voter_id && r.emoji === row.emoji
+              )
+            ) {
+              next[row.message_id] = [...arr, row];
+            }
           }
           return next;
         });
@@ -59,13 +63,12 @@ export function useChat() {
         .in("message_id", ids);
       if (data) {
         setReads((prev) => {
-          const existing = new Set(
-            prev.map((r) => `${r.message_id}:${r.voter_id}`)
-          );
-          const next = [...prev];
+          const next = { ...prev };
           for (const row of data as ReadRow[]) {
-            const key = `${row.message_id}:${row.voter_id}`;
-            if (!existing.has(key)) next.push(row);
+            const arr = next[row.message_id] ?? [];
+            if (!arr.some((r) => r.voter_id === row.voter_id)) {
+              next[row.message_id] = [...arr, row];
+            }
           }
           return next;
         });
@@ -149,10 +152,14 @@ export function useChat() {
         (payload) => {
           const row = payload.new as ReactionRow;
           setReactions((prev) => {
-            const key = `${row.message_id}:${row.voter_id}:${row.emoji}`;
-            if (prev.some((r) => `${r.message_id}:${r.voter_id}:${r.emoji}` === key))
+            const arr = prev[row.message_id] ?? [];
+            if (
+              arr.some(
+                (r) => r.voter_id === row.voter_id && r.emoji === row.emoji
+              )
+            )
               return prev;
-            return [...prev, row];
+            return { ...prev, [row.message_id]: [...arr, row] };
           });
         }
       );
@@ -162,16 +169,24 @@ export function useChat() {
         { event: "DELETE", schema: "public", table: "v2_message_reactions" },
         (payload) => {
           const old = payload.old as Partial<ReactionRow>;
-          setReactions((prev) =>
-            prev.filter(
+          setReactions((prev) => {
+            const msgId = old.message_id;
+            if (!msgId) return prev;
+            const arr = prev[msgId];
+            if (!arr) return prev;
+            const filtered = arr.filter(
               (r) =>
-                !(
-                  r.message_id === old.message_id &&
-                  r.voter_id === old.voter_id &&
-                  r.emoji === old.emoji
-                )
-            )
-          );
+                !(r.voter_id === old.voter_id && r.emoji === old.emoji)
+            );
+            if (filtered.length === arr.length) return prev;
+            const next = { ...prev };
+            if (filtered.length === 0) {
+              delete next[msgId];
+            } else {
+              next[msgId] = filtered;
+            }
+            return next;
+          });
         }
       );
 
@@ -181,10 +196,9 @@ export function useChat() {
         (payload) => {
           const row = payload.new as ReadRow;
           setReads((prev) => {
-            const key = `${row.message_id}:${row.voter_id}`;
-            if (prev.some((r) => `${r.message_id}:${r.voter_id}` === key))
-              return prev;
-            return [...prev, row];
+            const arr = prev[row.message_id] ?? [];
+            if (arr.some((r) => r.voter_id === row.voter_id)) return prev;
+            return { ...prev, [row.message_id]: [...arr, row] };
           });
         }
       );
@@ -237,25 +251,32 @@ export function useChat() {
       if (!me || !content.trim()) return;
       const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const now = new Date().toISOString();
+      const replyId = replyingTo?.id ?? null;
       const optimistic: MessageRow = {
         id: tempId,
         voter_id: me,
         content: content.trim(),
         image_url: null,
-        reply_to_id: null,
+        reply_to_id: replyId,
         is_deleted: false,
         created_at: now,
       };
       setMessages((prev) => [...prev, optimistic]);
+      setReplyingTo(null);
       const sb = getSupabase();
       if (!sb) {
         setMessages((prev) => prev.filter((m) => m.id !== tempId));
         return;
       }
       try {
+        const insertPayload: Record<string, unknown> = {
+          voter_id: me,
+          content: content.trim(),
+        };
+        if (replyId) insertPayload.reply_to_id = replyId;
         const { data, error } = await sb
           .from("v2_messages")
-          .insert({ voter_id: me, content: content.trim() })
+          .insert(insertPayload)
           .select("id,voter_id,content,image_url,reply_to_id,is_deleted,created_at")
           .single();
         if (error || !data) {
@@ -270,7 +291,7 @@ export function useChat() {
         setMessages((prev) => prev.filter((m) => m.id !== tempId));
       }
     },
-    []
+    [replyingTo]
   );
 
   const deleteMessage = useCallback(
@@ -300,6 +321,17 @@ export function useChat() {
     async (messageId: string) => {
       const me = voterIdRef.current;
       if (!me) return;
+      setReads((prev) => {
+        const arr = prev[messageId] ?? [];
+        if (arr.some((r) => r.voter_id === me)) return prev;
+        return {
+          ...prev,
+          [messageId]: [
+            ...arr,
+            { message_id: messageId, voter_id: me, read_at: new Date().toISOString() },
+          ],
+        };
+      });
       const sb = getSupabase();
       if (!sb) return;
       try {
@@ -318,6 +350,77 @@ export function useChat() {
     []
   );
 
+  const addReaction = useCallback(
+    async (messageId: string, emoji: string) => {
+      const me = voterIdRef.current;
+      if (!me) return;
+
+      // Check if user already has a reaction on this message
+      const existing = (reactions[messageId] ?? []).find(
+        (r) => r.voter_id === me
+      );
+      if (existing) {
+        if (existing.emoji === emoji) return;
+        await removeReaction(messageId);
+      }
+
+      const now = new Date().toISOString();
+      const optimistic: ReactionRow = {
+        message_id: messageId,
+        voter_id: me,
+        emoji,
+        created_at: now,
+      };
+      setReactions((prev) => ({
+        ...prev,
+        [messageId]: [...(prev[messageId] ?? []), optimistic],
+      }));
+
+      const sb = getSupabase();
+      if (!sb) return;
+      try {
+        await sb.from("v2_message_reactions").upsert(
+          { message_id: messageId, voter_id: me, emoji, created_at: now },
+          { onConflict: "message_id,voter_id" }
+        );
+      } catch {
+        // silent
+      }
+    },
+    [reactions]
+  );
+
+  const removeReaction = useCallback(
+    async (messageId: string) => {
+      const me = voterIdRef.current;
+      if (!me) return;
+      setReactions((prev) => {
+        const arr = prev[messageId];
+        if (!arr) return prev;
+        const filtered = arr.filter((r) => r.voter_id !== me);
+        const next = { ...prev };
+        if (filtered.length === 0) {
+          delete next[messageId];
+        } else {
+          next[messageId] = filtered;
+        }
+        return next;
+      });
+      const sb = getSupabase();
+      if (!sb) return;
+      try {
+        await sb
+          .from("v2_message_reactions")
+          .delete()
+          .eq("message_id", messageId)
+          .eq("voter_id", me);
+      } catch {
+        // silent
+      }
+    },
+    []
+  );
+
   return {
     messages,
     reactions,
@@ -325,9 +428,13 @@ export function useChat() {
     hasMore,
     loading,
     loadingMore,
+    replyingTo,
+    setReplyingTo,
     loadMore,
     sendMessage,
     deleteMessage,
     markRead,
+    addReaction,
+    removeReaction,
   };
 }

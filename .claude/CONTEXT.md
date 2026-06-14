@@ -200,10 +200,17 @@ Storage buckets:
 
 ## Current State
 Last updated: 2026-06-14
-Last change: **Chat Session A — fix double TopBar + chat core.**
-- Fixed double TopBar on /social/* routes (AppShell now bypasses shell for social).
-- Chat page at /social with full message list, input bar, realtime, optimistic sends.
-- useChat hook: messages, reactions, reads, pagination, realtime channel "hoppz-chat".
-- lib/chat.ts: types, helpers, constants (CHAT_PAGE_SIZE = 50, EMOJI_REACTIONS).
+Last change: **Chat Session B — reactions, read receipts, reply.**
+- Reactions: long-press (500ms) opens emoji picker (8 emojis from EMOJI_REACTIONS in
+  lib/chat.ts), pills below bubbles show grouped reactions with counts, one reaction
+  per person per message (swap behavior), optimistic add/remove.
+- Read receipts: avatar circles below timestamps (1-2 readers), "Seen by X" tappable
+  for 3+ readers → BottomSheet with reader list. markRead fires optimistically.
+- Reply: swipe right (mobile) or hover reply button (desktop) → reply preview bar
+  above input, quoted preview inside bubble with scroll-to-original on tap.
+- useChat hook: reactions/reads refactored to Record<string, Row[]> keyed by message_id.
+  Added addReaction, removeReaction, replyingTo, setReplyingTo. sendMessage includes
+  reply_to_id when replying.
+- lib/chat.ts: groupReactions helper added.
 - Placeholders: camera button, gallery button, image expand (Sessions C/D).
-Next up: reactions UI (Session B), image gallery + expand (Session C), camera (Session D).
+Next up: image gallery + expand (Session C), camera (Session D).
