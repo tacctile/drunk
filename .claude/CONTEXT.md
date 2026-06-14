@@ -191,6 +191,7 @@ All keys are product contract:
 - `bh2-city-vote-cache` / `bh2-hotel-vote-cache` / `bh2-avail-cache` — silent
   offline fallback caches mirroring this voter's writes.
 - `bh2-muted-ids` / `bh2-sharing-preference` / `bh2-session-id` — location sharing.
+- `bh2-hopperz-view` — `"list"` | `"grid"`; Hopperz page view toggle preference.
 - **`bh2-auth`** — *cookie*, value `"1"`, session-scoped, `SameSite=Lax`. Set by
   `isAuthenticated()`/`mirrorAuthCookie()`, cleared by `clearIdentity()`. Read by
   the middleware (existence only).
@@ -301,12 +302,12 @@ Storage buckets:
 
 ## Current State
 Last updated: 2026-06-14
-Last change: **Home Screen Dashboard Overhaul.**
-- /home route rebuilt from wing picker to full trip dashboard.
-- Trip status hero card (planning/upcoming/active) with contextual CTAs.
-- Quick stats row (votes cast, leading city, best date, on-trip count).
-- Who's In section (avatar row of on_trip members, remote sub-row with wifi icon).
-- Quick actions 2x2 grid (vote, availability, chat, locate) with completion states.
-- Home bottom bar (Plan | Hopp) replaces old card-based wing picker.
-- AppShell suppressNav on /home (TopBar only, no PlanNav).
+Last change: **Full Polish Pass — Known Issues + UX Fixes.**
+- Verified and fixed all known UX issues across login, camera, chat, nav, and profile.
+- Login: Android install button opacity fixed (opacity-50 when disabled).
+- TopBar: trip status pip labels fixed ("Today!", "d away" suffix).
+- CONTEXT.md: localStorage contract updated (added bh2-hopperz-view).
+- All other items verified correct as-is (sign-in lookup, camera controls,
+  chat scroll, nav dividers, AppShell, profile tabs, avatar fallback, Supabase
+  voter select, moderator routing, Hopperz view persistence).
 Next up: Wire push notification triggers (new message, reaction, etc.).

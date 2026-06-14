@@ -286,7 +286,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => void installAndroid()}
                 disabled={!installPrompt}
-                className="btn-ghost flex h-11 flex-1 items-center justify-center gap-2 disabled:text-ink-dim disabled:opacity-100"
+                className="btn-ghost flex h-11 flex-1 items-center justify-center gap-2 disabled:opacity-50"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path

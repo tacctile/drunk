@@ -4,6 +4,31 @@
 
 ---
 
+## Full Polish Pass — Known Issues + UX Fixes — 2026-06-14
+
+### Fixes applied
+- `app/src/app/login/page.tsx` — Android install button: changed
+  `disabled:opacity-100` to `disabled:opacity-50` for proper dimming.
+- `app/src/components/TopBar.tsx` — trip status pip: added "Today!" label
+  for daysUntil===0, changed "Nd" to "Nd away" suffix.
+- `.claude/CONTEXT.md` — added `bh2-hopperz-view` to localStorage contract.
+
+### Verified correct (no changes needed)
+- Login sign-in lookup (case-insensitive, trimmed, generic error)
+- Camera (shutter centering, icon styling, retake overlay, send+save, flip label, back button)
+- Chat scroll (rAF+scrollTop, overflow-y-scroll, spacer, new message pill)
+- Chat input bar (py-0, border-t, safe area, h-10 buttons, min/max textarea)
+- TopBar three-column flex layout (wordmark, pip, avatar)
+- PlanNav + HopNav (flex row, divider, ink-dim cross-wing tabs)
+- AppShell suppressNav on /home
+- ProfileOverlay three-tab structure (Me, Trip, About)
+- Hopperz view toggle persistence (bh2-hopperz-view)
+- Avatar component image fallback (onLoad/onError, initials)
+- Supabase voter select (avatar_url, role in select, overlayLocal, refetch sync)
+- Moderator routing (500ms long-press → /plan/moderator)
+
+---
+
 ## Home Screen Dashboard Overhaul — 2026-06-14
 
 ### Home page rebuild
