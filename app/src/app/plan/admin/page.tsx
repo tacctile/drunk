@@ -513,7 +513,7 @@ export default function AdminPage() {
         <div className="mx-auto flex h-14 max-w-2xl items-center gap-1 px-4">
           <button
             type="button"
-            onClick={() => router.push("/plan/locate")}
+            onClick={() => router.push("/social/locate")}
             aria-label="Back"
             className="-ml-2 flex h-11 w-11 flex-none items-center justify-center text-ink-muted transition hover:text-ink"
           >

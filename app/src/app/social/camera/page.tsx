@@ -1,6 +1,6 @@
 import { Icon } from "@/components/Icon";
 
-/** Night Out → Camera — placeholder. */
+/** Hopp → Camera — placeholder. */
 export default function CameraPage() {
   return (
     <div className="mx-auto flex min-h-[calc(100dvh-3.5rem)] max-w-2xl flex-col items-center justify-center gap-3 px-6 text-center">

@@ -4,6 +4,37 @@
 
 ---
 
+## Component Architecture Cleanup + Hopp Wing Locate + Nav Refactor — 2026-06-14
+
+### Nav components extracted from AppShell
+- `app/src/components/TopBar.tsx` — sticky wordmark bar (Hoppz + ProfileAvatar).
+  Hidden on `/plan/city/*` and `/plan/admin`. Rendered by both AppShell and HopShell.
+- `app/src/components/PlanNav.tsx` — plan-wing nav (Cities, Availability, Results,
+  Hopp). Mobile bottom bar + desktop 80px rail. Admin long-press on Results + Hopp.
+- `app/src/components/HopNav.tsx` — hopp-wing nav (Chat, Camera, Locate, Plan).
+  Mobile bottom bar only. Admin long-press on Plan tab.
+- `app/src/hooks/useAdminHold.ts` — 3s hold hook extracted from AppShell;
+  shared by PlanNav and HopNav.
+
+### Hopp shell
+- `app/src/components/HopShell.tsx` — hopp-wing shell: TopBar + children + HopNav.
+  Used by `social/layout.tsx`.
+
+### Locate relocation
+- Moved `app/src/app/plan/locate/page.tsx` → `app/src/app/social/locate/page.tsx`.
+  Zero logic changes. Admin back button updated to `/social/locate`.
+  All `/plan/locate` references removed from codebase.
+
+### AppShell simplification
+- `app/src/components/AppShell.tsx` — stripped to compose TopBar + PlanNav only.
+  No inline nav markup, no NAV array, no HOLD_CLASS, no useAdminHold.
+
+### Branding updates
+- All "Night Out" UI strings → "Hopp" (home page, social page, camera page,
+  nav labels, comments).
+
+---
+
 ## PWA Foundation + Auth Flow + Home Screen + Dual-Wing Navigation — 2026-06-14
 
 ### PWA / service worker
@@ -31,16 +62,15 @@
 
 ### Home screen
 - `app/src/app/home/page.tsx` — "Where to?" wing picker, two tappable cards
-  (Plan a Trip / Night Out), AppShell header, no bottom nav.
+  (Plan a Trip / Hopp), AppShell header, no bottom nav.
 
 ### Dual-wing navigation
 - `app/src/components/AppShell.tsx` — pathname-aware chrome: bare on `/login`/`/`,
-  header elsewhere, plan tabs + rail only on `/plan/*`, cross-wing Night Out
-  button in the wordmark bar.
+  TopBar + PlanNav on `/plan/*`, TopBar-only elsewhere.
 - Plan wing: `app/src/app/plan/{layout,page}.tsx` + moved routes
-  (`cities`, `city/[id]`, `calendar`, `board`, `locate`, `admin`).
+  (`cities`, `city/[id]`, `calendar`, `board`, `admin`).
 - Social wing: `app/src/app/social/{layout,page}.tsx` + `social/camera/page.tsx`
-  (own bottom nav: Chat / Camera / Switch-to-Plan).
+  + `social/locate/page.tsx` (own bottom nav via HopShell).
 - `app/next.config.mjs` — removed the `/`→`/cities` redirect (page.tsx routes now).
 
 ---

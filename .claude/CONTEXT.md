@@ -34,10 +34,26 @@ Every city is measured against that standard.
 
 Key dirs:
 - `app/src/app/` — routes (App Router). `app/src/components/` — UI.
-- `app/src/hooks/` — data hooks (`useGroupData` is the shared provider).
+- `app/src/hooks/` — data hooks (`useGroupData` is the shared provider),
+  plus `useAdminHold` (3s hold → admin).
 - `app/src/lib/` — `identity`, `auth`, `supabase`, `maps`, `venues`, `colors`, …
 - `app/src/data/` — `cities.ts` (the walkability index) + `types.ts`.
 - `app/public/` — PWA assets (manifest, service worker, offline page, icons).
+
+### File map — shell & nav components
+- `components/AppShell.tsx` — root-level shell (bare on `/login`/`/`, TopBar +
+  PlanNav on plan routes, TopBar-only elsewhere). Wraps all pages via root layout.
+- `components/TopBar.tsx` — sticky wordmark bar: "Hoppz" left, ProfileAvatar
+  right. Hidden on `/plan/city/*` and `/plan/admin` (pages with own headers).
+  Rendered by both AppShell and HopShell.
+- `components/PlanNav.tsx` — plan-wing nav: Cities, Availability, Results, Hopp.
+  Mobile bottom bar + desktop 80px rail (≥840px). Admin long-press on Results
+  AND Hopp tabs. Only renders on `/plan/*`.
+- `components/HopNav.tsx` — hopp-wing nav: Chat, Camera, Locate, Plan.
+  Mobile bottom bar only. Admin long-press on Plan tab.
+- `components/HopShell.tsx` — hopp-wing shell: TopBar + children + HopNav.
+  Used by `social/layout.tsx`.
+- `hooks/useAdminHold.ts` — 3s hold hook shared by PlanNav and HopNav.
 
 ---
 
@@ -52,28 +68,27 @@ Cold open hits `/` → client checks `isAuthenticated()`:
   (`beforeinstallprompt`) + iOS (inline Safari instructions), both hidden in
   standalone mode. On success → `setLastWing("plan")` → `/home`.
 - `/home` — wing picker. AppShell header only (no bottom nav). Two cards:
-  **Plan a Trip → `/plan`**, **Night Out → `/social`** (placeholder).
+  **Plan a Trip → `/plan`**, **Hopp → `/social`** (placeholder).
 - **Plan wing — `/plan/*`** (`plan/layout.tsx` sets last wing = plan):
   - `/plan` → redirects to `/plan/cities`.
   - `/plan/cities`, `/plan/city/[id]`, `/plan/calendar`, `/plan/board`,
-    `/plan/locate`, `/plan/admin` (3s-hold the Results tab to reach admin).
-  - AppShell renders 4 bottom tabs (Cities / Availability / Results /
-    Night Out) + the 80px desktop rail at ≥840px. Night Out is a cross-wing
-    link to `/social` (sports_bar icon) — it does not get active highlight
-    on /plan/* routes. The wordmark bar has only the wordmark left and
-    avatar right (no cross-wing button in the header).
-- **Social wing — `/social/*`** (`social/layout.tsx` sets last wing = social):
-  - `/social` (Chat placeholder), `/social/camera` (Camera placeholder).
-  - AppShell header still renders, but its plan nav/rail is **suppressed**; the
-    social layout supplies its own bottom nav (Chat / Camera / Locate / Plan),
-    matched to the plan nav's 64px + safe-area dimensions. Locate and Plan are
-    cross-wing links to `/plan/locate` and `/plan` respectively — neither gets
-    active highlight on /social/* routes.
+    `/plan/admin` (3s-hold Results or Hopp tab to reach admin).
+  - PlanNav renders 4 bottom tabs (Cities / Availability / Results / Hopp)
+    + the 80px desktop rail at ≥840px. Hopp is a cross-wing link to `/social`
+    (sports_bar icon) — it does not get active highlight on /plan/* routes.
+    Admin long-press is on both the Results tab and the Hopp tab.
+    The wordmark bar (TopBar) has only the wordmark left and avatar right.
+- **Hopp wing — `/social/*`** (`social/layout.tsx` sets last wing = social):
+  - `/social` (Chat placeholder), `/social/camera` (Camera placeholder),
+    `/social/locate` (live group map).
+  - HopShell renders TopBar + HopNav bottom bar (Chat / Camera / Locate / Plan).
+    Plan is a cross-wing link to `/plan` (list_alt icon) — it does not get
+    active highlight on /social/* routes. Admin long-press is on the Plan tab.
 
 AppShell (`components/AppShell.tsx`) is global (root layout) and pathname-aware:
-bare on `/login` and `/`; header everywhere else except pages with their own
-sticky header (`/plan/city/*`, `/plan/admin`); plan nav + rail only on `/plan/*`.
-Admin long-press (3s hold) is on the Results tab (leaderboard icon).
+bare on `/login` and `/`; TopBar everywhere else except pages with their own
+sticky header (`/plan/city/*`, `/plan/admin`); PlanNav only on `/plan/*`.
+On `/social/*`, the HopShell (via social layout) provides its own nav.
 
 **Auth guard:** `src/middleware.ts` matches `/home`, `/plan/:path*`,
 `/social/:path*` and redirects to `/login` when the `bh2-auth` cookie is absent.
@@ -168,13 +183,14 @@ mirroring. Tables (see `lib/supabase.ts` for row shapes):
 
 ## Current State
 Last updated: 2026-06-14
-Last change: **Nav bar restructure — cross-wing switching + icon updates.**
-- Plan nav: Cities, Availability, Results, Night Out (cross-wing to /social).
-  Removed Locate from plan nav. Removed local_bar cross-wing button from
-  wordmark bar header.
-- Night Out nav: Chat, Camera, Locate (cross-wing to /plan/locate), Plan
-  (cross-wing to /plan). Changed from 3-tab to 4-tab layout.
-- Admin 3s long-press moved from Locate tab (removed) to Results tab.
-- Cross-wing tabs use router.push + setLastWing, no active highlight on
-  their wing's routes.
-Next up: real PNG app icons; flesh out the Night Out (social) wing.
+Last change: **Component architecture cleanup + Hopp wing locate + nav refactor.**
+- Extracted TopBar, PlanNav, HopNav, HopShell, useAdminHold into discrete files.
+- AppShell now composes TopBar + PlanNav, renders no inline nav markup.
+- social/layout.tsx uses HopShell (TopBar + HopNav), renders no inline nav.
+- Plan nav: Cities, Availability, Results, Hopp (cross-wing to /social).
+  Admin 3s long-press on both Results and Hopp tabs.
+- Hopp nav: Chat, Camera, Locate, Plan (cross-wing to /plan).
+  Admin 3s long-press on Plan tab.
+- Locate moved from /plan/locate to /social/locate (zero logic changes).
+- All "Night Out" UI strings replaced with "Hopp".
+Next up: real PNG app icons; flesh out the Hopp (social) wing.
