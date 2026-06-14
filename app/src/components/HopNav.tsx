@@ -10,6 +10,7 @@ import { Icon } from "./Icon";
 const NAV = [
   { href: "/social", icon: "chat_bubble", label: "Chat" },
   { href: "/social/camera", icon: "photo_camera", label: "Camera" },
+  { href: "/social/gallery", icon: "photo_library", label: "Gallery" },
   { href: "/social/locate", icon: "person_pin", label: "Locate" },
 ] as const;
 
@@ -31,7 +32,7 @@ export function HopNav() {
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t bg-surface pb-[env(safe-area-inset-bottom)]">
-      <div className="grid h-16 grid-cols-4">
+      <div className="grid h-16 grid-cols-5">
         {NAV.map((tab) => {
           const active = pathname === tab.href;
           return (

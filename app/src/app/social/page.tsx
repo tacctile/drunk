@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/Icon";
 import { BottomSheet } from "@/components/BottomSheet";
+import { ImageViewer } from "@/components/ImageViewer";
+import { Toast } from "@/components/Toast";
 import { useGroupData } from "@/hooks/useGroupData";
 import { useChat } from "@/hooks/useChat";
 import {
@@ -15,6 +17,7 @@ import {
   type MessageRow,
 } from "@/lib/chat";
 import { contrastColor, getInitials } from "@/lib/colors";
+import { uploadChatImage } from "@/lib/storage";
 
 function SenderAvatar({
   name,
@@ -99,6 +102,12 @@ export default function ChatPage() {
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
+  // Image upload + viewer + toast state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [viewerUrl, setViewerUrl] = useState<string | null>(null);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
+
   const isNearBottom = useCallback(() => {
     const el = listRef.current;
     if (!el) return true;
@@ -164,7 +173,7 @@ export default function ChatPage() {
   const handleSend = useCallback(() => {
     const text = inputValue.trim();
     if (!text) return;
-    void sendMessage(text);
+    void sendMessage(text, null);
     setInputValue("");
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -400,6 +409,26 @@ export default function ChatPage() {
     setTimeout(() => setHighlightedId(null), 800);
   }, []);
 
+  const handleImageUpload = useCallback(
+    async (file: File) => {
+      if (file.size > 10 * 1024 * 1024) {
+        setToastMsg("Image must be under 10MB");
+        return;
+      }
+      const tempId = `uploading-${Date.now()}`;
+      setUploadingId(tempId);
+      const result = await uploadChatImage(file);
+      setUploadingId(null);
+      if (!result.ok) {
+        setToastMsg("Couldn't upload image. Try again.");
+        return;
+      }
+      await sendMessage(null, result.url);
+      scrollToBottom(true);
+    },
+    [sendMessage, scrollToBottom]
+  );
+
   const renderMessages = () => {
     const elements: React.ReactNode[] = [];
 
@@ -489,6 +518,7 @@ export default function ChatPage() {
           onRefSet={(node) => {
             if (node) messageRefs.current.set(msg.id, node);
           }}
+          onImageExpand={(url) => setViewerUrl(url)}
         />
       );
     }
@@ -535,6 +565,16 @@ export default function ChatPage() {
         )}
 
         {renderMessages()}
+
+        {uploadingId && (
+          <div className="mt-3 flex justify-end">
+            <div className="flex max-w-[75%] items-center gap-2 rounded-card rounded-br-none bg-accent px-3 py-3 opacity-60">
+              <Icon name="progress_activity" size={20} className="animate-spin text-bg" />
+              <span className="text-base text-bg">Uploading...</span>
+            </div>
+          </div>
+        )}
+
         <div ref={bottomRef} />
       </div>
 
@@ -641,12 +681,23 @@ export default function ChatPage() {
             className="input flex-1 resize-none !h-auto min-h-[44px] py-2.5"
           />
 
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,video/*,.heic,.heif,.webp"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) void handleImageUpload(file);
+              e.target.value = "";
+            }}
+          />
           <button
             type="button"
-            onClick={() => console.log("open gallery")}
+            onClick={() => fileInputRef.current?.click()}
             className="flex h-11 w-11 flex-none items-center justify-center text-ink-muted"
           >
-            <Icon name="photo" size={24} />
+            <Icon name="add_photo_alternate" size={24} />
           </button>
 
           <button
@@ -706,6 +757,14 @@ export default function ChatPage() {
           })}
         </div>
       </BottomSheet>
+
+      {viewerUrl && (
+        <ImageViewer url={viewerUrl} onClose={() => setViewerUrl(null)} />
+      )}
+
+      {toastMsg && (
+        <Toast message={toastMsg} onDismiss={() => setToastMsg(null)} />
+      )}
     </div>
   );
 }
@@ -746,6 +805,7 @@ interface MessageBubbleProps {
   onScrollToReply: (msgId: string) => void;
   onSeenByTap: () => void;
   onRefSet: (node: HTMLDivElement | null) => void;
+  onImageExpand: (url: string) => void;
 }
 
 function MessageBubble({
@@ -774,6 +834,7 @@ function MessageBubble({
   onScrollToReply,
   onSeenByTap,
   onRefSet,
+  onImageExpand,
 }: MessageBubbleProps) {
   const bubbleRef = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState(false);
@@ -858,18 +919,27 @@ function MessageBubble({
           {msg.image_url && (
             <button
               type="button"
-              onClick={() => console.log("expand image")}
-              className="mb-1 block"
+              onClick={() => onImageExpand(msg.image_url!)}
+              className="block"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={msg.image_url}
                 alt=""
-                className="max-h-[300px] max-w-full rounded-card object-contain"
+                loading="lazy"
+                className="block max-h-[300px] max-w-full rounded-card object-contain"
+                style={{ aspectRatio: "4/3" }}
+                onLoad={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.aspectRatio = "";
+                }}
               />
             </button>
           )}
-          {msg.content && <p className="text-base">{msg.content}</p>}
+          {msg.content && (
+            <p className={`text-base${msg.image_url ? " pt-1" : ""}`}>
+              {msg.content}
+            </p>
+          )}
         </div>
 
         {/* Desktop reply button — appears on hover */}

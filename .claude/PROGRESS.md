@@ -1,6 +1,25 @@
 # Hoppz — Progress
 > Feature checklist for the v2 Next.js app (`app/`). Newest phase on top.
 
+## Phase: Chat Session C — Image Upload + Gallery (2026-06-14)
+- [x] src/lib/storage.ts — uploadChatImage (hoppz-media bucket, 10MB cap, never throws)
+- [x] Image upload from input bar — file picker, optimistic uploading bubble, error toast
+- [x] sendMessage signature updated: (content: string | null, imageUrl?: string | null)
+- [x] Image display in chat bubbles — lazy loading, aspect-ratio 4/3 placeholder, pt-1 spacing
+- [x] ImageViewer component — full-screen overlay, close/download, escape, scroll lock, fade-in
+- [x] Tap image in bubble → opens ImageViewer (replaced console.log placeholder)
+- [x] Gallery page at /social/gallery — 3-col square grid, day grouping, sticky headers
+- [x] Gallery cursor pagination (30/page via GALLERY_PAGE_SIZE, IntersectionObserver sentinel)
+- [x] Gallery jump-to-date BottomSheet with date list and image counts
+- [x] Gallery empty state + loading skeleton state
+- [x] Gallery refresh button
+- [x] HopNav updated to 5 tabs: Chat, Camera, Gallery, Locate, Plan (grid-cols-5)
+- [x] Toast component for upload errors (ephemeral, auto-dismiss, fade in/out)
+- [x] Input bar layout: camera (left), textarea, add_photo_alternate + send (right)
+- [x] GALLERY_PAGE_SIZE = 30 added to lib/chat.ts
+- [x] All Session A/B features verified intact (typecheck + build pass clean)
+- [x] .claude/ files updated (CONTEXT.md, BUILD_INDEX.md, STATE.yml, PROGRESS.md)
+
 ## Phase: Chat Session B — Reactions + Read Receipts + Reply (2026-06-14)
 - [x] Reactions: long-press (500ms) opens emoji picker (8 emojis from EMOJI_REACTIONS)
 - [x] Reaction pills below bubbles — grouped by emoji, count, own-reaction accent border
@@ -35,9 +54,9 @@
 - [x] lib/chat.ts — MessageRow, ReactionRow, ReadRow types; helpers; constants
 - [x] supabase.ts — re-exports MessageRow; adds MessageReadRow, MessageReactionRow
 - [x] typecheck and build pass clean
+- [x] Gallery button → file upload picker (Session C)
+- [x] Image expand → ImageViewer overlay (Session C)
 - [ ] Camera button placeholder (Session D)
-- [ ] Gallery button placeholder (Session C)
-- [ ] Image expand placeholder (Session C)
 
 ## Phase: Component Architecture Cleanup + Nav Refactor (2026-06-14)
 - [x] Extracted TopBar.tsx — sticky wordmark bar, hidden on city detail/admin
@@ -99,6 +118,5 @@
 
 ## Backlog
 - [ ] Real PNG app icons (192 / 512 / 180)
-- [ ] Session C: image gallery + image expand modal
 - [ ] Session D: camera capture
 - [ ] More cities in `data/cities.ts`

@@ -23,6 +23,8 @@ export interface ReadRow {
 
 export const CHAT_PAGE_SIZE = 50;
 
+export const GALLERY_PAGE_SIZE = 30;
+
 export const EMOJI_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '😡', '🔥', '🍺'];
 
 export function formatMessageTime(iso: string): string {
