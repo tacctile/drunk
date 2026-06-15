@@ -57,6 +57,7 @@ const preset: Config = {
         "primary-container": "#0ea5e9",
         "surface-container-lowest": "#0d0e11",
         "on-background": "#e3e2e6",
+        "sky-blue": "#0EA5E9",
       },
       borderRadius: {
         DEFAULT: "0.25rem",

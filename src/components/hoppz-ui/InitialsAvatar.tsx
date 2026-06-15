@@ -4,12 +4,13 @@ import React from "react";
 
 export type InitialsAvatarProps = {
   initials: string;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   color?: string;
   avatarUrl?: string;
 };
 
 const sizeClasses = {
+  xs: "w-8 h-8 text-[10px]",
   sm: "w-10 h-10 text-sm",
   md: "w-14 h-14 text-lg",
   lg: "w-20 h-20 text-2xl",

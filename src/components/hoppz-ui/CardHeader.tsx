@@ -5,6 +5,7 @@ import React from "react";
 export type CardHeaderProps = {
   icon: string;
   title: string;
+  iconClassName?: string;
   rightIcon?: string;
   rightIconClassName?: string;
   onRightIconClick?: () => void;
@@ -13,6 +14,7 @@ export type CardHeaderProps = {
 export function CardHeader({
   icon,
   title,
+  iconClassName = "text-primary",
   rightIcon,
   rightIconClassName = "text-on-surface-variant",
   onRightIconClick,
@@ -20,7 +22,7 @@ export function CardHeader({
   return (
     <div className="flex justify-between items-center">
       <div className="flex items-center space-x-sm">
-        <span className="material-symbols-outlined text-primary">{icon}</span>
+        <span className={`material-symbols-outlined ${iconClassName}`}>{icon}</span>
         <h3 className="font-title-md text-title-md text-on-surface">{title}</h3>
       </div>
       {rightIcon &&
