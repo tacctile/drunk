@@ -15,11 +15,11 @@ All components use M3-style design tokens from `tailwind.preset.ts`. Import the 
 | ActionRow | `ActionRow.tsx` | `icon`, `label`, `onClick?`, `variant?` | Full-width icon + text button row (default or danger variant) |
 | SectionLabel | `SectionLabel.tsx` | `children` | Uppercase tracking-wider section header text |
 | GradeBadge | `GradeBadge.tsx` | `grade` | Small colored pill badge for letter grades |
-| BottomNav | `BottomNav.tsx` | `children` | Bottom navigation bar container with safe-area padding |
-| BottomNavItem | `BottomNavItem.tsx` | `icon`, `label?`, `active?`, `filled?`, `onClick?` | Individual bottom nav icon with optional label |
+| BottomNav | `BottomNav.tsx` | `children`, `className?` | Bottom navigation bar container with safe-area padding |
+| BottomNavItem | `BottomNavItem.tsx` | `icon`, `label?`, `active?`, `filled?`, `activeColor?`, `onClick?` | Individual bottom nav icon with optional label and custom active color |
 | FloatingAction | `FloatingAction.tsx` | `icon?`, `label`, `onClick?`, `visible?` | Fixed floating full-width CTA button |
 | LinkRow | `LinkRow.tsx` | `label`, `onClick?` | Navigation row with text and trailing chevron |
-| TopAppBar | `TopAppBar.tsx` | `title`, `actions?` | Sticky top header bar with app title and right action slot |
+| TopAppBar | `TopAppBar.tsx` | `title`, `leadingIcon?`, `leadingIconClassName?`, `centerSlot?`, `actions?` | Sticky top header bar with optional leading icon, center slot, and right action slot |
 | ProgressBar | `ProgressBar.tsx` | `value`, `colorClassName?` | Thin horizontal progress bar with customizable fill color |
 | GhostButton | `GhostButton.tsx` | `label`, `colorClassName?`, `onClick?` | Semi-transparent full-width action button |
 | VoteRow | `VoteRow.tsx` | `label`, `count`, `countLabel?`, `percentage`, `highlight?`, `actionLabel?`, `onAction?` | City vote row with label, count, progress bar, and optional action |
@@ -29,3 +29,8 @@ All components use M3-style design tokens from `tailwind.preset.ts`. Import the 
 | RatingPill | `RatingPill.tsx` | `rating`, `icon?` | Overlay pill badge with filled icon and rating number |
 | HotelCard | `HotelCard.tsx` | `imageUrl`, `imageAlt?`, `rating?`, `name`, `subtitle`, `preferenceCount?`, `preferenceLabel?`, `price?`, `priceUnit?`, `onClick?` | Image card with rating overlay, hotel info, preference count, and price |
 | HorizontalScroll | `HorizontalScroll.tsx` | `children`, `className?` | Horizontal scroll container with hidden scrollbars and mobile edge bleed |
+| StatusPill | `StatusPill.tsx` | `icon?`, `label`, `iconClassName?`, `className?` | Compact pill indicator with optional leading icon for status display |
+| DayDivider | `DayDivider.tsx` | `label` | Centered date/section divider pill for chat or list views |
+| ReactionPill | `ReactionPill.tsx` | `emoji`, `count`, `active?`, `onClick?` | Emoji reaction badge with count for message reactions |
+| ChatBubble | `ChatBubble.tsx` | `variant` (own/other), `text?`, `imageUrl?`, `imageAlt?`, `senderName?`, `senderNameColor?`, `senderInitials?`, `senderColor?`, `senderAvatarUrl?`, `timestamp?`, `grouped?`, `reactions?`, `onReactionClick?`, `onClick?` | Chat message bubble supporting own/other variants, text/image content, grouped messages, and reactions |
+| ChatInputBar | `ChatInputBar.tsx` | `placeholder?`, `leadingActions?`, `value?`, `onChange?`, `onSend?` | Message composition bar with media action buttons, auto-growing textarea, and send button |

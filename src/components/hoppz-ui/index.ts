@@ -72,3 +72,18 @@ export type { HotelCardProps } from "./HotelCard";
 
 export { HorizontalScroll } from "./HorizontalScroll";
 export type { HorizontalScrollProps } from "./HorizontalScroll";
+
+export { StatusPill } from "./StatusPill";
+export type { StatusPillProps } from "./StatusPill";
+
+export { DayDivider } from "./DayDivider";
+export type { DayDividerProps } from "./DayDivider";
+
+export { ReactionPill } from "./ReactionPill";
+export type { ReactionPillProps } from "./ReactionPill";
+
+export { ChatBubble } from "./ChatBubble";
+export type { ChatBubbleProps, ChatReaction } from "./ChatBubble";
+
+export { ChatInputBar } from "./ChatInputBar";
+export type { ChatInputBarProps, ChatInputAction } from "./ChatInputBar";
