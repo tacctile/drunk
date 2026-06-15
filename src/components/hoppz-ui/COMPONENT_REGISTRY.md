@@ -6,10 +6,10 @@ All components use M3-style design tokens from `tailwind.preset.ts`. Import the 
 |---|---|---|---|
 | OverlayHeader | `OverlayHeader.tsx` | `title`, `onBack?`, `rightSlot?` | Full-width header bar with back button, centered title, and optional right slot |
 | TabBar | `TabBar.tsx` | `tabs`, `activeTab`, `onTabChange` | Horizontal tab navigation with active underline indicator |
-| InitialsAvatar | `InitialsAvatar.tsx` | `initials`, `size?`, `color?`, `avatarUrl?` | Circular avatar showing initials or an image |
+| InitialsAvatar | `InitialsAvatar.tsx` | `initials`, `size?` (xs/sm/md/lg), `color?`, `avatarUrl?` | Circular avatar showing initials or an image |
 | ProfileHero | `ProfileHero.tsx` | `initials`, `name`, `subtitle`, `avatarColor?`, `avatarUrl?`, `onEditPhoto?` | Avatar + display name + subtitle block |
-| Card | `Card.tsx` | `children`, `className?` | Surface card with rim-light top border and shadow |
-| CardHeader | `CardHeader.tsx` | `icon`, `title`, `rightIcon?`, `rightIconClassName?`, `onRightIconClick?` | Icon + title row for card headers, optional right action |
+| Card | `Card.tsx` | `children`, `className?`, `glass?` | Surface card with rim-light top border and shadow; glass variant adds backdrop blur |
+| CardHeader | `CardHeader.tsx` | `icon`, `title`, `iconClassName?`, `rightIcon?`, `rightIconClassName?`, `onRightIconClick?` | Icon + title row for card headers with customizable icon color |
 | PinInput | `PinInput.tsx` | `value`, `onChange`, `maxLength?`, `placeholder?`, `hint?` | Centered PIN entry field with visibility toggle |
 | TextField | `TextField.tsx` | `label`, `value`, `onChange`, `maxLength?`, `type?`, `placeholder?` | Labeled text input field |
 | ActionRow | `ActionRow.tsx` | `icon`, `label`, `onClick?`, `variant?` | Full-width icon + text button row (default or danger variant) |
@@ -19,3 +19,13 @@ All components use M3-style design tokens from `tailwind.preset.ts`. Import the 
 | BottomNavItem | `BottomNavItem.tsx` | `icon`, `label?`, `active?`, `filled?`, `onClick?` | Individual bottom nav icon with optional label |
 | FloatingAction | `FloatingAction.tsx` | `icon?`, `label`, `onClick?`, `visible?` | Fixed floating full-width CTA button |
 | LinkRow | `LinkRow.tsx` | `label`, `onClick?` | Navigation row with text and trailing chevron |
+| TopAppBar | `TopAppBar.tsx` | `title`, `actions?` | Sticky top header bar with app title and right action slot |
+| ProgressBar | `ProgressBar.tsx` | `value`, `colorClassName?` | Thin horizontal progress bar with customizable fill color |
+| GhostButton | `GhostButton.tsx` | `label`, `colorClassName?`, `onClick?` | Semi-transparent full-width action button |
+| VoteRow | `VoteRow.tsx` | `label`, `count`, `countLabel?`, `percentage`, `highlight?`, `actionLabel?`, `onAction?` | City vote row with label, count, progress bar, and optional action |
+| DateTile | `DateTile.tsx` | `month`, `day`, `highlight?` | Small calendar tile showing abbreviated month and day number |
+| DateRow | `DateRow.tsx` | `month`, `day`, `dateRange`, `freeCount`, `freeLabel?`, `highlight?`, `actionLabel?`, `onAction?` | Date tile + range text + availability count with optional action |
+| SectionHeader | `SectionHeader.tsx` | `title`, `actionLabel?`, `actionClassName?`, `onAction?` | Section title with optional right-aligned action link |
+| RatingPill | `RatingPill.tsx` | `rating`, `icon?` | Overlay pill badge with filled icon and rating number |
+| HotelCard | `HotelCard.tsx` | `imageUrl`, `imageAlt?`, `rating?`, `name`, `subtitle`, `preferenceCount?`, `preferenceLabel?`, `price?`, `priceUnit?`, `onClick?` | Image card with rating overlay, hotel info, preference count, and price |
+| HorizontalScroll | `HorizontalScroll.tsx` | `children`, `className?` | Horizontal scroll container with hidden scrollbars and mobile edge bleed |
