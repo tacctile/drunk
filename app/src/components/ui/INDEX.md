@@ -4,6 +4,27 @@ Shared visual primitives for the Hoppz reskin. Single source of truth — check 
 
 ---
 
+## GlassCard
+
+- **File:** `src/components/ui/GlassCard.tsx`
+- **Props:** `children` (ReactNode), `className?` (extra classes — add padding, flex, etc.)
+- **What it does:** Elevated card container with surface background, standard border, and subtle depth shadow. No internal padding — caller controls spacing via className. Matches the Stitch "glass-card" pattern mapped to our token system.
+- **Used by:** `/plan/board` (Top Cities card, Hot Dates card)
+
+## ProgressBar
+
+- **File:** `src/components/ui/ProgressBar.tsx`
+- **Props:** `percent` (0–100), `colorClassName?` (Tailwind bg class for the fill, default `bg-accent`)
+- **What it does:** Thin horizontal progress bar (6px/1.5 height). Raised-color track with a colored fill bar. Percent is clamped 0–100. Fill transitions smoothly on change.
+- **Used by:** `/plan/board` (city vote proportion bars)
+
+## DateBadge
+
+- **File:** `src/components/ui/DateBadge.tsx`
+- **Props:** `dateKey` (YYYY-MM-DD string), `variant?` (`"primary"` | `"muted"`, default `"primary"`)
+- **What it does:** 40×40px date display badge showing 3-letter month abbreviation and day number. Primary variant uses green background/border (availability accent), muted uses raised background with standard border.
+- **Used by:** `/plan/board` (hot dates column)
+
 ## SettingToggle
 
 - **File:** `src/components/ui/SettingToggle.tsx`
