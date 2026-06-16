@@ -51,9 +51,9 @@ const STATE_NAMES: Record<string, string> = {
   MO: "Missouri",
   NE: "Nebraska",
   SD: "South Dakota",
+  TX: "Texas",
 };
 
-// Static class lookups so Tailwind sees every grade utility.
 const GRADE_TEXT: Record<string, string> = {
   a: "text-grade-a",
   b: "text-grade-b",
@@ -62,11 +62,11 @@ const GRADE_TEXT: Record<string, string> = {
   f: "text-grade-f",
 };
 const GRADE_BADGE: Record<string, string> = {
-  a: "bg-grade-a/15 text-grade-a",
-  b: "bg-grade-b/15 text-grade-b",
-  c: "bg-grade-c/15 text-grade-c",
-  d: "bg-grade-d/15 text-grade-d",
-  f: "bg-grade-f/15 text-grade-f",
+  a: "bg-grade-a/10 text-grade-a border border-grade-a/20",
+  b: "bg-grade-b/10 text-grade-b border border-grade-b/20",
+  c: "bg-grade-c/10 text-grade-c border border-grade-c/20",
+  d: "bg-grade-d/10 text-grade-d border border-grade-d/20",
+  f: "bg-grade-f/10 text-grade-f border border-grade-f/20",
 };
 
 function gradeKey(grade: string): string {
@@ -86,84 +86,109 @@ function CityRow({ city, active, voted, locked, onVote }: CityRowProps) {
   const k = gradeKey(city.walkGrade);
 
   return (
-    <li className={`border-b ${active ? "bg-raised" : ""}`}>
-      <div className="flex min-h-[72px] items-center gap-2 pl-4 pr-2">
+    <li>
+      <div
+        className={`relative flex min-h-[80px] items-center px-4 py-4 transition-all duration-150 active:scale-[0.98] ${
+          voted
+            ? "border-l-[4px] border-l-accent bg-accent/5"
+            : active
+              ? "bg-raised"
+              : "border-b border-border/10 hover:bg-surface/50"
+        }`}
+      >
         <Link
           href={`/plan/city/${city.id}`}
-          className="flex min-h-[72px] min-w-0 flex-1 items-center gap-3 py-2"
-        >
-          <span className="min-w-0 flex-1">
-            <span className="flex items-baseline gap-1.5">
-              <span className="truncate text-title font-bold text-ink">{city.name}</span>
-              <span className="label flex-none">{city.state}</span>
-            </span>
-            <span className="mt-0.5 block truncate text-meta font-normal text-ink-dim">
-              {city.district}
-            </span>
+          className="absolute inset-0 z-0"
+          aria-label={`View ${city.name} details`}
+        />
+
+        {/* City — 35% */}
+        <div className="pointer-events-none w-[35%] min-w-0 flex-col">
+          <div className="flex items-baseline gap-1">
+            <span className="truncate text-title font-bold text-ink">{city.name}</span>
+            <span className="flex-none text-[11px] font-semibold text-ink-muted">{city.state}</span>
+          </div>
+          <span className="mt-0.5 block truncate text-meta text-ink-muted opacity-70">
+            {city.district}
           </span>
-          <span className="flex w-[96px] flex-none items-center justify-center gap-1.5">
-            <span className={`text-display ${GRADE_TEXT[k]}`}>{city.walkScore}</span>
-            <span className={`rounded-full px-2 py-0.5 text-meta font-bold ${GRADE_BADGE[k]}`}>
-              {city.walkGrade}
+        </div>
+
+        {/* Walk — 20% */}
+        <div className="pointer-events-none flex w-[20%] flex-col items-center">
+          <span className={`text-display ${GRADE_TEXT[k]}`}>{city.walkScore}</span>
+          <div className={`rounded-full px-2 py-0.5 ${GRADE_BADGE[k]}`}>
+            <span className="text-[10px] font-extrabold uppercase tracking-tighter">
+              Grade {city.walkGrade}
             </span>
-          </span>
-          <span className="w-[72px] flex-none text-right">
-            <span className="block text-title font-bold text-ink">{city.miles} mi</span>
-            <span className="block whitespace-nowrap text-meta font-normal text-ink-muted">
-              {city.drive}
-            </span>
-          </span>
-        </Link>
-        <button
-          type="button"
-          aria-label={locked ? "Voting locked" : voted ? `Remove your vote for ${city.name}` : `Vote for ${city.name}`}
-          aria-pressed={voted}
-          disabled={locked}
-          onClick={() => onVote(city, voted)}
-          className={`flex h-11 w-11 flex-none items-center justify-center rounded-btn transition ${
-            locked
-              ? "opacity-40 pointer-events-none"
-              : voted
-                ? "text-accent"
-                : "text-ink-dim hover:text-ink-muted"
-          }`}
-        >
-          <Icon name="how_to_vote" filled={voted} size={22} />
-        </button>
+          </div>
+        </div>
+
+        {/* Distance — 25% */}
+        <div className="pointer-events-none flex w-[25%] flex-col items-end">
+          <span className="text-title font-bold text-ink">{city.miles} mi</span>
+          <span className="text-meta text-ink-muted">{city.drive}</span>
+        </div>
+
+        {/* Vote — 15% */}
+        <div className="relative z-10 flex w-[15%] justify-end">
+          <button
+            type="button"
+            aria-label={
+              locked
+                ? "Voting locked"
+                : voted
+                  ? `Remove your vote for ${city.name}`
+                  : `Vote for ${city.name}`
+            }
+            aria-pressed={voted}
+            disabled={locked}
+            onClick={(e) => {
+              e.stopPropagation();
+              onVote(city, voted);
+            }}
+            className={`flex h-11 w-11 items-center justify-center rounded-full transition ${
+              locked
+                ? "pointer-events-none opacity-40"
+                : voted
+                  ? "bg-accent text-bg shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
+                  : "text-ink-muted opacity-40 hover:opacity-100"
+            }`}
+          >
+            <Icon name="how_to_vote" filled={voted} />
+          </button>
+        </div>
       </div>
     </li>
   );
 }
 
-/**
- * Sticky column labels for the index — rides just below the 56px wordmark
- * bar, fully opaque, and mirrors the row grid exactly (flex-1 name column,
- * 96px walkability, 72px distance, 44px vote, same gaps and padding).
- */
 function ColumnHeader() {
   return (
-    <div className="sticky top-14 z-10 flex h-9 items-center gap-2 border-b bg-bg pl-4 pr-2">
-      <div className="flex min-w-0 flex-1 items-center gap-3">
-        <span className="label min-w-0 flex-1 !text-ink-dim">City</span>
-        <span className="label w-[96px] flex-none whitespace-nowrap text-center !text-ink-dim">
-          Walkability
-        </span>
-        <span className="label w-[72px] flex-none text-right !text-ink-dim">Distance</span>
+    <div className="sticky top-14 z-10 flex items-center border-b border-border/30 bg-bg px-4 py-2">
+      <div className="w-[35%]">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-ink-muted">City</span>
       </div>
-      <span className="label w-11 flex-none text-center !text-ink-dim">Vote</span>
+      <div className="w-[20%] text-center">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-ink-muted">Walk</span>
+      </div>
+      <div className="w-[25%] text-right">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-ink-muted">
+          Distance
+        </span>
+      </div>
+      <div className="w-[15%] text-right">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-ink-muted">Vote</span>
+      </div>
     </div>
   );
 }
 
 interface CityListProps {
   sort: CitySort;
-  /** Highlights the open city when the list rides along on desktop detail. */
   activeCityId?: string;
-  /** Sticky column header row — the /cities page only. */
   withHeader?: boolean;
 }
 
-/** The walkability index — every city, sorted the user's way. */
 export function CityList({ sort, activeCityId, withHeader = false }: CityListProps) {
   const { setCityVote } = useGroupData();
   const { myCityId } = useVotes();
@@ -208,7 +233,7 @@ export function CityList({ sort, activeCityId, withHeader = false }: CityListPro
       {withHeader && <ColumnHeader />}
       {groups.map((group) => (
         <section key={group.state}>
-          <h2 className="label border-b bg-bg px-4 pb-2 pt-5">
+          <h2 className="border-b border-border/30 bg-bg px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-ink-muted">
             {STATE_NAMES[group.state] ?? group.state}
           </h2>
           <ul>{group.cities.map(row)}</ul>
