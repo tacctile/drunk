@@ -2,28 +2,28 @@
 # Companion to CONTEXT.md / ARCHITECTURE.md / BUILD_INDEX.md.
 # Update at the end of every session.
 
-current_phase: reskin-group-chat
+current_phase: reskin-live-locate
 last_updated: 2026-06-16
 app_root: app/
 
 last_change: >
-  Reskinned Group Chat screen (/social) to match Stitch reference design.
-  MessageBubble: own messages use green bg with dark bold text, rounded
-  12px/12px/4px/12px shape. Other messages use raised bg with 4px/12px/12px/12px
-  shape, glass-highlight border, 32px avatar at bottom-left (spacer when grouped),
-  sender name in accent color above bubble. Reaction pills use translucent bg
-  with white/10 border. Input bar: raised bg with upward shadow, photo_camera +
-  photo_library buttons, rounded-card textarea wrapper with focus ring, circular
-  green send button. DayDivider: centered pill (no lines). HopNav: green active
-  state, raised bg, shadow, subtle border. TopBar: raised bg, map icon before
-  wordmark, trip pill as bordered chip on right next to avatar.
+  Refined Live Locate people panel and added distance unit picker.
+  PeoplePanel: reduced to 148px width (half of original), translucent bg with
+  backdrop-blur(16px), collapse handle stays visible when panel is collapsed
+  (width-based collapse instead of translateX on the whole aside), compact
+  avatar rows with 28px circles. Distance unit picker: new "Distance Display"
+  section in Location Options modal with 4-chip segmented control (Minutes,
+  Feet, Yards, Miles). Unit persisted to localStorage as bh2-distance-unit.
+  formatDistance now supports all 4 units with smart fallbacks (e.g. miles
+  mode shows feet under 0.1mi, yards mode auto-upgrades to miles over 1760yd).
+  Walking pace for minutes mode is ~5 km/h.
 
-last_session: "Reskin Group Chat screen to Stitch reference"
+last_session: "Reskin Live Locate screen to Stitch reference"
 
 verification:
   typecheck: pass        # pre-existing module warnings only
   lint: pass             # pre-existing warnings only
-  build: pass            # next build — all routes compiled
+  build: pass            # next build — all 44 routes compiled
 
 known_issues:
   - App icons are placeholders — public/icons/ needs real PNGs
