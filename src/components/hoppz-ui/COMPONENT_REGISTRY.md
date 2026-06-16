@@ -14,9 +14,9 @@ All components use M3-style design tokens from `tailwind.preset.ts`. Import the 
 | TextField | `TextField.tsx` | `label`, `value`, `onChange`, `maxLength?`, `type?`, `placeholder?` | Labeled text input field |
 | ActionRow | `ActionRow.tsx` | `icon`, `label`, `onClick?`, `variant?` | Full-width icon + text button row (default or danger variant) |
 | SectionLabel | `SectionLabel.tsx` | `children` | Uppercase tracking-wider section header text |
-| GradeBadge | `GradeBadge.tsx` | `grade` | Small colored pill badge for letter grades |
-| BottomNav | `BottomNav.tsx` | `children`, `className?` | Bottom navigation bar container with safe-area padding |
-| BottomNavItem | `BottomNavItem.tsx` | `icon`, `label?`, `active?`, `filled?`, `activeColor?`, `onClick?` | Individual bottom nav icon with optional label and custom active color |
+| GradeBadge | `GradeBadge.tsx` | `grade`, `colorScheme?` (secondary/tertiary/error), `pill?` | Colored pill badge for letter grades with configurable color scheme and pill shape |
+| BottomNav | `BottomNav.tsx` | `children`, `className?`, `height?`, `elevated?` | Bottom navigation bar container with safe-area padding and optional drop shadow |
+| BottomNavItem | `BottomNavItem.tsx` | `icon`, `label?`, `active?`, `filled?`, `activeColor?`, `fill?`, `onClick?` | Individual bottom nav icon with optional label; fill mode expands to fill parent |
 | FloatingAction | `FloatingAction.tsx` | `icon?`, `label`, `onClick?`, `visible?` | Fixed floating full-width CTA button |
 | LinkRow | `LinkRow.tsx` | `label`, `onClick?` | Navigation row with text and trailing chevron |
 | TopAppBar | `TopAppBar.tsx` | `title`, `leadingIcon?`, `leadingIconClassName?`, `centerSlot?`, `actions?`, `position?` (sticky/fixed) | Sticky or fixed top header bar with optional leading icon, center slot, and right action slot |
@@ -40,7 +40,7 @@ All components use M3-style design tokens from `tailwind.preset.ts`. Import the 
 | ToggleSwitch | `ToggleSwitch.tsx` | `checked?`, `onChange?`, `disabled?`, `ariaLabel?` | iOS-style toggle switch with peer-checked Tailwind styling |
 | SettingsToggleRow | `SettingsToggleRow.tsx` | `icon`, `title`, `description?`, `iconBgClassName?`, `iconClassName?`, `checked?`, `onChange?`, `disabled?` | Settings row with icon, title, description, and toggle switch |
 | DialogModal | `DialogModal.tsx` | `open`, `onClose`, `title`, `children`, `footer?` | Centered modal dialog with blurred backdrop overlay and close button |
-| FloatingPill | `FloatingPill.tsx` | `icon?`, `label`, `onClick?`, `className?`, `variant?` (primary/glass) | Pill-shaped floating button; glass variant for camera overlay retake-style actions |
+| FloatingPill | `FloatingPill.tsx` | `icon?`, `iconClassName?`, `label`, `onClick?`, `className?`, `variant?` (primary/glass/sort) | Pill-shaped floating button; sort variant for column sort indicators with backdrop blur |
 | SlidingPanel | `SlidingPanel.tsx` | `title`, `headerRight?`, `children`, `footer?`, `open?`, `onToggle?`, `width?` | Side sliding panel with toggle handle, scrollable content, and footer section |
 | PageTitle | `PageTitle.tsx` | `children` | Display-lg page heading for top-level screen titles |
 | MemberCard | `MemberCard.tsx` | `initials`, `name`, `avatarColor?`, `avatarUrl?`, `statusDotColor?`, `statusText?`, `badge?`, `onClick?` | Glass-card member row with avatar, status dot, location text, and trailing badge |
@@ -55,3 +55,7 @@ All components use M3-style design tokens from `tailwind.preset.ts`. Import the 
 | PhotoGridItem | `PhotoGridItem.tsx` | `src?`, `alt?`, `onClick?`, `className?` | Square aspect-ratio photo cell with press-scale feedback for gallery grids |
 | Fab | `Fab.tsx` | `icon`, `ariaLabel`, `filled?`, `onClick?`, `className?` | Circular floating action button anchored bottom-right with shadow and rim light |
 | StickyDateHeader | `StickyDateHeader.tsx` | `label`, `topOffset?`, `className?` | Sticky date section divider with backdrop blur, pins below the top app bar |
+| VoteButton | `VoteButton.tsx` | `voted?`, `icon?`, `onClick?` | Circular icon toggle button for voting with filled/unfilled states |
+| WalkScoreDisplay | `WalkScoreDisplay.tsx` | `score`, `grade`, `colorScheme?` (secondary/tertiary/error) | Walk score number with grade badge, color-coded by score quality |
+| ColumnHeaders | `ColumnHeaders.tsx` | `columns`, `sticky?`, `topOffset?` | Sticky column header strip with uppercase labels and backdrop blur |
+| CityListRow | `CityListRow.tsx` | `cityName`, `stateCode`, `district?`, `walkScore`, `grade`, `gradeColor?`, `distance`, `driveTime`, `voted?`, `onVote?`, `onClick?` | City list row with name/state, walk score, distance, and vote button columns |
