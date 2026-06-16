@@ -20,6 +20,7 @@ export function HopNav() {
   const pathname = usePathname();
   const router = useRouter();
   const adminHold = useAdminHold();
+  const locateHold = useAdminHold();
   const { onClick: holdClick, ...holdHandlers } = adminHold.handlers;
 
   const planClick = (e: MouseEvent) => {
@@ -41,14 +42,16 @@ export function HopNav() {
       <div className="flex h-16 items-stretch">
         {NAV.map((tab) => {
           const active = pathname === tab.href;
+          const isLocate = tab.href === "/social/locate";
           return (
             <Link
               key={tab.href}
               href={tab.href}
               aria-current={active ? "page" : undefined}
+              {...(isLocate ? locateHold.handlers : {})}
               className={`flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 text-label font-semibold transition-all ${
                 active ? "text-green font-bold" : "text-ink-muted"
-              }`}
+              } ${isLocate ? HOLD_CLASS : ""} ${isLocate && locateHold.holding ? "anim-hold" : ""}`}
             >
               <Icon name={tab.icon} filled={active} size={24} />
               {tab.label}

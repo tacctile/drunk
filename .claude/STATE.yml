@@ -2,27 +2,24 @@
 # Companion to CONTEXT.md / ARCHITECTURE.md / BUILD_INDEX.md.
 # Update at the end of every session.
 
-current_phase: home-rebuild
+current_phase: admin-hold-fix
 last_updated: 2026-06-16
 app_root: app/
 
 last_change: >
-  Rebuilt /home screen and added persistent Home icon to TopBar. TopBar now has
-  a house icon button (home, 24px, --ink-muted, "HOME" label) as the first
-  element on the left, navigating to /home. Home page completely rebuilt with
-  four sections: Trip Anchor Card (top city with walkGrade badge, top hotel from
-  hotel tallies, best weekend date pair as pills), Who's Going (overlapping
-  avatar stack with +N overflow chip and Dialog modal), My Status (Going/Remote/
-  Out segmented buttons + location sharing toggle), My Trip Actions (Vote and
-  Availability pills). Removed Quick Stats Row, Quick Actions grid, remote voter
-  sub-row, and all horizontal scrolling.
+  Restored 3-second admin long-press on the Locate tab in HopNav. A second
+  useAdminHold instance drives the Locate Link: hold 3s → navigate to
+  /plan/admin with anim-hold opacity pulse; normal tap navigates to
+  /social/locate; release click swallowed after hold fires. HOLD_CLASS
+  applied to prevent text selection during hold. Existing Plan tab admin
+  hold preserved.
 
-last_session: "Rebuild /home screen and add persistent Home icon to TopBar"
+last_session: "Restore admin long-press on Locate tab in HopNav"
 
 verification:
-  typecheck: pass        # pre-existing module warnings only
-  lint: pass             # pre-existing warnings only
-  build: pass            # next build — all 44 routes compiled
+  typecheck: pass
+  lint: pass
+  build: pass            # next build — all routes compiled
 
 known_issues:
   - App icons are placeholders — public/icons/ needs real PNGs
