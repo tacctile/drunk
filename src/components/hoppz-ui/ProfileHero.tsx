@@ -10,6 +10,7 @@ export type ProfileHeroProps = {
   avatarColor?: string;
   avatarUrl?: string;
   onEditPhoto?: () => void;
+  centered?: boolean;
 };
 
 export function ProfileHero({
@@ -19,7 +20,36 @@ export function ProfileHero({
   avatarColor,
   avatarUrl,
   onEditPhoto,
+  centered = false,
 }: ProfileHeroProps) {
+  if (centered) {
+    return (
+      <div className="flex flex-col items-center text-center">
+        <InitialsAvatar
+          initials={initials}
+          size="lg"
+          color={avatarColor}
+          avatarUrl={avatarUrl}
+        />
+        {onEditPhoto && (
+          <button
+            type="button"
+            className="mt-2 font-label-sm text-label-sm text-primary"
+            onClick={onEditPhoto}
+          >
+            Edit photo
+          </button>
+        )}
+        <h2 className="font-display-lg text-display-lg text-on-surface mt-md">
+          {name}
+        </h2>
+        <span className="font-label-sm text-label-sm text-primary uppercase tracking-widest mt-xs">
+          {subtitle}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center space-x-md py-sm">
       <div className="relative flex flex-col items-center">
