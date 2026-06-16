@@ -13,7 +13,7 @@ export default function CalendarPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 pt-4">
       <MonthHeader year={year} month={month} onPrev={prev} onNext={next} />
-      <p className="px-4 pb-2 text-meta text-ink-muted">
+      <p className="px-4 pb-2 text-meta-xs text-ink-muted">
         Tap a date to mark your availability. Tap again to mark unavailable.
       </p>
       <div className="mt-2">
