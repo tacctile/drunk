@@ -5,6 +5,7 @@ import { Icon } from "@/components/Icon";
 import { BottomSheet } from "@/components/BottomSheet";
 import { ImageViewer } from "@/components/ImageViewer";
 import { Toast } from "@/components/Toast";
+import { StickyDateHeader, PhotoGrid, PhotoGridItem, Fab, FloatingPill } from '@hoppz-ui';
 import { getSupabase } from "@/lib/supabase";
 import { uploadChatImage } from "@/lib/storage";
 import { useGroupData } from "@/hooks/useGroupData";
@@ -220,29 +221,12 @@ export default function GalleryPage() {
 
       {days.map((day) => (
         <div key={day.key} id={`gallery-day-${day.key}`}>
-          <div className="sticky top-0 z-10 bg-bg px-4 py-2">
-            <span className="text-label text-ink-muted">
-              {formatDayDivider(day.iso)}
-            </span>
-          </div>
-          <div className="grid grid-cols-3 gap-0.5">
+          <StickyDateHeader label={formatDayDivider(day.iso)} />
+          <PhotoGrid columns={3} gap={2}>
             {day.items.map((img) => (
-              <button
-                key={img.id}
-                type="button"
-                onClick={() => setViewerUrl(img.image_url)}
-                className="aspect-square overflow-hidden"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={img.image_url}
-                  alt=""
-                  loading="lazy"
-                  className="h-full w-full object-cover"
-                />
-              </button>
+              <PhotoGridItem key={img.id} src={img.image_url} onClick={() => setViewerUrl(img.image_url)} />
             ))}
-          </div>
+          </PhotoGrid>
         </div>
       ))}
 
@@ -266,25 +250,10 @@ export default function GalleryPage() {
           e.target.value = "";
         }}
       />
-      <button
-        type="button"
-        onClick={() => uploadInputRef.current?.click()}
-        disabled={uploading}
-        className={`fixed bottom-[calc(80px+env(safe-area-inset-bottom))] left-4 z-20 flex items-center gap-1.5 rounded-btn bg-surface-raised border border-border px-3 py-2 text-meta font-semibold text-ink shadow-overlay ${uploading ? "animate-pulse opacity-50" : ""}`}
-      >
-        <Icon name="add_photo_alternate" size={18} />
-        Upload
-      </button>
+      <Fab icon="add_photo_alternate" ariaLabel="Upload" onClick={() => uploadInputRef.current?.click()} className="!left-4 !right-auto !bottom-[calc(80px+env(safe-area-inset-bottom))]" />
 
       {/* Jump to date pill — bottom-right */}
-      <button
-        type="button"
-        onClick={() => setJumpSheetOpen(true)}
-        className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] right-4 z-20 flex items-center gap-1.5 rounded-btn bg-surface-raised border border-border px-3 py-2 text-meta font-semibold text-ink shadow-overlay"
-      >
-        <Icon name="calendar_month" size={18} />
-        Jump to date
-      </button>
+      <FloatingPill icon="calendar_month" label="Jump to date" onClick={() => setJumpSheetOpen(true)} className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] right-4 z-20" />
 
       <BottomSheet
         open={jumpSheetOpen}

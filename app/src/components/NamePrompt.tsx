@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useGroupData } from "@/hooks/useGroupData";
 import { MAX_FIRST_NAME_LENGTH, isValidPin } from "@/lib/identity";
+import { TextField, PinInput, ActionButton } from '@hoppz-ui';
 import { Dialog } from "./Dialog";
 import { FieldError } from "./FieldError";
 
@@ -95,60 +96,19 @@ export function IdentityForm({ flow = "new", autoFocus = true, onDone }: Identit
         className="flex flex-col gap-3"
       >
         <div className="flex flex-col gap-1">
-          <input
-            autoFocus={autoFocus}
-            className="input"
-            placeholder="First name"
-            autoComplete="off"
-            value={first}
-            maxLength={MAX_FIRST_NAME_LENGTH}
-            onChange={(e) => setFirst(e.target.value)}
-            aria-label="First name"
-          />
+          <TextField label="First name" value={first} onChange={(v) => setFirst(v)} maxLength={MAX_FIRST_NAME_LENGTH} placeholder="First name" />
           {errors.first && <FieldError>{errors.first}</FieldError>}
         </div>
         <div className="flex flex-col gap-1">
-          <input
-            className="input"
-            placeholder="Initial"
-            autoComplete="off"
-            autoCapitalize="characters"
-            value={initial}
-            maxLength={1}
-            onChange={(e) =>
-              setInitial(e.target.value.replace(/[^A-Za-z]/g, "").slice(0, 1).toUpperCase())
-            }
-            aria-label="Last initial"
-          />
+          <TextField label="Last initial" value={initial} onChange={(v) => setInitial(v.replace(/[^A-Za-z]/g, "").slice(0, 1).toUpperCase())} maxLength={1} placeholder="Initial" />
           {errors.initial && <FieldError>{errors.initial}</FieldError>}
         </div>
         <div className="flex flex-col gap-1">
-          <input
-            className="input"
-            type="text"
-            inputMode="numeric"
-            autoComplete="off"
-            placeholder="2-digit PIN"
-            value={pin}
-            maxLength={2}
-            onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 2))}
-            aria-label="2-digit PIN"
-          />
+          <PinInput value={pin} onChange={(v) => setPin(v.replace(/\D/g, "").slice(0, 2))} maxLength={2} placeholder="2-digit PIN" hint="Name, initial, and PIN let you vote from another device." />
           {errors.pin && <FieldError>{errors.pin}</FieldError>}
-          <p className="text-meta font-normal text-ink-dim">
-            Name, initial, and PIN let you vote from another device.
-          </p>
         </div>
-        <button type="submit" className="btn-accent w-full" disabled={busy}>
-          Save
-        </button>
-        <button
-          type="button"
-          onClick={() => swapMode("signin")}
-          className="h-11 text-meta font-semibold text-accent"
-        >
-          Sign in as existing user
-        </button>
+        <ActionButton label="Save" variant="filled" fullWidth onClick={() => void submitSave()} />
+        <ActionButton label="Sign in as existing user" variant="ghost" onClick={() => swapMode("signin")} />
       </form>
     );
   }
@@ -181,33 +141,11 @@ export function IdentityForm({ flow = "new", autoFocus = true, onDone }: Identit
         ))}
       </select>
       <div className="flex flex-col gap-1">
-        <input
-          className="input"
-          type="text"
-          inputMode="numeric"
-          autoComplete="off"
-          placeholder="2-digit PIN"
-          value={signInPin}
-          maxLength={2}
-          onChange={(e) => setSignInPin(e.target.value.replace(/\D/g, "").slice(0, 2))}
-          aria-label="Your 2-digit PIN"
-        />
+        <PinInput value={signInPin} onChange={(v) => setSignInPin(v.replace(/\D/g, "").slice(0, 2))} maxLength={2} placeholder="2-digit PIN" />
         {signInError && <FieldError>{signInError}</FieldError>}
       </div>
-      <button
-        type="submit"
-        className="btn-accent w-full"
-        disabled={!selectedId || !isValidPin(signInPin) || busy}
-      >
-        Sign in
-      </button>
-      <button
-        type="button"
-        onClick={() => swapMode("create")}
-        className="h-11 text-meta font-semibold text-accent"
-      >
-        Never mind, create new
-      </button>
+      <ActionButton label="Sign in" variant="filled" fullWidth onClick={() => void submitSignIn()} />
+      <ActionButton label="Never mind, create new" variant="ghost" onClick={() => swapMode("create")} />
     </form>
   );
 }

@@ -65,7 +65,7 @@ function WeekdayRow() {
   return (
     <div className="mb-1 grid grid-cols-7 gap-1">
       {WEEKDAYS.map((d) => (
-        <div key={d} className="py-1 text-center text-label font-semibold uppercase tracking-label text-ink-dim">
+        <div key={d} className="py-1 text-center text-label-sm font-label-sm text-on-surface-variant uppercase">
           {d}
         </div>
       ))}
