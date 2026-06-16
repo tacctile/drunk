@@ -7,21 +7,25 @@ import type { Config } from "tailwindcss";
 // Grade colors are literal hex (not vars) so Tailwind opacity modifiers like
 // bg-grade-a/15 work; the values mirror the --grade-* variables exactly.
 const config: Config = {
-  content: ["./src/**/*.{ts,tsx}"],
+  presets: [require("../src/components/hoppz-ui/tailwind.preset")],
+  content: [
+    "./src/**/*.{ts,tsx}",
+    "../src/components/hoppz-ui/**/*.{ts,tsx}",
+  ],
   theme: {
-    borderRadius: {
-      none: "0",
-      chip: "6px",
-      btn: "8px",
-      DEFAULT: "8px",
-      card: "12px",
-      full: "9999px",
-    },
-    boxShadow: {
-      none: "none",
-      overlay: "0 24px 64px rgba(0, 0, 0, 0.6)",
-    },
     extend: {
+      borderRadius: {
+        none: "0",
+        chip: "6px",
+        btn: "8px",
+        DEFAULT: "8px",
+        card: "12px",
+        full: "9999px",
+      },
+      boxShadow: {
+        none: "none",
+        overlay: "0 24px 64px rgba(0, 0, 0, 0.6)",
+      },
       colors: {
         bg: "var(--bg)",
         surface: "var(--surface)",

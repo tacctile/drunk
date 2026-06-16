@@ -1,11 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 import { setLastWing } from "@/lib/auth";
 import { useAdminHold } from "@/hooks/useAdminHold";
-import { Icon } from "./Icon";
+import { BottomNav, BottomNavItem } from "@hoppz-ui";
 
 const NAV = [
   { href: "/social", icon: "chat_bubble", label: "Chat" },
@@ -31,35 +30,32 @@ export function HopNav() {
   };
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 border-t bg-surface pb-[env(safe-area-inset-bottom)]">
-      <div className="flex h-16 items-stretch">
-        {NAV.map((tab) => {
-          const active = pathname === tab.href;
-          return (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              aria-current={active ? "page" : undefined}
-              className={`flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 text-label font-semibold transition ${
-                active ? "text-accent" : "text-ink-muted"
-              }`}
-            >
-              <Icon name={tab.icon} filled={active} size={24} />
-              {tab.label}
-            </Link>
-          );
-        })}
-        <button
-          type="button"
-          {...holdHandlers}
-          onClick={planClick}
-          aria-label="Plan"
-          className={`flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 bg-raised text-label font-semibold text-ink-dim transition ${HOLD_CLASS} ${adminHold.holding ? "anim-hold" : ""}`}
-        >
-          <Icon name="list_alt" size={24} />
-          Plan
-        </button>
-      </div>
-    </nav>
+    <BottomNav fixed elevated className="z-30">
+      {NAV.map((tab) => {
+        const active = pathname === tab.href;
+        return (
+          <BottomNavItem
+            key={tab.href}
+            icon={tab.icon}
+            label={tab.label}
+            active={active}
+            filled={active}
+            activeColor="text-accent"
+            fill
+            onClick={() => router.push(tab.href)}
+          />
+        );
+      })}
+      <button
+        type="button"
+        {...holdHandlers}
+        onClick={planClick}
+        aria-label="Plan"
+        className={`flex min-h-[44px] flex-1 flex-col items-center justify-center gap-0.5 bg-raised font-label-sm text-label-sm text-on-surface-variant transition hover:bg-surface-variant/50 active:scale-95 ${HOLD_CLASS} ${adminHold.holding ? "anim-hold" : ""}`}
+      >
+        <span className="material-symbols-outlined mb-0.5">list_alt</span>
+        Plan
+      </button>
+    </BottomNav>
   );
 }

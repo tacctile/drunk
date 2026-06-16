@@ -1,6 +1,7 @@
 "use client";
 
 import { getSupabase, type LocationRow } from "@/lib/supabase";
+import { SectionLabel, Card, ActionButton } from "@hoppz-ui";
 
 function hoursAgo(iso: string, nowMs: number): string {
   const hrs = Math.floor((nowMs - new Date(iso).getTime()) / 3_600_000);
@@ -34,30 +35,27 @@ export function ActiveLocationsPanel({ locations }: ActiveLocationsPanelProps) {
 
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="label">Active locations</h2>
+      <SectionLabel>Active locations</SectionLabel>
       {locations.length === 0 && (
         <p className="text-meta font-normal text-ink-dim">No active locations.</p>
       )}
       {locations.map((loc) => (
-        <div
-          key={loc.voter_id}
-          className="flex min-h-[56px] items-center justify-between gap-3 rounded-card border bg-surface px-4 py-2"
-        >
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-title text-ink">{loc.display_name}</p>
-            <p className="text-meta font-normal text-ink-dim">
-              Sharing since {hoursAgo(loc.sharing_since, nowMs)} · expires in{" "}
-              {hoursLeft(loc.expires_at, nowMs)}
-            </p>
+        <Card key={loc.voter_id}>
+          <div className="flex min-h-[56px] items-center justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-title text-ink">{loc.display_name}</p>
+              <p className="text-meta font-normal text-ink-dim">
+                Sharing since {hoursAgo(loc.sharing_since, nowMs)} · expires in{" "}
+                {hoursLeft(loc.expires_at, nowMs)}
+              </p>
+            </div>
+            <ActionButton
+              label="Force expire"
+              variant="ghost"
+              onClick={() => void forceExpire(loc.voter_id)}
+            />
           </div>
-          <button
-            type="button"
-            onClick={() => void forceExpire(loc.voter_id)}
-            className="h-11 flex-none rounded-btn border bg-raised px-3 text-meta font-semibold text-red transition hover:brightness-110"
-          >
-            Force expire
-          </button>
-        </div>
+        </Card>
       ))}
     </section>
   );

@@ -25,7 +25,7 @@ export function Toast({ message, onDismiss, duration = 3000 }: ToastProps) {
       className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] left-4 right-4 z-40 flex justify-center transition-opacity duration-[160ms]"
       style={{ opacity: visible ? 1 : 0 }}
     >
-      <div className="rounded-card border border-border bg-surface-raised px-4 py-3 text-base text-ink shadow-overlay">
+      <div className="rounded-xl border border-border bg-surface-raised px-4 py-3 text-base text-ink shadow-overlay">
         {message}
       </div>
     </div>

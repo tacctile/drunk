@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef } from "react";
 import { lockBodyScroll, unlockBodyScroll } from "@/lib/scrollLock";
-import { Icon } from "./Icon";
+import { OverlayHeader } from "@hoppz-ui";
 import { ProfileBody } from "./profile";
 
 const SWIPE_CLOSE_PX = 70;
@@ -70,8 +70,7 @@ export function ProfileOverlay({ open, onClose }: ProfileOverlayProps) {
       aria-label="Profile"
       className="anim-sheet fixed inset-0 z-50 flex flex-col bg-bg"
     >
-      <header
-        className="flex h-14 flex-none items-center justify-between border-b bg-bg px-2"
+      <div
         style={{ touchAction: "none" }}
         onPointerDown={(e) => {
           if ((e.target as HTMLElement).closest("button")) return;
@@ -91,17 +90,8 @@ export function ProfileOverlay({ open, onClose }: ProfileOverlayProps) {
           dragY.current = null;
         }}
       >
-        <button
-          type="button"
-          aria-label="Close profile"
-          onClick={requestClose}
-          className="flex h-11 w-11 items-center justify-center text-ink"
-        >
-          <Icon name="arrow_back" size={24} />
-        </button>
-        <h1 className="text-title text-ink">Profile</h1>
-        <span className="h-11 w-11" aria-hidden="true" />
-      </header>
+        <OverlayHeader title="Profile" onBack={requestClose} />
+      </div>
 
       <ProfileBody onClose={requestClose} onNavigate={navTo} />
     </div>
