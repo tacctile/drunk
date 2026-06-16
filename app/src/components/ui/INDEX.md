@@ -9,7 +9,7 @@ Shared visual primitives for the Hoppz reskin. Single source of truth — check 
 - **File:** `src/components/ui/GlassCard.tsx`
 - **Props:** `children` (ReactNode), `className?` (extra classes — add padding, flex, etc.)
 - **What it does:** Elevated card container with surface background, standard border, and subtle depth shadow. No internal padding — caller controls spacing via className. Matches the Stitch "glass-card" pattern mapped to our token system.
-- **Used by:** `/plan/board` (Top Cities card, Hot Dates card)
+- **Used by:** `/plan/board` (Top Cities card, Hot Dates card), `/plan/hopperz` (member cards in list + grid)
 
 ## ProgressBar
 
@@ -31,6 +31,13 @@ Shared visual primitives for the Hoppz reskin. Single source of truth — check 
 - **Props:** `icon` (Material Symbols name), `iconClassName` (icon color class, default `text-ink-muted`), `iconBgClassName` (icon circle bg class, default `bg-raised`), `title`, `subtitle?`, `checked`, `disabled?`, `dimmed?` (reduces opacity), `onToggle`, `ariaLabel`
 - **What it does:** A settings row with a leading icon circle, title + subtitle, and a trailing Switch toggle. 44px touch target via the Switch component.
 - **Used by:** `/social/locate` (Location Options modal — Share Live Position toggle)
+
+## StatusChip
+
+- **File:** `src/components/ui/StatusChip.tsx`
+- **Props:** `label` (string), `variant?` (`"active"` | `"muted"`, default `"muted"`), `icon?` (Material Symbols name)
+- **What it does:** Small pill-shaped status indicator. Active variant uses green text on green-dim background; muted variant uses ink-muted text on raised background. Optional leading icon at 14px. Rounded-full, no-shrink. Matches the Stitch member status chip pattern.
+- **Used by:** `/plan/hopperz` (Remote/Out trip status chips on member cards)
 
 ## GlassIconButton
 

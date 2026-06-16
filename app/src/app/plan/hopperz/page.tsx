@@ -6,6 +6,8 @@ import { Avatar } from "@/components/Avatar";
 import { Icon } from "@/components/Icon";
 import { RoleBadge } from "@/components/RoleBadge";
 import { VoterProfileSheet } from "@/components/VoterProfileSheet";
+import { GlassCard } from "@/components/ui/GlassCard";
+import { StatusChip } from "@/components/ui/StatusChip";
 import { useHopperz, type HopperzVoter } from "@/hooks/useHopperz";
 import { setLastWing } from "@/lib/auth";
 import { lsGet, lsSet } from "@/lib/storage";
@@ -43,12 +45,10 @@ export default function HopperzPage() {
 
   return (
     <>
-      <div className="mx-auto max-w-2xl">
-        <div className="flex items-start justify-between px-4 pt-4">
-          <div>
-            <h1 className="text-title font-bold text-ink">Hopperz</h1>
-            <p className="text-meta text-ink-muted">{voters.length} member{voters.length !== 1 ? "s" : ""}</p>
-          </div>
+      <div className="mx-auto max-w-2xl px-4 pt-4">
+        {/* Header */}
+        <div className="mb-6 flex items-start justify-between">
+          <h1 className="text-display font-extrabold text-ink">Crew Roster</h1>
           <button
             type="button"
             onClick={toggleView}
@@ -59,90 +59,111 @@ export default function HopperzPage() {
         </div>
 
         {voters.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 px-4 pt-16 text-center">
+          <div className="flex flex-col items-center gap-3 pt-16 text-center">
             <Icon name="group" size={48} className="text-ink-dim" />
             <h2 className="text-title font-bold text-ink">No crew yet</h2>
             <p className="text-meta text-ink-muted">Registered users will appear here</p>
           </div>
         ) : view === "list" ? (
-          <div className="mt-2 pb-32">
+          <div className="flex flex-col gap-2 pb-32">
             {voters.map((v) => (
               <button
                 key={v.voter_id}
                 type="button"
                 onClick={() => setSelectedVoter(v)}
-                className={`flex w-full min-h-[72px] items-center gap-3 border-b border-border px-4 text-left ${
-                  v.isYou ? "bg-raised" : ""
-                }`}
+                className="w-full text-left transition-transform active:scale-[0.98]"
               >
-                <Avatar
-                  voter={{
-                    display_name: v.display_name,
-                    name: v.display_name,
-                    pin_color: v.pin_color,
-                    avatar_url: v.avatar_url,
-                  }}
-                  size={44}
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="truncate text-title text-ink">{v.display_name}</span>
-                    {v.isYou && <span className="text-meta text-ink-dim">You</span>}
-                    {v.role && <RoleBadge role={v.role} size="sm" />}
+                <GlassCard className="flex items-center gap-4 p-4">
+                  <div className="relative flex-none">
+                    <Avatar
+                      voter={{
+                        display_name: v.display_name,
+                        name: v.display_name,
+                        pin_color: v.pin_color,
+                        avatar_url: v.avatar_url,
+                      }}
+                      size={44}
+                    />
+                    <div
+                      className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-surface ${
+                        v.isSharing ? "bg-green" : "bg-ink-dim"
+                      }`}
+                    />
                   </div>
-                  {v.noteCount > 0 && (
-                    <p className="text-meta text-ink-muted">{v.noteCount} note{v.noteCount !== 1 ? "s" : ""}</p>
-                  )}
-                  {v.isSharing && (
-                    <div className="flex items-center gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-green" />
-                      <span className="text-meta text-green">Sharing location</span>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <div className="flex min-w-0 flex-col items-start">
+                        <span className="flex items-center gap-2 text-title text-ink">
+                          <span className="truncate">{v.display_name}</span>
+                          {v.isYou && (
+                            <span className="flex-none text-meta text-ink-dim">You</span>
+                          )}
+                          {v.role && <RoleBadge role={v.role} size="sm" />}
+                        </span>
+                        {v.isSharing && (
+                          <p className="mt-0.5 flex items-center gap-1 text-meta text-green">
+                            <span className="h-2 w-2 flex-none rounded-full bg-green" />
+                            Sharing location
+                          </p>
+                        )}
+                        {!v.isSharing && v.noteCount > 0 && (
+                          <p className="mt-0.5 text-meta text-ink-muted">
+                            {v.noteCount} note{v.noteCount !== 1 ? "s" : ""}
+                          </p>
+                        )}
+                      </div>
+
+                      {v.tripStatus === "remote" && (
+                        <StatusChip label="Remote" variant="active" icon="wifi" />
+                      )}
+                      {v.tripStatus === "out" && (
+                        <StatusChip label="Out" variant="muted" />
+                      )}
                     </div>
-                  )}
-                  {v.tripStatus === "remote" && (
-                    <div className="flex items-center gap-1.5">
-                      <Icon name="wifi" size={16} className="text-accent" />
-                      <span className="text-meta text-accent">Remote</span>
-                    </div>
-                  )}
-                  {v.tripStatus === "out" && (
-                    <span className="mt-1 inline-flex rounded-full bg-raised px-2 text-meta text-ink-dim">
-                      Out
-                    </span>
-                  )}
-                </div>
-                <Icon name="chevron_right" size={20} className="flex-none text-ink-dim" />
+                  </div>
+                </GlassCard>
               </button>
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-3 px-4 pb-32 pt-4">
+          <div className="grid grid-cols-3 gap-3 pb-32">
             {voters.map((v) => (
               <button
                 key={v.voter_id}
                 type="button"
                 onClick={() => setSelectedVoter(v)}
-                className={`flex flex-col items-center gap-2 rounded-card border bg-surface p-3 ${
-                  v.tripStatus === "out" ? "opacity-50" : ""
-                }`}
+                className="transition-transform active:scale-[0.98]"
               >
-                <Avatar
-                  voter={{
-                    display_name: v.display_name,
-                    name: v.display_name,
-                    pin_color: v.pin_color,
-                    avatar_url: v.avatar_url,
-                  }}
-                  size={56}
-                />
-                <span className="max-w-full truncate text-center text-meta font-semibold text-ink">
-                  {v.display_name}
-                </span>
-                {v.role && <RoleBadge role={v.role} size="sm" />}
-                {v.isSharing && <span className="h-2 w-2 rounded-full bg-green" />}
-                {v.tripStatus === "remote" && (
-                  <Icon name="wifi" size={16} className="text-accent" />
-                )}
+                <GlassCard
+                  className={`flex flex-col items-center gap-2 p-3 ${
+                    v.tripStatus === "out" ? "opacity-50" : ""
+                  }`}
+                >
+                  <div className="relative">
+                    <Avatar
+                      voter={{
+                        display_name: v.display_name,
+                        name: v.display_name,
+                        pin_color: v.pin_color,
+                        avatar_url: v.avatar_url,
+                      }}
+                      size={56}
+                    />
+                    <div
+                      className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-surface ${
+                        v.isSharing ? "bg-green" : "bg-ink-dim"
+                      }`}
+                    />
+                  </div>
+                  <span className="max-w-full truncate text-center text-meta font-semibold text-ink">
+                    {v.display_name}
+                  </span>
+                  {v.role && <RoleBadge role={v.role} size="sm" />}
+                  {v.tripStatus === "remote" && (
+                    <StatusChip label="Remote" variant="active" icon="wifi" />
+                  )}
+                </GlassCard>
               </button>
             ))}
           </div>
