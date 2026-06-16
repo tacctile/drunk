@@ -7,17 +7,16 @@ last_updated: 2026-06-16
 app_root: app/
 
 last_change: >
-  Reskinned Live Locate screen (/social/locate) to match Stitch reference design.
-  PeoplePanel: 280px right-side panel with "Nearby Hopperz" header + "Live" badge,
-  avatar-based person rows (pin_color circle with initials, name, haversine distance,
-  near_me trailing icon), "Show All" row with accent avatar, active trip card at
-  bottom (using useTripData context), collapsible via left-edge chevron handle.
-  Location Options pill: floating rounded-full accent button centered above bottom
-  nav with share_location icon. LocationOptionsModal: custom modal (no Dialog) with
-  rounded-3xl card, display-size "Settings" header with close X, SettingToggle for
-  share position with icon circle, avatar-based mute list, full-width "Save
-  Preferences" button in ink color. Map pin name labels restyled as rounded-full
-  pills with border and shadow. Created SettingToggle UI component.
+  Refined Live Locate people panel and added distance unit picker.
+  PeoplePanel: reduced to 148px width (half of original), translucent bg with
+  backdrop-blur(16px), collapse handle stays visible when panel is collapsed
+  (width-based collapse instead of translateX on the whole aside), compact
+  avatar rows with 28px circles. Distance unit picker: new "Distance Display"
+  section in Location Options modal with 4-chip segmented control (Minutes,
+  Feet, Yards, Miles). Unit persisted to localStorage as bh2-distance-unit.
+  formatDistance now supports all 4 units with smart fallbacks (e.g. miles
+  mode shows feet under 0.1mi, yards mode auto-upgrades to miles over 1760yd).
+  Walking pace for minutes mode is ~5 km/h.
 
 last_session: "Reskin Live Locate screen to Stitch reference"
 
