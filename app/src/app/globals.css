@@ -159,6 +159,14 @@ body {
 }
 .anim-focus { animation: bh-focus-ring 800ms ease-out forwards; }
 
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
