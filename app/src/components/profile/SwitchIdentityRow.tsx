@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { BottomSheet } from "@/components/BottomSheet";
+import { ActionRow } from "@hoppz-ui";
 
 export function SwitchIdentityRow({
   displayName,
@@ -13,13 +14,7 @@ export function SwitchIdentityRow({
   const [confirmOpen, setConfirmOpen] = useState(false);
   return (
     <div className="mt-6">
-      <button
-        type="button"
-        onClick={() => setConfirmOpen(true)}
-        className="flex h-11 w-full items-center justify-center text-base font-semibold text-ink-dim"
-      >
-        Sign out
-      </button>
+      <ActionRow icon="logout" label="Sign out" variant="danger" onClick={() => setConfirmOpen(true)} />
       <BottomSheet open={confirmOpen} onClose={() => setConfirmOpen(false)} label="Switch identity">
         <p className="px-1 pb-3 pt-1 text-base text-ink">
           Sign out as {displayName}? You&apos;ll need your PIN to sign back in.

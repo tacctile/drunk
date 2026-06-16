@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { BottomSheet } from "@/components/BottomSheet";
-import { Icon } from "@/components/Icon";
 import type { City } from "@/data/types";
 import { useAvailability } from "@/hooks/useAvailability";
 import { useGroupData } from "@/hooks/useGroupData";
@@ -10,39 +9,16 @@ import { useVenues } from "@/hooks/useVenues";
 import { useVotes } from "@/hooks/useVotes";
 import { formatShortDate, plural } from "@/lib/format";
 import { Stars } from "@/components/Stars";
-
-/** Shared card row for every Board list — 56px floor, surface, hairline. */
-const ROW_CLASS =
-  "flex min-h-[56px] flex-col justify-center gap-1 rounded-card border bg-surface px-3 py-2";
+import { SectionLabel, Card, ActionButton, OverlayHeader } from "@hoppz-ui";
 
 /** Small drill-down trigger — "See Votes" / "See Who". */
 function SeeButton({ label, onClick }: { label: string; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="h-11 flex-none rounded-chip bg-raised px-2 text-label font-semibold text-ink-muted transition hover:text-ink"
-    >
-      {label}
-    </button>
-  );
+  return <ActionButton variant="ghost" label={label} onClick={onClick} />;
 }
 
 /** Sheet heading with the close button top right. */
 function SheetHeader({ title, onClose }: { title: string; onClose: () => void }) {
-  return (
-    <div className="flex items-center justify-between gap-2">
-      <h2 className="min-w-0 flex-1 truncate text-title font-bold text-ink">{title}</h2>
-      <button
-        type="button"
-        onClick={onClose}
-        aria-label="Close"
-        className="flex h-11 w-11 flex-none items-center justify-center text-ink-muted transition hover:text-ink"
-      >
-        <Icon name="close" size={22} />
-      </button>
-    </div>
-  );
+  return <OverlayHeader title={title} onBack={onClose} />;
 }
 
 /** Low end of a "$X-$Y/night" range; unparseable sorts last. */
@@ -76,10 +52,10 @@ function HotelSection({ city, prefs }: { city: City; prefs: { name: string; coun
 
   return (
     <section className="mt-6">
-      <h2 className="pb-2 text-label font-semibold uppercase tracking-label text-ink-dim">Top Hotels in Top Voted City</h2>
+      <div className="pb-2"><SectionLabel>Top Hotels in Top Voted City</SectionLabel></div>
       <ul className="flex flex-col gap-2">
         {rows.map((hotel) => (
-          <li key={hotel.name} className={ROW_CLASS}>
+          <Card key={hotel.name} className="flex min-h-[56px] flex-col justify-center gap-1 px-3 py-2">
             <p className="truncate text-title text-ink">{hotel.name}</p>
             <div className="flex items-center justify-between gap-2">
               <span className="text-meta font-bold text-accent">
@@ -87,7 +63,7 @@ function HotelSection({ city, prefs }: { city: City; prefs: { name: string; coun
               </span>
               <Stars count={hotel.stars} />
             </div>
-          </li>
+          </Card>
         ))}
       </ul>
     </section>
@@ -141,13 +117,13 @@ export default function BoardPage() {
       {/* Section 1 — two columns, side by side at every width */}
       <div className="grid grid-cols-2 items-start gap-3">
         <section>
-          <h2 className="pb-2 text-label font-semibold uppercase tracking-label text-ink-dim">Top Cities</h2>
+          <div className="pb-2"><SectionLabel>Top Cities</SectionLabel></div>
           {topCities.length === 0 ? (
             <p className="py-10 text-center text-meta font-normal text-ink-dim">No votes yet.</p>
           ) : (
             <ul className="flex flex-col gap-2">
               {topCities.map((tally) => (
-                <li key={tally.city.id} className={ROW_CLASS}>
+                <Card key={tally.city.id} className="flex min-h-[56px] flex-col justify-center gap-1 px-3 py-2">
                   <p className="truncate text-title text-ink">{tally.city.name}</p>
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-meta font-bold text-accent">
@@ -155,14 +131,14 @@ export default function BoardPage() {
                     </span>
                     <SeeButton label="See Votes" onClick={() => setCitySheetId(tally.city.id)} />
                   </div>
-                </li>
+                </Card>
               ))}
             </ul>
           )}
         </section>
 
         <section>
-          <h2 className="pb-2 text-label font-semibold uppercase tracking-label text-ink-dim">Hot Dates</h2>
+          <div className="pb-2"><SectionLabel>Hot Dates</SectionLabel></div>
           {hotDates.length === 0 ? (
             <p className="py-10 text-center text-meta font-normal text-ink-dim">
               No dates marked yet.
@@ -170,7 +146,7 @@ export default function BoardPage() {
           ) : (
             <ul className="flex flex-col gap-2">
               {hotDates.map((day) => (
-                <li key={day.date} className={ROW_CLASS}>
+                <Card key={day.date} className="flex min-h-[56px] flex-col justify-center gap-1 px-3 py-2">
                   <p className="truncate text-title text-ink">
                     {formatShortDate(day.date).replace(",", "")}
                   </p>
@@ -180,7 +156,7 @@ export default function BoardPage() {
                     </span>
                     <SeeButton label="See Who" onClick={() => setDateSheetKey(day.date)} />
                   </div>
-                </li>
+                </Card>
               ))}
             </ul>
           )}
@@ -229,7 +205,7 @@ export default function BoardPage() {
             />
             {dateSheet.available.length > 0 && (
               <>
-                <h3 className="pb-1 pt-2 text-label font-semibold uppercase tracking-label text-ink-dim">Available</h3>
+                <div className="pb-1 pt-2"><SectionLabel>Available</SectionLabel></div>
                 <ul>
                   {dateSheet.available.map((person) => (
                     <li key={person.voterId} className="flex h-11 items-center text-base text-green">
@@ -241,7 +217,7 @@ export default function BoardPage() {
             )}
             {dateSheet.unavailable.length > 0 && (
               <>
-                <h3 className="pb-1 pt-2 text-label font-semibold uppercase tracking-label text-ink-dim">Not available</h3>
+                <div className="pb-1 pt-2"><SectionLabel>Not available</SectionLabel></div>
                 <ul>
                   {dateSheet.unavailable.map((person) => (
                     <li key={person.voterId} className="flex h-11 items-center text-base text-red">

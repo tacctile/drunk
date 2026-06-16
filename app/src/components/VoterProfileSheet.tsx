@@ -1,16 +1,14 @@
 "use client";
 
-import { Avatar } from "@/components/Avatar";
 import { BottomSheet } from "@/components/BottomSheet";
-import { Icon } from "@/components/Icon";
-import { RoleBadge } from "@/components/RoleBadge";
-import { Switch } from "@/components/Switch";
 import { useGroupData } from "@/hooks/useGroupData";
 import { useTripData } from "@/hooks/useTripData";
 import { useVoterNotes } from "@/hooks/useVoterNotes";
-import { isSuperAdmin, getRoleForVoter } from "@/lib/roles";
+import { isSuperAdmin, getRoleForVoter, ROLE_LABELS } from "@/lib/roles";
+import { getInitials } from "@/lib/colors";
 import type { TripMemberStatus } from "@/lib/supabase";
 import type { HopperzVoter } from "@/hooks/useHopperz";
+import { ProfileHero, ActionRow, SectionLabel, StatusPill, Card, SettingsToggleRow } from '@hoppz-ui';
 
 interface VoterProfileSheetProps {
   voter: HopperzVoter | null;
@@ -81,37 +79,18 @@ export function VoterProfileSheet({ voter, onClose, onLocate }: VoterProfileShee
 
   return (
     <BottomSheet open={!!voter} onClose={onClose} label={`${voter.display_name} profile`}>
-      <div className="flex items-center gap-3 border-b border-border pb-4">
-        <Avatar
-          voter={{
-            display_name: voter.display_name,
-            name: voter.display_name,
-            pin_color: voter.pin_color,
-            avatar_url: voter.avatar_url,
-          }}
-          size={56}
-        />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <p className="truncate text-title text-ink">{voter.display_name}</p>
-            {voter.isYou && <span className="text-meta text-ink-dim">You</span>}
-          </div>
-          {voter.role && <RoleBadge role={voter.role} size="sm" />}
-        </div>
-      </div>
+      <ProfileHero
+        initials={getInitials(voter.display_name)}
+        name={voter.display_name}
+        subtitle={voter.role ? ROLE_LABELS[voter.role] : voter.isYou ? "You" : ""}
+        avatarColor={voter.pin_color}
+        avatarUrl={voter.avatar_url ?? undefined}
+      />
 
       {voter.isSharing && !voter.isYou && onLocate && (
-        <button
-          type="button"
-          className="btn-ghost mt-4 w-full"
-          onClick={() => {
-            onLocate(voter.voter_id);
-            onClose();
-          }}
-        >
-          <Icon name="person_pin" size={20} />
-          Locate on map
-        </button>
+        <div className="mt-4">
+          <ActionRow icon="person_pin" label="Locate on map" onClick={() => { onLocate(voter.voter_id); onClose(); }} />
+        </div>
       )}
 
       {/* Trip status */}
@@ -124,12 +103,14 @@ export function VoterProfileSheet({ voter, onClose, onLocate }: VoterProfileShee
 
         return (
           <div className="mt-4 border-t border-border pt-4">
-            <p className="label">Trip Status</p>
-            <div className="mt-2 flex items-center gap-2" style={{ color: cfg.color }}>
-              <span className="ms flex-none" style={{ fontSize: 18 }} aria-hidden="true">{cfg.icon}</span>
-              <span className="text-base">
-                {cfg.label}
-              </span>
+            <SectionLabel>Trip Status</SectionLabel>
+            <div className="mt-2">
+              <StatusPill
+                icon={cfg.icon}
+                label={cfg.label}
+                variant={memberStatus === "on_trip" ? "active" : memberStatus === "out" ? "muted" : "default"}
+                iconClassName={memberStatus === "remote" ? "text-accent" : undefined}
+              />
             </div>
             {showButtons && (
               <div className="mt-3">
@@ -144,7 +125,7 @@ export function VoterProfileSheet({ voter, onClose, onLocate }: VoterProfileShee
       })()}
 
       <div className="mt-4">
-        <p className="label">About</p>
+        <SectionLabel>About</SectionLabel>
         {notesLoading ? (
           <div className="mt-2 flex flex-col gap-2">
             <div className="h-4 w-3/4 animate-pulse rounded bg-surface-raised" />
@@ -153,9 +134,7 @@ export function VoterProfileSheet({ voter, onClose, onLocate }: VoterProfileShee
         ) : notes.length > 0 ? (
           <div className="mt-2 flex flex-col gap-2">
             {notes.map((note) => (
-              <div key={note.id} className="card text-base text-ink">
-                {note.content}
-              </div>
+              <Card key={note.id}><p className="text-base text-ink">{note.content}</p></Card>
             ))}
           </div>
         ) : (
@@ -166,14 +145,12 @@ export function VoterProfileSheet({ voter, onClose, onLocate }: VoterProfileShee
       {viewerIsSuperAdmin && !voter.isYou && (
         <>
           <div className="mt-4 border-t border-border pt-4">
-            <div className="flex items-center justify-between">
-              <span className="text-base text-ink">Moderator access</span>
-              <Switch
-                checked={isMod}
-                onToggle={handleToggleMod}
-                ariaLabel="Moderator access"
-              />
-            </div>
+            <SettingsToggleRow
+              icon="shield"
+              title="Moderator access"
+              checked={isMod}
+              onChange={handleToggleMod}
+            />
           </div>
         </>
       )}

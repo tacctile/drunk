@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Icon } from "@/components/Icon";
+import { ShutterButton, GlassIconButton, ViewfinderFrame } from '@hoppz-ui';
 import { useCamera } from "@/hooks/useCamera";
 import { uploadChatImage } from "@/lib/storage";
 
@@ -144,7 +145,7 @@ function CameraInner() {
   const mirrorCapture = capturedFacingRef.current === "user";
 
   return (
-    <div className="fixed inset-0 z-50 bg-black">
+    <ViewfinderFrame className="fixed inset-0 z-50">
       {/* Video always mounted — stream never interrupted */}
       <video
         ref={videoRef}
@@ -166,17 +167,7 @@ function CameraInner() {
       )}
 
       {/* Back button */}
-      <button
-        type="button"
-        onClick={() => router.back()}
-        className="absolute left-4 flex h-11 w-11 items-center justify-center"
-        style={{
-          top: "env(safe-area-inset-top, 16px)",
-          ...dropShadow,
-        }}
-      >
-        <Icon name="arrow_back" size={28} className="text-white" />
-      </button>
+      <GlassIconButton icon="arrow_back" ariaLabel="Go back" onClick={() => router.back()} className="absolute left-4 top-[env(safe-area-inset-top,16px)]" />
 
       {/* Bottom scrim */}
       <div
@@ -198,34 +189,9 @@ function CameraInner() {
         {capturedImage ? (
           <>
             {/* Post-capture: Retake (left) + Send (right) */}
-            <button
-              type="button"
-              onClick={handleRetake}
-              className="absolute left-8 flex flex-col items-center gap-1"
-              style={{ bottom: 0 }}
-            >
-              <span style={dropShadow}>
-                <Icon name="replay" size={32} className="text-white" />
-              </span>
-              <span className={`text-[11px] font-semibold text-white ${textShadow}`}>
-                Retake
-              </span>
-            </button>
+            <GlassIconButton icon="replay" ariaLabel="Retake" onClick={handleRetake} className="absolute left-8 bottom-0" />
 
-            <button
-              type="button"
-              onClick={() => void handleSend()}
-              disabled={sending}
-              className="absolute right-8 flex flex-col items-center gap-1"
-              style={{ bottom: 0 }}
-            >
-              <span style={dropShadow} className={sending ? "animate-pulse" : ""}>
-                <Icon name="send" size={32} className="text-white" />
-              </span>
-              <span className={`text-[11px] font-semibold text-white ${textShadow}`}>
-                Send
-              </span>
-            </button>
+            <GlassIconButton icon="send" ariaLabel="Send" onClick={() => void handleSend()} className={`absolute right-8 bottom-0 ${sending ? "animate-pulse" : ""}`} />
 
             {sendError && (
               <p
@@ -239,45 +205,14 @@ function CameraInner() {
         ) : (
           <>
             {/* Pre-capture: Shutter (center) + Flip (right) */}
-            <button
-              type="button"
-              onClick={handleCapture}
-              className="absolute left-1/2 flex items-center justify-center rounded-full"
-              style={{
-                width: 72,
-                height: 72,
-                transform: "translateX(-50%)",
-                border: "4px solid white",
-                bottom: 0,
-              }}
-            >
-              <span
-                className="block rounded-full bg-white"
-                style={{ width: 60, height: 60 }}
-              />
-            </button>
+            <ShutterButton onClick={handleCapture} className="absolute left-1/2 -translate-x-1/2 bottom-0" />
 
             {hasMultipleCameras && (
-              <button
-                type="button"
-                onClick={flipCamera}
-                className="absolute flex flex-col items-center gap-1"
-                style={{
-                  right: 32,
-                  bottom: 12,
-                }}
-              >
-                <span style={dropShadow}>
-                  <Icon name="cameraswitch" size={28} className="text-white" />
-                </span>
-                <span className={`text-[11px] font-semibold text-white ${textShadow}`}>
-                  Flip
-                </span>
-              </button>
+              <GlassIconButton icon="cameraswitch" ariaLabel="Flip camera" onClick={flipCamera} className="absolute right-8 bottom-3" />
             )}
           </>
         )}
       </div>
-    </div>
+    </ViewfinderFrame>
   );
 }

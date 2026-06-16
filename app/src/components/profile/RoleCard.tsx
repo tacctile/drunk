@@ -8,6 +8,7 @@ import {
   MODERATOR_RESTRICTIONS,
   type UserRole,
 } from "@/lib/roles";
+import { Card } from "@hoppz-ui";
 
 export function RoleCard({ role }: { role: NonNullable<UserRole> }) {
   const isSA = role === "super_admin";
@@ -15,7 +16,7 @@ export function RoleCard({ role }: { role: NonNullable<UserRole> }) {
 
   return (
     <section className="mt-4">
-      <div className="card">
+      <Card>
         <div className="flex items-center gap-2">
           <Icon name={ROLE_BADGE_ICONS[role]} size={20} className={colorClass} />
           <span className={`text-title ${colorClass}`}>{ROLE_LABELS[role]}</span>
@@ -44,7 +45,7 @@ export function RoleCard({ role }: { role: NonNullable<UserRole> }) {
             </div>
           </div>
         )}
-      </div>
+      </Card>
     </section>
   );
 }

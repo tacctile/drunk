@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Avatar } from "@/components/Avatar";
+import { SectionHeader, PersonRow, MemberCard } from "@hoppz-ui";
 import { Icon } from "@/components/Icon";
 import { RoleBadge } from "@/components/RoleBadge";
 import { VoterProfileSheet } from "@/components/VoterProfileSheet";
 import { useHopperz, type HopperzVoter } from "@/hooks/useHopperz";
 import { setLastWing } from "@/lib/auth";
+import { getInitials } from "@/lib/colors";
 import { lsGet, lsSet } from "@/lib/storage";
 
 type ViewMode = "list" | "grid";
@@ -45,10 +46,11 @@ export default function HopperzPage() {
     <>
       <div className="mx-auto max-w-2xl">
         <div className="flex items-start justify-between px-4 pt-4">
-          <div>
-            <h1 className="text-title font-bold text-ink">Hopperz</h1>
-            <p className="text-meta text-ink-muted">{voters.length} member{voters.length !== 1 ? "s" : ""}</p>
-          </div>
+          <SectionHeader
+            title="Hopperz"
+            actionLabel={`${voters.length} member${voters.length !== 1 ? "s" : ""}`}
+            actionClassName="text-on-surface-variant"
+          />
           <button
             type="button"
             onClick={toggleView}
@@ -67,83 +69,33 @@ export default function HopperzPage() {
         ) : view === "list" ? (
           <div className="mt-2 pb-32">
             {voters.map((v) => (
-              <button
+              <PersonRow
                 key={v.voter_id}
-                type="button"
+                initials={getInitials(v.display_name)}
+                name={v.display_name}
+                subtitle={v.noteCount > 0 ? `${v.noteCount} note${v.noteCount !== 1 ? "s" : ""}` : undefined}
+                avatarColor={v.pin_color}
+                avatarUrl={v.avatar_url ?? undefined}
+                statusColor={v.isSharing ? "var(--green)" : undefined}
+                trailingIcon="chevron_right"
                 onClick={() => setSelectedVoter(v)}
-                className={`flex w-full min-h-[72px] items-center gap-3 border-b border-border px-4 text-left ${
-                  v.isYou ? "bg-raised" : ""
-                }`}
-              >
-                <Avatar
-                  voter={{
-                    display_name: v.display_name,
-                    name: v.display_name,
-                    pin_color: v.pin_color,
-                    avatar_url: v.avatar_url,
-                  }}
-                  size={44}
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="truncate text-title text-ink">{v.display_name}</span>
-                    {v.isYou && <span className="text-meta text-ink-dim">You</span>}
-                    {v.role && <RoleBadge role={v.role} size="sm" />}
-                  </div>
-                  {v.noteCount > 0 && (
-                    <p className="text-meta text-ink-muted">{v.noteCount} note{v.noteCount !== 1 ? "s" : ""}</p>
-                  )}
-                  {v.isSharing && (
-                    <div className="flex items-center gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-green" />
-                      <span className="text-meta text-green">Sharing location</span>
-                    </div>
-                  )}
-                  {v.tripStatus === "remote" && (
-                    <div className="flex items-center gap-1.5">
-                      <Icon name="wifi" size={16} className="text-accent" />
-                      <span className="text-meta text-accent">Remote</span>
-                    </div>
-                  )}
-                  {v.tripStatus === "out" && (
-                    <span className="mt-1 inline-flex rounded-full bg-raised px-2 text-meta text-ink-dim">
-                      Out
-                    </span>
-                  )}
-                </div>
-                <Icon name="chevron_right" size={20} className="flex-none text-ink-dim" />
-              </button>
+              />
             ))}
           </div>
         ) : (
           <div className="grid grid-cols-3 gap-3 px-4 pb-32 pt-4">
             {voters.map((v) => (
-              <button
+              <MemberCard
                 key={v.voter_id}
-                type="button"
+                initials={getInitials(v.display_name)}
+                name={v.display_name}
+                avatarColor={v.pin_color}
+                avatarUrl={v.avatar_url ?? undefined}
+                statusDotColor={v.isSharing ? "var(--green)" : v.tripStatus === "remote" ? "var(--accent)" : undefined}
+                statusText={v.tripStatus === "remote" ? "Remote" : v.tripStatus === "out" ? "Out" : undefined}
+                badge={v.role ? <RoleBadge role={v.role} size="sm" /> : undefined}
                 onClick={() => setSelectedVoter(v)}
-                className={`flex flex-col items-center gap-2 rounded-card border bg-surface p-3 ${
-                  v.tripStatus === "out" ? "opacity-50" : ""
-                }`}
-              >
-                <Avatar
-                  voter={{
-                    display_name: v.display_name,
-                    name: v.display_name,
-                    pin_color: v.pin_color,
-                    avatar_url: v.avatar_url,
-                  }}
-                  size={56}
-                />
-                <span className="max-w-full truncate text-center text-meta font-semibold text-ink">
-                  {v.display_name}
-                </span>
-                {v.role && <RoleBadge role={v.role} size="sm" />}
-                {v.isSharing && <span className="h-2 w-2 rounded-full bg-green" />}
-                {v.tripStatus === "remote" && (
-                  <Icon name="wifi" size={16} className="text-accent" />
-                )}
-              </button>
+              />
             ))}
           </div>
         )}

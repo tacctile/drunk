@@ -6,6 +6,7 @@ import { Icon } from "@/components/Icon";
 import { cities } from "@/data/cities";
 import { useGroupData } from "@/hooks/useGroupData";
 import { useTripData } from "@/hooks/useTripData";
+import { SectionLabel, Card, StatusPill, TextField, ActionButton } from '@hoppz-ui';
 
 interface TripSetupPanelProps {
   canClear: boolean;
@@ -63,27 +64,16 @@ export function TripSetupPanel({ canClear }: TripSetupPanelProps) {
 
   const activeVoters = groupVoters.filter((v) => v.is_active);
 
-  const statusDot =
-    effectiveStatus === "active"
-      ? "var(--green)"
-      : effectiveStatus === "upcoming"
-        ? "var(--accent)"
-        : "var(--ink-dim)";
-
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="label">Trip setup</h2>
+      <SectionLabel>Trip setup</SectionLabel>
 
-      <div className="rounded-card border bg-surface p-4">
-        <div className="flex items-center gap-2">
-          <span
-            className="h-2.5 w-2.5 rounded-full"
-            style={{ background: statusDot }}
-          />
-          <span className="text-base font-semibold text-ink">
-            Status: {effectiveStatus === "active" ? "Active" : effectiveStatus === "upcoming" ? "Upcoming" : "Planning"}
-          </span>
-        </div>
+      <Card>
+        <StatusPill
+          dot
+          dotClassName={effectiveStatus === "active" ? "bg-green" : effectiveStatus === "upcoming" ? "bg-accent" : "bg-on-surface-variant"}
+          label={`Status: ${effectiveStatus === "active" ? "Active" : effectiveStatus === "upcoming" ? "Upcoming" : "Planning"}`}
+        />
         {(effectiveStatus === "upcoming" || effectiveStatus === "active") && (
           <div className="mt-2 flex flex-col gap-1 text-meta font-normal text-ink-muted">
             {cityName && <p>City: {cityName}</p>}
@@ -91,12 +81,12 @@ export function TripSetupPanel({ canClear }: TripSetupPanelProps) {
             {trip?.end_date && <p>End: {trip.end_date}</p>}
           </div>
         )}
-      </div>
+      </Card>
 
       {(effectiveStatus === "planning" || effectiveStatus === "upcoming") && (
         <>
           <div className="flex flex-col gap-1">
-            <p className="label">Destination City</p>
+            <SectionLabel>Destination City</SectionLabel>
             <select
               className="input w-full"
               value={trip?.city_id ?? ""}
@@ -114,7 +104,7 @@ export function TripSetupPanel({ canClear }: TripSetupPanelProps) {
           </div>
 
           <div className="flex flex-col gap-1">
-            <p className="label">Trip dates</p>
+            <SectionLabel>Trip dates</SectionLabel>
             <div className="grid grid-cols-2 gap-3">
               <input
                 type="date"
@@ -141,9 +131,9 @@ export function TripSetupPanel({ canClear }: TripSetupPanelProps) {
       )}
 
       <div className="flex flex-col gap-2">
-        <p className="label">Confirmed Hotels</p>
+        <SectionLabel>Confirmed Hotels</SectionLabel>
         {hotels.map((hotel) => (
-          <div key={hotel.id} className="rounded-card border bg-surface">
+          <Card key={hotel.id} className="!p-0">
             <div className="flex items-center justify-between px-4 py-3">
               <button
                 type="button"
@@ -210,18 +200,12 @@ export function TripSetupPanel({ canClear }: TripSetupPanelProps) {
                 })}
               </div>
             )}
-          </div>
+          </Card>
         ))}
-        <div className="flex gap-2">
-          <input
-            className="input min-w-0 flex-1"
-            placeholder="Hotel name"
-            value={hotelInput}
-            onChange={(e) => setHotelInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleAddHotel();
-            }}
-          />
+        <div className="flex items-end gap-2">
+          <div className="min-w-0 flex-1">
+            <TextField label="Add hotel" value={hotelInput} onChange={setHotelInput} placeholder="Hotel name" />
+          </div>
           <button
             type="button"
             onClick={handleAddHotel}
@@ -236,15 +220,9 @@ export function TripSetupPanel({ canClear }: TripSetupPanelProps) {
       {canClear && (effectiveStatus === "upcoming" || effectiveStatus === "active" || startVal) && (
         <>
           {!confirmClear ? (
-            <button
-              type="button"
-              onClick={() => setConfirmClear(true)}
-              className="btn w-full border border-red bg-raised text-red"
-            >
-              Clear Trip Dates
-            </button>
+            <ActionButton label="Clear Trip Dates" variant="ghost" fullWidth onClick={() => setConfirmClear(true)} />
           ) : (
-            <div className="rounded-card border border-red bg-raised p-4">
+            <Card className="!border !border-red">
               <p className="text-meta font-normal text-ink-muted">
                 This will return the trip to planning mode. Votes will unlock.
               </p>
@@ -267,7 +245,7 @@ export function TripSetupPanel({ canClear }: TripSetupPanelProps) {
                   Confirm
                 </button>
               </div>
-            </div>
+            </Card>
           )}
         </>
       )}

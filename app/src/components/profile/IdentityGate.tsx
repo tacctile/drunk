@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Icon } from "@/components/Icon";
 import { NamePrompt } from "@/components/NamePrompt";
+import { ActionButton } from "@hoppz-ui";
 
 export function IdentityGate() {
   const [open, setOpen] = useState(false);
@@ -13,9 +14,7 @@ export function IdentityGate() {
       <p className="text-meta font-normal text-ink-muted">
         Create your identity to vote, mark dates, and share your location.
       </p>
-      <button type="button" className="btn-accent w-full max-w-sm" onClick={() => setOpen(true)}>
-        Create identity
-      </button>
+      <ActionButton label="Create identity" variant="filled" fullWidth onClick={() => setOpen(true)} />
       <NamePrompt open={open} flow="new" onCancel={() => setOpen(false)} onDone={() => setOpen(false)} />
     </div>
   );

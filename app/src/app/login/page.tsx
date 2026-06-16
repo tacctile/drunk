@@ -6,7 +6,7 @@ import { useGroupData } from "@/hooks/useGroupData";
 import { isAuthenticated, mirrorAuthCookie, setLastWing } from "@/lib/auth";
 import { isValidPin, MAX_FIRST_NAME_LENGTH } from "@/lib/identity";
 import { FieldError } from "@/components/FieldError";
-import { Icon } from "@/components/Icon";
+import { PageTitle, TextField, PinInput, ActionButton, SectionLabel, Card } from '@hoppz-ui';
 
 interface InstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -26,7 +26,6 @@ export default function LoginPage() {
   const [siErrors, setSiErrors] = useState<{ first?: string; initial?: string; pin?: string }>({});
   const [siAuthError, setSiAuthError] = useState("");
   const [siBusy, setSiBusy] = useState(false);
-  const [siShowPin, setSiShowPin] = useState(false);
 
   // Create fields
   const [crFirst, setCrFirst] = useState("");
@@ -34,7 +33,6 @@ export default function LoginPage() {
   const [crPin, setCrPin] = useState("");
   const [crErrors, setCrErrors] = useState<{ first?: string; initial?: string; pin?: string }>({});
   const [crBusy, setCrBusy] = useState(false);
-  const [crShowPin, setCrShowPin] = useState(false);
 
   // Install section
   const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
@@ -137,156 +135,51 @@ export default function LoginPage() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-sm flex-col px-6 pb-[calc(24px+env(safe-area-inset-bottom))]">
       <header className="pt-16 text-center">
-        <h1 className="text-display text-ink">Hoppz</h1>
+        <PageTitle>Hoppz</PageTitle>
         <p className="mt-2 text-base text-ink-muted">Plan the perfect overnight bar hop</p>
       </header>
 
       <div className="mt-10">
         {mode === "signin" ? (
           <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              void submitSignIn();
-            }}
+            onSubmit={(e) => e.preventDefault()}
             className="flex flex-col gap-3"
           >
             <div className="flex flex-col gap-1">
-              <input
-                className="input"
-                placeholder="First name"
-                autoComplete="off"
-                autoCapitalize="words"
-                value={siFirst}
-                maxLength={MAX_FIRST_NAME_LENGTH}
-                onChange={(e) => setSiFirst(e.target.value)}
-                aria-label="First name"
-              />
+              <TextField label="First name" value={siFirst} onChange={(v) => setSiFirst(v)} maxLength={MAX_FIRST_NAME_LENGTH} placeholder="First name" />
               {siErrors.first && <FieldError>{siErrors.first}</FieldError>}
             </div>
             <div className="flex flex-col gap-1">
-              <input
-                className="input"
-                placeholder="Last initial"
-                autoComplete="off"
-                autoCapitalize="characters"
-                value={siInitial}
-                maxLength={1}
-                onChange={(e) =>
-                  setSiInitial(e.target.value.replace(/[^A-Za-z]/g, "").slice(0, 1).toUpperCase())
-                }
-                aria-label="Last initial"
-              />
+              <TextField label="Last initial" value={siInitial} onChange={(v) => setSiInitial(v.replace(/[^A-Za-z]/g, "").slice(0, 1).toUpperCase())} maxLength={1} placeholder="Last initial" />
               {siErrors.initial && <FieldError>{siErrors.initial}</FieldError>}
             </div>
             <div className="flex flex-col gap-1">
-              <div className="relative">
-                <input
-                  className="input pr-12"
-                  type={siShowPin ? "text" : "password"}
-                  inputMode="numeric"
-                  autoComplete="off"
-                  placeholder="PIN"
-                  value={siPin}
-                  maxLength={2}
-                  onChange={(e) => setSiPin(e.target.value.replace(/\D/g, "").slice(0, 2))}
-                  aria-label="PIN"
-                />
-                <button
-                  type="button"
-                  aria-label={siShowPin ? "Hide PIN" : "Reveal PIN"}
-                  onClick={() => setSiShowPin((s) => !s)}
-                  className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center text-ink-muted"
-                >
-                  <Icon name={siShowPin ? "visibility_off" : "visibility"} size={20} />
-                </button>
-              </div>
+              <PinInput value={siPin} onChange={(v) => setSiPin(v.replace(/\D/g, "").slice(0, 2))} maxLength={2} placeholder="PIN" />
               {siErrors.pin && <FieldError>{siErrors.pin}</FieldError>}
               {siAuthError && <FieldError>{siAuthError}</FieldError>}
             </div>
-            <button type="submit" className="btn-accent w-full" disabled={siBusy}>
-              Sign In
-            </button>
-            <button
-              type="button"
-              onClick={() => swapMode("create")}
-              className="h-11 text-meta font-semibold text-accent"
-            >
-              New here? Create an account
-            </button>
+            <ActionButton label="Sign In" variant="filled" fullWidth onClick={() => void submitSignIn()} />
+            <ActionButton label="New here? Create an account" variant="ghost" onClick={() => swapMode("create")} />
           </form>
         ) : (
           <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              void submitCreate();
-            }}
+            onSubmit={(e) => e.preventDefault()}
             className="flex flex-col gap-3"
           >
             <div className="flex flex-col gap-1">
-              <input
-                className="input"
-                placeholder="First name"
-                autoComplete="off"
-                autoCapitalize="words"
-                value={crFirst}
-                maxLength={MAX_FIRST_NAME_LENGTH}
-                onChange={(e) => setCrFirst(e.target.value)}
-                aria-label="First name"
-              />
+              <TextField label="First name" value={crFirst} onChange={(v) => setCrFirst(v)} maxLength={MAX_FIRST_NAME_LENGTH} placeholder="First name" />
               {crErrors.first && <FieldError>{crErrors.first}</FieldError>}
             </div>
             <div className="flex flex-col gap-1">
-              <input
-                className="input"
-                placeholder="Last initial"
-                autoComplete="off"
-                autoCapitalize="characters"
-                value={crInitial}
-                maxLength={1}
-                onChange={(e) =>
-                  setCrInitial(e.target.value.replace(/[^A-Za-z]/g, "").slice(0, 1).toUpperCase())
-                }
-                aria-label="Last initial"
-              />
+              <TextField label="Last initial" value={crInitial} onChange={(v) => setCrInitial(v.replace(/[^A-Za-z]/g, "").slice(0, 1).toUpperCase())} maxLength={1} placeholder="Last initial" />
               {crErrors.initial && <FieldError>{crErrors.initial}</FieldError>}
             </div>
             <div className="flex flex-col gap-1">
-              <div className="relative">
-                <input
-                  className="input pr-12"
-                  type={crShowPin ? "text" : "password"}
-                  inputMode="numeric"
-                  autoComplete="off"
-                  placeholder="2-digit PIN"
-                  value={crPin}
-                  maxLength={2}
-                  onChange={(e) => setCrPin(e.target.value.replace(/\D/g, "").slice(0, 2))}
-                  aria-label="2-digit PIN"
-                />
-                <button
-                  type="button"
-                  aria-label={crShowPin ? "Hide PIN" : "Reveal PIN"}
-                  onClick={() => setCrShowPin((s) => !s)}
-                  className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center text-ink-muted"
-                >
-                  <Icon name={crShowPin ? "visibility_off" : "visibility"} size={20} />
-                </button>
-              </div>
+              <PinInput value={crPin} onChange={(v) => setCrPin(v.replace(/\D/g, "").slice(0, 2))} maxLength={2} placeholder="2-digit PIN" hint="Name, initial, and PIN let you vote from another device." />
               {crErrors.pin && <FieldError>{crErrors.pin}</FieldError>}
-              <p className="text-meta font-normal text-ink-dim">
-                Name, initial, and PIN let you vote from another device.
-              </p>
             </div>
-            <button type="submit" className="btn-accent w-full" disabled={crBusy}>
-              Save
-            </button>
-            <button
-              type="button"
-              onClick={() => swapMode("signin")}
-              className="h-11 text-meta font-semibold text-accent"
-            >
-              Already have an account? Sign in
-            </button>
+            <ActionButton label="Save" variant="filled" fullWidth onClick={() => void submitCreate()} />
+            <ActionButton label="Already have an account? Sign in" variant="ghost" onClick={() => swapMode("signin")} />
           </form>
         )}
       </div>
@@ -296,7 +189,7 @@ export default function LoginPage() {
         <>
           <div className="my-6 h-px w-full bg-border" />
           <section>
-            <h2 className="label pb-3">Add to Home Screen</h2>
+            <SectionLabel>Add to Home Screen</SectionLabel>
             <div className="flex items-stretch gap-3">
               <button
                 type="button"
@@ -331,10 +224,8 @@ export default function LoginPage() {
               className="grid transition-[max-height] duration-200 ease-in-out"
               style={{ maxHeight: showIosHint ? "200px" : "0px", overflow: "hidden" }}
             >
-              <p className="mt-3 rounded-card bg-raised p-4 text-meta font-normal text-ink-muted">
-                Tap the Share button (⎙) at the bottom of Safari, then select &lsquo;Add to Home
-                Screen&rsquo; and tap Add.
-              </p>
+              <Card className="mt-3"><p className="text-meta font-normal text-ink-muted">Tap the Share button (⎙) at the bottom of Safari, then select &lsquo;Add to Home
+                Screen&rsquo; and tap Add.</p></Card>
             </div>
           </section>
         </>

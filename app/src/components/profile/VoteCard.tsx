@@ -3,6 +3,7 @@
 import { cities } from "@/data/cities";
 import { useGroupData } from "@/hooks/useGroupData";
 import { useVotes } from "@/hooks/useVotes";
+import { SectionLabel, Card, LinkRow } from "@hoppz-ui";
 
 export function VoteCard({ onGoVote }: { onGoVote: () => void }) {
   const { voterId, hotelVotes } = useGroupData();
@@ -14,8 +15,8 @@ export function VoteCard({ onGoVote }: { onGoVote: () => void }) {
 
   return (
     <section>
-      <h2 className="label">My vote</h2>
-      <div className="card mt-2">
+      <SectionLabel>My vote</SectionLabel>
+      <Card className="mt-2">
         {hasVoted ? (
           <>
             <p className="text-title text-ink">{cityName}</p>
@@ -27,16 +28,10 @@ export function VoteCard({ onGoVote }: { onGoVote: () => void }) {
         ) : (
           <>
             <p className="text-base text-ink-dim">No vote cast yet</p>
-            <button
-              type="button"
-              onClick={onGoVote}
-              className="flex h-11 items-center text-base font-semibold text-accent"
-            >
-              Go vote
-            </button>
+            <LinkRow label="Go vote" onClick={onGoVote} />
           </>
         )}
-      </div>
+      </Card>
     </section>
   );
 }
