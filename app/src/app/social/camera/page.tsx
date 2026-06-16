@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Icon } from "@/components/Icon";
+import { GlassIconButton } from "@/components/ui/GlassIconButton";
 import { useCamera } from "@/hooks/useCamera";
 import { uploadChatImage } from "@/lib/storage";
 
@@ -53,6 +54,7 @@ function CameraInner() {
   const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [showFlash, setShowFlash] = useState(false);
   const capturedFacingRef = useRef(facingMode);
 
   useEffect(() => {
@@ -70,7 +72,9 @@ function CameraInner() {
 
   const handleCapture = useCallback(() => {
     capturedFacingRef.current = facingMode;
+    setShowFlash(true);
     capturePhoto();
+    setTimeout(() => setShowFlash(false), 300);
   }, [capturePhoto, facingMode]);
 
   const handleSend = useCallback(async () => {
@@ -93,9 +97,6 @@ function CameraInner() {
     retake();
     setSendError(null);
   }, [retake]);
-
-  const dropShadow = { filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.8))" };
-  const textShadow = "[text-shadow:0_1px_3px_rgba(0,0,0,0.8)]";
 
   if (permissionDenied) {
     return (
@@ -144,140 +145,144 @@ function CameraInner() {
   const mirrorCapture = capturedFacingRef.current === "user";
 
   return (
-    <div className="fixed inset-0 z-50 bg-black">
-      {/* Video always mounted — stream never interrupted */}
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        muted
-        className="h-full w-full object-cover"
-        style={facingMode === "user" ? { transform: "scaleX(-1)" } : undefined}
-      />
-      {/* Captured image overlays video — video keeps running beneath */}
-      {capturedImage && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={capturedImage}
-          alt=""
-          className="absolute inset-0 h-full w-full object-cover"
-          style={mirrorCapture ? { transform: "scaleX(-1)" } : undefined}
+    <main className="fixed inset-0 z-50 overflow-hidden bg-black">
+      {/* Viewfinder feed — always running */}
+      <div className="absolute inset-0 z-0">
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className="h-full w-full object-cover"
+          style={facingMode === "user" ? { transform: "scaleX(-1)" } : undefined}
         />
-      )}
+      </div>
 
-      {/* Back button */}
-      <button
-        type="button"
-        onClick={() => router.back()}
-        className="absolute left-4 flex h-11 w-11 items-center justify-center"
-        style={{
-          top: "env(safe-area-inset-top, 16px)",
-          ...dropShadow,
-        }}
-      >
-        <Icon name="arrow_back" size={28} className="text-white" />
-      </button>
-
-      {/* Bottom scrim */}
-      <div
-        className="absolute bottom-0 left-0 right-0 pointer-events-none"
-        style={{
-          height: 160,
-          background:
-            "linear-gradient(to bottom, transparent, rgba(0,0,0,0.6))",
-        }}
-      />
-
-      {/* Controls container */}
-      <div
-        className="absolute left-0 right-0"
-        style={{
-          bottom: "calc(env(safe-area-inset-bottom, 0px) + 32px)",
-        }}
-      >
-        {capturedImage ? (
-          <>
-            {/* Post-capture: Retake (left) + Send (right) */}
-            <button
-              type="button"
-              onClick={handleRetake}
-              className="absolute left-8 flex flex-col items-center gap-1"
-              style={{ bottom: 0 }}
-            >
-              <span style={dropShadow}>
-                <Icon name="replay" size={32} className="text-white" />
+      {/* Pre-capture UI overlay */}
+      {!capturedImage && (
+        <div className="relative z-10 flex h-full w-full flex-col justify-between pointer-events-none">
+          {/* Top controls */}
+          <header
+            className="w-full px-4 pt-2 flex items-center justify-between pointer-events-auto"
+            style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)" }}
+          >
+            <GlassIconButton
+              icon="arrow_back"
+              onClick={() => router.back()}
+              ariaLabel="Go back"
+            />
+            <div className="flex items-center gap-1 rounded-full border border-white/10 bg-black/40 px-4 py-1 backdrop-blur-md">
+              <span className="h-2 w-2 rounded-full bg-red animate-pulse" />
+              <span className="text-[12px] font-semibold uppercase tracking-widest text-white">
+                Live
               </span>
-              <span className={`text-[11px] font-semibold text-white ${textShadow}`}>
-                Retake
-              </span>
-            </button>
+            </div>
+            <div className="h-11 w-11" />
+          </header>
 
-            <button
-              type="button"
-              onClick={() => void handleSend()}
-              disabled={sending}
-              className="absolute right-8 flex flex-col items-center gap-1"
-              style={{ bottom: 0 }}
-            >
-              <span style={dropShadow} className={sending ? "animate-pulse" : ""}>
-                <Icon name="send" size={32} className="text-white" />
-              </span>
-              <span className={`text-[11px] font-semibold text-white ${textShadow}`}>
-                Send
-              </span>
-            </button>
-
-            {sendError && (
-              <p
-                className={`absolute left-0 right-0 text-center text-base font-semibold text-white ${textShadow}`}
-                style={{ bottom: -32 }}
-              >
-                {sendError}
-              </p>
-            )}
-          </>
-        ) : (
-          <>
-            {/* Pre-capture: Shutter (center) + Flip (right) */}
-            <button
-              type="button"
-              onClick={handleCapture}
-              className="absolute left-1/2 flex items-center justify-center rounded-full"
-              style={{
-                width: 72,
-                height: 72,
-                transform: "translateX(-50%)",
-                border: "4px solid white",
-                bottom: 0,
-              }}
-            >
-              <span
-                className="block rounded-full bg-white"
-                style={{ width: 60, height: 60 }}
+          {/* Bottom controls */}
+          <footer
+            className="w-full px-4 pointer-events-auto"
+            style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 32px)" }}
+          >
+            <div className="flex w-full items-center justify-between">
+              <GlassIconButton
+                icon="photo_library"
+                iconSize={28}
+                label="Gallery"
+                onClick={() => router.push("/social/gallery")}
+                ariaLabel="Gallery"
               />
-            </button>
 
-            {hasMultipleCameras && (
+              {/* Shutter button */}
               <button
                 type="button"
-                onClick={flipCamera}
-                className="absolute flex flex-col items-center gap-1"
-                style={{
-                  right: 32,
-                  bottom: 12,
-                }}
+                onClick={handleCapture}
+                aria-label="Take photo"
+                className="group relative flex h-[84px] w-[84px] items-center justify-center"
               >
-                <span style={dropShadow}>
-                  <Icon name="cameraswitch" size={28} className="text-white" />
-                </span>
-                <span className={`text-[11px] font-semibold text-white ${textShadow}`}>
-                  Flip
+                <div className="absolute inset-0 rounded-full border-[5px] border-white transition-transform group-active:scale-105" />
+                <div className="h-[66px] w-[66px] rounded-full bg-white shadow-inner" />
+              </button>
+
+              {hasMultipleCameras ? (
+                <GlassIconButton
+                  icon="flip_camera_ios"
+                  iconSize={28}
+                  label="Flip"
+                  onClick={flipCamera}
+                  ariaLabel="Flip camera"
+                />
+              ) : (
+                <div className="w-12" />
+              )}
+            </div>
+          </footer>
+        </div>
+      )}
+
+      {/* Post-capture review overlay */}
+      {capturedImage && (
+        <div className="absolute inset-0 z-40">
+          <div className="relative h-full w-full">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={capturedImage}
+              alt=""
+              className="h-full w-full object-cover"
+              style={mirrorCapture ? { transform: "scaleX(-1)" } : undefined}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30" />
+
+            {/* Review top controls */}
+            <div
+              className="absolute top-0 w-full px-4 flex items-center gap-2"
+              style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)" }}
+            >
+              <GlassIconButton
+                icon="arrow_back"
+                onClick={() => router.back()}
+                ariaLabel="Go back"
+              />
+              <button
+                type="button"
+                onClick={handleRetake}
+                className="flex items-center gap-1 rounded-full border border-white/10 bg-black/60 px-4 py-2 shadow-2xl backdrop-blur-xl transition-transform active:scale-95"
+              >
+                <Icon name="close" size={24} className="text-white" />
+                <span className="text-title font-bold text-white">Retake</span>
+              </button>
+            </div>
+
+            {/* Review bottom controls */}
+            <div
+              className="absolute bottom-0 w-full px-4 flex flex-col items-center gap-2"
+              style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 32px)" }}
+            >
+              <button
+                type="button"
+                onClick={() => void handleSend()}
+                disabled={sending}
+                className="flex h-11 w-full max-w-sm items-center justify-center gap-2 rounded-full border border-white/20 bg-accent text-bg shadow-[0_4px_24px_rgba(255,140,66,0.5)] transition-all active:scale-[0.98] disabled:opacity-50"
+              >
+                <span className="text-title font-bold">
+                  {sending ? "Sending…" : "Post to Hopp"}
                 </span>
               </button>
-            )}
-          </>
-        )}
-      </div>
-    </div>
+              {sendError && (
+                <p className="text-base font-semibold text-white drop-shadow-md">
+                  {sendError}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Capture flash overlay */}
+      {showFlash && (
+        <div className="fixed inset-0 z-50 bg-white pointer-events-none anim-flash" />
+      )}
+    </main>
   );
 }

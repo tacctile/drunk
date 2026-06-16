@@ -138,6 +138,12 @@ body {
 .anim-rise { animation: bh-rise 160ms ease both; }
 .anim-sheet { animation: bh-sheet-up 160ms ease both; }
 .anim-hold { animation: bh-hold-pulse 3s ease both; }
+@keyframes bh-capture-flash {
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.anim-flash { animation: bh-capture-flash 300ms ease-out forwards; }
 
 @media (prefers-reduced-motion: reduce) {
   *,

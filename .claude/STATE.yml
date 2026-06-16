@@ -2,23 +2,24 @@
 # Companion to CONTEXT.md / ARCHITECTURE.md / BUILD_INDEX.md.
 # Update at the end of every session.
 
-current_phase: reskin-live-locate
+current_phase: reskin-camera
 last_updated: 2026-06-16
 app_root: app/
 
 last_change: >
-  Refined Live Locate people panel and added distance unit picker.
-  PeoplePanel: reduced to 148px width (half of original), translucent bg with
-  backdrop-blur(16px), collapse handle stays visible when panel is collapsed
-  (width-based collapse instead of translateX on the whole aside), compact
-  avatar rows with 28px circles. Distance unit picker: new "Distance Display"
-  section in Location Options modal with 4-chip segmented control (Minutes,
-  Feet, Yards, Miles). Unit persisted to localStorage as bh2-distance-unit.
-  formatDistance now supports all 4 units with smart fallbacks (e.g. miles
-  mode shows feet under 0.1mi, yards mode auto-upgrades to miles over 1760yd).
-  Walking pace for minutes mode is ~5 km/h.
+  Reskinned Camera screen to match Stitch reference. Full-bleed viewfinder
+  with frosted-glass control overlay pattern: top header (glass back button,
+  Live badge pill with pulsing red dot, spacer), bottom controls (Gallery
+  glass button, 84px shutter with 5px border ring + 66px inner circle, Flip
+  glass button). Post-capture review overlay with gradient scrim
+  (from-black/60 via-transparent to-black/30), glass back button + retake
+  pill (close icon + text), full-width accent "Post to Hopp" send button
+  with orange glow shadow. Added capture flash animation (300ms white
+  overlay). New GlassIconButton UI component for frosted-glass circular
+  buttons. pointer-events layering pattern (none on container, auto on
+  interactive children) prevents viewfinder touch interference.
 
-last_session: "Reskin Live Locate screen to Stitch reference"
+last_session: "Reskin Camera screen to Stitch reference"
 
 verification:
   typecheck: pass        # pre-existing module warnings only
