@@ -2,22 +2,27 @@
 # Companion to CONTEXT.md / ARCHITECTURE.md / BUILD_INDEX.md.
 # Update at the end of every session.
 
-current_phase: reskin-gallery
+current_phase: reskin-cities
 last_updated: 2026-06-16
 app_root: app/
 
 last_change: >
-  Reskinned Gallery (Photos) screen to match Stitch reference. Photo grid now
-  uses 2px gap with surface-colored placeholders, 1:1 aspect ratio items, and
-  active:scale-[0.98] tap feedback. Day section headers are fully opaque
-  sticky bars with uppercase label-voice typography (12px/bold/tracking-widest).
-  Upload button replaced with green FloatingActionButton (56px circle, filled
-  icon, rim-light, deep shadow) positioned bottom-right matching the Stitch FAB
-  pattern. Jump-to-date restyled as a compact pill with label-voice text. Loading
-  skeleton uses 3-col grid with 2px gap and surface placeholders. One new UI
-  component: FloatingActionButton.
+  Reskinned Cities List screen to match Stitch reference. Row layout switched
+  from pixel-based flex to percentage-based columns (35% city / 20% walk /
+  25% distance / 15% vote) matching the Stitch 4-column pattern. Walk score
+  column now stacks vertically (big display number above, grade badge pill
+  below) instead of horizontal. Grade badges gained borders (grade-color/20)
+  and "Grade" prefix text. Voted row gets accent/5 background tint and 4px
+  left accent border. Vote buttons are now circular (rounded-full) with
+  accent fill + shadow when voted, opacity-40 ghost when unvoted. All rows
+  have active:scale-[0.98] tap feedback. Min row height increased 72→80px.
+  Column header switched to 10px uppercase tracking-widest labels. State
+  group headers match column header aesthetic. Sort control changed from
+  full-width ActionBar button to floating centered pill (rounded-full,
+  shadow, accent icon). No new UI components added — no reusable primitives
+  were needed beyond existing library.
 
-last_session: "Reskin Gallery screen to Stitch reference"
+last_session: "Reskin Cities List screen to Stitch reference"
 
 verification:
   typecheck: pass        # pre-existing module warnings only
