@@ -222,7 +222,7 @@ export default function GalleryPage() {
       {days.map((day) => (
         <div key={day.key} id={`gallery-day-${day.key}`}>
           <StickyDateHeader label={formatDayDivider(day.iso)} />
-          <PhotoGrid columns={3} gap={2}>
+          <PhotoGrid columns={3} gap="gap-0.5">
             {day.items.map((img) => (
               <PhotoGridItem key={img.id} src={img.image_url} onClick={() => setViewerUrl(img.image_url)} />
             ))}

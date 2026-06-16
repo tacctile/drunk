@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useVoterNotes } from "@/hooks/useVoterNotes";
 import { Icon } from "@/components/Icon";
+import { Card, ActionButton } from "@hoppz-ui";
 
 export function NotesSection({ voterId }: { voterId: string }) {
   const { notes, loading, addNote, deleteNote } = useVoterNotes(voterId);
@@ -73,14 +74,7 @@ export function NotesSection({ voterId }: { voterId: string }) {
             >
               Cancel
             </button>
-            <button
-              type="button"
-              disabled={!canSave}
-              onClick={() => void handleAdd(draft)}
-              className="btn-accent flex-1"
-            >
-              Save
-            </button>
+            <ActionButton label="Save" variant="filled" onClick={() => void handleAdd(draft)} />
           </div>
         </div>
       )}
@@ -91,7 +85,7 @@ export function NotesSection({ voterId }: { voterId: string }) {
 
       <div className="mt-3 flex flex-col gap-3">
         {notes.map((note) => (
-          <div key={note.id} className="card relative">
+          <Card key={note.id} className="relative">
             <p className="text-base text-ink" style={{ wordBreak: "break-word" }}>
               {note.content}
             </p>
@@ -131,7 +125,7 @@ export function NotesSection({ voterId }: { voterId: string }) {
                 </button>
               )}
             </div>
-          </div>
+          </Card>
         ))}
       </div>
     </section>

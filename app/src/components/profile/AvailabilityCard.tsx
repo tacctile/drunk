@@ -2,6 +2,7 @@
 
 import { useAvailability } from "@/hooks/useAvailability";
 import { formatMonthTitle, plural } from "@/lib/format";
+import { SectionLabel, Card, LinkRow } from "@hoppz-ui";
 
 export function AvailabilityCard({ onMarkDates }: { onMarkDates: () => void }) {
   const { mine } = useAvailability();
@@ -18,8 +19,8 @@ export function AvailabilityCard({ onMarkDates }: { onMarkDates: () => void }) {
 
   return (
     <section>
-      <h2 className="label">My availability</h2>
-      <div className="card mt-2">
+      <SectionLabel>My availability</SectionLabel>
+      <Card className="mt-2">
         {dates.length > 0 ? (
           <>
             <p className="text-title text-green">{plural(availCount, "day")} available</p>
@@ -31,16 +32,10 @@ export function AvailabilityCard({ onMarkDates }: { onMarkDates: () => void }) {
         ) : (
           <>
             <p className="text-base text-ink-dim">No dates marked yet</p>
-            <button
-              type="button"
-              onClick={onMarkDates}
-              className="flex h-11 items-center text-base font-semibold text-accent"
-            >
-              Mark dates
-            </button>
+            <LinkRow label="Mark dates" onClick={onMarkDates} />
           </>
         )}
-      </div>
+      </Card>
     </section>
   );
 }

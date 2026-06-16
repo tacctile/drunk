@@ -84,7 +84,7 @@ export function VoterProfileSheet({ voter, onClose, onLocate }: VoterProfileShee
         name={voter.display_name}
         subtitle={voter.role ? ROLE_LABELS[voter.role] : voter.isYou ? "You" : ""}
         avatarColor={voter.pin_color}
-        avatarUrl={voter.avatar_url}
+        avatarUrl={voter.avatar_url ?? undefined}
       />
 
       {voter.isSharing && !voter.isYou && onLocate && (

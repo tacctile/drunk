@@ -5,45 +5,9 @@ import { compare as comparePin } from "bcryptjs";
 import { buildDisplayName, isValidPin } from "@/lib/identity";
 import { FieldError } from "@/components/FieldError";
 import { Icon } from "@/components/Icon";
+import { SectionLabel, Card, PinInput, TextField, ActionButton } from "@hoppz-ui";
 
 const SAVED_FLASH_MS = 1200;
-
-function PinField({
-  value,
-  onChange,
-  placeholder,
-  ariaLabel,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  placeholder: string;
-  ariaLabel: string;
-}) {
-  const [show, setShow] = useState(false);
-  return (
-    <div className="relative">
-      <input
-        className="input pr-12"
-        type={show ? "text" : "password"}
-        inputMode="numeric"
-        autoComplete="off"
-        placeholder={placeholder}
-        maxLength={2}
-        value={value}
-        onChange={(e) => onChange(e.target.value.replace(/\D/g, "").slice(0, 2))}
-        aria-label={ariaLabel}
-      />
-      <button
-        type="button"
-        aria-label={show ? "Hide PIN" : "Reveal PIN"}
-        onClick={() => setShow((s) => !s)}
-        className="absolute right-0 top-0 flex h-11 w-11 items-center justify-center text-ink-muted"
-      >
-        <Icon name={show ? "visibility_off" : "visibility"} size={20} />
-      </button>
-    </div>
-  );
-}
 
 export interface IdentityCardProps {
   storedFirst: string;
@@ -144,74 +108,40 @@ export function IdentityCard({ storedFirst, storedInitial, pinHash, onSave }: Id
 
   return (
     <section>
-      <h2 className="label">My identity</h2>
-      <div className="card mt-2 flex flex-col gap-3">
+      <SectionLabel>My identity</SectionLabel>
+      <Card className="mt-2 flex flex-col gap-3">
         {!showEditFields ? (
           <>
             <p className="text-meta font-normal italic text-ink-dim">
               Enter your PIN to make changes.
             </p>
-            <PinField
-              placeholder="Current PIN"
-              value={unlockPin}
-              onChange={setUnlockPin}
-              ariaLabel="Current PIN"
-            />
+            <PinInput value={unlockPin} onChange={(v) => setUnlockPin(v)} maxLength={2} placeholder="Current PIN" />
             {pinError && <FieldError>{pinError}</FieldError>}
           </>
         ) : (
           <div className="anim-rise flex flex-col gap-3">
-            <input
-              className="input"
-              placeholder="New first name"
-              autoComplete="off"
-              maxLength={15}
-              value={newFirst}
-              onChange={(e) => setNewFirst(e.target.value)}
-              aria-label="New first name"
-            />
+            <TextField label="First name" value={newFirst} onChange={(v) => setNewFirst(v)} maxLength={15} placeholder="New first name" />
             {firstFilled && !firstValid && (
               <FieldError>Letters only, 1–15 characters.</FieldError>
             )}
 
-            <input
-              className="input"
-              placeholder="New last initial"
-              autoComplete="off"
-              autoCapitalize="characters"
-              maxLength={1}
-              value={newInitial}
-              onChange={(e) =>
-                setNewInitial(e.target.value.replace(/[^A-Za-z]/g, "").slice(0, 1).toUpperCase())
-              }
-              aria-label="New last initial"
-            />
+            <TextField label="Last initial" value={newInitial} onChange={(v) => setNewInitial(v.replace(/[^A-Za-z]/g, "").slice(0, 1).toUpperCase())} maxLength={1} placeholder="New last initial" />
 
-            <PinField
-              placeholder="New PIN"
-              value={newPin}
-              onChange={setNewPin}
-              ariaLabel="New PIN"
-            />
+            <PinInput value={newPin} onChange={(v) => setNewPin(v)} maxLength={2} placeholder="New PIN" />
             {pinFilled && !pinValid && (
               <FieldError>Exactly 2 digits (00–99).</FieldError>
             )}
 
-            <button
-              type="button"
-              disabled={!canSave && !saved}
-              onClick={() => void submit()}
-              className={`btn w-full ${
-                saved
-                  ? "bg-green text-bg disabled:opacity-100"
-                  : "bg-accent text-bg hover:brightness-110 active:brightness-95"
-              }`}
-            >
-              {saved ? <Icon name="check" size={22} className="anim-rise" /> : "Save changes"}
-            </button>
+            {saved ? (
+              <button type="button" disabled className="btn w-full bg-green text-bg disabled:opacity-100">
+                <Icon name="check" size={22} className="anim-rise" />
+              </button>
+            ) : (
+              <ActionButton label="Save changes" variant="filled" fullWidth onClick={() => void submit()} />
+            )}
           </div>
         )}
-      </div>
+      </Card>
     </section>
   );
 }

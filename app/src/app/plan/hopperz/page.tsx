@@ -75,7 +75,7 @@ export default function HopperzPage() {
                 name={v.display_name}
                 subtitle={v.noteCount > 0 ? `${v.noteCount} note${v.noteCount !== 1 ? "s" : ""}` : undefined}
                 avatarColor={v.pin_color}
-                avatarUrl={v.avatar_url}
+                avatarUrl={v.avatar_url ?? undefined}
                 statusColor={v.isSharing ? "var(--green)" : undefined}
                 trailingIcon="chevron_right"
                 onClick={() => setSelectedVoter(v)}
@@ -90,7 +90,7 @@ export default function HopperzPage() {
                 initials={getInitials(v.display_name)}
                 name={v.display_name}
                 avatarColor={v.pin_color}
-                avatarUrl={v.avatar_url}
+                avatarUrl={v.avatar_url ?? undefined}
                 statusDotColor={v.isSharing ? "var(--green)" : v.tripStatus === "remote" ? "var(--accent)" : undefined}
                 statusText={v.tripStatus === "remote" ? "Remote" : v.tripStatus === "out" ? "Out" : undefined}
                 badge={v.role ? <RoleBadge role={v.role} size="sm" /> : undefined}

@@ -3,6 +3,7 @@
 import { useGroupData } from "@/hooks/useGroupData";
 import { useTripData } from "@/hooks/useTripData";
 import type { TripMemberStatus } from "@/lib/supabase";
+import { SectionLabel, Card } from "@hoppz-ui";
 
 export function TripStatusCard() {
   const { voterId } = useGroupData();
@@ -11,8 +12,8 @@ export function TripStatusCard() {
 
   return (
     <section>
-      <h2 className="label">Trip Status</h2>
-      <div className="card mt-2">
+      <SectionLabel>Trip Status</SectionLabel>
+      <Card className="mt-2">
         <p className="text-meta font-normal text-ink-muted mb-3">
           {effectiveStatus === "active"
             ? "The trip is happening now."
@@ -40,7 +41,7 @@ export function TripStatusCard() {
             </button>
           ))}
         </div>
-      </div>
+      </Card>
     </section>
   );
 }

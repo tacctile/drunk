@@ -5,10 +5,11 @@ import { useGroupData } from "@/hooks/useGroupData";
 import { useLocations } from "@/hooks/useLocations";
 import { getStoredPinColor, storeAvatarUrl } from "@/lib/identity";
 import { PIN_COLORS } from "@/lib/colors";
+import { getInitials } from "@/lib/colors";
 import { getRoleForVoter } from "@/lib/roles";
 import { getSupabase } from "@/lib/supabase";
 import { uploadAvatar } from "@/lib/storage";
-import { Avatar } from "@/components/Avatar";
+import { TabBar, ProfileHero } from "@hoppz-ui";
 import { AvatarCropper } from "@/components/AvatarCropper";
 import { Icon } from "@/components/Icon";
 import { RoleBadge } from "@/components/RoleBadge";
@@ -24,38 +25,6 @@ import { IdentityGate } from "./IdentityGate";
 import { SwitchIdentityRow } from "./SwitchIdentityRow";
 
 type ProfileTab = "me" | "trip" | "about";
-
-function TabBar({
-  active,
-  onChange,
-}: {
-  active: ProfileTab;
-  onChange: (tab: ProfileTab) => void;
-}) {
-  const tabs: { key: ProfileTab; label: string }[] = [
-    { key: "me", label: "Me" },
-    { key: "trip", label: "Trip" },
-    { key: "about", label: "About" },
-  ];
-  return (
-    <div className="flex w-full border-b border-border bg-bg">
-      {tabs.map((t) => (
-        <button
-          key={t.key}
-          type="button"
-          onClick={() => onChange(t.key)}
-          className={`flex h-11 flex-1 items-center justify-center text-label font-semibold transition ${
-            active === t.key
-              ? "border-b-2 border-accent text-accent"
-              : "text-ink-muted"
-          }`}
-        >
-          {t.label}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 export function ProfileBody({
   onClose,
@@ -149,56 +118,38 @@ export function ProfileBody({
 
   return (
     <>
-      <TabBar active={activeTab} onChange={setActiveTab} />
+      <TabBar
+        tabs={[{id: "me", label: "Me"}, {id: "trip", label: "Trip"}, {id: "about", label: "About"}]}
+        activeTab={activeTab}
+        onTabChange={(id) => setActiveTab(id as ProfileTab)}
+      />
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 pb-[calc(24px+env(safe-area-inset-bottom))] pt-6">
           {activeTab === "me" && (
             <>
               {/* Avatar section */}
-              <div className="flex flex-col items-center text-center">
-                <button
-                  type="button"
-                  onClick={handleAvatarTap}
-                  className="relative"
-                  aria-label="Change profile photo"
-                  disabled={uploading}
-                >
-                  <Avatar
-                    voter={{
-                      display_name: displayName,
-                      name: displayName,
-                      pin_color: pinColor,
-                      avatar_url: myRow?.avatar_url,
-                    }}
-                    size={80}
-                  />
-                  {uploading && (
-                    <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50">
-                      <Icon name="hourglass_empty" size={24} className="animate-pulse text-white" />
-                    </span>
-                  )}
-                </button>
-                <p className="mt-1 text-meta text-ink-muted">Edit photo</p>
-                <p className="mt-2 text-display text-ink">{displayName}</p>
-                {role && (
-                  <div className="mt-1">
-                    <RoleBadge role={role} size="md" />
-                  </div>
-                )}
-                {memberSince && (
-                  <p className="mt-1 text-meta font-normal text-ink-dim">
-                    Member since {memberSince}
-                  </p>
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleFileSelected}
-                />
-              </div>
+              <ProfileHero
+                initials={getInitials(displayName)}
+                name={displayName}
+                subtitle={memberSince ? `Member since ${memberSince}` : ""}
+                avatarColor={pinColor}
+                avatarUrl={myRow?.avatar_url ?? undefined}
+                onEditPhoto={handleAvatarTap}
+                centered
+              />
+              {role && (
+                <div className="flex justify-center">
+                  <RoleBadge role={role} size="md" />
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileSelected}
+              />
 
               {role && <RoleCard role={role} />}
 

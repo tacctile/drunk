@@ -1,7 +1,7 @@
 "use client";
 
 import { usePushNotifications } from "@/hooks/usePushNotifications";
-import { Switch } from "@/components/Switch";
+import { SectionLabel, Card, SettingsToggleRow } from "@hoppz-ui";
 
 export function NotificationsCard() {
   const { supported, permission, subscribed, requesting, requestPermission, unsubscribe } =
@@ -11,34 +11,20 @@ export function NotificationsCard() {
 
   return (
     <section>
-      <h2 className="label">Notifications</h2>
-      <div className="card mt-2">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-base text-ink">Push notifications</p>
-          <Switch
-            checked={subscribed}
-            disabled={requesting || permission === "denied"}
-            onToggle={() => (subscribed ? void unsubscribe() : void requestPermission())}
-            ariaLabel="Enable push notifications"
-          />
-        </div>
-        {permission === "denied" && (
-          <p className="text-meta font-normal text-ink-dim">
-            Notifications blocked. Enable them in your browser settings.
-          </p>
-        )}
-        {permission === "default" && !subscribed && (
-          <p className="text-meta font-normal text-ink-dim">
-            Get notified when your crew sends messages.
-          </p>
-        )}
-        {subscribed && (
-          <p className="text-meta font-normal text-green">Notifications enabled</p>
-        )}
+      <SectionLabel>Notifications</SectionLabel>
+      <Card className="mt-2">
+        <SettingsToggleRow
+          icon="notifications"
+          title="Push notifications"
+          description={subscribed ? "Notifications enabled" : permission === "denied" ? "Blocked in browser settings" : "Get notified when your crew sends messages"}
+          checked={subscribed}
+          onChange={() => (subscribed ? void unsubscribe() : void requestPermission())}
+          disabled={requesting || permission === "denied"}
+        />
         <p className="mt-1 text-meta font-normal text-ink-dim">
           This only affects Hoppz notifications.
         </p>
-      </div>
+      </Card>
     </section>
   );
 }
