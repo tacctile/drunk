@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { lockBodyScroll, unlockBodyScroll } from "@/lib/scrollLock";
 import { Icon } from "./Icon";
+import { Toast } from "./Toast";
 
 interface ImageViewerProps {
   url: string;
@@ -11,6 +12,8 @@ interface ImageViewerProps {
 
 export function ImageViewer({ url, onClose }: ImageViewerProps) {
   const [visible, setVisible] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadToast, setDownloadToast] = useState<string | null>(null);
 
   useEffect(() => {
     lockBodyScroll();
@@ -25,15 +28,26 @@ export function ImageViewer({ url, onClose }: ImageViewerProps) {
     };
   }, [onClose]);
 
-  const handleDownload = () => {
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = url.split("/").pop() ?? "image";
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  const handleDownload = async () => {
+    if (downloading) return;
+    setDownloading(true);
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = url.split("/").pop()?.split("?")[0] ?? "image";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+      setDownloadToast("Image saved to device");
+    } catch {
+      setDownloadToast("Download failed. Try again.");
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -64,8 +78,16 @@ export function ImageViewer({ url, onClose }: ImageViewerProps) {
         onClick={handleDownload}
         className="fixed right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full text-white drop-shadow-lg"
       >
-        <Icon name="download" size={24} />
+        {downloading ? (
+          <Icon name="progress_activity" size={24} className="animate-spin" />
+        ) : (
+          <Icon name="download" size={24} />
+        )}
       </button>
+
+      {downloadToast && (
+        <Toast message={downloadToast} onDismiss={() => setDownloadToast(null)} />
+      )}
     </div>
   );
 }

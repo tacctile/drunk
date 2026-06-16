@@ -1,6 +1,12 @@
 # Hoppz — Progress
 > Feature checklist for the v2 Next.js app (`app/`). Newest phase on top.
 
+### 2026-06-16 — audit-fix: Scroll button position + image download toast
+
+**What:** Repositioned scroll-to-bottom button from 12px to 88px above nav+safe-area so it sits clearly inside the chat body. Replaced ImageViewer anchor-click download with fetch-based blob download for reliable mobile save-to-device. Added downloading spinner and Toast confirmation on success/failure.
+
+**Status:** Complete. Both files pass typecheck (pre-existing module warnings only).
+
 ### 2026-06-16 — audit-fix: Fix initial chat scroll + add scroll-to-bottom button
 
 **What:** Fixed initial-load scroll miss by using double requestAnimationFrame to guarantee DOM paint before scrollIntoView fires. Added a scroll-to-bottom arrow button (expand_circle_down icon, 44px circle, bg-surface with border and shadow-overlay) that appears when the user scrolls up and hides on tap or when at bottom. Existing "New message" pill kept intact for the different use case.

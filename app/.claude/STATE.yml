@@ -7,12 +7,13 @@ last_updated: 2026-06-16
 app_root: app/
 
 last_change: >
-  Fixed initial chat scroll with double-rAF to guarantee DOM paint before
-  scrollIntoView. Added scroll-to-bottom arrow button (expand_circle_down,
-  44px circle, bg-surface, border, shadow-overlay) that appears when user
-  scrolls up and hides when at bottom or tapped.
+  Repositioned scroll-to-bottom button higher (88px above nav+safe-area) so it
+  sits inside the chat body without overlapping the input bar. Replaced
+  ImageViewer anchor-click download with fetch-based blob download for reliable
+  mobile save-to-device. Added downloading spinner state and Toast confirmation
+  ("Image saved to device" / "Download failed. Try again.").
 
-last_session: "Fix initial chat scroll + add scroll-to-bottom button"
+last_session: "Scroll button position + image download toast"
 
 verification:
   typecheck: pass        # pre-existing module warnings only

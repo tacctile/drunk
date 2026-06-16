@@ -654,7 +654,7 @@ function ChatInner() {
             setShowScrollButton(false);
           }}
           className="fixed left-1/2 -translate-x-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-surface border border-border shadow-overlay text-ink-muted"
-          style={{ bottom: "calc(64px + env(safe-area-inset-bottom) + 12px)" }}
+          style={{ bottom: "calc(64px + env(safe-area-inset-bottom) + 88px)" }}
         >
           <Icon name="expand_circle_down" size={24} />
         </button>
