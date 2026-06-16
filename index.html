@@ -1,0 +1,4610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Bar Hoppers overnight trip guide — 29 cities within driving distance of Ralston, NE ranked by walkability, bar count, hotel proximity, and group fit for 12 adults.">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#1b1b1f" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f7f7f5" media="(prefers-color-scheme: light)">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Bar Hoppers — Weekend Trip Guide">
+<meta property="og:description" content="29 cities ranked for overnight bar-hop trips from Ralston, NE. Compare walkability, bar density, hotels, and drink prices.">
+<meta property="og:site_name" content="Bar Hoppers">
+<!-- <meta property="og:image" content="https://yourdomain.com/og-image.jpg"> -->
+<!-- <meta property="og:url" content="https://yourdomain.com/"> -->
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Bar Hoppers — Weekend Trip Guide">
+<meta name="twitter:description" content="29 cities ranked for overnight bar-hop trips. Compare walkability, bar count, hotels, and prices.">
+<!-- <meta name="twitter:image" content="https://yourdomain.com/og-image.jpg"> -->
+
+<!-- Favicon — replace with your own -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍺</text></svg>">
+
+<title>Bar Hoppers — Weekend Trip Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+
+  /* --- DARK MODE (default) --- */
+  :root {
+    --bg: #1b1b1f;
+    --surface: #27272b;
+    --surface2: #323237;
+    --border: #3e3e45;
+    --amber: #e49a4a;
+    --amber-dim: #b87a2e;
+    --red: #e25c5c;
+    --green: #4fbe7a;
+    --yellow: #e0c846;
+    --text: #e6e4e1;
+    --text-dim: #a3a09b;
+    --text-muted: #6b6966;
+    --font-display: 'Inter', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    --modal-overlay: rgba(10,10,14,0.88);
+    --compare-overlay: rgba(10,10,14,0.92);
+    color-scheme: dark;
+  }
+
+  /* --- LIGHT MODE --- */
+  [data-theme="light"] {
+    --bg: #f7f7f5;
+    --surface: #ffffff;
+    --surface2: #eeeeec;
+    --border: #d8d7d4;
+    --amber: #c27a1a;
+    --amber-dim: #9e6010;
+    --red: #c43c3c;
+    --green: #1d8348;
+    --yellow: #9a7d00;
+    --text: #1d1d1f;
+    --text-dim: #4a4a4d;
+    --text-muted: #7c7c80;
+    --modal-overlay: rgba(0,0,0,0.45);
+    --compare-overlay: rgba(0,0,0,0.55);
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f7f7f5;
+      --surface: #ffffff;
+      --surface2: #eeeeec;
+      --border: #d8d7d4;
+      --amber: #c27a1a;
+      --amber-dim: #9e6010;
+      --red: #c43c3c;
+      --green: #1d8348;
+      --yellow: #9a7d00;
+      --text: #1d1d1f;
+      --text-dim: #4a4a4d;
+      --text-muted: #7c7c80;
+      --modal-overlay: rgba(0,0,0,0.45);
+      --compare-overlay: rgba(0,0,0,0.55);
+      color-scheme: light;
+    }
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    background: var(--surface);
+    border-bottom: 2px solid var(--amber);
+    padding: 16px 40px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .header-brand { text-align: center; }
+
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .logo {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--amber);
+    line-height: 1;
+  }
+
+  .tagline {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-dim);
+    padding-bottom: 0;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .benchmark-badge {
+    margin-left: auto;
+    background: var(--amber);
+    color: #000;
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 3px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    align-self: center;
+  }
+
+  /* ─── INTRO STRIP ─── */
+  .intro-strip {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 40px;
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .intro-stat {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .intro-stat-label {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-weight: 600;
+  }
+
+  .intro-stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--amber);
+  }
+
+  .intro-note {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--text-dim);
+    max-width: 420px;
+    font-style: italic;
+    min-width: 0;
+    word-break: break-word;
+  }
+
+  /* ─── SECTION TITLES ─── */
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--amber);
+    padding: 32px 40px 0;
+    word-break: break-word;
+  }
+
+  .section-sub {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 4px 40px 16px;
+  }
+
+  /* ─── CONTROLS ─── */
+  .controls {
+    padding: 0 40px 20px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .control-label {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-weight: 600;
+  }
+
+  select, button {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 7px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+  }
+
+  select:hover, button:hover {
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+
+  select option { background: var(--surface2); }
+
+  .filter-btn {
+    padding: 7px 14px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+
+  .filter-btn.active {
+    background: var(--amber);
+    color: #000;
+    border-color: var(--amber);
+    font-weight: 700;
+  }
+
+  /* ─── COMPARISON TABLE ─── */
+  .table-wrap {
+    padding: 0 40px 40px;
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead tr {
+    background: var(--surface2);
+    border-bottom: 2px solid var(--amber);
+  }
+
+  th {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--amber);
+    padding: 12px 16px;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  th.sortable { cursor: pointer; user-select: none; }
+  th.sortable:hover { color: #fff; }
+  th .sort-arrow { margin-left: 4px; opacity: 0.4; }
+  th.sort-active .sort-arrow { opacity: 1; color: var(--amber); }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+
+  tbody tr:hover { background: var(--surface2); }
+  tbody tr.benchmark-row { border-left: 3px solid var(--amber); }
+
+  td {
+    padding: 13px 16px;
+    vertical-align: middle;
+    font-size: 13px;
+  }
+
+  .city-name-cell {
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .city-state {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+  }
+
+  .caveat-tag {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 3px;
+    margin-top: 0;
+    font-family: var(--font-body);
+  }
+
+  .tag-caution { background: rgba(245,166,35,0.15); color: var(--amber); border: 1px solid rgba(245,166,35,0.3); }
+  .tag-warning { background: rgba(232,64,64,0.15); color: var(--red); border: 1px solid rgba(232,64,64,0.3); }
+  .tag-good { background: rgba(61,186,111,0.15); color: var(--green); border: 1px solid rgba(61,186,111,0.3); }
+  .tag-benchmark { background: rgba(245,208,32,0.15); color: var(--yellow); border: 1px solid rgba(245,208,32,0.3); }
+
+  .dot-score {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+  }
+
+  .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+
+  .dot.filled { background: var(--amber); }
+  .dot.half { background: linear-gradient(90deg, var(--amber) 50%, var(--border) 50%); }
+
+  .walk-pill {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-family: var(--font-body);
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+
+  .walk-yes { background: rgba(61,186,111,0.2); color: var(--green); }
+  .walk-partial { background: rgba(245,166,35,0.2); color: var(--amber); }
+  .walk-no { background: rgba(232,64,64,0.2); color: var(--red); }
+
+  .view-btn {
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: 3px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    cursor: pointer;
+    font-family: var(--font-mono);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+
+  .view-btn:hover {
+    background: var(--amber);
+    color: #000;
+    border-color: var(--amber);
+  }
+
+  .actions-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-end;
+  }
+
+  .actions-cell .view-btn,
+  .actions-cell .vote-btn {
+    width: 120px;
+    text-align: center;
+    padding: 7px 0;
+    font-size: 11px;
+  }
+
+  /* ─── CITY CARDS ─── */
+  .cards-section { padding: 0 40px 60px; }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+  }
+
+  .city-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    transition: border-color 0.15s, transform 0.15s;
+    min-width: 0;
+  }
+
+  .city-card:hover {
+    border-color: var(--amber);
+    transform: translateY(-2px);
+  }
+
+  .city-card.hidden { display: none; }
+
+  .card-header--benchmark { border-top: 3px solid var(--amber); }
+
+  .card-header {
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  /* ─── CARD HEADER INNER SPACING ─── */
+  .card-header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    flex: 1 1 0%;
+    overflow: hidden;
+  }
+
+  .card-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+
+
+  .card-city {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--amber);
+    line-height: 1.15;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  .card-state {
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    margin-top: 4px;
+    text-transform: uppercase;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    line-height: 1.4;
+  }
+
+  .card-distance {
+    text-align: right;
+    font-family: var(--font-body);
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .card-miles {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
+    display: block;
+  }
+
+  .card-time {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-dim);
+    display: block;
+  }
+
+  .card-body { padding: 18px 20px 16px; }
+
+  .card-description {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+
+  .card-section-label {
+    font-family: var(--font-body);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    margin-top: 14px;
+  }
+
+  .bar-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .bar-list li {
+    font-size: 12px;
+    color: var(--text);
+    padding: 8px 12px;
+    background: var(--surface2);
+    border-radius: 4px;
+    border-left: 2px solid var(--amber);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .bar-name { font-weight: 600; min-width: 0; }
+  .bar-note { font-size: 11px; color: var(--text-dim); font-style: italic; min-width: 0; text-align: right; }
+
+  .hotel-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .hotel-list li {
+    font-size: 12px;
+    color: var(--text);
+    padding: 8px 12px;
+    background: var(--surface2);
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .hotel-name { font-weight: 600; }
+  .hotel-meta { font-size: 11px; color: var(--text-dim); text-align: right; }
+  .hotel-proximity { font-size: 10px; font-family: var(--font-mono); }
+
+  .hotel-prox-walk { color: var(--green); }
+  .hotel-prox-ride { color: var(--amber); }
+  .hotel-prox-far { color: var(--red); }
+
+  .card-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .stat-box {
+    background: var(--surface2);
+    border-radius: 4px;
+    padding: 10px 8px;
+    text-align: center;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .stat-box-label {
+    font-family: var(--font-body);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    display: block;
+  }
+
+  .stat-box-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    display: block;
+    margin-top: 2px;
+  }
+
+  .card-poi {
+    margin-top: 14px;
+    padding: 10px;
+    background: rgba(245,166,35,0.06);
+    border: 1px solid rgba(245,166,35,0.2);
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .card-poi strong { color: var(--amber); }
+
+  .card-caveat {
+    margin-top: 12px;
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .card-caveat.caution {
+    background: rgba(245,166,35,0.08);
+    border: 1px solid rgba(245,166,35,0.25);
+    color: var(--caveat-caution-text, #c8a84b);
+  }
+
+  .card-caveat.warning {
+    background: rgba(232,64,64,0.08);
+    border: 1px solid rgba(232,64,64,0.25);
+    color: var(--caveat-warning-text, #c87070);
+  }
+
+  .card-caveat strong { display: block; margin-bottom: 3px; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; font-family: var(--font-body); font-weight: 700; }
+
+  /* ─── DETAILS MODAL ─── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--modal-overlay);
+    z-index: 100;
+    overflow-y: auto;
+    padding: 40px 20px;
+  }
+
+  .modal-overlay.open { display: block; }
+
+  .modal {
+    max-width: 700px;
+    margin: 0 auto;
+    background: var(--surface);
+    border: 1px solid var(--amber);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .modal-header {
+    background: var(--surface2);
+    padding: 24px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid var(--amber);
+  }
+
+  .modal-title {
+    font-family: var(--font-display);
+    font-size: 40px;
+    font-weight: 900;
+    color: var(--amber);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  .modal-subtitle {
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-dim);
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  .modal-close {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 20px;
+    width: 36px;
+    height: 36px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0;
+  }
+
+  .modal-close:hover { border-color: var(--red); color: var(--red); }
+
+  .modal-body { padding: 24px 28px; }
+
+  .modal-section { margin-bottom: 24px; }
+
+  .modal-section-title {
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--amber);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+    margin-bottom: 12px;
+  }
+
+  .modal-desc { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .modal-stat {
+    background: var(--surface2);
+    padding: 10px 14px;
+    border-radius: 4px;
+  }
+
+  .modal-stat-label {
+    font-size: 10px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    display: block;
+  }
+
+  .modal-stat-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-top: 2px;
+    display: block;
+  }
+
+  /* ─── COMPARE TRIGGER BUTTON ─── */
+  .compare-trigger-btn {
+    background: var(--amber);
+    color: #000;
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 800;
+    padding: 8px 18px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: background 0.15s, transform 0.1s;
+    white-space: nowrap;
+  }
+
+  .compare-trigger-btn:hover {
+    background: #ffb83f;
+    transform: translateY(-1px);
+  }
+
+  /* ─── COMPARE LIGHTBOX ─── */
+  .compare-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--compare-overlay);
+    z-index: 200;
+    overflow-y: auto;
+    padding: 30px 16px;
+  }
+
+  .compare-overlay.open { display: block; }
+
+  .compare-lightbox {
+    max-width: 960px;
+    margin: 0 auto;
+    background: var(--surface);
+    border: 1px solid var(--amber);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .compare-lightbox-header {
+    background: var(--surface2);
+    padding: 20px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid var(--amber);
+    gap: 16px;
+  }
+
+  .compare-lightbox-title {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--amber);
+  }
+
+  .compare-lightbox-sub {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 3px;
+    font-weight: 500;
+  }
+
+  .compare-lightbox-body {
+    padding: 24px 28px;
+  }
+
+  /* City picker toggle buttons */
+  .compare-city-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .compare-city-btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-dim);
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.3px;
+  }
+
+  .compare-city-btn:hover {
+    border-color: var(--amber);
+    color: var(--text);
+  }
+
+  .compare-city-btn.selected {
+    background: var(--amber);
+    color: #000;
+    border-color: var(--amber);
+    font-weight: 800;
+  }
+
+  .compare-city-btn.disabled-pick {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .compare-picker-hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-bottom: 20px;
+    font-style: italic;
+  }
+
+  /* Compare result grid */
+  .compare-result { margin-top: 4px; }
+  .compare-result.hidden { display: none; }
+
+  .compare-grid {
+    display: grid;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    overflow-x: auto;
+  }
+
+  .compare-grid-2 { grid-template-columns: 1fr 60px 1fr; }
+  .compare-grid-3 { grid-template-columns: 1fr 60px 1fr 60px 1fr; }
+
+  .compare-col-header {
+    padding: 14px 16px;
+    background: var(--surface2);
+    border-bottom: 2px solid var(--border);
+  }
+
+  .compare-col-header.winner-col {
+    background: rgba(245,166,35,0.1);
+    border-bottom-color: var(--amber);
+  }
+
+  .compare-col-name {
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--amber);
+    line-height: 1.1;
+    word-break: break-word;
+  }
+
+  .compare-col-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 3px;
+    font-weight: 500;
+  }
+
+  .compare-winner-crown {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--amber);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 5px;
+  }
+
+  .compare-middle-header {
+    padding: 14px 6px;
+    background: var(--bg);
+    border-bottom: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .compare-cell {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .compare-cell.win { background: rgba(61,186,111,0.07); }
+  .compare-cell.lose { background: rgba(232,64,64,0.04); }
+  .compare-cell.tie { background: transparent; }
+  .compare-cell.cat-row { background: var(--bg); padding: 8px 16px; }
+
+  .compare-cell-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .compare-cell-note {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 2px;
+    line-height: 1.4;
+    font-weight: 400;
+  }
+
+  .compare-cat-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .compare-middle-cell {
+    padding: 11px 6px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  .compare-middle-cell.cat-row {
+    font-size: 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--amber);
+    padding: 8px 4px;
+  }
+
+  .win-indicator {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .win-indicator.green { background: var(--green); }
+  .win-indicator.red { background: var(--red); }
+  .win-indicator.tie-dot { background: var(--text-muted); }
+
+  /* Verdict */
+  .compare-verdict {
+    margin-top: 16px;
+    padding: 18px 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .compare-verdict-winner {
+    font-size: 26px;
+    font-weight: 900;
+    color: var(--amber);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .compare-verdict-detail { flex: 1; min-width: 200px; }
+
+  .compare-verdict-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .compare-verdict-text {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.55;
+  }
+
+  .compare-score-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+
+  .compare-score-chip {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+
+  .compare-score-chip.winner-chip {
+    background: rgba(245,166,35,0.15);
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+
+  /* ─── DISTANCE SLIDER ─── */
+  .slider-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 140px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--amber);
+    cursor: pointer;
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 0 1px var(--amber);
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--amber);
+    cursor: pointer;
+    border: 2px solid var(--bg);
+  }
+
+  input[type="range"]:hover {
+    border: none;
+    color: inherit;
+  }
+
+  .slider-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--amber);
+    min-width: 52px;
+    font-family: var(--font-body);
+    white-space: nowrap;
+  }
+
+  /* ─── SCORE BADGE ON CARDS ─── */
+  .card-score-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(245,166,35,0.12);
+    border: 1px solid rgba(245,166,35,0.35);
+    border-radius: 3px;
+    padding: 3px 8px;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--amber);
+    font-family: var(--font-body);
+    letter-spacing: 0.3px;
+    margin-top: 0;
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  footer p {
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    word-break: break-word;
+  }
+
+
+
+
+  /* --- SCREEN READER ONLY --- */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* ─── EXPANDABLE TRAY ─── */
+  .tray-row td {
+    padding: 0 !important;
+    border-bottom: 2px solid var(--amber);
+  }
+
+  .tray-wrap {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.25s ease;
+  }
+
+  .tray-row.open .tray-wrap {
+    grid-template-rows: 1fr;
+  }
+
+  .tray-inner {
+    overflow: hidden;
+  }
+
+  .tray-content {
+    padding: 20px 24px 70px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+  }
+
+  .tray-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.65;
+    margin-bottom: 16px;
+  }
+
+  .tray-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+
+  .tray-stat {
+    background: var(--surface2);
+    padding: 10px 12px;
+    border-radius: 4px;
+  }
+
+  .tray-stat-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    display: block;
+  }
+
+  .tray-stat-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-top: 2px;
+    display: block;
+  }
+
+  .tray-section-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--amber);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+    margin-top: 18px;
+  }
+
+  .tray-bar-item {
+    margin-bottom: 6px;
+    padding: 8px 12px;
+    background: var(--surface2);
+    border-radius: 4px;
+    border-left: 2px solid var(--amber);
+  }
+
+  .tray-bar-item strong { font-size: 13px; }
+
+  .tray-bar-note {
+    display: block;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  .tray-hotel-item {
+    margin-bottom: 6px;
+    padding: 8px 12px;
+    background: var(--surface2);
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .tray-hotel-item strong { font-size: 13px; }
+  .tray-hotel-stars { font-size: 11px; color: var(--text-dim); margin-left: 6px; }
+  .tray-hotel-prox { display: block; font-size: 11px; margin-top: 2px; }
+  .tray-hotel-price { font-size: 13px; font-weight: 600; flex-shrink: 0; }
+
+  .tray-poi {
+    margin-top: 14px;
+    padding: 10px 12px;
+    background: rgba(245,166,35,0.06);
+    border: 1px solid rgba(245,166,35,0.2);
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .tray-poi strong { color: var(--amber); }
+
+  .tray-caveat {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-dim);
+    background: var(--surface2);
+  }
+
+  .tray-caveat.caveat-warning { border-left: 3px solid var(--red); }
+  .tray-caveat.caveat-caution { border-left: 3px solid var(--amber); }
+
+  .tray-caveat strong {
+    display: block;
+    margin-bottom: 3px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+
+  .tray-event {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: rgba(61,186,111,0.1);
+    border: 1px solid rgba(61,186,111,0.3);
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--green);
+  }
+
+  .tray-hotel-note {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text-dim);
+    font-style: italic;
+  }
+
+  /* Active row highlight — sticky when tray open */
+  tbody tr.tray-active {
+    background: var(--surface2);
+    border-bottom-color: var(--amber);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  tbody tr.tray-active td {
+    background: var(--surface2);
+  }
+
+  .tray-hidden {
+    display: none !important;
+  }
+
+  /* ─── STICKY TOAST ─── */
+  .tray-toast {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border-top: 2px solid var(--amber);
+    padding: 12px 24px;
+    display: flex;
+    justify-content: center;
+    z-index: 80;
+    transform: translateY(100%);
+    transition: transform 0.25s ease;
+  }
+
+  .tray-toast.visible {
+    transform: translateY(0);
+  }
+
+  .tray-toast-btn {
+    background: var(--amber);
+    color: #000;
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 800;
+    padding: 10px 28px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: background 0.15s;
+  }
+
+  .tray-toast-btn:hover { background: #ffb83f; }
+
+  [data-theme="light"] .tray-toast-btn {
+    background: #c27a1a;
+    color: #fff;
+  }
+
+  @media (max-width: 600px) {
+    .tray-content { padding: 16px 16px 70px; }
+    .tray-stats { grid-template-columns: 1fr; gap: 6px; }
+    .tray-hotel-item { flex-direction: column; align-items: flex-start; gap: 4px; }
+    .tray-toast { padding: 10px 16px; }
+    .tray-toast-btn { width: 100%; }
+  }
+
+  /* ─── VOTE BUTTON ─── */
+  .vote-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-dim);
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .vote-btn:hover {
+    border-color: var(--amber);
+    color: var(--amber);
+    background: rgba(228,154,74,0.08);
+  }
+  .vote-btn.voted {
+    background: var(--green);
+    color: #fff;
+    border-color: var(--green);
+    cursor: default;
+  }
+  .vote-btn.voted:hover {
+    background: var(--green);
+    color: #fff;
+    border-color: var(--green);
+  }
+  [data-theme="light"] .vote-btn.voted {
+    background: #1d8348;
+    border-color: #1d8348;
+  }
+
+  /* ─── FLOATING RESULTS FAB ─── */
+  .vote-fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--amber);
+    color: #000;
+    border: none;
+    cursor: pointer;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    z-index: 90;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .vote-fab:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 28px rgba(0,0,0,0.5);
+  }
+  [data-theme="light"] .vote-fab {
+    background: #c27a1a;
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  }
+  .vote-fab-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    background: var(--green);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    font-family: var(--font-body);
+  }
+
+  /* ─── VOTE RESULTS LIGHTBOX ─── */
+  .vote-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--modal-overlay);
+    z-index: 300;
+    overflow-y: auto;
+    padding: 40px 20px;
+  }
+  .vote-overlay.open { display: block; }
+  .vote-lightbox {
+    max-width: 560px;
+    margin: 0 auto;
+    background: var(--surface);
+    border: 1px solid var(--amber);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .vote-lb-header {
+    background: var(--surface2);
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--amber);
+    gap: 12px;
+  }
+  .vote-lb-title {
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--amber);
+  }
+  .vote-lb-close {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 20px;
+    width: 36px;
+    height: 36px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0;
+  }
+  .vote-lb-close:hover { border-color: var(--red); color: var(--red); }
+  .vote-lb-body { padding: 20px 24px; }
+  .vote-lb-empty {
+    text-align: center;
+    padding: 30px 16px;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .vote-lb-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    border-radius: 4px;
+    margin-bottom: 6px;
+    background: var(--surface2);
+    position: relative;
+    overflow: hidden;
+  }
+  .vote-lb-row.vr-leader {
+    border: 1px solid var(--amber);
+    background: rgba(228,154,74,0.08);
+  }
+  [data-theme="light"] .vote-lb-row.vr-leader {
+    background: rgba(194,122,26,0.06);
+    border-color: #c27a1a;
+  }
+  .vote-lb-rank {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 900;
+    flex-shrink: 0;
+    background: var(--border);
+    color: var(--text-dim);
+  }
+  .vote-lb-row.vr-leader .vote-lb-rank {
+    background: var(--amber);
+    color: #000;
+  }
+  .vote-lb-info { flex: 1; min-width: 0; }
+  .vote-lb-city {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .vote-lb-row.vr-leader .vote-lb-city { color: var(--amber); }
+  .vote-lb-voters {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+  .vote-lb-count {
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--text);
+    font-family: var(--font-mono);
+    flex-shrink: 0;
+  }
+  .vote-lb-row.vr-leader .vote-lb-count { color: var(--amber); }
+  .vote-lb-bar-track {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: var(--border);
+    width: 100%;
+  }
+  .vote-lb-bar-fill {
+    height: 100%;
+    background: var(--amber);
+    transition: width 0.4s ease;
+    border-radius: 0 2px 2px 0;
+  }
+  .vote-lb-who-section {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .vote-lb-who-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .vote-lb-who-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .vote-lb-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .vote-lb-chip.vlc-voted { border-color: var(--green); }
+  .vote-lb-chip.vlc-waiting { opacity: 0.4; border-style: dashed; }
+  .vote-lb-chip-city {
+    font-size: 10px;
+    color: var(--text-dim);
+    font-weight: 400;
+  }
+  .vote-lb-your-vote {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: rgba(228,154,74,0.06);
+    border: 1px solid rgba(228,154,74,0.2);
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .vote-lb-your-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .vote-lb-your-city {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--amber);
+  }
+  .vote-lb-clear-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .vote-lb-clear-btn:hover { border-color: var(--red); color: var(--red); }
+
+  /* ─── NAME PROMPT ─── */
+  .name-prompt-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--modal-overlay);
+    z-index: 400;
+    padding: 40px 20px;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  .name-prompt-overlay.open { display: flex; }
+  .name-prompt-box {
+    margin-top: 120px;
+    background: var(--surface);
+    border: 1px solid var(--amber);
+    border-radius: 8px;
+    padding: 28px 24px;
+    max-width: 360px;
+    width: 100%;
+  }
+  .name-prompt-title {
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 6px;
+  }
+  .name-prompt-sub {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+    font-weight: 500;
+  }
+  .name-prompt-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 16px;
+    font-weight: 600;
+    padding: 12px 14px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    outline: none;
+  }
+  .name-prompt-input:focus { border-color: var(--amber); }
+  .name-prompt-input::placeholder { color: var(--text-muted); }
+  .name-prompt-confirm {
+    width: 100%;
+    background: var(--amber);
+    color: #000;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 800;
+    padding: 10px 24px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .name-prompt-confirm:hover { background: #ffb83f; }
+  .name-prompt-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
+  [data-theme="light"] .name-prompt-confirm { background: #c27a1a; color: #fff; }
+
+  @media (max-width: 600px) {
+    .vote-fab { bottom: 16px; right: 16px; width: 48px; height: 48px; font-size: 18px; }
+    .vote-overlay { padding: 16px 8px; }
+    .vote-lb-header { padding: 14px 16px; }
+    .vote-lb-body { padding: 14px 16px; }
+    .vote-lb-title { font-size: 14px; }
+    .vote-lb-city { font-size: 12px; }
+    .vote-lb-count { font-size: 14px; }
+    .name-prompt-box { margin-top: 60px; }
+  }
+
+  @media print {
+    .vote-fab, .vote-overlay, .name-prompt-overlay, .vote-btn { display: none !important; }
+  }
+
+  /* --- SKIP LINK --- */
+  .skip-link {
+    position: absolute;
+    top: -100px;
+    left: 16px;
+    background: var(--amber);
+    color: #000;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 13px;
+    z-index: 1000;
+    text-decoration: none;
+    transition: top 0.2s;
+  }
+  .skip-link:focus {
+    top: 8px;
+  }
+
+  /* --- THEME TOGGLE --- */
+  .theme-toggle {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .theme-toggle:hover {
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+
+  .theme-toggle-icon { font-size: 14px; }
+
+
+  /* --- UTILITY CLASSES FOR JS TEMPLATES --- */
+  .text-dim { color: var(--text-dim); }
+  .text-green { color: var(--green); }
+  .text-amber { color: var(--amber); }
+  .text-muted { color: var(--text-muted); }
+  .text-sm { font-size: 12px; }
+  .text-xs { font-size: 11px; }
+  .text-xxs { font-size: 9px; }
+  .fw-500 { font-weight: 500; }
+  .fw-600 { font-weight: 600; }
+  .fw-700 { font-weight: 700; }
+  .fw-800 { font-weight: 800; }
+  .ml-auto { margin-left: auto; }
+  .benchmark-inline-badge {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #000;
+    background: var(--amber);
+    padding: 2px 5px;
+    border-radius: 2px;
+    vertical-align: middle;
+  }
+  .modal-bar-item {
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    background: var(--surface2);
+    border-radius: 4px;
+    border-left: 2px solid var(--amber);
+  }
+  .modal-bar-item strong { font-size: 13px; }
+  .modal-bar-note { display: block; font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+  .modal-hotel-item {
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    background: var(--surface2);
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .modal-hotel-item strong { font-size: 13px; }
+  .modal-hotel-stars { font-size: 11px; color: var(--text-dim); margin-left: 6px; }
+  .modal-hotel-prox { display: block; font-size: 11px; margin-top: 2px; }
+  .modal-hotel-price { font-size: 13px; font-weight: 600; }
+  .modal-event-box {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: rgba(61,186,111,0.1);
+    border: 1px solid rgba(61,186,111,0.3);
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--green);
+  }
+  .modal-caveat-box {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    padding: 12px;
+    background: var(--surface2);
+    border-radius: 4px;
+  }
+  .modal-caveat-box.caveat-warning { border-left: 3px solid var(--red); }
+  .modal-caveat-box.caveat-caution { border-left: 3px solid var(--amber); }
+  .modal-hotel-note {
+    margin-top: 8px;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-dim);
+    font-style: italic;
+  }
+  .benchmark-card-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-top: 4px;
+  }
+
+
+  /* --- LIGHT MODE ELEMENT OVERRIDES --- */
+  [data-theme="light"] .benchmark-badge,
+  [data-theme="light"] .compare-trigger-btn,
+  [data-theme="light"] .filter-btn.active,
+  [data-theme="light"] .compare-city-btn.selected {
+    background: #c27a1a;
+    color: #fff;
+    border-color: #c27a1a;
+  }
+
+  [data-theme="light"] .compare-trigger-btn:hover {
+    background: #cc8000;
+  }
+
+  [data-theme="light"] .benchmark-inline-badge {
+    background: #c27a1a;
+    color: #fff;
+  }
+
+  [data-theme="light"] .dot.filled { background: #c27a1a; }
+  [data-theme="light"] .dot.half { background: linear-gradient(90deg, #c27a1a 50%, var(--border) 50%); }
+  [data-theme="light"] .dot { background: #d5d0c8; }
+
+  [data-theme="light"] thead tr {
+    background: #eeeeec;
+    border-bottom: 2px solid #c27a1a;
+  }
+
+  [data-theme="light"] th { color: #9e6010; }
+
+  [data-theme="light"] .card-poi { background: rgba(154,94,0,0.06); border-color: rgba(154,94,0,0.2); }
+
+  [data-theme="light"] .card-caveat.caution {
+    background: rgba(154,94,0,0.06);
+    border-color: rgba(154,94,0,0.2);
+    color: #6b4400;
+  }
+
+  [data-theme="light"] .card-caveat.warning {
+    background: rgba(168,34,34,0.06);
+    border-color: rgba(168,34,34,0.2);
+    color: #7a1a1a;
+  }
+
+  [data-theme="light"] .view-btn:hover {
+    background: #c27a1a;
+    color: #fff;
+    border-color: #c27a1a;
+  }
+
+  [data-theme="light"] .card-score-badge {
+    background: rgba(154,94,0,0.1);
+    border-color: rgba(154,94,0,0.3);
+    color: #9e6010;
+  }
+
+  [data-theme="light"] select option { background: #fff; }
+
+  [data-theme="light"] .modal-event-box {
+    background: rgba(22,113,59,0.08);
+    border-color: rgba(22,113,59,0.25);
+  }
+
+  [data-theme="light"] .compare-cell.win { background: rgba(22,113,59,0.08); }
+  [data-theme="light"] .compare-cell.lose { background: rgba(168,34,34,0.05); }
+
+  [data-theme="light"] .compare-score-chip.winner-chip {
+    background: rgba(154,94,0,0.1);
+    border-color: #c27a1a;
+    color: #9e6010;
+  }
+
+  @media (prefers-color-scheme: light) {
+
+  /* --- LIGHT MODE ELEMENT OVERRIDES --- */
+  :root:not([data-theme="dark"]) .benchmark-badge,
+  :root:not([data-theme="dark"]) .compare-trigger-btn,
+  :root:not([data-theme="dark"]) .filter-btn.active,
+  :root:not([data-theme="dark"]) .compare-city-btn.selected {
+    background: #c27a1a;
+    color: #fff;
+    border-color: #c27a1a;
+  }
+
+  :root:not([data-theme="dark"]) .compare-trigger-btn:hover {
+    background: #cc8000;
+  }
+
+  :root:not([data-theme="dark"]) .benchmark-inline-badge {
+    background: #c27a1a;
+    color: #fff;
+  }
+
+  :root:not([data-theme="dark"]) .dot.filled { background: #c27a1a; }
+  :root:not([data-theme="dark"]) .dot.half { background: linear-gradient(90deg, #c27a1a 50%, var(--border) 50%); }
+  :root:not([data-theme="dark"]) .dot { background: #d5d0c8; }
+
+  :root:not([data-theme="dark"]) thead tr {
+    background: #eeeeec;
+    border-bottom: 2px solid #c27a1a;
+  }
+
+  :root:not([data-theme="dark"]) th { color: #9e6010; }
+
+  :root:not([data-theme="dark"]) .card-poi { background: rgba(154,94,0,0.06); border-color: rgba(154,94,0,0.2); }
+
+  :root:not([data-theme="dark"]) .card-caveat.caution {
+    background: rgba(154,94,0,0.06);
+    border-color: rgba(154,94,0,0.2);
+    color: #6b4400;
+  }
+
+  :root:not([data-theme="dark"]) .card-caveat.warning {
+    background: rgba(168,34,34,0.06);
+    border-color: rgba(168,34,34,0.2);
+    color: #7a1a1a;
+  }
+
+  :root:not([data-theme="dark"]) .view-btn:hover {
+    background: #c27a1a;
+    color: #fff;
+    border-color: #c27a1a;
+  }
+
+  :root:not([data-theme="dark"]) .card-score-badge {
+    background: rgba(154,94,0,0.1);
+    border-color: rgba(154,94,0,0.3);
+    color: #9e6010;
+  }
+
+  :root:not([data-theme="dark"]) select option { background: #fff; }
+
+  :root:not([data-theme="dark"]) .modal-event-box {
+    background: rgba(22,113,59,0.08);
+    border-color: rgba(22,113,59,0.25);
+  }
+
+  :root:not([data-theme="dark"]) .compare-cell.win { background: rgba(22,113,59,0.08); }
+  :root:not([data-theme="dark"]) .compare-cell.lose { background: rgba(168,34,34,0.05); }
+
+  :root:not([data-theme="dark"]) .compare-score-chip.winner-chip {
+    background: rgba(154,94,0,0.1);
+    border-color: #c27a1a;
+    color: #9e6010;
+  }
+
+  }
+
+  /* ─── RESPONSIVE ─── */
+
+  /* Tablet */
+  @media (max-width: 900px) {
+    .section-title {
+      padding: 24px 24px 0;
+      font-size: 22px;
+      letter-spacing: 2px;
+    }
+    .section-subtitle {
+      padding: 6px 24px 20px;
+      font-size: 12px;
+    }
+    .card-header {
+      padding: 14px 16px 12px;
+    }
+    .card-city {
+      font-size: 22px;
+    }
+    .card-body {
+      padding: 14px 16px;
+    }
+    .stat-grid {
+      gap: 6px;
+    }
+    .stat-val {
+      font-size: 14px;
+    }
+    .stat-label {
+      font-size: 9px;
+    }
+
+    header { padding: 14px 24px 12px; }
+    .logo { font-size: 26px; letter-spacing: 2px; }
+    .intro-strip { padding: 12px 24px; gap: 20px; }
+    .section-title { padding: 24px 24px 0; font-size: 22px; }
+    .section-sub { padding: 4px 24px 12px; }
+    .controls { padding: 0 24px 16px; }
+    .table-wrap { padding: 0 24px 30px; }
+    .cards-section { padding: 0 24px 40px; }
+    .cards-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+    footer { padding: 16px 24px; }
+
+    .modal-title { font-size: 30px; }
+    .modal-header { padding: 20px 22px; }
+    .modal-body { padding: 20px 22px; }
+
+    .compare-lightbox-header { padding: 16px 20px; }
+    .compare-lightbox-body { padding: 20px; }
+    .compare-lightbox-title { font-size: 18px; }
+  }
+
+  /* Mobile */
+  @media (max-width: 600px) {
+    header { padding: 12px 16px 10px; }
+    .logo { font-size: 22px; letter-spacing: 2px; }
+    .tagline { font-size: 9px; letter-spacing: 1px; }
+
+    .header-actions {
+      width: 100%;
+      gap: 6px;
+    }
+
+    .header-actions .compare-trigger-btn,
+    .header-actions .theme-toggle {
+      flex: 1;
+      text-align: center;
+      padding: 10px 8px;
+      font-size: 11px;
+    }
+
+    .section-title {
+      padding: 20px 16px 0;
+      font-size: 18px;
+      letter-spacing: 1.5px;
+    }
+    .section-subtitle {
+      padding: 4px 16px 16px;
+      font-size: 11px;
+    }
+    .card-header {
+      padding: 12px 14px 10px;
+    }
+    .card-city {
+      font-size: 20px;
+    }
+    .card-body {
+      padding: 12px 14px;
+    }
+    .bar-list li, .hotel-list li {
+      padding: 6px 10px;
+      font-size: 11px;
+    }
+    .compare-col-name {
+      font-size: 14px;
+    }
+
+    header {
+      padding: 16px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .logo { font-size: 26px; letter-spacing: 1.5px; }
+    .tagline { font-size: 10px; letter-spacing: 1px; padding-bottom: 0; }
+
+    header > div:last-child {
+      margin-left: 0 !important;
+      width: 100%;
+      justify-content: flex-start;
+    }
+
+    .benchmark-badge { font-size: 10px; padding: 5px 10px; }
+    .compare-trigger-btn { font-size: 11px; padding: 7px 14px; }
+    .theme-toggle { padding: 7px 12px; }
+
+    .intro-strip {
+      padding: 12px 16px;
+      gap: 12px;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .intro-note { display: none; }
+    .intro-stat-value { font-size: 15px; }
+
+    .section-title { padding: 20px 16px 0; font-size: 20px; letter-spacing: 1.5px; }
+    .section-sub { padding: 4px 16px 10px; font-size: 10px; }
+
+    .controls {
+      padding: 0 16px 14px;
+      gap: 8px;
+    }
+
+    .controls select,
+    .controls button,
+    .filter-btn {
+      font-size: 11px;
+      padding: 8px 12px;
+      min-height: 36px;
+    }
+
+    .slider-wrap { width: 100%; }
+    .slider-wrap input[type="range"] { flex: 1; width: auto; min-width: 80px; }
+
+    .table-wrap {
+      padding: 0 16px 24px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    table { min-width: 0; }
+
+    th { padding: 10px 10px; font-size: 9px; }
+    td { padding: 10px 10px; font-size: 12px; }
+    .city-name-cell { font-size: 13px; }
+
+    .dot { width: 7px; height: 7px; }
+
+    .cards-section { padding: 0 16px 30px; }
+    .cards-grid {
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .card-header--benchmark { border-top: 3px solid var(--amber); }
+
+  .card-header { padding: 14px 16px 12px; flex-wrap: wrap; gap: 8px; }
+    .card-city { font-size: 20px; }
+    .card-state { font-size: 10px; }
+    .card-body { padding: 14px 16px; }
+    .card-description { font-size: 12px; }
+    .card-miles { font-size: 18px; }
+    .card-stats { grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+    .stat-box { padding: 6px 8px; }
+    .stat-box-label { font-size: 8px; }
+    .stat-box-value { font-size: 13px; }
+
+    .bar-list li,
+    .hotel-list li {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+      padding: 8px 10px;
+    }
+
+    .hotel-meta { text-align: left; }
+
+    /* Modal mobile */
+    .modal-overlay { padding: 16px 8px; }
+    .modal { border-radius: 6px; }
+    .modal-header { padding: 16px; }
+    .modal-title { font-size: 24px; letter-spacing: 1px; }
+    .modal-subtitle { font-size: 11px; }
+    .modal-body { padding: 16px; }
+    .modal-grid { grid-template-columns: 1fr; gap: 8px; }
+
+    /* Compare lightbox mobile */
+    .compare-overlay { padding: 12px 6px; }
+    .compare-lightbox-header { padding: 14px 16px; flex-wrap: wrap; }
+    .compare-lightbox-title { font-size: 16px; }
+    .compare-lightbox-sub { font-size: 11px; }
+    .compare-lightbox-body { padding: 14px 16px; }
+
+    .compare-city-picker { gap: 6px; }
+    .compare-city-btn { padding: 6px 10px; font-size: 11px; min-height: 36px; }
+
+    .compare-grid-2 { grid-template-columns: 1fr 40px 1fr; }
+    .compare-grid-3 { grid-template-columns: 1fr 30px 1fr 30px 1fr; }
+
+    .compare-col-name { font-size: 14px; }
+    .compare-col-sub { font-size: 10px; }
+    .compare-col-header { padding: 10px 10px; }
+    .compare-cell { padding: 8px 10px; }
+    .compare-cell-value { font-size: 12px; }
+    .compare-cell-note { font-size: 10px; }
+    .compare-middle-cell { padding: 8px 4px; font-size: 10px; }
+    .compare-middle-header { padding: 10px 4px; font-size: 8px; }
+
+    .compare-verdict { padding: 14px 16px; flex-direction: column; gap: 12px; }
+    .compare-verdict-winner { font-size: 20px; }
+    .compare-verdict-text { font-size: 12px; }
+    .compare-score-row { gap: 6px; }
+    .compare-score-chip { font-size: 10px; padding: 3px 8px; }
+
+    footer {
+      padding: 14px 16px;
+      flex-direction: column;
+      gap: 6px;
+      text-align: center;
+    }
+
+    footer p { font-size: 10px; }
+  }
+
+  /* Very small phones */
+  @media (max-width: 380px) {
+    .section-title {
+      padding: 16px 12px 0;
+      font-size: 16px;
+      letter-spacing: 1px;
+    }
+    .section-subtitle {
+      padding: 4px 12px 12px;
+      font-size: 10px;
+    }
+    .card-header {
+      padding: 10px 12px 8px;
+    }
+    .card-city {
+      font-size: 18px;
+    }
+    .card-body {
+      padding: 10px 12px;
+    }
+    .stat-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+    }
+    .stat-val {
+      font-size: 13px;
+    }
+    .bar-list li, .hotel-list li {
+      padding: 6px 8px;
+      font-size: 10px;
+      gap: 6px;
+    }
+    .bar-note {
+      font-size: 9px;
+    }
+
+    .logo { font-size: 22px; }
+    .card-city { font-size: 18px; }
+    .card-stats { grid-template-columns: 1fr 1fr; }
+    .compare-grid-3 { grid-template-columns: 1fr; }
+    .compare-middle-cell,
+    .compare-middle-header { display: none; }
+    .compare-grid-3 .compare-col-header,
+    .compare-grid-3 .compare-cell { border-bottom: 1px solid var(--border); }
+  }
+
+
+  /* ─── PRINT ─── */
+  @media print {
+    * { color-adjust: exact; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+    body {
+      background: #fff;
+      color: #111;
+      font-size: 11px;
+    }
+
+    header {
+      background: #fff;
+      border-bottom: 2px solid #333;
+      padding: 12px 20px;
+    }
+
+    .logo { color: #333; font-size: 24px; }
+    .benchmark-badge { background: #333; color: #fff; }
+    .compare-trigger-btn,
+    .theme-toggle,
+    .view-btn,
+    .filter-btn,
+    .controls,
+    .modal-overlay,
+    .compare-overlay,
+    .skip-link { display: none !important; }
+
+    .table-wrap { padding: 0 20px; overflow: visible; }
+    table { min-width: 0; width: 100%; font-size: 10px; }
+    th { font-size: 8px; padding: 6px 8px; color: #333; border-bottom: 2px solid #333; }
+    td { padding: 6px 8px; border-bottom: 1px solid #d8d7d4; }
+
+    .dot { border: 1px solid #999; }
+    .dot.filled { background: #333; border-color: #333; }
+    .dot.half { background: linear-gradient(90deg, #333 50%, #fff 50%); border-color: #333; }
+
+    .cards-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+    .city-card { border: 1px solid #ccc; break-inside: avoid; page-break-inside: avoid; }
+    .card-city { color: #333; font-size: 16px; }
+    .card-body { padding: 10px 14px; }
+
+    .tag-caution, .tag-warning, .tag-good, .tag-benchmark {
+      border: 1px solid #666;
+      color: #333;
+      background: #eee;
+    }
+
+    .walk-pill { border: 1px solid #999; background: #f5f5f5; color: #333; }
+
+    footer { border-top: 1px solid #ccc; padding: 10px 20px; }
+    footer p { color: #666; }
+
+    .intro-strip { background: #f7f7f5; border-bottom: 1px solid #d8d7d4; }
+    .intro-stat-value { color: #333; }
+
+    .section-title { color: #333; }
+  }
+
+  /* ─── PROGRESSIVE DISCLOSURE ─── */
+
+  /* Card expand/collapse (mobile only — desktop always visible) */
+  .card-expand-toggle {
+    display: none; /* hidden on desktop */
+  }
+
+  .card-quick-stats {
+    display: none; /* hidden on desktop — full body shows instead */
+  }
+
+  /* Controls collapse toggle (mobile only) */
+  .controls-toggle {
+    display: none;
+  }
+
+  /* Table column hiding classes */
+  .hide-mobile { /* default: visible */ }
+
+  @media (max-width: 600px) {
+    /* — Card progressive disclosure — */
+    .card-body {
+      display: none;
+      /* will be toggled via .card-expanded */
+    }
+
+    .city-card.card-expanded .card-body {
+      display: block;
+    }
+
+    .card-quick-stats {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 8px 14px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+    }
+
+    .card-qs-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      background: var(--surface2);
+      border-radius: 3px;
+      font-weight: 600;
+      font-size: 11px;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .card-qs-item .qs-label {
+      font-weight: 400;
+      color: var(--text-dim);
+      font-size: 10px;
+    }
+
+    .card-expand-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      padding: 10px 14px;
+      border: none;
+      border-top: 1px solid var(--border);
+      background: transparent;
+      color: var(--amber);
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .card-expand-toggle:hover,
+    .card-expand-toggle:focus-visible {
+      background: var(--surface2);
+    }
+
+    .card-expand-toggle .chevron {
+      display: inline-block;
+      transition: transform 0.2s ease;
+      font-size: 14px;
+    }
+
+    .city-card.card-expanded .card-expand-toggle .chevron {
+      transform: rotate(180deg);
+    }
+
+    .city-card.card-expanded .card-expand-toggle .toggle-text::after {
+      content: 'Hide Details';
+    }
+
+    .city-card:not(.card-expanded) .card-expand-toggle .toggle-text::after {
+      content: 'Show Details';
+    }
+
+    /* Card click behavior changes on mobile — no pointer on whole card */
+    .city-card {
+      cursor: default;
+    }
+
+    .city-card:hover {
+      transform: none;
+    }
+
+    /* — Table progressive disclosure — */
+    .hide-mobile {
+      display: none !important;
+    }
+
+    /* — Controls collapse — */
+    .controls-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      margin: 0 16px 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .controls-toggle .chevron {
+      display: inline-block;
+      transition: transform 0.2s ease;
+      color: var(--amber);
+    }
+
+    .controls-toggle[aria-expanded="true"] .chevron {
+      transform: rotate(180deg);
+    }
+
+    .controls.collapsed {
+      display: none;
+    }
+  }
+
+</style>
+</head>
+<body>
+<a href="#compTable" class="skip-link">Skip to comparison table</a>
+
+<!-- HEADER -->
+<header>
+  <div class="header-brand">
+    <div class="logo">🍺 BAR HOPPERS</div>
+    <div class="tagline">OVERNIGHT TRIP GUIDE — FROM RALSTON, NE</div>
+  </div>
+  <div class="header-actions">
+    <button class="compare-trigger-btn" id="compareTriggerBtn">⚖ Compare Cities</button>
+    <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-icon">☀</span> Light Mode</button>
+  </div>
+</header>
+
+<!-- MAIN CONTENT -->
+<main>
+<!-- COMPARISON TABLE -->
+<div class="section-title">COMPARE ALL DESTINATIONS</div>
+<div class="section-sub">TAP ANY ROW FOR DETAILS — TAP COLUMN HEADERS TO SORT</div>
+
+<div class="table-wrap">
+  <table id="compTable">
+    <thead>
+      <tr>
+        <th scope="col" class="sortable" data-col="name">City <span class="sort-arrow">↕</span></th>
+        <th scope="col" class="sortable sort-active" data-col="miles">Distance <span class="sort-arrow">▲</span></th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
+
+<!-- COMPARE LIGHTBOX -->
+<div class="compare-overlay" id="compareOverlay" role="dialog" aria-modal="true" aria-label="Compare cities">
+  <div class="compare-lightbox">
+    <div class="compare-lightbox-header">
+      <div>
+        <div class="compare-lightbox-title">⚖ Compare Cities</div>
+        <div class="compare-lightbox-sub">Select 2 or 3 cities to compare across 8 categories</div>
+      </div>
+      <button class="modal-close" id="compareClose" aria-label="Close compare dialog">✕</button>
+    </div>
+    <div class="compare-lightbox-body">
+      <div class="compare-city-picker" id="compareCityPicker">
+        <!-- City toggle buttons injected by JS -->
+      </div>
+      <div class="compare-picker-hint" id="comparePickerHint">Select 2 or 3 cities above to compare</div>
+      <div id="compareLightboxResult"></div>
+    </div>
+  </div>
+</div>
+
+<!-- STICKY TOAST — visible when a tray is open -->
+<div class="tray-toast" id="trayToast">
+  <button class="tray-toast-btn" id="trayToastBtn">▲ Back to List</button>
+</div>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <p>BAR HOPPERS GUIDE — ALL DISTANCES FROM 5068 S 107TH ST, RALSTON NE 68127</p>
+  <p>DRIVE TIMES ARE APPROXIMATE — VERIFY CURRENT BAR HOURS BEFORE BOOKING</p>
+</footer>
+
+<!-- FLOATING VOTE RESULTS FAB -->
+<button class="vote-fab" id="voteFab" aria-label="View vote results">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+  <span class="vote-fab-badge" id="voteFabBadge" style="display:none;">0</span>
+</button>
+
+<!-- VOTE RESULTS LIGHTBOX -->
+<div class="vote-overlay" id="voteOverlay">
+  <div class="vote-lightbox">
+    <div class="vote-lb-header">
+      <div>
+        <div class="vote-lb-title">Vote Results</div>
+      </div>
+      <button class="vote-lb-close" id="voteClose">✕</button>
+    </div>
+    <div class="vote-lb-body" id="voteLbBody">
+      <div class="vote-lb-empty">No votes yet — tap "I'D GO HERE" on any city to cast yours</div>
+    </div>
+  </div>
+</div>
+
+<!-- NAME PROMPT -->
+<div class="name-prompt-overlay" id="namePromptOverlay">
+  <div class="name-prompt-box">
+    <div class="name-prompt-title">Who's Voting?</div>
+    <div class="name-prompt-sub">Enter your name or nickname — you only have to do this once</div>
+    <input type="text" class="name-prompt-input" id="namePromptInput" placeholder="Your name" maxlength="20" autocomplete="off">
+    <button class="name-prompt-confirm" id="namePromptConfirm" disabled>Lock It In</button>
+  </div>
+</div>
+
+<script>
+// ─── VOTING SYSTEM ───
+(function() {
+  var VOTE_KEY = 'bh-vote';
+  var VOTER_KEY = 'bh-voter';
+  var ALL_VOTES_KEY = 'bh-all-votes';
+
+  // Get current voter name (persisted)
+  function getVoterName() {
+    return localStorage.getItem(VOTER_KEY) || null;
+  }
+
+  function setVoterName(name) {
+    localStorage.setItem(VOTER_KEY, name.trim());
+  }
+
+  // Get this voter's pick
+  function getMyVote() {
+    return localStorage.getItem(VOTE_KEY) || null;
+  }
+
+  function setMyVote(cityId) {
+    localStorage.setItem(VOTE_KEY, cityId);
+    // Also store in shared votes object
+    var name = getVoterName();
+    if (name) {
+      var allVotes = getAllVotes();
+      allVotes[name] = cityId;
+      localStorage.setItem(ALL_VOTES_KEY, JSON.stringify(allVotes));
+    }
+  }
+
+  function clearMyVote() {
+    var name = getVoterName();
+    localStorage.removeItem(VOTE_KEY);
+    if (name) {
+      var allVotes = getAllVotes();
+      delete allVotes[name];
+      localStorage.setItem(ALL_VOTES_KEY, JSON.stringify(allVotes));
+    }
+  }
+
+  // All votes: { "Nick": "sioux-city", "Booner": "norfolk", ... }
+  function getAllVotes() {
+    try {
+      return JSON.parse(localStorage.getItem(ALL_VOTES_KEY)) || {};
+    } catch(e) { return {}; }
+  }
+
+  // Pending vote — city user clicked before entering name
+  var pendingVoteCityId = null;
+
+  // ─── NAME PROMPT ───
+  var nameOverlay = document.getElementById('namePromptOverlay');
+  var nameInput = document.getElementById('namePromptInput');
+  var nameConfirm = document.getElementById('namePromptConfirm');
+
+  nameInput.addEventListener('input', function() {
+    nameConfirm.disabled = nameInput.value.trim().length === 0;
+  });
+
+  nameInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && nameInput.value.trim().length > 0) {
+      confirmName();
+    }
+  });
+
+  nameConfirm.addEventListener('click', confirmName);
+
+  function showNamePrompt(cityId) {
+    pendingVoteCityId = cityId;
+    nameOverlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    nameInput.value = '';
+    nameConfirm.disabled = true;
+    setTimeout(function() { nameInput.focus(); }, 100);
+  }
+
+  function confirmName() {
+    var name = nameInput.value.trim();
+    if (!name) return;
+    setVoterName(name);
+    nameOverlay.classList.remove('open');
+    document.body.style.overflow = '';
+    if (pendingVoteCityId) {
+      castVote(pendingVoteCityId);
+      pendingVoteCityId = null;
+    }
+  }
+
+  nameOverlay.addEventListener('click', function(e) {
+    if (e.target === nameOverlay) {
+      nameOverlay.classList.remove('open');
+      document.body.style.overflow = '';
+      pendingVoteCityId = null;
+    }
+  });
+
+  // ─── CAST VOTE ───
+  function castVote(cityId) {
+    setMyVote(cityId);
+    updateAllVoteButtons();
+    updateFabBadge();
+    updateResultsLightbox();
+  }
+
+  // ─── VOTE BUTTON HANDLER ───
+  // Called by vote buttons everywhere (cards, table, modal)
+  window._bhVote = function(cityId, e) {
+    if (e) { e.stopPropagation(); e.preventDefault(); }
+    var myVote = getMyVote();
+    if (myVote === cityId) return; // already voted for this
+
+    // If they haven't given a name yet, prompt
+    if (!getVoterName()) {
+      showNamePrompt(cityId);
+      return;
+    }
+
+    castVote(cityId);
+  };
+
+  // ─── CREATE VOTE BUTTON HTML ───
+  window._bhVoteBtn = function(cityId) {
+    var myVote = getMyVote();
+    var isVoted = myVote === cityId;
+    return '<button class="vote-btn' + (isVoted ? ' voted' : '') + '" data-vote-city="' + cityId + '" onclick="_bhVote(\'' + cityId + '\', event)">'
+      + (isVoted ? '✓ MY PICK' : 'I\'D GO HERE')
+      + '</button>';
+  };
+
+  // ─── UPDATE ALL VOTE BUTTONS ON PAGE ───
+  function updateAllVoteButtons() {
+    var myVote = getMyVote();
+    document.querySelectorAll('[data-vote-city]').forEach(function(btn) {
+      var cid = btn.dataset.voteCity;
+      if (cid === myVote) {
+        btn.className = 'vote-btn voted';
+        btn.innerHTML = '✓ MY PICK';
+      } else {
+        btn.className = 'vote-btn';
+        btn.innerHTML = 'I\'D GO HERE';
+      }
+    });
+  }
+
+  // ─── FAB BADGE ───
+  function updateFabBadge() {
+    var allVotes = getAllVotes();
+    var count = Object.keys(allVotes).length;
+    var badge = document.getElementById('voteFabBadge');
+    if (count > 0) {
+      badge.textContent = count;
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  // ─── RESULTS LIGHTBOX ───
+  var voteOverlay = document.getElementById('voteOverlay');
+
+  document.getElementById('voteFab').addEventListener('click', function() {
+    updateResultsLightbox();
+    voteOverlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  });
+
+  document.getElementById('voteClose').addEventListener('click', function() {
+    voteOverlay.classList.remove('open');
+    document.body.style.overflow = '';
+  });
+
+  voteOverlay.addEventListener('click', function(e) {
+    if (e.target === voteOverlay) {
+      voteOverlay.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+  });
+
+  // Close vote lightbox on Escape too
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      if (voteOverlay.classList.contains('open')) {
+        voteOverlay.classList.remove('open');
+        document.body.style.overflow = '';
+      }
+      if (nameOverlay.classList.contains('open')) {
+        nameOverlay.classList.remove('open');
+        document.body.style.overflow = '';
+        pendingVoteCityId = null;
+      }
+    }
+  });
+
+  function updateResultsLightbox() {
+    var body = document.getElementById('voteLbBody');
+    var allVotes = getAllVotes();
+    var myVote = getMyVote();
+    var voterName = getVoterName();
+    var entries = Object.entries(allVotes);
+
+    if (entries.length === 0) {
+      body.innerHTML = '<div class="vote-lb-empty">No votes yet</div>';
+      return;
+    }
+
+    // Tally: cityId -> { count, voters: [name, ...] }
+    var tally = {};
+    entries.forEach(function(pair) {
+      var name = pair[0], cid = pair[1];
+      if (!tally[cid]) tally[cid] = { count: 0, voters: [] };
+      tally[cid].count++;
+      tally[cid].voters.push(name);
+    });
+
+    // Sort by count desc
+    var sorted = Object.entries(tally).sort(function(a, b) {
+      return b[1].count - a[1].count;
+    });
+
+    var maxCount = sorted[0][1].count;
+    var html = '';
+
+    sorted.forEach(function(pair, idx) {
+      var cid = pair[0], data = pair[1];
+      var city = typeof cities !== 'undefined' ? cities.find(function(c) { return c.id === cid; }) : null;
+      var cityName = city ? city.name + ', ' + city.state : cid;
+      var isLeader = idx === 0;
+      var pct = maxCount > 0 ? (data.count / maxCount) * 100 : 0;
+
+      html += '<div class="vote-lb-row' + (isLeader ? ' vr-leader' : '') + '">'
+        + '<div class="vote-lb-rank">' + (idx + 1) + '</div>'
+        + '<div class="vote-lb-info">'
+        + '<div class="vote-lb-city">' + cityName + '</div>'
+        + '<div class="vote-lb-voters">' + data.voters.join(', ') + '</div>'
+        + '</div>'
+        + '<div class="vote-lb-count">' + data.count + '</div>'
+        + '<div class="vote-lb-bar-track"><div class="vote-lb-bar-fill" style="width:' + pct + '%"></div></div>'
+        + '</div>';
+    });
+
+    // Your vote section
+    if (myVote && voterName) {
+      var myCity = typeof cities !== 'undefined' ? cities.find(function(c) { return c.id === myVote; }) : null;
+      var myCityName = myCity ? myCity.name + ', ' + myCity.state : myVote;
+      html += '<div class="vote-lb-your-vote">'
+        + '<div>'
+        + '<div class="vote-lb-your-label">Your Vote (' + voterName + ')</div>'
+        + '<div class="vote-lb-your-city">' + myCityName + '</div>'
+        + '</div>'
+        + '<button class="vote-lb-clear-btn" id="voteLbClear">Change Vote</button>'
+        + '</div>';
+    }
+
+    body.innerHTML = html;
+
+    // Wire clear button
+    var clearBtn = document.getElementById('voteLbClear');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', function() {
+        clearMyVote();
+        updateAllVoteButtons();
+        updateFabBadge();
+        updateResultsLightbox();
+      });
+    }
+  }
+
+  // ─── INIT ───
+  updateFabBadge();
+
+  // Make the vote button builder available globally so buildCards/buildTable/openModal can use it
+  // Already set above via window._bhVoteBtn
+
+})();
+</script>
+
+<script>
+const cities = [
+  {
+    id: "sioux-city",
+    name: "Sioux City",
+    state: "IA",
+    miles: 100,
+    drive: "~1 hr 30 min",
+    bars: 10,
+    lastCall: "2:00 AM",
+    hotelWalk: "yes",
+    drinksFrom: "$3",
+    score: 10,
+    scoreLabel: "10/10",
+    tag: "good",
+    tagLabel: "TOP PICK",
+    description: "The trip that started it all. Sioux City's 4th Street district is a dense, historic strip of local dives and neighborhood taverns right off the Missouri River. Active Saturday nights year-round with a working-class local crowd. One of the strongest walkable bar districts in the region.",
+    district: "4th Street District",
+    bars_list: [
+      { name: "Dive Bar Row", note: "Multiple dives within 2-3 blocks" },
+      { name: "Hard Rock Hotel Bar", note: "Attached to hotel — easy access" },
+      { name: "Local sports taverns", note: "Walkable up and down 4th St" },
+    ],
+    hotels: [
+      { name: "Hard Rock Hotel", stars: "4★", price: "$150–$220/night", prox: "walk", proxLabel: "In District" },
+      { name: "Warrior Hotel", stars: "4★", price: "$140–$200/night", prox: "walk", proxLabel: "In District" },
+      { name: "AC Hotel by Marriott", stars: "3★", price: "$130–$170/night", prox: "walk", proxLabel: "~2 blocks" },
+    ],
+    poi: "Hard Rock Hotel itself is a point of interest — an art deco landmark. Sioux City Art Center is a 7-min walk.",
+    caveat: null,
+    drinkPrice: "$3",
+    crowd: "Local working-class, all ages, active year-round",
+    walkNote: "Park once at or near Hard Rock, walk all night",
+    hotelNote: "Hard Rock Hotel puts you right in the action. Book early.",
+  },
+  {
+    id: "norfolk",
+    name: "Norfolk",
+    state: "NE",
+    miles: 113,
+    drive: "~1 hr 45 min",
+    bars: 8,
+    lastCall: "1:00 AM",
+    hotelWalk: "yes",
+    drinksFrom: "$3",
+    score: 9.5,
+    scoreLabel: "9.5/10",
+    tag: "good",
+    tagLabel: "TOP PICK",
+    description: "The closest thing to a Sioux City clone in the region. The River Point District is a fully walkable, officially recognized entertainment zone on Norfolk Avenue with 8+ bars and taverns in a tight strip. Norfolk even runs an annual pub crawl event through the district — proof the bar mass is real. The 8-room River Point Inn sits directly in the middle of it all.",
+    district: "River Point District — Norfolk Avenue",
+    bars_list: [
+      { name: "Office Bar", note: "Live music weekends, cheap specials" },
+      { name: "Harbor Bar", note: "Quintessential dive, pool tables, low prices" },
+      { name: "Fifth Street Tavern", note: "Retro dive, local regulars, pool" },
+      { name: "District Table & Tap", note: "23 Nebraska taps, restored Elkhorn Hotel building" },
+      { name: "Divots Downtown", note: "Brewpub, wood-fired pizza, local beers" },
+      { name: "Saddle Up Saloon", note: "Country bar, DJ nights, open till 2AM weekends" },
+      { name: "Mint Bar / Mel's", note: "Classic local spots rounding out the strip" },
+      { name: "Paul's Cigar Lounge", note: "Bonus rooftop stop" },
+    ],
+    hotels: [
+      { name: "River Point Inn", stars: "Boutique", price: "$120–$180/night", prox: "walk", proxLabel: "IN THE DISTRICT" },
+      { name: "Fairfield Inn & Suites", stars: "3★", price: "$140–$170/night", prox: "ride", proxLabel: "~1 mile south" },
+      { name: "TownePlace Suites", stars: "3★", price: "$160–$190/night", prox: "ride", proxLabel: "~0.9 miles south" },
+      { name: "Hampton Inn Norfolk", stars: "3★", price: "$130–$175/night", prox: "ride", proxLabel: "~1.3 miles" },
+    ],
+    poi: "Johnny Carson was born in Norfolk — small but charming museum downtown. The River Point District itself has a public sculpture walk.",
+    caveat: { type: "caution", title: "HOTEL CAVEAT", text: "River Point Inn has only 8 rooms total. For a group of 12, you'd book the whole hotel. Call ahead and ask about a group block. If it's full, Hampton Inn or Fairfield are solid backups — but you'll need a short rideshare back at night. Uber in Norfolk exists but isn't always fast after midnight." },
+    drinkPrice: "$3",
+    crowd: "Local working-class, agricultural, some young professionals. No college crowd.",
+    walkNote: "100% walkable from River Point Inn. 5-min walk from chain hotels.",
+    hotelNote: "River Point Inn is the unicorn — boutique hotel inside the bar district. Book it early.",
+    event: "Annual Putt Putt Pub Crawl every April through the River Point District — proof of real bar density."
+  },
+  {
+    id: "columbus",
+    name: "Columbus",
+    state: "NE",
+    miles: 90,
+    drive: "~1 hr 20 min",
+    bars: 4,
+    lastCall: "1:00 AM",
+    hotelWalk: "no",
+    drinksFrom: "$2",
+    score: 7.5,
+    scoreLabel: "7.5/10",
+    tag: "caution",
+    tagLabel: "RIDESHARE REQUIRED",
+    description: "Closest city on the list and home to Glur's Tavern — the oldest continuously operating tavern west of the Missouri River, established 1876, listed on the National Register of Historic Places. Buffalo Bill Cody drank here. The downtown has 4 walkable late-night bars with some of the cheapest drink prices anywhere. Hotels are on the highway strip, not downtown, so you'll need a short rideshare.",
+    district: "11th & 13th Street Downtown Core",
+    bars_list: [
+      { name: "Glur's Tavern", note: "Est. 1876 — oldest bar west of Missouri. MUST visit." },
+      { name: "Oborny's Husker Bar", note: "Right next door to Glur's. Local sports crowd." },
+      { name: "Micek's Shangri-La", note: "Classic dive, 3 blocks from Glur's, open till 1AM" },
+      { name: "Duster's & Gottberg Brew Pub", note: "Brewpub in restored auto dealership, closes 11PM" },
+      { name: "Oasis Bar & Lounge", note: "5 blocks north, Keno, local crowd, open till 1AM" },
+    ],
+    hotels: [
+      { name: "Hampton Inn Columbus", stars: "3★", price: "$125–$160/night", prox: "ride", proxLabel: "1.8 mi from downtown" },
+      { name: "Holiday Inn Express", stars: "3★", price: "$110–$150/night", prox: "ride", proxLabel: "2.0 mi from downtown" },
+      { name: "Fairfield Inn & Suites", stars: "3★", price: "$100–$140/night", prox: "ride", proxLabel: "2.2 mi — near Harrah's casino" },
+    ],
+    poi: "Glur's Tavern is the point of interest. Platte River State Park is nearby for a morning walk before the drive home.",
+    caveat: { type: "caution", title: "LOGISTICS", text: "All chain hotels are on the US-30 commercial strip, ~2 miles from the bars. Uber operates in Columbus but can be slow after midnight for a group of 12 needing 3+ cars. Strongly recommend pre-arranging a local shuttle or designating a driver. Note: Gottberg closes at 11PM — plan your rotation accordingly." },
+    drinkPrice: "$2",
+    crowd: "Manufacturing and ag workers, true blue-collar local crowd. Zero college presence.",
+    walkNote: "Downtown bars are walkable from each other. Hotel-to-bars requires a ride.",
+    hotelNote: "Hampton Inn is the cleanest option. Book Hampton, plan your shuttle.",
+  },
+  {
+    id: "creston",
+    name: "Creston",
+    state: "IA",
+    miles: 110,
+    drive: "~1 hr 40 min",
+    bars: 5,
+    lastCall: "1:00 AM",
+    hotelWalk: "no",
+    drinksFrom: "$3",
+    score: 7.0,
+    scoreLabel: "7/10",
+    tag: "caution",
+    tagLabel: "HIDDEN GEM",
+    description: "The most underrated find in four waves of research. Creston is a BNSF railroad hub with a genuine working-class dive bar scene nobody talks about. The Uptown district has 5+ bars within easy walking distance — The Elms Club, Hot Air Brewing, A&G Lounge, Side Tracked, Mario's. Authentic, cheap, local. The only catch is the hotel is a mile from the bars on the highway bypass.",
+    district: "Uptown District — Courthouse Square area",
+    bars_list: [
+      { name: "The Elms Club", note: "Legendary local tavern, operating since 1976. Pool, local crowd." },
+      { name: "Hot Air Brewing", note: "0.1 miles from Elms — local craft brewery, community vibe" },
+      { name: "A&G Restaurant & Lounge", note: "Classic lounge adjacent to Hot Air Brewing" },
+      { name: "Side Tracked", note: "Local dive/sports bar in the Uptown core" },
+      { name: "Mario's Sports Bar & Grill", note: "Active sports bar, walkable from the square" },
+    ],
+    hotels: [
+      { name: "Quality Inn Creston", stars: "2.5★", price: "$90–$130/night", prox: "far", proxLabel: "~1 mile south on highway" },
+      { name: "AmericInn Creston", stars: "2.5★", price: "$95–$135/night", prox: "far", proxLabel: "~1 mile south on highway" },
+    ],
+    poi: "Creston is an Amtrak stop — the California Zephyr runs through here. Railroad history throughout downtown.",
+    caveat: { type: "caution", title: "HOTEL & LODGING", text: "Hotels are on the southern highway bypass, ~1 mile from Uptown bars. No 3-star chains in town — Quality Inn and AmericInn are your options. Walking back at night involves highway shoulders with no consistent lighting. Pre-arrange a local shuttle or designated driver. If lodging quality is a hard priority, this one requires some compromise." },
+    drinkPrice: "$3",
+    crowd: "BNSF railroad workers, ag sector, real locals. No tourists, no students.",
+    walkNote: "Bars are walkable from each other. Hotel-to-bars requires a ride.",
+    hotelNote: "Hotel quality is the trade-off for the best hidden dive scene in the radius.",
+  },
+  {
+    id: "maryville",
+    name: "Maryville",
+    state: "MO",
+    miles: 112,
+    drive: "~1 hr 45 min",
+    bars: 5,
+    lastCall: "1:30 AM",
+    hotelWalk: "no",
+    drinksFrom: "$3",
+    score: 7.0,
+    scoreLabel: "7/10",
+    tag: "caution",
+    tagLabel: "SCHOOL YEAR ONLY",
+    description: "Home to Northwest Missouri State University. The courthouse square has a tight, walkable cluster of bars — The Pub, Burny's rooftop, Black Pony Brewing, The Palms, A&G. The square is extremely compact. Best during the school year when the university crowd adds energy. During summer or winter break it gets quiet fast. Also worth knowing: Missouri allows 19+ entry in bars, so expect a younger crowd.",
+    district: "Downtown Courthouse Square — Main & Market Streets",
+    bars_list: [
+      { name: "The Pub", note: "21+ anchor bar, live music, trivia, local favorite" },
+      { name: "Burny's Pub & Grub", note: "Sports bar downstairs, open-air rooftop deck upstairs" },
+      { name: "Black Pony Brewing Co.", note: "Downtown craft brewery, Thu–Sat, closes 11PM" },
+      { name: "The Palms Bar & Grill", note: "Neighborhood bar, elevated bar food, patio" },
+      { name: "A&G Restaurant", note: "Long-standing local institution on the square" },
+    ],
+    hotels: [
+      { name: "Holiday Inn Express Maryville", stars: "3★", price: "$130–$180/night", prox: "far", proxLabel: "~2 miles south" },
+      { name: "Downtown Loft Rentals", stars: "Varies", price: "$150–$250/night", prox: "walk", proxLabel: "Above the bar district" },
+    ],
+    poi: "Mozingo Lake Recreation Park is nearby for morning activities before the drive home.",
+    caveat: { type: "warning", title: "TIMING IS EVERYTHING", text: "This scene lives and dies by the NWMSU calendar. During the school year (fall semester, spring semester) it's lively and fun. During summer break or winter break it can be nearly dead. Also: Missouri law allows 19+ entry in bars — expect a younger crowd than you'll find in Nebraska towns. Rideshare in Maryville is thin — consider renting a 15-passenger van for the evening or designating drivers." },
+    drinkPrice: "$3",
+    crowd: "College students dominate during school year. Local/faculty mix in off-season.",
+    walkNote: "The square is extremely compact and walkable. Hotel is not.",
+    hotelNote: "Check for downtown loft rentals — some sit directly above the bar district and can fit the whole group.",
+  },
+  {
+    id: "st-joseph",
+    name: "St. Joseph",
+    state: "MO",
+    miles: 132,
+    drive: "~2 hrs",
+    bars: 4,
+    lastCall: "1:30 AM",
+    hotelWalk: "no",
+    drinksFrom: "$2.50",
+    score: 6.0,
+    scoreLabel: "6/10",
+    tag: "warning",
+    tagLabel: "VERIFY BEFORE BOOKING",
+    description: "Historic Missouri river town with some of the best bar bones on the list — Felix Street, old brick buildings, working-class character, incredibly cheap drinks. The problem: local Reddit threads describe the downtown nightlife as significantly diminished over the past decade, with many bars closing by 9–10PM. May be better suited as a daytime history trip than an overnight bar crawl. Felix Street Pub is still operating, but it runs in relative isolation.",
+    district: "Felix Street / Downtown Historic Core",
+    bars_list: [
+      { name: "Felix Street Pub", note: "Classic dive, karaoke, pool, cheap drinks — still open" },
+      { name: "1st Barrel Brewing", note: "Downtown brewery — closes ~10PM Saturdays" },
+      { name: "Hi-Ho Bar & Grill", note: "Neighborhood bar on Frederick Ave, open till 1:30AM" },
+      { name: "Unplugged", note: "Irish whiskey bar, live music some weekends, 1:30AM close" },
+      { name: "River Bluff Brewing", note: "Historic brick building, local taproom" },
+    ],
+    hotels: [
+      { name: "Drury Inn & Suites", stars: "3★", price: "$100–$155/night", prox: "far", proxLabel: "3.5 mi from Felix St" },
+      { name: "Stoney Creek Hotel", stars: "3.5★", price: "$90–$130/night", prox: "far", proxLabel: "~2 miles from downtown" },
+      { name: "Hampton Inn St. Joseph", stars: "3★", price: "$110–$145/night", prox: "far", proxLabel: "~2.4 miles from Felix St" },
+    ],
+    poi: "Pony Express Museum and Jesse James Home Museum are both in the downtown core — legitimately great daytime stops. Consider arriving early for history, then dinner and drinks.",
+    caveat: { type: "warning", title: "LOCAL INTELLIGENCE FLAG", text: "A Reddit thread from r/St_Joseph specifically describes downtown nightlife as having 'died almost a decade ago' with bars closing early. Tourism sites paint a rosier picture. Best practice: call Felix Street Pub directly before booking to confirm it's consistently open and active on a Saturday. If verified, St. Joe has great bones. If not, it's a daytime trip. The Drury Inn includes a free '5:30 Kickback' with hot food and 3 complimentary drinks per person nightly — great pre-game value." },
+    drinkPrice: "$2.50",
+    crowd: "Blue-collar local, multi-generational, zero college. When it's active, it's the right vibe.",
+    walkNote: "Felix Street bars are walkable from each other. Hotels are all 2-3+ miles away — rideshare required.",
+    hotelNote: "Drury Inn is the best hotel pick. Free evening food and drinks is a bonus for a group.",
+  },
+  {
+    id: "vermillion",
+    name: "Vermillion",
+    state: "SD",
+    miles: 150,
+    drive: "~2 hrs 15 min",
+    bars: 6,
+    lastCall: "2:00 AM",
+    hotelWalk: "yes",
+    drinksFrom: "$3",
+    score: 8.5,
+    scoreLabel: "8.5/10",
+    tag: "good",
+    tagLabel: "BEST DENSITY",
+    description: "Home to the University of South Dakota. Main Street has 6 bars packed into a 0.2-mile stretch with a 2AM last call — the latest close time on this entire list. Carey's Bar has been a local institution since 1954 with a genuine mix of students, faculty, townies and regulars. The Main Street Inn boutique hotel sits one block from the bars. The stretch drive is worth it.",
+    district: "Main Street — 0.2 mile strip",
+    bars_list: [
+      { name: "Carey's Bar", note: "Est. 1954. The anchor. Local institution, dive, open till 2AM." },
+      { name: "Doc's Bar", note: "Newly remodeled, 75\" TVs, full liquor, right next to Carey's" },
+      { name: "Main Street Pub", note: "Classic neighborhood pub, pool tables, 2AM close" },
+      { name: "Old Lumber Company", note: "Bar & grill, rooftop/balcony, open till 2AM" },
+      { name: "Dakota Brick House", note: "20 rotating craft taps, closes ~11PM — good early stop" },
+      { name: "Leo's Sports Bar & Grill", note: "One block off Main, sports crowd, open till 2AM" },
+    ],
+    hotels: [
+      { name: "Main Street Inn", stars: "Boutique", price: "$150–$200/night", prox: "walk", proxLabel: "1 BLOCK FROM BARS" },
+      { name: "Holiday Inn Express Vermillion", stars: "3★", price: "$110–$140/night", prox: "ride", proxLabel: "~2 miles north" },
+      { name: "Best Western Vermillion Inn", stars: "3★", price: "$120–$170/night", prox: "ride", proxLabel: "~1 mile from Main St" },
+    ],
+    poi: "National Music Museum on the USD campus — world-class instrument collection, free to enter. Legitimately impressive.",
+    caveat: { type: "caution", title: "AVOID THESE DATES", text: "USD home football Saturdays, Dakota Days/Homecoming (typically October), and May graduation weekend will spike hotel rates to $200+ and sell rooms out weeks in advance. Check the USD athletic schedule before booking. Off those dates, rates are very reasonable. The Main Street Inn has only 5 rooms — it can fit 12 adults but book well in advance and confirm capacity directly with the owner." },
+    drinkPrice: "$3",
+    crowd: "Students + faculty + locals + alumni. College energy but never exclusive. Carey's specifically draws all ages.",
+    walkNote: "Main Street Inn is one block from everything. Holiday Inn is ~2 miles — borderline walkable.",
+    hotelNote: "Main Street Inn is the move. Call the owner directly to confirm a group block.",
+  },
+  {
+    id: "yankton",
+    name: "Yankton",
+    state: "SD",
+    miles: 140,
+    drive: "~2 hrs 10 min",
+    bars: 6,
+    lastCall: "2:00 AM",
+    hotelWalk: "partial",
+    drinksFrom: "$3",
+    score: 7.5,
+    scoreLabel: "7.5/10",
+    tag: "good",
+    tagLabel: "RIVER TOWN VIBE",
+    description: "Classic Missouri River town with a historic 3rd Street bar strip and frontier-era character. The Meridian District downtown has 6+ walkable bars including Ben's Brewing, the legendary Walnut Tavern, and several neighborhood spots. South Dakota's 2AM last call applies here too. Different energy from the college towns — this is more adult, more local, more river town.",
+    district: "Meridian District — West 3rd Street",
+    bars_list: [
+      { name: "Ben's Brewing Co.", note: "SD's first smoke-free bar, 20 house taps. Downtown anchor." },
+      { name: "Walnut Tavern", note: "Known locally as 'The Dead Animal Bar.' Legendary dive." },
+      { name: "Rounding 3rd Bar & Casino", note: "Classic SD bar/casino format. Local crowd." },
+      { name: "TommyJack's Pub", note: "Neighborhood staple, good food, casual" },
+      { name: "The Thirsty Duck", note: "Local dive, regulars, cheap drinks" },
+      { name: "Cottonwood / Shipwreck Bar", note: "Outdoor-adjacent, river-town atmosphere" },
+    ],
+    hotels: [
+      { name: "Fairfield Inn & Suites Yankton", stars: "3★", price: "$105–$140/night", prox: "ride", proxLabel: "~1.5 miles from 3rd St" },
+      { name: "Comfort Inn Yankton", stars: "3★", price: "$107–$140/night", prox: "ride", proxLabel: "~1.5 miles from downtown" },
+      { name: "Best Western Kelly Inn", stars: "3★", price: "$106–$130/night", prox: "ride", proxLabel: "~1.5 miles from downtown" },
+    ],
+    poi: "Meridian Bridge and Missouri River waterfront — great for a morning walk before heading home. Gavins Point Dam is nearby.",
+    caveat: { type: "caution", title: "NOTE ON SOUTH DAKOTA BARS", text: "Most SD bars have video lottery/slot machines — it's a cultural thing, not a red flag. Adds to the local character. Rideshare in Yankton (pop. 15,000) is thin — have a transportation plan. Summer is the best time to visit; the river-town atmosphere is at its peak in warmer months." },
+    drinkPrice: "$3",
+    crowd: "Local adults, river-town regulars, less college-heavy than Vermillion. More mature crowd overall.",
+    walkNote: "3rd Street bars are walkable from each other. Hotels require a short rideshare.",
+    hotelNote: "Fairfield Inn is the cleanest 3-star option. Book early for summer weekends.",
+  },
+  {
+    id: "west-des-moines",
+    name: "West Des Moines",
+    state: "IA",
+    miles: 128,
+    drive: "~1 hr 55 min",
+    bars: 6,
+    lastCall: "2:00 AM",
+    hotelWalk: "no",
+    drinksFrom: "$3",
+    score: 6.5,
+    scoreLabel: "6.5/10",
+    tag: "caution",
+    tagLabel: "STRETCH OPTION",
+    description: "Historic Valley Junction is West Des Moines' long-standing railroad and manufacturing district — a 5th Street strip of late 19th-century brick buildings with local taverns and no tourist polish. Sully's Irish Pub, G. Mig's 5th Street Pub, The Foundry, The Longest Yard, and others fill a compact 5-block grid. Hotels are a rideshare away. Iowa's 2AM last call helps.",
+    district: "Historic Valley Junction — 5th Street",
+    bars_list: [
+      { name: "Sully's Irish Pub", note: "Legendary neighborhood joint, cold drafts, welcoming" },
+      { name: "G. Mig's 5th Street Pub", note: "Classic local bar, good pub food, neighborhood crowd" },
+      { name: "The Foundry", note: "Craft bar in renovated industrial space" },
+      { name: "The Longest Yard", note: "Live music weekends, local following" },
+      { name: "West Junction Wings & Pub", note: "Sports bar, cheap domestic pints" },
+    ],
+    hotels: [
+      { name: "Holiday Inn Express WDM", stars: "3★", price: "$120–$150/night", prox: "far", proxLabel: "~2.5 miles from Valley Junction" },
+      { name: "Hampton Inn WDM", stars: "3★", price: "$130–$160/night", prox: "far", proxLabel: "~2.7 miles from Valley Junction" },
+      { name: "TownePlace Suites WDM", stars: "3★", price: "$140–$170/night", prox: "far", proxLabel: "~3 miles — extended stay kitchens" },
+    ],
+    poi: "Valley Junction itself is a Saturday morning antique/market destination. A few hours before the drive home is well spent here.",
+    caveat: { type: "caution", title: "ENERGY NOTE", text: "Valley Junction is partly a daytime shopping and dining district — the late-night bar energy can thin after midnight on slower Saturdays. It's best on summer weekends and during local event nights. Des Moines proper (Court Avenue, East Village) is ~8 miles east and has far deeper bar density if the group is willing to drive a bit within the city." },
+    drinkPrice: "$3",
+    crowd: "Working-class and multi-generational local WDM residents. No student crowd. Good mix.",
+    walkNote: "5th Street bars are walkable from each other. Hotel to bars requires 10-min rideshare.",
+    hotelNote: "Strong hotel inventory. Easy to accommodate 12 — book Holiday Inn Express or Hampton.",
+  },
+  {
+    id: "wayne",
+    name: "Wayne",
+    state: "NE",
+    miles: 100,
+    drive: "~1 hr 35 min",
+    bars: 2,
+    lastCall: "2:00 AM",
+    hotelWalk: "no",
+    drinksFrom: "$3",
+    score: 4.0,
+    scoreLabel: "4/10",
+    tag: "warning",
+    tagLabel: "TOO SMALL",
+    description: "Wayne State College keeps two solid bars alive — Max Bar & Grill and White Dog Pub are literally next to each other on Main Street with 2AM closes. Johnnie Byrd Brewing adds a third stop but closes at 11PM. For a group in their 40s who just want 5+ options and room to move, Wayne doesn't have the depth. Worth knowing about, but not a full overnight destination.",
+    district: "Main Street & Pearl Street — 2 block radius",
+    bars_list: [
+      { name: "Max Bar & Grill", note: "Sports bar, active food menu, open till 2AM" },
+      { name: "White Dog Pub", note: "Traditional pub, local crowd, open till 2AM" },
+      { name: "Johnnie Byrd Brewing Co.", note: "Small-batch craft brewery — closes 11PM Saturdays" },
+      { name: "Pearl Street Steakhouse", note: "Higher-end lounge, dining focus — closes 8PM" },
+    ],
+    hotels: [
+      { name: "Cobblestone Hotel & Suites", stars: "2.5★", price: "$90–$120/night", prox: "far", proxLabel: "1 mile south — highway walk unsafe at night" },
+    ],
+    poi: "Wayne Chicken Show — annual quirky community festival in July with chicken-themed everything. Fun if timing works out.",
+    caveat: { type: "warning", title: "HONEST ASSESSMENT", text: "Wayne has the right vibe in a very small package. Two late-night bars is not enough rotation for 12 adults on a full Saturday night. The nearest 3-star hotels are 25 miles away in Norfolk. Cobblestone is the only local option and it's a 1-mile walk along unlit highway shoulders. Best use case: combine with Norfolk on a trip where you stop in Wayne for a couple rounds at Max Bar before driving the extra 20 minutes to Norfolk for the night." },
+    drinkPrice: "$3",
+    crowd: "Wayne State students during school year, local agricultural workers otherwise.",
+    walkNote: "Max Bar and White Dog are steps from each other. Hotel is 1 mile on highway — not safe to walk at night.",
+    hotelNote: "Seriously consider staying in Norfolk instead and making Wayne a stop en route.",
+  },
+
+  {
+    id: "blair",
+    name: "Blair",
+    state: "NE",
+    miles: 25,
+    drive: "~25 min",
+    bars: 5,
+    lastCall: "1:00 AM",
+    hotelWalk: "no",
+    drinksFrom: "$2.50",
+    score: 6.0,
+    scoreLabel: "6/10",
+    tag: "caution",
+    tagLabel: "CLOSEST NE OPTION",
+    description: "25 minutes north on Highway 75. Blair's Washington Street has a cluster of local bars — Lighthouse Bar & Grill, Red Brick Bar & Grill, Russow's Corner Pub, George's Tavern, Churchill's Cigar Bar. Classic small Nebraska town bar scene: friendly locals, cheap drinks, no pretense. No great hotel in Blair itself — the play is to drink in Blair and stay at a Fremont hotel 20 minutes away, or combine the two towns into one night.",
+    district: "Washington Street — Downtown Blair",
+    bars_list: [
+      { name: "Lighthouse Bar & Grill", note: "Top-rated in Blair, good food, welcoming crowd" },
+      { name: "Red Brick Bar & Grill", note: "Great burgers, local favorite on Washington St" },
+      { name: "Russow's Corner Pub", note: "Classic corner pub, regulars, cold beer" },
+      { name: "George's Tavern", note: "Described as exactly what a small-town bar should be — smoky, wood paneling, locals" },
+      { name: "Churchill's Cigar Bar", note: "Also has a Blair location — 12 taps, casual vibe" },
+    ],
+    hotels: [
+      { name: "Fairfield Inn & Suites Fremont", stars: "3★", price: "$95–$125/night", prox: "far", proxLabel: "20 min south in Fremont" },
+      { name: "Holiday Inn Express Fremont", stars: "3★", price: "$95–$125/night", prox: "far", proxLabel: "20 min south in Fremont" },
+    ],
+    poi: "Neale Woods Nature Center is nearby for a Sunday morning walk. Missouri River access at Desoto National Wildlife Refuge.",
+    caveat: { type: "caution", title: "NO HOTEL IN TOWN", text: "Blair doesn't have a 3-star hotel in the city limits. The realistic play: stay in Fremont (20 minutes south) and Uber between the two towns, or make Blair a stop on a Fremont night. Alternatively, combine Blair and Fremont into one long evening — drink through both towns and end up at your Fremont hotel." },
+    drinkPrice: "$2.50",
+    crowd: "Local Blair adults — working-class, blue-collar, very welcoming to outsiders.",
+    walkNote: "Washington Street bars are within a few blocks of each other.",
+    hotelNote: "Stay in Fremont. Uber to Blair for part of the night, then back.",
+  },
+
+  {
+    id: "wahoo",
+    name: "Wahoo",
+    state: "NE",
+    miles: 30,
+    drive: "~30 min",
+    bars: 5,
+    lastCall: "1:00 AM",
+    hotelWalk: "partial",
+    drinksFrom: "$2.50",
+    score: 6.5,
+    scoreLabel: "6.5/10",
+    tag: "good",
+    tagLabel: "QUICK GETAWAY",
+    description: "30 minutes west on Highway 92. Wahoo has a surprisingly active little downtown bar scene — Riffs Pub & Patio (music-themed bar with live entertainment and cocktails in historic downtown), The GOAT, Chip's Restaurant & Bar, Titles Lounge & Sports Bar, Wheelhouse. The Wahoo Heritage Inn is right in town. Not a destination trip but a completely valid 'let's get out of Omaha for a night' option at 30 minutes.",
+    district: "Downtown Wahoo — 5th & Broadway",
+    bars_list: [
+      { name: "Riffs Pub & Patio", note: "Live entertainment, cocktails, American food. Music-themed. The standout." },
+      { name: "The GOAT", note: "Local sports bar, active crowd, good beer selection" },
+      { name: "Chip's Restaurant & Bar", note: "Burger and a beer — reliable local spot" },
+      { name: "Titles Lounge & Sports Bar", note: "Sports bar, locals, every TV covered" },
+      { name: "Wheelhouse", note: "Neighborhood bar, regulars, cold beer, no frills" },
+    ],
+    hotels: [
+      { name: "Wahoo Heritage Inn", stars: "2.5★", price: "$75–$100/night", prox: "walk", proxLabel: "Downtown Wahoo — walking distance" },
+    ],
+    poi: "Saunders County Museum — small but genuine local history. Wahoo itself has a funny name that gives the whole trip a built-in joke.",
+    caveat: { type: "caution", title: "ONE HOTEL, BASIC", text: "Wahoo Heritage Inn is the only hotel in town and it's a basic motel — clean and functional but not a Hampton Inn. If hotel quality matters, base in Fremont and Uber to Wahoo for a few hours. At $75-100/night it's also the cheapest overnight on the whole list." },
+    drinkPrice: "$2.50",
+    crowd: "Local Wahoo adults, families, working-class regulars. Extremely welcoming small-town vibe.",
+    walkNote: "Downtown bars are within easy walking distance of each other and the Heritage Inn.",
+    hotelNote: "Heritage Inn is functional and cheap. Manage expectations or base in Fremont.",
+  },
+
+  {
+    id: "nebraska-city",
+    name: "Nebraska City",
+    state: "NE",
+    miles: 50,
+    drive: "~50 min",
+    bars: 5,
+    lastCall: "1:00 AM",
+    hotelWalk: "partial",
+    drinksFrom: "$3",
+    score: 6.5,
+    scoreLabel: "6.5/10",
+    tag: "good",
+    tagLabel: "CHARMING RIVER TOWN",
+    description: "Nebraska City is one of the most underrated small cities in the state — a historic Missouri River town with a genuinely charming downtown on Central Avenue. Little Ted's Pub & Grill, City Tap House, The Keeping Room, West Central Bar & Grill. The bar count is modest but the town itself is worth the trip: apple orchards, Arbor Day Farm, beautiful 1870s-era downtown architecture. Best as a Saturday afternoon arrival — explore the town, have dinner at a good local restaurant, then work the bar strip.",
+    district: "Central Avenue — Downtown Nebraska City",
+    bars_list: [
+      { name: "Little Ted's Pub & Grill", note: "Best-reviewed bar in Nebraska City. Reliable local favorite." },
+      { name: "City Tap House", note: "Downtown taproom, local beers, good atmosphere" },
+      { name: "The Keeping Room", note: "Bar and restaurant in historic downtown building" },
+      { name: "West Central Bar & Grill", note: "Local sports bar, cold beer, active Saturday nights" },
+      { name: "The Wagon Wheel", note: "Classic Nebraska neighborhood tavern" },
+    ],
+    hotels: [
+      { name: "Lied Lodge & Conference Center", stars: "4★", price: "$130–$190/night", prox: "ride", proxLabel: "At Arbor Day Farm — 2 miles from downtown" },
+      { name: "Apple Inn Motel", stars: "2★", price: "$70–$95/night", prox: "ride", proxLabel: "Highway, short drive to downtown" },
+    ],
+    poi: "Arbor Day Farm and the Lied Lodge — genuinely beautiful property with walking trails and an orchard. Mayhew Cabin (site of an actual Underground Railroad station) is in Nebraska City. Great morning activity before the drive home.",
+    caveat: { type: "caution", title: "QUALITY OVER QUANTITY", text: "Nebraska City is more of a 'charming destination with bars' than a pure bar crawl city. The bar scene is 4-5 spots, not 10+. The real draw is the town itself — arrive early, walk the historic downtown, grab apple cider at the orchard, have a great dinner, then hit the bars. Lied Lodge is a genuinely excellent hotel if the group wants something nicer." },
+    drinkPrice: "$3",
+    crowd: "Local Missouri River town adults, orchard tourists on weekend afternoons, locals at night. Good mix.",
+    walkNote: "Downtown bars are within walking distance of each other. Lied Lodge requires a short Uber.",
+    hotelNote: "Lied Lodge is the gem — full-service lodge at Arbor Day Farm, beautiful setting, worth the splurge for a nicer trip.",
+  },
+
+  {
+    id: "plattsmouth",
+    name: "Plattsmouth",
+    state: "NE",
+    miles: 20,
+    drive: "~20 min",
+    bars: 5,
+    lastCall: "1:00 AM",
+    hotelWalk: "no",
+    drinksFrom: "$2.50",
+    score: 5.5,
+    scoreLabel: "5.5/10",
+    tag: "caution",
+    tagLabel: "BASICALLY NEXT DOOR",
+    description: "20 minutes south on Highway 75. Plattsmouth is a small river town with a handful of bars on Main Street — DC's Waterhole, Tiki Time, Shooters, Country Bar & Grill, Main Street Bar & Grill. It's quick, cheap, and easy. No hotel in town — you'd base in the Omaha metro and drive over, or combine with a Nebraska City night. This is the 'we just want to get out of the house for a few hours' option.",
+    district: "Main Street — Downtown Plattsmouth",
+    bars_list: [
+      { name: "DC's Waterhole", note: "Top local pick, neighborhood dive, welcoming" },
+      { name: "Tiki Time", note: "Local bar with a fun name, active weekend crowd" },
+      { name: "Shooters", note: "Classic small-town bar, regulars, cheap drinks" },
+      { name: "Country Bar & Grill", note: "Country music, local crowd, good time" },
+      { name: "Main Street Bar & Grill", note: "Downtown staple, food and drinks" },
+    ],
+    hotels: [
+      { name: "Hampton Inn Bellevue/Omaha", stars: "3★", price: "$105–$140/night", prox: "far", proxLabel: "15 min north in Bellevue" },
+      { name: "Hotels in Nebraska City", stars: "Various", price: "$70–$190/night", prox: "far", proxLabel: "30 min south — combine trips" },
+    ],
+    poi: "Plattsmouth sits on the Platte River confluence with the Missouri. Bridge views are genuinely scenic. CASS County Historical Museum for history buffs.",
+    caveat: { type: "caution", title: "VERY CLOSE, NO HOTEL", text: "At 20 miles this barely qualifies as leaving home. No hotel in Plattsmouth — you'd need to base in Bellevue or combine with Nebraska City to make it a real overnight. Best use case: stop in Plattsmouth for a couple rounds at DC's Waterhole on the way to or from Nebraska City." },
+    drinkPrice: "$2.50",
+    crowd: "Local Plattsmouth adults — river town blue-collar, welcoming, real locals only.",
+    walkNote: "Main Street bars are all within a block or two.",
+    hotelNote: "Don't make this a standalone overnight. Combine with Nebraska City or use as an easy out-of-the-house evening with a designated driver.",
+  },
+
+  // ── ADDITIONAL CITIES ───────────────────────────────────────
+
+  {
+    id: "fremont",
+    name: "Fremont",
+    state: "NE",
+    miles: 40,
+    drive: "~40 min",
+    bars: 8,
+    lastCall: "1:00 AM",
+    hotelWalk: "partial",
+    drinksFrom: "$2",
+    score: 7.0,
+    scoreLabel: "7/10",
+    tag: "good",
+    tagLabel: "CLOSEST OPTION",
+    description: "40 minutes from Ralston — the shortest drive on the list. Downtown Fremont's Main Street has a legitimate cluster of local bars: The Dugout (the busiest dive, regulars singing along to ELO on the jukebox), Bourbon Trail Lounge (100+ bourbons, craft cocktails, full bar in historic space), Churchill's Cigar Bar (12 taps, beer garden), Tin Lizzy Tavern (live music Saturdays), Doe's Place (karaoke and live music), Alto Kitchen + Bar (upscale food and drinks). Dirt cheap drinks, welcoming crowd, middle-aged regulars. At 40 miles this is the 'spur of the moment' trip — you could literally decide to go at noon and be there by dinner.",
+    district: "Main Street — Downtown Fremont",
+    bars_list: [
+      { name: "The Dugout Bar", note: "Busiest dive downtown. Pool, jukebox, middle-aged crowd, dirt cheap." },
+      { name: "Bourbon Trail Lounge", note: "100+ bourbons, craft cocktails in historic downtown space. Standout." },
+      { name: "Churchill's Cigar Bar", note: "12 taps, beer garden, 345 N Main St, historic downtown building" },
+      { name: "Tin Lizzy Tavern", note: "Live music Saturday nights, karaoke, neighborhood crowd" },
+      { name: "Doe's Place", note: "Live music, karaoke, welcoming atmosphere, Main Street" },
+      { name: "Alto Kitchen + Bar", note: "Upscale food and drinks — best dinner option before the crawl" },
+      { name: "The Corner Bar", note: "Local dive, regulars, sports on every TV" },
+      { name: "Silver Dollar Lounge", note: "Classic Nebraska bar — exactly what it sounds like" },
+    ],
+    hotels: [
+      { name: "Comfort Inn & Suites Fremont", stars: "3★", price: "$90–$120/night", prox: "ride", proxLabel: "~1.5 miles from Main St" },
+      { name: "Holiday Inn Express Fremont", stars: "3★", price: "$95–$125/night", prox: "ride", proxLabel: "~1.5 miles from downtown" },
+      { name: "Hampton Inn Fremont", stars: "3★", price: "$105–$135/night", prox: "ride", proxLabel: "~2 miles from Main St" },
+    ],
+    poi: "Fremont & Elkhorn Valley Railroad — scenic steam train rides on weekends. Fremont Lakes State Recreation Area for a Sunday morning walk.",
+    caveat: { type: "caution", title: "ALMOST TOO CLOSE", text: "At 40 miles, this might feel like a local night out rather than a 'trip.' That said, it's the perfect option for a last-minute Saturday decision, a low-key outing, or a first run at the format before committing to a longer drive. Uber in Fremont is limited — pre-arrange a local taxi or shuttle from downtown to your hotel." },
+    drinkPrice: "$2",
+    crowd: "Pure local Fremont adults — middle-aged, working-class, welcoming to outsiders. Zero pretense.",
+    walkNote: "Downtown bars are within a few blocks of each other. Hotels require a short ride.",
+    hotelNote: "Comfort Inn or Hampton are the cleanest options. You're not spending much on the hotel here — budget accordingly.",
+  },
+
+  {
+    id: "beatrice",
+    name: "Beatrice",
+    state: "NE",
+    miles: 85,
+    drive: "~1 hr 15 min",
+    bars: 8,
+    lastCall: "1:00 AM",
+    hotelWalk: "partial",
+    drinksFrom: "$2.50",
+    score: 7.5,
+    scoreLabel: "7.5/10",
+    tag: "good",
+    tagLabel: "HIDDEN GEM",
+    description: "Beatrice punches way above its weight. Downtown is listed on the National Register of Historic Places — 113 contributing buildings, 40 acres of 1880s brick commercial architecture centered on Court and 6th Streets. Nearly 20 bar, brewery, and restaurant establishments downtown. Stone Hollow Brewery in a restored 1883 Mercantile Building, The Mechanical Room prohibition-era speakeasy, Micheal J's, 402 Sports Bar, Kabo Bar, Tall Tree Tastings wine and beer bar, The Black Crow (critically acclaimed as best restaurant in SE Nebraska). This is genuinely impressive for a city of 12,000.",
+    district: "Court Street & 6th Street — Downtown Historic District",
+    bars_list: [
+      { name: "Stone Hollow Brewery", note: "Local production brewery in restored 1883 Mercantile Building. Must visit." },
+      { name: "The Mechanical Room", note: "Prohibition-inspired speakeasy inside the Mercantile Building. Unique stop." },
+      { name: "The Black Crow", note: "Best restaurant in SE Nebraska — dinner anchor. Antique oak back bar, gold leaf tin ceiling." },
+      { name: "Tall Tree Tastings", note: "Nebraska wines and local beers on tap, 5th Street, welcoming vibe" },
+      { name: "402 Sports Bar & Grill", note: "Local sports bar, good food, active Saturday crowd" },
+      { name: "Micheal J's Bar and Grill", note: "Downtown staple, local crowd, reliable" },
+      { name: "Kabo Bar", note: "Local bar, downtown, regulars" },
+      { name: "BIGG'S / The Endzone", note: "Sports bars rounding out the downtown rotation" },
+    ],
+    hotels: [
+      { name: "Holiday Inn Express Beatrice", stars: "3★", price: "$95–$130/night", prox: "ride", proxLabel: "~1 mile from downtown" },
+      { name: "Victorian Inn Beatrice", stars: "3★", price: "$85–$110/night", prox: "ride", proxLabel: "Short drive to Court St" },
+      { name: "Americas Best Value Inn Beatrice", stars: "2★", price: "$70–$90/night", prox: "far", proxLabel: "Budget option" },
+    ],
+    poi: "Homestead National Monument — 5 miles from downtown, one of the most significant historical sites in Nebraska. Free entry. Beatrice's downtown historic district itself is worth walking in daylight.",
+    caveat: null,
+    drinkPrice: "$2.50",
+    crowd: "Local Beatrice adults — agricultural, blue-collar, longtime residents. No students, no tourists. Very welcoming.",
+    walkNote: "Downtown bars are all within a few blocks on Court Street. Hotels are a short Uber away.",
+    hotelNote: "Holiday Inn Express is the cleanest option. Easy to block rooms for 12.",
+  },
+
+  {
+    id: "okoboji",
+    name: "Okoboji / Arnolds Park",
+    state: "IA",
+    miles: 175,
+    drive: "~2 hrs 35 min",
+    bars: 8,
+    lastCall: "2:00 AM",
+    hotelWalk: "partial",
+    drinksFrom: "$4",
+    score: 7.5,
+    scoreLabel: "7.5/10",
+    tag: "good",
+    tagLabel: "SUMMER ONLY",
+    description: "Iowa's Great Lakes region is a completely different animal from every other city on this list — lakeside resort town energy, outdoor bars, live music at the water's edge. Captain's Getaway, Barefoot Bar, Pirate Jack's outdoor bar on the lake, Murphy's of Okoboji, The Revelry, Sportsman's in downtown Spirit Lake. Iowa's 2AM close. This is the 'summer trip' option — genuinely best May through September. In winter it's largely closed or dead.",
+    district: "Arnolds Park lakefront + Spirit Lake downtown",
+    bars_list: [
+      { name: "Captain's Getaway", note: "Busy Saturday nights, live music, upstairs deck. Local favorite." },
+      { name: "Barefoot Bar", note: "Outdoor lakeside bar with palm trees. Outdoor space is the draw." },
+      { name: "Pirate Jack's Bar", note: "Outdoor watering hole on the lake, steps from Arnolds Park amusement park." },
+      { name: "Murphy's of Okoboji", note: "Nightclub energy, dancing, Arnolds Park strip" },
+      { name: "The Revelry", note: "Newer addition, well-reviewed, good cocktail program" },
+      { name: "Sportsman's Bar", note: "Downtown Spirit Lake institution since 1996 — the local anchor" },
+      { name: "The Gardens", note: "Live music, outdoor seating, good crowd" },
+      { name: "Okoboji Store & Bar", note: "Described as 'one of the coolest hangouts on the lake' — waterfront" },
+    ],
+    hotels: [
+      { name: "Inn Hotel Lake Okoboji (Ascend Collection)", stars: "3.5★", price: "$100–$180/night", prox: "walk", proxLabel: "Arnolds Park lakefront" },
+      { name: "Bridges Bay Resort", stars: "3.5★", price: "$98–$200/night", prox: "walk", proxLabel: "On the lake, Arnolds Park" },
+      { name: "Oakwood Inn Okoboji (Adults Only)", stars: "3.5★", price: "$179–$250/night", prox: "ride", proxLabel: "Lakeside, adults-only, 10/10 rated" },
+      { name: "AmericInn Okoboji", stars: "3★", price: "$90–$140/night", prox: "ride", proxLabel: "Short drive to Arnolds Park" },
+    ],
+    poi: "Arnolds Park Amusement Park — the oldest amusement park in Iowa, right on the lake. Iowa Rock 'n' Roll Hall of Fame is here. Pearson Lakes Art Center.",
+    caveat: { type: "warning", title: "SUMMER ONLY + SEASONAL CROWDS", text: "This destination is only worth it May through September. Outside summer the lake bars are closed or operating skeleton hours and the resort vibe disappears entirely. Summer weekends — especially Memorial Day, 4th of July, and Labor Day — are packed with families and lake vacationers, rooms sell out months ahead and prices spike significantly. Best window: a random weekend in June, July, or early August when it's active but not maxed out." },
+    drinkPrice: "$4",
+    crowd: "Summer resort crowd — families, vacationers, lake regulars of all ages. More adult-oriented after 9PM when families clear out.",
+    walkNote: "Arnolds Park lakefront hotels put you near the outdoor bars. Spirit Lake downtown is a short Uber.",
+    hotelNote: "Inn Hotel Lake Okoboji is the best value in the district. Oakwood Inn is adults-only and exceptional but pricier.",
+  },
+
+  {
+    id: "hastings",
+    name: "Hastings",
+    state: "NE",
+    miles: 130,
+    drive: "~1 hr 50 min",
+    bars: 8,
+    lastCall: "1:00 AM",
+    hotelWalk: "partial",
+    drinksFrom: "$3",
+    score: 7.5,
+    scoreLabel: "7.5/10",
+    tag: "good",
+    tagLabel: "HISTORIC ANCHOR BAR",
+    description: "Murphy's Wagon Wheel has been a bar since 1889 — that's older than the state of South Dakota. It's the anchor of a legitimate downtown bar scene on Lincoln Avenue. Directly above it, the Sky Lofts boutique hotel has a rooftop bar and loft rooms, meaning you can literally sleep above one of the oldest bars in Nebraska. Add Bourbon Jack's Honkytonk, The Olive Saloon, Valentini's Martini Bar & Gallery, Kitty's Roadhouse, The Brickhouse Lounge, and Art Bar — this is a proper rotation. A Holiday Inn Express reviewer noted walking over to Murphy's from the hotel, so logistics are manageable.",
+    district: "Lincoln Avenue — Downtown Hastings",
+    bars_list: [
+      { name: "Murphy's Wagon Wheel", note: "Est. 1889. House-smoked meat, full bar, open till 1AM. Nebraska institution." },
+      { name: "Sky Lofts Rooftop Bar", note: "Directly above Murphy's — rooftop bar with rooms to rent above it" },
+      { name: "Bourbon Jack's Honkytonk Bar", note: "Country bar, live music, active Saturday nights" },
+      { name: "The Olive Saloon", note: "Top-ranked nightlife spot in Hastings, local favorite" },
+      { name: "Valentini's Martini Bar & Gallery", note: "Upscale cocktail bar, art gallery setting, unique stop" },
+      { name: "Kitty's Roadhouse", note: "Classic roadhouse, outdoor seating, local crowd" },
+      { name: "The Brickhouse Lounge", note: "Downtown lounge, good cocktails, neighborhood vibe" },
+      { name: "Art Bar", note: "Creative cocktail bar with outdoor seating" },
+    ],
+    hotels: [
+      { name: "Sky Lofts Downtown Hastings", stars: "Boutique 3★", price: "$100–$160/night", prox: "walk", proxLabel: "ABOVE Murphy's Wagon Wheel" },
+      { name: "Holiday Inn Express Hastings", stars: "3★", price: "$100–$135/night", prox: "ride", proxLabel: "Short Uber to Lincoln Ave" },
+      { name: "Hampton Inn Hastings", stars: "3★", price: "$105–$140/night", prox: "ride", proxLabel: "~1.5 miles from downtown" },
+    ],
+    poi: "Hastings Museum — one of Nebraska's best regional museums with a full planetarium. Birthplace of Kool-Aid (seriously — there's a museum). Good Sunday morning stop.",
+    caveat: null,
+    drinkPrice: "$3",
+    crowd: "Local Hastings adults, blue-collar and professional mix, no college crowd. Active year-round.",
+    walkNote: "Lincoln Ave bars are walkable from each other. Sky Lofts puts you directly in the action.",
+    hotelNote: "Sky Lofts is the obvious choice — sleep above Murphy's Wagon Wheel is a story in itself. Book early, only 5 loft rooms.",
+  },
+
+  {
+    id: "council-bluffs",
+    name: "Council Bluffs",
+    state: "IA",
+    miles: 10,
+    drive: "~15 min",
+    bars: 6,
+    lastCall: "2:00 AM",
+    hotelWalk: "yes",
+    drinksFrom: "$3",
+    score: 7.5,
+    scoreLabel: "7.5/10",
+    tag: "good",
+    tagLabel: "CASINO NIGHT",
+    description: "Literally 10 minutes away — across the Missouri River on I-80. Three casino resorts with hotels: Harrah's (251 rooms, Guy Fieri's 360 Steakhouse, rooftop views of Omaha skyline, Stir Cove outdoor concert venue), Horseshoe Council Bluffs (24/7 casino, poker room, live entertainment), and Ameristar (one of the nicest casino hotels in the region). This is a completely different format from the rest of the list — it's a casino night, not a bar crawl — but you never leave the property, drinks are flowing until 2AM, and the hotels are built in. The 'no planning required' option.",
+    district: "Casino Row — Missouri River Corridor",
+    bars_list: [
+      { name: "Harrah's Casino Floor & Bars", note: "360 Steakhouse, Vertigo Lounge, Stir Cove outdoor venue — all on property" },
+      { name: "Horseshoe Council Bluffs", note: "24/7 casino, dedicated poker room, karaoke and live entertainment at the bar" },
+      { name: "Ameristar Casino Bar Scene", note: "Multiple bars on casino floor, sports bar, nightclub on weekends" },
+      { name: "Stir Cove (Harrah's)", note: "Outdoor concert venue — national touring acts summer season" },
+      { name: "Whiskey Roadhouse (Horseshoe)", note: "Full country bar with live music and dancing inside Horseshoe" },
+      { name: "Downtown Council Bluffs bars", note: "Separate from casinos — local dive bars on Broadway if you want to venture out" },
+    ],
+    hotels: [
+      { name: "Harrah's Council Bluffs", stars: "3.5★", price: "$75–$150/night", prox: "walk", proxLabel: "IS the casino — walk everywhere" },
+      { name: "Horseshoe Council Bluffs Hotel", stars: "3.5★", price: "$80–$160/night", prox: "walk", proxLabel: "IS the casino — walk everywhere" },
+      { name: "Ameristar Casino Hotel Council Bluffs", stars: "4★", price: "$90–$180/night", prox: "walk", proxLabel: "IS the casino — walk everywhere" },
+    ],
+    poi: "Missouri River views from Harrah's are legitimately good — Omaha skyline across the water. Free shuttle between Harrah's and Horseshoe runs all night.",
+    caveat: { type: "caution", title: "DIFFERENT FORMAT", text: "This is a casino night, not a bar crawl. You're not walking between downtown bars — you're staying on one property and letting the casino do the work. That's either perfect or not what you're looking for, depending on the group's mood. Iowa has 2AM last call on alcohol service. Also worth knowing: it's 10 minutes from home, so some group members might choose to drive back — build that into logistics if needed." },
+    drinkPrice: "$3",
+    crowd: "Regional casino crowd — all ages, all types. Lively on Saturday nights year-round. National acts at Stir Cove in summer draw big crowds.",
+    walkNote: "Hotel and bars are all on the same property — zero logistics.",
+    hotelNote: "Ameristar is the nicest of the three. Harrah's has the best views. Horseshoe has the most active bar/entertainment scene. All are solid.",
+  },
+
+  // ── ORIGINAL NEW CITIES ─────────────────────────────────────
+
+  {
+    id: "des-moines",
+    name: "Des Moines",
+    state: "IA",
+    miles: 138,
+    drive: "~2 hrs",
+    bars: 20,
+    lastCall: "2:00 AM",
+    hotelWalk: "yes",
+    drinksFrom: "$4",
+    score: 9.0,
+    scoreLabel: "9/10",
+    tag: "good",
+    tagLabel: "BIG CITY OPTION",
+    description: "Iowa's capital has 50+ bars in the downtown core across four distinct neighborhoods — Court Avenue, East Village, Ingersoll, and the newly hot Highland Park. Court Avenue is the original strip: Annie's Irish Pub, Hessen Haus, The Royal Mile/Red Monk, Court Avenue Brewing, Tonic on Court. East Village is the cooler, newer scene on cobblestone streets. Multiple Marriott/Hilton hotels sit right in the Court Ave district. Biggest bar density on the entire list by far — you could spend 5 Saturdays here and not repeat.",
+    district: "Court Avenue District + East Village",
+    bars_list: [
+      { name: "Annie's Irish Pub", note: "Corner of 3rd & Court — great patio, late-night specials" },
+      { name: "Hessen Haus", note: "German beer hall, massive selection, always packed Saturday" },
+      { name: "The Royal Mile / Red Monk", note: "90 Belgian taps on the 2nd floor — beer nerd heaven" },
+      { name: "Court Avenue Brewing Co.", note: "Anchor of the strip since 1996. Craft beers, full kitchen" },
+      { name: "Tonic on Court", note: "20+ cold drafts, seasonal cocktails, friendly crowd" },
+      { name: "Shorts Basement / ROCA", note: "Locals call it 'somewhat fancy' with true dive charm" },
+      { name: "El Bait Shop", note: "200+ beers. Legendary Iowa beer bar." },
+      { name: "East Village bars", note: "Nightingale, Exile Brewing, multiple cocktail lounges" },
+    ],
+    hotels: [
+      { name: "Marriott Des Moines Downtown", stars: "4★", price: "$140–$200/night", prox: "walk", proxLabel: "Court Ave — steps away" },
+      { name: "Hilton Des Moines Downtown", stars: "4★", price: "$130–$180/night", prox: "walk", proxLabel: "3 blocks from Court Ave" },
+      { name: "AC Hotel Des Moines East Village", stars: "4★", price: "$150–$210/night", prox: "walk", proxLabel: "Right in East Village" },
+      { name: "Hampton Inn Des Moines Downtown", stars: "3★", price: "$120–$160/night", prox: "walk", proxLabel: "4 blocks from Court Ave" },
+    ],
+    poi: "Iowa State Capitol building is stunning at night — lit up and walkable from Court Ave. Farmer's Market on Saturday mornings before the drive home is a local institution.",
+    caveat: { type: "caution", title: "IT'S A BIG CITY", text: "Des Moines is noticeably larger than everything else on this list — think Sioux City multiplied by 5. That's not a bad thing, it just changes the feel from 'small town adventure' to 'actual night out in a real city.' Uber is extremely reliable. Hotel rates spike during Barnstormer games, Iowa State events, and major conventions — check the calendar before booking." },
+    drinkPrice: "$4",
+    crowd: "Young professionals, 30s-40s crowd, diverse mix. Court Ave draws all ages and types.",
+    walkNote: "Court Ave hotels are steps from 20+ bars. East Village is a 10-min walk or 5-min Uber.",
+    hotelNote: "Marriott or AC Hotel are the best anchors. Book 3-4 weeks out on a random Saturday.",
+  },
+
+  {
+    id: "lincoln",
+    name: "Lincoln",
+    state: "NE",
+    miles: 55,
+    drive: "~50 min",
+    bars: 15,
+    lastCall: "2:00 AM",
+    hotelWalk: "yes",
+    drinksFrom: "$3",
+    score: 8.0,
+    scoreLabel: "8/10",
+    tag: "good",
+    tagLabel: "CLOSEST BIG OPTION",
+    description: "Only 50 miles — some might say too close, but Lincoln's Haymarket district is genuinely excellent. Canopy Street and the Railyard are lined with bars, breweries, and restaurants all within a few walkable blocks. Multiple 3-4 star hotels are literally inside the district. Husker game days are electric but also sell out rooms fast. Non-game Saturdays are a great low-key version of this trip.",
+    district: "Historic Haymarket — Canopy St & The Railyard",
+    bars_list: [
+      { name: "Zipline Brewing Co.", note: "Local flagship brewery, Canopy Street, always busy" },
+      { name: "The Hub Cafe & Bar", note: "Haymarket staple, live music, full bar" },
+      { name: "Dario's Brasserie", note: "Upscale cocktail bar in the Haymarket" },
+      { name: "James Arthur Vineyard Tasting Room", note: "Local Nebraska wine — good change of pace" },
+      { name: "Brewsky's Bar & Grill", note: "Classic sports bar, Husker central, 30+ beers" },
+      { name: "Barry's Bar & Grill", note: "O Street dive — legendary Lincoln institution since 1969" },
+      { name: "Duffy's Tavern", note: "Iconic Lincoln bar, live music most weekends" },
+      { name: "The Zoo Bar", note: "Best blues venue in Nebraska. Real deal." },
+    ],
+    hotels: [
+      { name: "Hyatt Place Lincoln/Downtown-Haymarket", stars: "3.5★", price: "$120–$160/night", prox: "walk", proxLabel: "Heart of Haymarket" },
+      { name: "Courtyard Marriott Lincoln Downtown/Haymarket", stars: "3★", price: "$110–$150/night", prox: "walk", proxLabel: "In Haymarket district" },
+      { name: "Hilton Garden Inn Lincoln Downtown/Haymarket", stars: "3★", price: "$115–$155/night", prox: "walk", proxLabel: "Steps from Canopy St" },
+      { name: "Graduate Lincoln", stars: "Boutique 4★", price: "$140–$190/night", prox: "walk", proxLabel: "Historic Haymarket, steps from everything" },
+    ],
+    poi: "The Zoo Bar on O Street — one of the best blues clubs in the country. Nebraska State Capitol is stunning. Pinnacle Bank Arena for events.",
+    caveat: { type: "caution", title: "HUSKER GAME DAYS", text: "Nebraska home football Saturdays turn Lincoln into a different city — 90,000 fans, rooms sold out months ahead, prices triple. Check the Husker schedule and avoid game days unless that's the point. Non-game Saturdays are significantly more relaxed and rooms are easy to book. Also: at 50 miles it may feel like 'too close to home' for some groups — that's a vibe call, not a logistics call." },
+    drinkPrice: "$3",
+    crowd: "Mix of young professionals, UNL students, and locals. Non-game Saturdays skew older and more relaxed.",
+    walkNote: "Hyatt Place and Courtyard are inside the Haymarket — walk everywhere all night.",
+    hotelNote: "Hyatt Place is the sweet spot — in the district, free breakfast, great reviews. Avoid game weekends.",
+  },
+
+  {
+    id: "sioux-falls",
+    name: "Sioux Falls",
+    state: "SD",
+    miles: 183,
+    drive: "~2 hrs 45 min",
+    bars: 12,
+    lastCall: "2:00 AM",
+    hotelWalk: "yes",
+    drinksFrom: "$4",
+    score: 8.0,
+    scoreLabel: "8/10",
+    tag: "good",
+    tagLabel: "STRETCH — WORTH IT",
+    description: "Sioux Falls punches way above its weight. Phillips Avenue downtown is a legitimate bar district — PAve nightclub, The Treasury at Hotel on Phillips, Carpenter Bar, Blarney Stone Pub, Fernson Brewing. The Hotel on Phillips is a converted 1918 bank building that's become the nightlife anchor for the whole city. South Dakota's 2AM last call seals it. The drive is ~2:45 but the group may decide it's worth it.",
+    district: "Phillips Avenue Downtown",
+    bars_list: [
+      { name: "The Treasury at Hotel on Phillips", note: "Top mixologists, local craft beers, the city's best bar" },
+      { name: "PAve (Phillips Ave Bar)", note: "Multi-level nightclub — restaurant by day, nightclub after dark" },
+      { name: "Carpenter Bar", note: "Well-reviewed craft cocktail bar right on Phillips Ave" },
+      { name: "Blarney Stone Pub", note: "Outdoor seating, best patio on Phillips, local crowd" },
+      { name: "Fernson Brewing Downtown", note: "South Dakota's flagship craft brewery, always packed" },
+      { name: "The Hello Hi", note: "Natural wine and cocktails, upscale but approachable" },
+      { name: "JL Beers", note: "Best burgers on Phillips Ave, casual beer bar" },
+      { name: "Top Hat", note: "Local institution, regulars rave about it" },
+    ],
+    hotels: [
+      { name: "Hotel on Phillips", stars: "Boutique 4★", price: "$140–$220/night", prox: "walk", proxLabel: "IS the bar district" },
+      { name: "Hilton Garden Inn Sioux Falls Downtown", stars: "3★", price: "$120–$165/night", prox: "walk", proxLabel: "Steps from Phillips Ave" },
+      { name: "Sheraton Sioux Falls", stars: "4★", price: "$130–$175/night", prox: "walk", proxLabel: "Downtown core, walkable" },
+    ],
+    poi: "Falls Park — the actual waterfalls the city is named after — is a 10 min drive and stunning at night. Great Sunday morning stop before heading home.",
+    caveat: { type: "caution", title: "LONGEST DRIVE ON THE LIST", text: "At ~183 miles this is the longest option. That's about 2:45 from Ralston. Worth it if the group is up for the stretch — Phillips Ave is legitimately excellent and Hotel on Phillips is one of the coolest hotels on the whole list. Sioux Falls is a regional party destination and draws bachelorette parties and groups from multiple states." },
+    drinkPrice: "$4",
+    crowd: "Mix of locals, professionals, bachelorette groups, regional visitors. Sophisticated for a city its size.",
+    walkNote: "Hotel on Phillips puts you inside the bar district. Hilton Garden Inn is 2 blocks away.",
+    hotelNote: "Hotel on Phillips is the marquee pick — converted bank building, in the action, memorable stay. Book early.",
+  },
+
+  {
+    id: "grand-island",
+    name: "Grand Island",
+    state: "NE",
+    miles: 149,
+    drive: "~2 hrs 10 min",
+    bars: 6,
+    lastCall: "1:00 AM",
+    hotelWalk: "partial",
+    drinksFrom: "$3",
+    score: 6.5,
+    scoreLabel: "6.5/10",
+    tag: "caution",
+    tagLabel: "UNDERRATED",
+    description: "Grand Island's Railside BID is a genuine surprise — a historic downtown district with festoon lights on Third Street, a craft cocktail lounge (Archives), a speakeasy (Henry J's), a legendary martini bar (J. Alfred Prufrock's), and Prairie Pride Brewing. Smaller scene than the big cities but more character than most people expect from central Nebraska. Hotels are a short Uber from Railside.",
+    district: "Railside BID — Third Street",
+    bars_list: [
+      { name: "J. Alfred Prufrock's", note: "Legendary martini bar, whiskey selection, enchanting atmosphere. TripAdvisor darling." },
+      { name: "Prairie Pride Brewing & Taproom", note: "Local craft brewery, rotating taps, welcoming crowd" },
+      { name: "Archives Cocktail Lounge", note: "New upscale cocktail bar in Railside — highly reviewed" },
+      { name: "Henry J's Speakeasy", note: "Basement speakeasy in historic building — unique stop" },
+      { name: "McKinney's Pub", note: "Classic pub, local crowd, good beer selection" },
+      { name: "40 North Sports Lounge", note: "Comedy and live music, regular entertainment" },
+    ],
+    hotels: [
+      { name: "Canteen District Hotel (Doubletree)", stars: "3.5★", price: "$110–$150/night", prox: "ride", proxLabel: "~1 mile from Railside" },
+      { name: "Holiday Inn Grand Island Midtown", stars: "3★", price: "$95–$130/night", prox: "ride", proxLabel: "~1.5 miles from downtown" },
+      { name: "Hampton Inn Grand Island", stars: "3★", price: "$105–$140/night", prox: "ride", proxLabel: "~2 miles from Railside" },
+    ],
+    poi: "Stuhr Museum of the Prairie Pioneer — genuinely impressive living history museum. Fonner Park horse racing if the timing works out.",
+    caveat: { type: "caution", title: "BAR COUNT IS MODEST", text: "Railside is a quality-over-quantity situation. 5-6 solid spots rather than 10+. If the group wants to bar hop all night they may run out of steam by midnight. Pairs well with dinner at one of the Railside restaurants before starting the crawl. Hotels are a short Uber — Uber does operate reliably in Grand Island." },
+    drinkPrice: "$3",
+    crowd: "Local adults, agricultural and professional mix, some travelers. No college crowd.",
+    walkNote: "Railside bars are walkable from each other. Hotel-to-Railside is a 5-10 min Uber.",
+    hotelNote: "Canteen District Hotel (Doubletree) is the nicest option and closest to the action.",
+  },
+
+  {
+    id: "kearney",
+    name: "Kearney",
+    state: "NE",
+    miles: 165,
+    drive: "~2 hrs 20 min",
+    bars: 8,
+    lastCall: "2:00 AM",
+    hotelWalk: "partial",
+    drinksFrom: "$3",
+    score: 7.0,
+    scoreLabel: "7/10",
+    tag: "good",
+    tagLabel: "SOLID MID-STATE STOP",
+    description: "Kearney has a legitimate downtown bar scene centered on Central Avenue — Cunningham's Journal on the Bricks, Gillies Bar, Thunderhead Brewing, NVY Cigar Bar, Retrograde, and more. University of Nebraska at Kearney keeps energy up year-round. The Archway monument is a wild roadside POI that's free to view from the highway. Solid 3-star hotel inventory.",
+    district: "Central Avenue — Downtown Kearney",
+    bars_list: [
+      { name: "Cunningham's Journal on the Bricks", note: "Best bar in Kearney — cocktails, local crowd, brick patio" },
+      { name: "Gillies Bar", note: "Classic dive, pool tables, local regulars, cheap drinks" },
+      { name: "Thunderhead Brewing", note: "Downtown craft brewery, solid taps, welcoming vibe" },
+      { name: "NVY Bar & Cigar Lounge", note: "Sophisticated cigar and cocktail bar downtown" },
+      { name: "Retrograde", note: "Cocktail bar downtown, highly rated, low-key cool" },
+      { name: "Copperfields Bar", note: "Live music weekends, great bands, active crowd" },
+      { name: "Palm Garden Lounge", note: "Good local sports bar, cold beer, casual crowd" },
+      { name: "The Crafty Dog Sports Bar", note: "Craft beer and sports focus, active Saturday nights" },
+    ],
+    hotels: [
+      { name: "Fairfield Inn & Suites Kearney", stars: "3★", price: "$100–$135/night", prox: "ride", proxLabel: "~1.5 miles from downtown" },
+      { name: "Holiday Inn Kearney", stars: "3★", price: "$95–$125/night", prox: "ride", proxLabel: "~1 mile from Central Ave" },
+      { name: "Hampton Inn Kearney", stars: "3★", price: "$105–$140/night", prox: "ride", proxLabel: "~2 miles from downtown" },
+    ],
+    poi: "Great Platte River Road Archway Monument — an entire museum built over I-80. Weird and wonderful. Sandhill crane migration at Platte River if timing is right (Feb-April).",
+    caveat: null,
+    drinkPrice: "$3",
+    crowd: "UNK students mixed with local blue-collar and professional adults. Active year-round.",
+    walkNote: "Downtown bars are walkable from each other. Hotels are a short Uber away.",
+    hotelNote: "Fairfield Inn is the cleanest 3-star option closest to downtown.",
+  },
+
+  {
+    id: "ames",
+    name: "Ames",
+    state: "IA",
+    miles: 155,
+    drive: "~2 hrs 15 min",
+    bars: 12,
+    lastCall: "2:00 AM",
+    hotelWalk: "partial",
+    drinksFrom: "$3",
+    score: 7.0,
+    scoreLabel: "7/10",
+    tag: "caution",
+    tagLabel: "COLLEGE TOWN ENERGY",
+    description: "Home to Iowa State University. Welch Avenue in Campustown has 10+ bars packed into a 3-block stretch — AJ's Ultra Lounge (3 levels), Cy's Roost, Welch Ave Station, Es Tas Bar & Grill, BNC, Mickey's, Paddy's. Downtown Ames a mile away adds Noir speakeasy bar in a historic hotel and Main Street spots. Iowa's 2AM close. The crowd skews younger — you're the cool older group at the bar.",
+    district: "Campustown — Welch Avenue + Downtown Main St",
+    bars_list: [
+      { name: "AJ's Ultra Lounge", note: "3 levels, outdoor patio, one of the most popular in Ames" },
+      { name: "Cy's Roost", note: "Iconic ISU bar, outdoor patio, free popcorn, local legend" },
+      { name: "Welch Ave Station", note: "Oldest bar in Campustown. Pool, pizza, no pretense." },
+      { name: "Es Tas Bar & Grill", note: "Tex-Mex until 2AM, great drink specials, Welch Ave" },
+      { name: "BNC Bar", note: "Sports bar by day, DJ and dance floor Saturday nights" },
+      { name: "Mickey's Irish Pub", note: "Dive-adjacent Irish pub, Welch Ave staple" },
+      { name: "Noir", note: "Bourbon-forward speakeasy in historic downtown Sheldon Munn hotel. Standout stop." },
+      { name: "Mother's Pub", note: "More local/residential crowd — good alternative to Welch" },
+    ],
+    hotels: [
+      { name: "Marriott Hotel Ames", stars: "3.5★", price: "$130–$170/night", prox: "ride", proxLabel: "~1.5 miles from Campustown" },
+      { name: "Hotel Indigo Ames Downtown", stars: "Boutique 3★", price: "$120–$160/night", prox: "ride", proxLabel: "Downtown — closer to Noir bar" },
+      { name: "Comfort Inn & Suites Ames near ISU", stars: "3★", price: "$85–$115/night", prox: "ride", proxLabel: "Near ISU campus, close to Welch Ave" },
+    ],
+    poi: "Iowa State's central campus is beautiful for a Sunday morning walk. Reiman Gardens if anyone is into that. Noir bar in the historic Sheldon Munn is itself a POI.",
+    caveat: { type: "caution", title: "YOUNG CROWD", text: "Welch Avenue is ISU's bar strip — expect 21-24 year olds to dominate the crowd. The energy is high and the prices are low, but it's unmistakably a college scene. Downtown Ames (Noir, Main Street bars) skews older and more sophisticated. A smart strategy is dinner and early drinks downtown, then a couple stops on Welch for the spectacle, then back downtown to close out the night." },
+    drinkPrice: "$3",
+    crowd: "Heavily ISU student crowd on Welch. Downtown Ames is older and more local.",
+    walkNote: "Welch Ave bars are all within 3 blocks. Hotel Indigo to downtown bars is walkable. Campustown is a short Uber.",
+    hotelNote: "Hotel Indigo downtown is the move for a group in their 40s — puts you near the classier spots and it's walkable.",
+  },
+
+  {
+    id: "carroll",
+    name: "Carroll",
+    state: "IA",
+    miles: 108,
+    drive: "~1 hr 35 min",
+    bars: 5,
+    lastCall: "2:00 AM",
+    hotelWalk: "partial",
+    drinksFrom: "$2.50",
+    score: 7.0,
+    scoreLabel: "7/10",
+    tag: "good",
+    tagLabel: "HIDDEN GEM",
+    description: "Carroll is a classic Iowa small city with a documented bar-crawl culture — the annual CC Bar Crawl fundraiser confirmed multiple walkable bars on and around Main Street. The Angry Beaver, Brothers on Main, Wasted Grain, Malarky's Pub, the Norse Horse Tavern. Iowa's 2AM last call. The Carrollton Hotel has an onsite bar and is downtown. Cheap drinks, friendly locals, zero pretense.",
+    district: "Main Street Downtown Carroll",
+    bars_list: [
+      { name: "The Angry Beaver Bar", note: "Open till 2AM Saturdays. Dive bar, great breakfast too. Local legend." },
+      { name: "Brothers on Main Bar & Grill", note: "Active Saturday nights, sports bar, good food" },
+      { name: "Wasted Grain", note: "Bar on the Main Street strip, local favorite" },
+      { name: "Malarky's Pub", note: "Classic Irish-style pub, local crowd, reliable" },
+      { name: "Norse Horse Tavern", note: "Neighborhood tavern, regulars, no frills" },
+    ],
+    hotels: [
+      { name: "Carrollton Hotel", stars: "3★", price: "$90–$130/night", prox: "walk", proxLabel: "Downtown — onsite bar" },
+      { name: "Days Inn Carroll", stars: "2★", price: "$70–$100/night", prox: "far", proxLabel: "Highway strip" },
+    ],
+    poi: "Swan Lake State Park — beautiful if anyone wants a Sunday morning walk before the drive home.",
+    caveat: null,
+    drinkPrice: "$2.50",
+    crowd: "Local ag workers, families, and longtime Carroll residents. Extremely welcoming to outsiders.",
+    walkNote: "Main Street bars are within a few blocks. Carrollton Hotel is downtown.",
+    hotelNote: "Carrollton Hotel is the obvious pick — in town, has its own bar, solid reviews.",
+  },
+
+  {
+    id: "manhattan-ks",
+    name: "Manhattan",
+    state: "KS",
+    miles: 156,
+    drive: "~2 hrs 20 min",
+    bars: 15,
+    lastCall: "2:00 AM",
+    hotelWalk: "partial",
+    drinksFrom: "$3",
+    score: 7.5,
+    scoreLabel: "7.5/10",
+    tag: "good",
+    tagLabel: "THE LITTLE APPLE",
+    description: "Home to Kansas State University, Aggieville is the oldest entertainment district in Kansas — six square blocks, over 20 bars and restaurants, established 1889. Auntie Mae's speakeasy below street level, Rock-A-Belly Deli with legendary summer beers, So Long Saloon, Dirty Dawgs country bar, Fat's Fishbowl drinks, 324 Speakeasy. Kansas allows 2AM last call. You'll feel like regulars in a town that knows how to party.",
+    district: "Aggieville — 6 square blocks near KSU",
+    bars_list: [
+      { name: "Auntie Mae's Parlor", note: "Below street level speakeasy, cozy, Manhattan favorite" },
+      { name: "Rock-A-Belly Bar & Deli", note: "Est. 1987, legendary summer beers, indoor + outdoor, eclectic decor" },
+      { name: "So Long Saloon", note: "Home of the Nancy — signature raspberry black bean cocktail, local icon" },
+      { name: "324 Speakeasy", note: "Top-rated cocktail bar in Aggieville, sophisticated" },
+      { name: "Dirty Dawgs", note: "Country bar, two-stepping, boots optional but encouraged" },
+      { name: "Fat's Bar", note: "Home of the Fishbowl drink — group activity built in" },
+      { name: "Finn's Neighborhood Pub", note: "Cozy neighborhood pub feel, great staff" },
+      { name: "Tubby's Sports Bar", note: "Active sports bar, weekend crowds, good vibe" },
+    ],
+    hotels: [
+      { name: "Hilton Garden Inn Manhattan", stars: "3★", price: "$120–$160/night", prox: "ride", proxLabel: "~1.5 miles from Aggieville" },
+      { name: "Holiday Inn Express Manhattan KS", stars: "3★", price: "$100–$135/night", prox: "ride", proxLabel: "~2 miles from Aggieville" },
+      { name: "Bluemont Hotel", stars: "Boutique 4★", price: "$150–$200/night", prox: "ride", proxLabel: "~1 mile from Aggieville, rooftop bar" },
+    ],
+    poi: "Bluemont Hotel has a rooftop bar with views of the Flint Hills — worth a stop even if you don't stay there. KSU's campus is walkable from Aggieville.",
+    caveat: { type: "caution", title: "KSU GAME DAYS", text: "Kansas State home football Saturdays pack Aggieville to the gills — thousands of fans, electric energy, but rooms book out well in advance and prices spike. Non-game Saturdays are more manageable and still lively. Also: this is primarily a college crowd — you'll be the fun older group, which can be great or annoying depending on the mood. Kansas allows 21+ mixed with 18+ in some bars — check signs." },
+    drinkPrice: "$3",
+    crowd: "Heavily KSU students on game days. Mixed local + student on off weekends.",
+    walkNote: "Aggieville bars are all within the 6-block district. Hotels are a short Uber.",
+    hotelNote: "Bluemont Hotel is the standout — boutique, rooftop bar, closest to Aggieville of the nicer options.",
+  },
+
+  {
+    id: "fort-dodge",
+    name: "Fort Dodge",
+    state: "IA",
+    miles: 150,
+    drive: "~2 hrs 15 min",
+    bars: 5,
+    lastCall: "2:00 AM",
+    hotelWalk: "partial",
+    drinksFrom: "$2.50",
+    score: 6.0,
+    scoreLabel: "6/10",
+    tag: "caution",
+    tagLabel: "SLEEPER PICK",
+    description: "Fort Dodge is a working-class Iowa city with a downtown bar scene that doesn't get enough credit. Central Avenue has a handful of legit locals bars — Sody's Bar, The Pub Fort Dodge, Olde Main Brewing, and several neighborhood spots. Iowa's 2AM last call helps. No college crowd, no tourists — just locals who know how to have a Saturday night. Best of all, you can book a solid hotel for cheap.",
+    district: "Central Avenue — Downtown Fort Dodge",
+    bars_list: [
+      { name: "Olde Main Brewing Co.", note: "Downtown craft brewery and taproom, local anchor" },
+      { name: "Sody's Bar", note: "Classic dive bar, pool, cheap drinks, local crowd" },
+      { name: "The Pub Fort Dodge", note: "Central Ave staple, local regulars, sports on every TV" },
+      { name: "Bob's Bar", note: "Old-school neighborhood dive, very cheap, very local" },
+      { name: "Brickhouse Bar & Grill", note: "Good bar food, active Saturday crowd" },
+    ],
+    hotels: [
+      { name: "Holiday Inn Express Fort Dodge", stars: "3★", price: "$90–$120/night", prox: "ride", proxLabel: "~1.5 miles from Central Ave" },
+      { name: "Comfort Inn Fort Dodge", stars: "3★", price: "$85–$110/night", prox: "ride", proxLabel: "~2 miles from downtown" },
+    ],
+    poi: "Fort Dodge has the Cardiff Giant replica — one of America's greatest historical hoaxes. Legitimately interesting for a quick morning stop.",
+    caveat: { type: "caution", title: "MODEST BAR COUNT", text: "Fort Dodge won't blow anyone away on paper. It's a smaller scene — 4-5 solid bars downtown. But the prices are rock-bottom, the locals are welcoming, and there's zero pretense. Good pick if the group wants a true 'off the beaten path' experience. Hotel is cheap and there are plenty of rooms to go around." },
+    drinkPrice: "$2.50",
+    crowd: "Pure local adults — factory workers, ag sector, long-time Iowa residents. No students, no tourists.",
+    walkNote: "Downtown bars are within a few blocks of each other. Hotel requires a short Uber.",
+    hotelNote: "Holiday Inn Express is clean and affordable. No reason to spend more here.",
+  },
+
+  {
+    id: "denison",
+    name: "Denison",
+    state: "IA",
+    miles: 75,
+    drive: "~1 hr 10 min",
+    bars: 4,
+    lastCall: "2:00 AM",
+    hotelWalk: "partial",
+    drinksFrom: "$2",
+    score: 6.0,
+    scoreLabel: "6/10",
+    tag: "caution",
+    tagLabel: "CLOSEST IOWA OPTION",
+    description: "Denison is a small Iowa city with a surprisingly active downtown thanks to a large working population and a renovated main street. Broadway Street has a few solid bars — Cronk's Bar & Steakhouse is a regional institution (featured on Diners, Drive-Ins and Dives), plus a couple of local taverns. Cheapest drinks on the list. Iowa's 2AM last call. Short drive makes this a low-commitment option.",
+    district: "Broadway Street — Downtown Denison",
+    bars_list: [
+      { name: "Cronk's Bar & Steakhouse", note: "DDD featured. Legendary Iowa bar and restaurant. A must." },
+      { name: "The Rustic on Broadway", note: "Local bar, Broadway St, weekend crowd" },
+      { name: "Denison Brewing Co.", note: "Small local taproom, community vibe" },
+      { name: "Eagles Club / American Legion", note: "Local social clubs — open to public, incredibly cheap" },
+    ],
+    hotels: [
+      { name: "Hotel Donna Boutique", stars: "Boutique 3★", price: "$100–$140/night", prox: "walk", proxLabel: "Downtown Denison" },
+      { name: "Days Inn Denison", stars: "2★", price: "$70–$90/night", prox: "far", proxLabel: "Highway, short Uber" },
+    ],
+    poi: "Donna Reed was born in Denison — there's a performing arts center named after her. Crawford County Courthouse square is charming.",
+    caveat: { type: "caution", title: "SMALL SCENE", text: "Denison is a 4-bar town. For a group of 12 that wants to move around all night, you'll run out of options by 10PM. Best framed as: drive to Denison, have a legendary meal and a few rounds at Cronk's, then either drive home or stretch to Carroll or another nearby city for the night. As a standalone overnight bar-hop destination it's thin." },
+    drinkPrice: "$2",
+    crowd: "Local workers — meatpacking industry, ag sector, longtime Denison families. Very welcoming.",
+    walkNote: "Broadway bars are within a couple blocks. Hotel Donna is downtown.",
+    hotelNote: "Hotel Donna is the right call if you want to stay — boutique downtown, solid reviews.",
+  },
+];
+
+// Score dots
+function renderDots(score) {
+  const full = Math.floor(score);
+  const half = score % 1 >= 0.5 ? 1 : 0;
+  const empty = 10 - full - half;
+  let html = '<div class="dot-score" role="img" aria-label="Score: ' + score + ' out of 10">';
+  for (let i = 0; i < full; i++) html += '<div class="dot filled" aria-hidden="true"></div>';
+  if (half) html += '<div class="dot half" aria-hidden="true"></div>';
+  for (let i = 0; i < empty; i++) html += '<div class="dot" aria-hidden="true"></div>';
+  html += '</div>';
+  return html;
+}
+
+function getTagHTML(tag, label) {
+  const map = { benchmark: 'tag-benchmark', good: 'tag-good', caution: 'tag-caution', warning: 'tag-warning' };
+  return `<div class="caveat-tag ${map[tag]}">${label}</div>`;
+}
+
+function getWalkPill(val) {
+  if (val === 'yes') return '<span class="walk-pill walk-yes" role="status">Walkable</span>';
+  if (val === 'partial') return '<span class="walk-pill walk-partial" role="status">Partial walk</span>';
+  return '<span class="walk-pill walk-no" role="status">Rideshare needed</span>';
+}
+
+function getProxClass(prox) {
+  if (prox === 'walk') return 'hotel-prox-walk';
+  if (prox === 'ride') return 'hotel-prox-ride';
+  return 'hotel-prox-far';
+}
+
+// Build table
+function buildTable(data) {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  data.forEach((c, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <div class="city-name-cell">${c.name}</div>
+        <div class="city-state">${c.state}</div>
+      </td>
+      <td>
+        <div style="font-weight:700;">${c.miles} mi</div>
+        <div style="font-size:11px;color:var(--text-dim);font-weight:500;">${c.drive}</div>
+      </td>
+      <td class="actions-cell">
+        <button class="view-btn" data-id="${c.id}">More Info</button>
+        ${typeof _bhVoteBtn === 'function' ? _bhVoteBtn(c.id) : ''}
+      </td>
+    `;
+    tr.addEventListener('click', (e) => {
+      if (e.target.classList.contains('view-btn') || e.target.classList.contains('vote-btn')) return;
+      toggleTray(c.id, tr);
+    });
+    tr.querySelector('.view-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleTray(c.id, tr);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+// ─── EXPANDABLE TRAY ───
+var currentTrayId = null;
+var currentTrayRow = null;
+
+function buildTrayContent(c) {
+  var barsHTML = c.bars_list.map(function(b) {
+    return '<div class="tray-bar-item"><strong>' + b.name + '</strong><span class="tray-bar-note">' + b.note + '</span></div>';
+  }).join('');
+
+  var hotelsHTML = c.hotels.map(function(h) {
+    return '<div class="tray-hotel-item"><div><strong>' + h.name + '</strong>'
+      + '<span class="tray-hotel-stars">' + h.stars + '</span>'
+      + '<span class="tray-hotel-prox ' + getProxClass(h.prox) + '">' + h.proxLabel + '</span>'
+      + '</div><div class="tray-hotel-price">' + h.price + '</div></div>';
+  }).join('');
+
+  var caveatHTML = c.caveat
+    ? '<div class="tray-caveat caveat-' + c.caveat.type + '"><strong>' + c.caveat.title + '</strong>' + c.caveat.text + '</div>'
+    : '';
+
+  var poiHTML = c.poi
+    ? '<div class="tray-poi"><strong>POI:</strong> ' + c.poi + '</div>'
+    : '';
+
+  var eventHTML = c.event
+    ? '<div class="tray-event">' + c.event + '</div>'
+    : '';
+
+  return '<div class="tray-content">'
+    + '<div class="tray-desc">' + c.description + '</div>'
+    + '<div class="tray-stats">'
+    + '<div class="tray-stat"><span class="tray-stat-label">Last Call</span><span class="tray-stat-value">' + c.lastCall + '</span></div>'
+    + '<div class="tray-stat"><span class="tray-stat-label">Crowd</span><span class="tray-stat-value" style="font-size:11px;font-weight:500;">' + c.crowd + '</span></div>'
+    + '</div>'
+    + eventHTML
+    + '<div class="tray-section-label">Bars & Venues</div>'
+    + barsHTML
+    + '<div class="tray-section-label">Hotels</div>'
+    + hotelsHTML
+    + caveatHTML
+    + poiHTML
+    + '</div>';
+}
+
+function toggleTray(id, sourceRow) {
+  var toast = document.getElementById('trayToast');
+
+  // If tapping the same row, close it
+  if (currentTrayId === id) {
+    closeTray();
+    return;
+  }
+
+  // Close any existing tray first
+  if (currentTrayRow) {
+    closeTrayImmediate();
+  }
+
+  var c = cities.find(function(x) { return x.id === id; });
+  if (!c) return;
+
+  // Mark source row
+  sourceRow.classList.add('tray-active');
+
+  // Create tray row
+  var trayRow = document.createElement('tr');
+  trayRow.className = 'tray-row';
+  trayRow.innerHTML = '<td colspan="3"><div class="tray-wrap"><div class="tray-inner">'
+    + buildTrayContent(c)
+    + '</div></div></td>';
+
+  // Insert after source row
+  sourceRow.after(trayRow);
+
+  // Hide all other rows and chrome
+  var tbody = document.getElementById('tableBody');
+  Array.from(tbody.children).forEach(function(row) {
+    if (row !== sourceRow && row !== trayRow) row.classList.add('tray-hidden');
+  });
+  var thead = document.querySelector('#compTable thead');
+  if (thead) thead.classList.add('tray-hidden');
+  document.querySelectorAll('.section-title, .section-sub').forEach(function(el) {
+    el.classList.add('tray-hidden');
+  });
+
+  // Trigger animation on next frame
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      trayRow.classList.add('open');
+    });
+  });
+
+  currentTrayId = id;
+  currentTrayRow = { source: sourceRow, tray: trayRow };
+
+  // Show toast
+  toast.classList.add('visible');
+
+  // Scroll the row into view
+  setTimeout(function() {
+    sourceRow.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
+}
+
+function restoreRows() {
+  document.querySelectorAll('.tray-hidden').forEach(function(el) {
+    el.classList.remove('tray-hidden');
+  });
+}
+
+function closeTray() {
+  if (!currentTrayRow) return;
+  var toast = document.getElementById('trayToast');
+  var trayRow = currentTrayRow.tray;
+  var sourceRow = currentTrayRow.source;
+
+  trayRow.classList.remove('open');
+  sourceRow.classList.remove('tray-active');
+  toast.classList.remove('visible');
+  restoreRows();
+
+  // Remove tray row after animation
+  setTimeout(function() {
+    if (trayRow.parentNode) trayRow.parentNode.removeChild(trayRow);
+  }, 250);
+
+  currentTrayId = null;
+  currentTrayRow = null;
+}
+
+function closeTrayImmediate() {
+  if (!currentTrayRow) return;
+  var trayRow = currentTrayRow.tray;
+  var sourceRow = currentTrayRow.source;
+  sourceRow.classList.remove('tray-active');
+  restoreRows();
+  if (trayRow.parentNode) trayRow.parentNode.removeChild(trayRow);
+  currentTrayId = null;
+  currentTrayRow = null;
+}
+
+// Toast button
+document.getElementById('trayToastBtn').addEventListener('click', function() {
+  if (currentTrayRow) {
+    var sourceRow = currentTrayRow.source;
+    closeTray();
+    setTimeout(function() {
+      sourceRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  }
+});
+
+// Sort
+let currentSort = 'miles';
+let currentSortDir = 'asc';
+
+function getFilteredSorted() {
+  let data = [...cities];
+  if (currentSort === 'miles') data.sort((a, b) => currentSortDir === 'asc' ? a.miles - b.miles : b.miles - a.miles);
+  if (currentSort === 'name') data.sort((a, b) => currentSortDir === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name));
+  return data;
+}
+
+function refresh() {
+  closeTrayImmediate();
+  const data = getFilteredSorted();
+  buildTable(data);
+}
+
+// Column header sorting
+document.querySelectorAll('th.sortable').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.col;
+    if (currentSort === col) {
+      currentSortDir = currentSortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      currentSort = col;
+      currentSortDir = 'asc';
+    }
+    // Update header arrows
+    document.querySelectorAll('th.sortable').forEach(h => {
+      h.classList.remove('sort-active');
+      h.querySelector('.sort-arrow').textContent = '↕';
+    });
+    th.classList.add('sort-active');
+    th.querySelector('.sort-arrow').textContent = currentSortDir === 'asc' ? '▲' : '▼';
+    refresh();
+  });
+});
+
+
+// ─── COMPARE LIGHTBOX ───
+
+// Derive crowd fit score from city data instead of hardcoded ID lists
+function crowdScore(c) {
+  var cr = (c.crowd || '').toLowerCase();
+  if (/college|student|isu|usd|ksu|nwmsu|wayne state|unk/i.test(cr)) return 1;
+  if (/mix|faculty|multi/i.test(cr)) return 2;
+  return 3;
+}
+
+function logisticsScore(c) {
+  var s = 3;
+  if (c.hotelWalk !== 'yes') s--;
+  if (c.caveat && c.caveat.type === 'warning') s--;
+  if (/school year|calendar|semester|summer only|seasonal/i.test(c.crowd + ' ' + (c.caveat ? c.caveat.text : ''))) s--;
+  return Math.max(s, 0);
+}
+
+const compareCategories = [
+  {
+    key: 'drive', label: 'Drive Time',
+    getValue: c => c.drive,
+    getRaw: c => c.miles,
+    winner: (arr) => {
+      const min = Math.min(...arr.map(c => c.miles));
+      return arr.map(c => c.miles === min ? 'win' : 'lose');
+    },
+    getNote: c => `${c.miles} miles from Ralston`,
+  },
+  {
+    key: 'bars', label: 'Bar Count',
+    getValue: c => `${c.bars} bars`,
+    getRaw: c => c.bars,
+    winner: (arr) => {
+      const max = Math.max(...arr.map(c => c.bars));
+      return arr.map(c => c.bars === max ? 'win' : 'lose');
+    },
+    getNote: c => `${c.bars} walkable late-night spots`,
+  },
+  {
+    key: 'lastcall', label: 'Last Call',
+    getValue: c => c.lastCall,
+    getRaw: c => { const t = c.lastCall; if (t==='2:00 AM') return 2; if (t==='1:30 AM') return 1.5; return 1; },
+    winner: (arr) => {
+      const rawArr = arr.map(c => {const t=c.lastCall; if(t==='2:00 AM')return 2; if(t==='1:30 AM')return 1.5; return 1;});
+      const max = Math.max(...rawArr);
+      return rawArr.map(r => r === max ? 'win' : 'lose');
+    },
+    getNote: c => `Bars close at ${c.lastCall}`,
+  },
+  {
+    key: 'hotel', label: 'Hotel Walkability',
+    getValue: c => c.hotelWalk === 'yes' ? 'Walk back ✓' : c.hotelWalk === 'partial' ? 'Partial walk' : 'Rideshare needed',
+    getRaw: c => c.hotelWalk === 'yes' ? 3 : c.hotelWalk === 'partial' ? 2 : 1,
+    winner: (arr) => {
+      const rawArr = arr.map(c => c.hotelWalk === 'yes' ? 3 : c.hotelWalk === 'partial' ? 2 : 1);
+      const max = Math.max(...rawArr);
+      return rawArr.map(r => r === max ? 'win' : 'lose');
+    },
+    getNote: c => c.walkNote,
+  },
+  {
+    key: 'price', label: 'Drink Prices',
+    getValue: c => `From ${c.drinksFrom}`,
+    getRaw: c => parseFloat(c.drinksFrom.replace('$','')),
+    winner: (arr) => {
+      const rawArr = arr.map(c => parseFloat(c.drinksFrom.replace('$','')));
+      const min = Math.min(...rawArr);
+      return rawArr.map(r => r === min ? 'win' : 'lose');
+    },
+    getNote: c => `${c.drinksFrom} for domestics`,
+  },
+  {
+    key: 'crowd', label: 'Crowd Fit (40s group)',
+    getValue: c => {
+      const s = crowdScore(c);
+      if (s >= 3) return 'Local adults ✓';
+      if (s >= 2) return 'Mixed crowd';
+      return 'College-heavy';
+    },
+    getRaw: c => crowdScore(c),
+    winner: (arr) => {
+      const rawArr = arr.map(c => crowdScore(c));
+      const max = Math.max(...rawArr);
+      return rawArr.map(r => r === max ? 'win' : 'lose');
+    },
+    getNote: c => c.crowd,
+  },
+  {
+    key: 'logistics', label: 'Trip Logistics',
+    getValue: c => {
+      const issues = [];
+      if (c.hotelWalk !== 'yes') issues.push('Hotel not walkable');
+      if (c.caveat && c.caveat.type === 'warning') issues.push('Needs verification');
+      if (['maryville','vermillion','wayne'].includes(c.id)) issues.push('Calendar-dependent');
+      return issues.length === 0 ? 'Clean & simple ✓' : issues[0];
+    },
+    getRaw: c => logisticsScore(c),
+    winner: (arr) => {
+      const rawArr = arr.map(c => logisticsScore(c));
+      const max = Math.max(...rawArr);
+      return rawArr.map(r => r === max ? 'win' : 'lose');
+    },
+    getNote: c => c.hotelWalk === 'yes' ? 'No transportation needed' : 'Requires pre-arranged transport',
+  },
+  {
+    key: 'poi', label: 'Points of Interest',
+    getValue: c => c.poi ? 'Has nearby POI ✓' : 'Nothing notable',
+    getRaw: c => c.poi ? 1 : 0,
+    winner: (arr) => {
+      const rawArr = arr.map(c => c.poi ? 1 : 0);
+      const max = Math.max(...rawArr);
+      return rawArr.map(r => r === max ? 'win' : 'lose');
+    },
+    getNote: c => c.poi ? c.poi.substring(0,80) + (c.poi.length > 80 ? '…' : '') : 'Nothing notable nearby',
+  },
+];
+
+let selectedCities = [];
+
+function populateComparePicker() {
+  const picker = document.getElementById('compareCityPicker');
+  picker.innerHTML = '';
+  cities.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'compare-city-btn';
+    btn.dataset.id = c.id;
+    btn.textContent = `${c.name}, ${c.state}`;
+    btn.addEventListener('click', () => toggleCitySelect(c.id, btn));
+    picker.appendChild(btn);
+  });
+}
+
+function toggleCitySelect(id, btn) {
+  if (selectedCities.includes(id)) {
+    selectedCities = selectedCities.filter(x => x !== id);
+    btn.classList.remove('selected');
+  } else {
+    if (selectedCities.length >= 3) return;
+    selectedCities.push(id);
+    btn.classList.add('selected');
+  }
+  // Disable unselected buttons when at max
+  document.querySelectorAll('.compare-city-btn').forEach(b => {
+    if (!b.classList.contains('selected')) {
+      b.classList.toggle('disabled-pick', selectedCities.length >= 3);
+    }
+  });
+  updateCompareHint();
+  if (selectedCities.length >= 2) renderCompare();
+  else document.getElementById('compareLightboxResult').innerHTML = '';
+}
+
+function updateCompareHint() {
+  const hint = document.getElementById('comparePickerHint');
+  if (selectedCities.length === 0) hint.textContent = 'Select 2 or 3 cities above to compare';
+  else if (selectedCities.length === 1) hint.textContent = 'Select 1 or 2 more cities';
+  else if (selectedCities.length === 2) hint.textContent = 'Comparing 2 cities — or add a 3rd';
+  else hint.textContent = 'Comparing 3 cities — click any selected city to remove it';
+}
+
+function renderCompare() {
+  const selected = selectedCities.map(id => cities.find(c => c.id === id)).filter(Boolean);
+  const n = selected.length;
+  const result = document.getElementById('compareLightboxResult');
+
+  // Tally category wins per city
+  const winCounts = selected.map(() => 0);
+  const catResults = compareCategories.map(cat => {
+    const outcomes = cat.winner(selected); // array of 'win'/'lose' per city
+    // Handle ties — if all are 'win', it's a tie
+    const allWin = outcomes.every(o => o === 'win');
+    return outcomes.map((o, i) => {
+      if (allWin) return 'tie';
+      if (o === 'win') { winCounts[i]++; return 'win'; }
+      return 'lose';
+    });
+  });
+
+  // Determine overall winner
+  const maxWins = Math.max(...winCounts);
+  const winnersIdx = winCounts.map((w, i) => w === maxWins ? i : -1).filter(i => i >= 0);
+  const isTie = winnersIdx.length > 1;
+  const overallWinner = isTie ? null : selected[winnersIdx[0]];
+
+  // Build column headers
+  const gridCols = n === 2 ? 'compare-grid-2' : 'compare-grid-3';
+  let headersHTML = '';
+  selected.forEach((c, i) => {
+    const isWinner = overallWinner && overallWinner.id === c.id;
+    headersHTML += `
+      <div class="compare-col-header ${isWinner ? 'winner-col' : ''}">
+        <div class="compare-col-name">${c.name}</div>
+        <div class="compare-col-sub">${c.state} · ${c.miles} mi · ${c.drive}</div>
+        ${isWinner ? '<div class="compare-winner-crown">🏆 Winner</div>' : ''}
+      </div>
+    `;
+    if (i < n - 1) headersHTML += `<div class="compare-middle-header">VS</div>`;
+  });
+
+  // Build category rows
+  let rowsHTML = '';
+  compareCategories.forEach((cat, ci) => {
+
+    // Value row
+    let valueRow = '';
+    selected.forEach((c, i) => {
+      const outcome = catResults[ci][i];
+      const indicator = outcome === 'win'
+        ? `<span class="win-indicator green"></span>`
+        : outcome === 'lose'
+        ? `<span class="win-indicator red"></span>`
+        : `<span class="win-indicator tie-dot"></span>`;
+      valueRow += `
+        <div class="compare-cell ${outcome}">
+          <div class="compare-cell-value">${indicator}${cat.getValue(c)}</div>
+          <div class="compare-cell-note">${cat.getNote(c)}</div>
+        </div>
+      `;
+      if (i < n - 1) {
+        const arrow = n === 2
+          ? (catResults[ci][0] === 'win' ? '←' : catResults[ci][1] === 'win' ? '→' : '=')
+          : '·';
+        valueRow += `<div class="compare-middle-cell">${arrow}</div>`;
+      }
+    });
+
+    rowsHTML += valueRow;
+  });
+
+  // Verdict
+  let verdictText = '';
+  if (isTie) {
+    const tiedNames = winnersIdx.map(i => selected[i].name).join(' & ');
+    verdictText = `${tiedNames} are tied with ${maxWins} wins each. The tiebreaker is what matters most to your group — hotel walkability, bar count, or just the shortest drive.`;
+  } else {
+    const loserWins = winCounts.filter((_, i) => i !== winnersIdx[0]);
+    const margin = maxWins - Math.max(...loserWins);
+    const marginWord = margin <= 1 ? 'narrow edge' : margin <= 2 ? 'clear edge' : 'strong advantage';
+    verdictText = `<strong>${overallWinner.name}</strong> wins with ${maxWins} out of 8 categories, giving it a ${marginWord}. Still worth considering what categories matter most to your group before booking.`;
+  }
+
+  const scoreChips = selected.map((c, i) => {
+    const isWinner = overallWinner && overallWinner.id === c.id;
+    return `<div class="compare-score-chip ${isWinner ? 'winner-chip' : ''}">${c.name}: ${winCounts[i]} wins</div>`;
+  }).join('');
+
+  result.innerHTML = `
+    <div class="compare-grid ${gridCols}">
+      ${headersHTML}
+      ${rowsHTML}
+    </div>
+    <div class="compare-verdict">
+      <div>
+        <div class="compare-verdict-label">Overall Winner</div>
+        <div class="compare-verdict-winner">${overallWinner ? overallWinner.name : 'Tied'}</div>
+        <div class="compare-score-row">${scoreChips}</div>
+      </div>
+      <div class="compare-verdict-detail">
+        <div class="compare-verdict-label">The Call</div>
+        <div class="compare-verdict-text">${verdictText}</div>
+      </div>
+    </div>
+  `;
+}
+
+// Open / close compare lightbox
+document.getElementById('compareTriggerBtn').addEventListener('click', () => {
+  document.getElementById('compareOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+});
+
+document.getElementById('compareClose').addEventListener('click', () => {
+  document.getElementById('compareOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+});
+
+document.getElementById('compareOverlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('compareOverlay')) {
+    document.getElementById('compareOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeTray();
+    document.getElementById('compareOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+});
+
+populateComparePicker();
+
+// Initial build
+refresh();
+
+
+// --- THEME TOGGLE ---
+(function() {
+  var toggle = document.getElementById('themeToggle');
+  var root = document.documentElement;
+  var stored = localStorage.getItem('bh-theme');
+
+  function applyTheme(theme) {
+    if (theme === 'light') {
+      root.setAttribute('data-theme', 'light');
+      toggle.innerHTML = '<span class="theme-toggle-icon">\u263E</span> Dark Mode';
+    } else if (theme === 'dark') {
+      root.setAttribute('data-theme', 'dark');
+      toggle.innerHTML = '<span class="theme-toggle-icon">\u2600</span> Light Mode';
+    } else {
+      root.removeAttribute('data-theme');
+      var isDark = !window.matchMedia('(prefers-color-scheme: light)').matches;
+      toggle.innerHTML = isDark
+        ? '<span class="theme-toggle-icon">\u2600</span> Light Mode'
+        : '<span class="theme-toggle-icon">\u263E</span> Dark Mode';
+    }
+  }
+
+  if (stored) { applyTheme(stored); } else { applyTheme('auto'); }
+
+  toggle.addEventListener('click', function() {
+    var current = root.getAttribute('data-theme');
+    var osLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+    if (current === 'light' || (!current && osLight)) {
+      localStorage.setItem('bh-theme', 'dark');
+      applyTheme('dark');
+    } else {
+      localStorage.setItem('bh-theme', 'light');
+      applyTheme('light');
+    }
+  });
+})();
+
+</script>
+</body>
+</html>
