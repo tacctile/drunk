@@ -36,7 +36,7 @@ export function TripStatusCard() {
                   : "btn-ghost"
               }`}
             >
-              {s === "on_trip" ? "On Trip" : s === "remote" ? "Remote" : "Out"}
+              {s === "on_trip" ? "Going" : s === "remote" ? "Remote" : "Out"}
             </button>
           ))}
         </div>

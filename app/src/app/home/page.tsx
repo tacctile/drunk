@@ -60,14 +60,19 @@ export default function HomePage() {
 
   const sortedActiveVoters = useMemo(() => {
     const active = voters.filter((v) => v.is_active !== false);
+    const statusMap = new Map(members.map((m) => [m.voter_id, m.trip_status]));
+    const going = active.filter((v) => {
+      const s = statusMap.get(v.voter_id);
+      return !s || s === "on_trip";
+    });
     const voted = new Set(cityVotes.map((cv) => cv.voter_id));
-    return [...active].sort((a, b) => {
+    return [...going].sort((a, b) => {
       const av = voted.has(a.voter_id);
       const bv = voted.has(b.voter_id);
       if (av !== bv) return av ? -1 : 1;
       return (a.display_name ?? a.name).localeCompare(b.display_name ?? b.name);
     });
-  }, [voters, cityVotes]);
+  }, [voters, cityVotes, members]);
 
   const alphabeticalVoters = useMemo(
     () =>
