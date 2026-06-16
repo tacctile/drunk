@@ -5,6 +5,7 @@ import { ActionBar } from "@/components/ActionBar";
 import { BottomSheet } from "@/components/BottomSheet";
 import { CityList, SORT_OPTIONS, loadSort, storeSort, type CitySort } from "@/components/CityList";
 import { Icon } from "@/components/Icon";
+import { FloatingPill, SectionLabel } from "@hoppz-ui";
 
 /** The walkability index — the first screen. */
 export default function CitiesPage() {
@@ -30,18 +31,18 @@ export default function CitiesPage() {
       <CityList sort={sort} withHeader />
 
       <ActionBar>
-        <button
-          type="button"
+        <FloatingPill
+          variant="sort"
+          label={`Sorted by ${current.pillLabel}`}
+          icon="swap_vert"
           onClick={() => setSheetOpen(true)}
-          className="flex h-11 w-full items-center justify-center gap-2 rounded-btn border bg-raised text-base font-semibold text-ink shadow-overlay transition hover:border-border-strong"
-        >
-          <Icon name="swap_vert" size={20} className="text-ink-muted" />
-          Sorted by {current.pillLabel}
-        </button>
+        />
       </ActionBar>
 
       <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} label="Sort cities">
-        <h2 className="label px-1 pb-2">Sort by</h2>
+        <div className="px-1 pb-2">
+          <SectionLabel>Sort by</SectionLabel>
+        </div>
         <ul className="pb-2">
           {SORT_OPTIONS.map((option) => {
             const active = option.value === sort;
