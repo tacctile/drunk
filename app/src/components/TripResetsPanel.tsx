@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Dialog } from "@/components/Dialog";
 import { getSupabase } from "@/lib/supabase";
+import { SectionLabel, ActionButton } from "@hoppz-ui";
 
 const ALL_ROWS = "1970-01-01";
 
@@ -65,21 +66,17 @@ export function TripResetsPanel() {
   return (
     <>
       <section className="flex flex-col gap-3">
-        <h2 className="label">Trip resets</h2>
-        <button
-          type="button"
+        <SectionLabel>Trip resets</SectionLabel>
+        <ActionButton
+          label="Reset All Votes"
+          variant="ghost"
           onClick={() => setConfirmReset("votes")}
-          className="btn w-full border bg-raised text-red"
-        >
-          Reset All Votes
-        </button>
-        <button
-          type="button"
+        />
+        <ActionButton
+          label="Reset All Availability"
+          variant="ghost"
           onClick={() => setConfirmReset("availability")}
-          className="btn w-full border bg-raised text-red"
-        >
-          Reset All Availability
-        </button>
+        />
       </section>
 
       {confirmReset === "votes" && (

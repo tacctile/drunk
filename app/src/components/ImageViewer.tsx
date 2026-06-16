@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { lockBodyScroll, unlockBodyScroll } from "@/lib/scrollLock";
-import { Icon } from "./Icon";
+import { GlassIconButton } from "@hoppz-ui";
 
 interface ImageViewerProps {
   url: string;
@@ -47,21 +47,19 @@ export function ImageViewer({ url, onClose }: ImageViewerProps) {
         className="max-h-full max-w-full object-contain"
       />
 
-      <button
-        type="button"
+      <GlassIconButton
+        icon="close"
+        ariaLabel="Close"
         onClick={onClose}
-        className="fixed left-4 top-4 flex h-11 w-11 items-center justify-center rounded-full text-white drop-shadow-lg"
-      >
-        <Icon name="close" size={28} />
-      </button>
+        className="fixed left-4 top-4"
+      />
 
-      <button
-        type="button"
+      <GlassIconButton
+        icon="download"
+        ariaLabel="Download"
         onClick={handleDownload}
-        className="fixed bottom-4 right-4 flex h-11 w-11 items-center justify-center rounded-full text-white drop-shadow-lg"
-      >
-        <Icon name="download" size={28} />
-      </button>
+        className="fixed bottom-4 right-4"
+      />
     </div>
   );
 }

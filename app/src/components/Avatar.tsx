@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { contrastColor, getInitials } from "@/lib/colors";
+import { getInitials } from "@/lib/colors";
+import { InitialsAvatar } from "@hoppz-ui";
 
 interface AvatarProps {
   voter: {
@@ -14,38 +14,24 @@ interface AvatarProps {
   className?: string;
 }
 
+function toSizeToken(px: number): "xs" | "sm" | "md" | "lg" {
+  if (px <= 28) return "xs";
+  if (px <= 38) return "sm";
+  if (px <= 50) return "md";
+  return "lg";
+}
+
 export function Avatar({ voter, size, className = "" }: AvatarProps) {
-  const [loaded, setLoaded] = useState(false);
-  const [errored, setErrored] = useState(false);
   const displayName = voter.display_name ?? voter.name;
-  const hasImage = Boolean(voter.avatar_url) && !errored;
 
   return (
-    <span
-      className={`relative flex flex-none items-center justify-center rounded-full ${className}`}
-      style={{ width: size, height: size }}
-    >
-      <span
-        className="flex h-full w-full items-center justify-center rounded-full font-bold"
-        style={{
-          background: voter.pin_color,
-          color: contrastColor(voter.pin_color),
-          fontSize: Math.max(size * 0.3, 10),
-          opacity: hasImage && loaded ? 0 : 1,
-        }}
-      >
-        {getInitials(displayName)}
-      </span>
-      {hasImage && (
-        <img
-          src={voter.avatar_url!}
-          alt=""
-          onLoad={() => setLoaded(true)}
-          onError={() => setErrored(true)}
-          className="absolute inset-0 h-full w-full rounded-full object-cover"
-          style={{ opacity: loaded ? 1 : 0 }}
-        />
-      )}
+    <span className={className}>
+      <InitialsAvatar
+        initials={getInitials(displayName)}
+        size={toSizeToken(size)}
+        color={voter.pin_color}
+        avatarUrl={voter.avatar_url ?? undefined}
+      />
     </span>
   );
 }
