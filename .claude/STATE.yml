@@ -2,22 +2,25 @@
 # Companion to CONTEXT.md / ARCHITECTURE.md / BUILD_INDEX.md.
 # Update at the end of every session.
 
-current_phase: reskin-gallery
+current_phase: reskin-city-detail
 last_updated: 2026-06-16
 app_root: app/
 
 last_change: >
-  Reskinned Gallery (Photos) screen to match Stitch reference. Photo grid now
-  uses 2px gap with surface-colored placeholders, 1:1 aspect ratio items, and
-  active:scale-[0.98] tap feedback. Day section headers are fully opaque
-  sticky bars with uppercase label-voice typography (12px/bold/tracking-widest).
-  Upload button replaced with green FloatingActionButton (56px circle, filled
-  icon, rim-light, deep shadow) positioned bottom-right matching the Stitch FAB
-  pattern. Jump-to-date restyled as a compact pill with label-voice text. Loading
-  skeleton uses 3-col grid with 2px gap and surface placeholders. One new UI
-  component: FloatingActionButton.
+  Reskinned City Detail screen to match Stitch reference. Header changed from
+  centered city-name layout to left-aligned back + stacked "Hoppz" / city name
+  with profile avatar right. Tabs restyled with uppercase label typography and
+  accent bottom border. Venue list replaced with card-based layout: hotel cards
+  have 80×80 icon thumbnail, title/price row, address, 5-star rating display
+  (filled + unfilled), and full-width PREFER/PREFERRED button with favorite
+  icon. Bar/food cards use stacked layout with title, address, and green
+  pill badges for "Has Food" / "Full Bar" / descriptors. Tap-to-focus retained
+  with ring-accent flash on cards. Vote FAB restyled to 56px height with
+  how_to_vote icon, rounded-card, accent border/bg states, active:scale-95.
+  Stars component updated with showAll prop to render all 5 stars (filled +
+  unfilled outlines).
 
-last_session: "Reskin Gallery screen to Stitch reference"
+last_session: "Reskin City Detail screen to Stitch reference"
 
 verification:
   typecheck: pass        # pre-existing module warnings only

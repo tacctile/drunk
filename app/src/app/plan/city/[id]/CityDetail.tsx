@@ -25,11 +25,9 @@ const TABS: { kind: VenueKind; label: string }[] = [
   { kind: "food", label: "Food" },
 ];
 
-// A tapped venue row flashes --surface-raised this long to confirm the tap.
 const ROW_FLASH_MS = 300;
 
 export function CityDetail({ cityId }: { cityId: string }) {
-  // The server wrapper 404s unknown ids before this component renders.
   const city = cityById(cityId)!;
   const { venues, ready } = useVenues(city);
   const { setCityVote, setHotelPref } = useGroupData();
@@ -46,9 +44,6 @@ export function CityDetail({ cityId }: { cityId: string }) {
     setListSort(loadSort());
   }, []);
 
-  // Tap-to-focus: a venue row pans the map to that venue's pin and grows it.
-  // A venue with no coords has no pin — the tap does nothing, not even the
-  // flash. Only the map moves; the page scrolls only if the map is off-screen.
   const mapRef = useRef<CityMapHandle>(null);
   const [flashId, setFlashId] = useState<string | null>(null);
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -82,33 +77,34 @@ export function CityDetail({ cityId }: { cityId: string }) {
 
   return (
     <div className="min-[840px]:grid min-[840px]:grid-cols-[360px_1fr]">
-      {/* Push layout — the index stays visible on desktop */}
       <aside className="hidden border-r min-[840px]:sticky min-[840px]:top-0 min-[840px]:block min-[840px]:h-dvh min-[840px]:overflow-y-auto">
         <CityList sort={listSort} activeCityId={city.id} />
       </aside>
 
       <div className="min-w-0">
-        {/* Sticky header — back, city + state, profile avatar. Fully opaque,
-            always. Voting lives in the ActionBar CTA below. */}
-        <header className="sticky top-0 z-30 grid h-14 grid-cols-[44px_1fr_44px] items-center border-b bg-bg px-2">
-          <Link
-            href="/plan/cities"
-            aria-label="Back to cities"
-            className="flex h-11 w-11 items-center justify-center rounded-btn text-ink-muted transition hover:bg-raised hover:text-ink"
-          >
-            <Icon name="arrow_back" size={22} />
-          </Link>
-          <div className="flex items-baseline justify-center gap-1.5 overflow-hidden">
-            <span className="truncate text-title font-bold text-ink">{city.name}</span>
-            <span className="label flex-none">{city.state}</span>
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-bg px-4">
+          <div className="flex items-center gap-4">
+            <Link
+              href="/plan/cities"
+              aria-label="Back to cities"
+              className="flex h-11 w-11 items-center justify-center transition active:scale-95"
+            >
+              <Icon name="arrow_back" size={22} className="text-ink" />
+            </Link>
+            <div className="flex flex-col">
+              <h1 className="text-title font-bold leading-tight text-ink">Hoppz</h1>
+              <span className="text-meta font-normal text-ink-muted">{city.name}</span>
+            </div>
           </div>
           <ProfileAvatar onClick={() => setProfileOpen(true)} />
         </header>
 
         <CityMap ref={mapRef} city={city} venues={venues} onPinTap={setPinned} />
 
-        {/* Hotels / Bars / Food */}
-        <div className="sticky z-20 flex h-11 border-b bg-surface" style={{ top: CITY_DETAIL_HEADER_HEIGHT }}>
+        <nav
+          className="sticky z-20 flex border-b bg-surface"
+          style={{ top: CITY_DETAIL_HEADER_HEIGHT }}
+        >
           {TABS.map(({ kind, label }) => {
             const active = tab === kind;
             return (
@@ -117,98 +113,128 @@ export function CityDetail({ cityId }: { cityId: string }) {
                 type="button"
                 onClick={() => setTab(kind)}
                 aria-pressed={active}
-                className={`relative h-11 flex-1 text-base font-semibold transition ${
-                  active ? "text-accent" : "text-ink-muted hover:text-ink"
+                className={`flex-1 py-4 text-label uppercase transition ${
+                  active
+                    ? "border-b-2 border-accent text-accent"
+                    : "text-ink-muted"
                 }`}
               >
                 {label}
-                {active && <span className="absolute inset-x-0 bottom-0 h-0.5 bg-accent" />}
               </button>
             );
           })}
-        </div>
+        </nav>
 
         {!ready ? (
-          <p className="px-4 py-10 text-center text-meta font-normal text-ink-dim">Loading…</p>
+          <p className="px-4 py-10 text-center text-meta font-normal text-ink-dim">
+            Loading…
+          </p>
         ) : list.length === 0 ? (
           <p className="px-4 py-10 text-center text-meta font-normal text-ink-dim">
             Nothing found near {city.district}.
           </p>
         ) : (
-          <ul className="mx-auto max-w-2xl">
-            {list.map((venue) => (
-              <li
-                key={venue.id}
-                className="flex min-h-14 items-center gap-2 border-b pr-2 transition"
-                style={flashId === venue.id ? { background: "var(--surface-raised)" } : undefined}
-              >
-                {/* The whole info block is the tap target — sibling of the
-                    hotel star so the two actions never nest or collide. */}
-                <button
-                  type="button"
-                  onClick={() => focusVenue(venue)}
-                  className="min-w-0 flex-1 py-3 pl-4 text-left"
+          <div className="mx-auto max-w-2xl space-y-4 px-4 pb-36 pt-6">
+            {list.map((venue) => {
+              const flashed = flashId === venue.id;
+              return tab === "hotel" ? (
+                <div
+                  key={venue.id}
+                  className={`rounded-card border bg-raised p-4 shadow-[0_2px_8px_rgba(0,0,0,0.35)] transition ${
+                    flashed ? "ring-1 ring-accent" : ""
+                  }`}
                 >
-                  <span className="block truncate text-title font-bold text-ink">{venue.name}</span>
-                  {venue.address && (
-                    <span className="block break-words text-meta font-normal text-ink-muted">
-                      {venue.address}
-                    </span>
-                  )}
-                  {tab === "hotel" ? (
-                    (venue.stars != null || venue.price_range) && (
-                      <span className="flex items-center gap-2 pt-0.5 text-meta font-normal text-ink-muted">
-                        {venue.stars != null && <Stars count={venue.stars} />}
-                        {venue.price_range && <span>{venue.price_range}</span>}
-                      </span>
-                    )
-                  ) : (
-                    <>
-                      {venue.descriptor && (
-                        <span className="block break-words pt-0.5 text-meta font-normal text-ink-dim">
-                          {venue.descriptor}
-                        </span>
+                  <button
+                    type="button"
+                    onClick={() => focusVenue(venue)}
+                    className="flex w-full gap-4 text-left"
+                  >
+                    <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-btn bg-surface">
+                      <Icon name="apartment" size={32} className="text-ink-dim" />
+                    </div>
+                    <div className="flex min-w-0 flex-1 flex-col justify-center">
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="truncate text-title font-bold text-ink">
+                          {venue.name}
+                        </h3>
+                        {venue.price_range && (
+                          <span className="shrink-0 text-label text-accent">
+                            {venue.price_range}
+                          </span>
+                        )}
+                      </div>
+                      {venue.address && (
+                        <p className="mt-0.5 text-meta font-normal text-ink-muted">
+                          {venue.address}
+                        </p>
                       )}
-                      {(tab === "bar" ? venue.has_food : venue.has_bar) && (
-                        <span className="mt-1.5 inline-flex rounded-full bg-raised px-2.5 py-0.5 text-meta font-normal text-ink-muted">
-                          {tab === "bar" ? "Also serves food" : "Full bar"}
-                        </span>
+                      {venue.stars != null && (
+                        <div className="mt-1">
+                          <Stars count={venue.stars} showAll />
+                        </div>
                       )}
-                    </>
-                  )}
-                </button>
-                {tab === "hotel" && (
+                    </div>
+                  </button>
                   <button
                     type="button"
                     onClick={() => toggleHotel(venue)}
-                    className="flex h-11 w-11 flex-none flex-col items-center justify-center gap-1"
-                    aria-label={myHotel === venue.id ? "Remove hotel preference" : "Prefer this hotel"}
+                    className={`mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-btn text-label uppercase transition active:scale-[0.98] ${
+                      myHotel === venue.id
+                        ? "bg-accent text-bg"
+                        : "border border-accent text-accent"
+                    }`}
+                    aria-label={
+                      myHotel === venue.id
+                        ? "Remove hotel preference"
+                        : "Prefer this hotel"
+                    }
                   >
                     <Icon
-                      name="star"
-                      size={20}
+                      name="favorite"
+                      size={18}
                       filled={myHotel === venue.id}
-                      className={myHotel === venue.id ? "text-accent" : "text-ink-dim"}
                     />
-                    {myHotel !== venue.id && (
-                      <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-dim">
-                        Prefer
-                      </span>
-                    )}
+                    {myHotel === venue.id ? "PREFERRED" : "PREFER"}
                   </button>
-                )}
-              </li>
-            ))}
-          </ul>
+                </div>
+              ) : (
+                <div
+                  key={venue.id}
+                  className={`rounded-card border bg-raised p-4 shadow-[0_2px_8px_rgba(0,0,0,0.35)] transition ${
+                    flashed ? "ring-1 ring-accent" : ""
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => focusVenue(venue)}
+                    className="flex w-full flex-col gap-2 text-left"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <h3 className="text-title font-bold text-ink">
+                          {venue.name}
+                        </h3>
+                        {venue.address && (
+                          <p className="mt-0.5 text-meta font-normal text-ink-muted">
+                            {venue.address}
+                          </p>
+                        )}
+                      </div>
+                      {renderBadges(tab, venue)}
+                    </div>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         )}
 
-        {/* Vote CTA — replaces the sort pill on this page only */}
         <ActionBar>
           {votingLocked ? (
             <button
               type="button"
               disabled
-              className="h-11 w-full rounded-btn border bg-raised text-base font-bold text-ink-dim opacity-60 shadow-overlay"
+              className="flex h-14 w-full items-center justify-center gap-4 rounded-card border bg-raised text-title font-bold text-ink-dim opacity-60 shadow-overlay"
             >
               Voting locked
             </button>
@@ -216,25 +242,50 @@ export function CityDetail({ cityId }: { cityId: string }) {
             <button
               type="button"
               onClick={toggleVote}
-              className="h-11 w-full rounded-btn bg-accent text-base font-bold text-bg shadow-overlay transition hover:brightness-110"
+              className="flex h-14 w-full items-center justify-center gap-4 rounded-card bg-accent text-title font-bold text-bg shadow-overlay transition active:scale-95"
             >
-              Your pick — {city.name} ✓
+              <Icon name="how_to_vote" size={24} filled />
+              Voted for {city.name}
             </button>
           ) : (
             <button
               type="button"
               onClick={toggleVote}
-              className="h-11 w-full rounded-btn border bg-raised text-base font-bold text-accent shadow-overlay transition hover:border-border-strong"
+              className="flex h-14 w-full items-center justify-center gap-4 rounded-card border border-accent bg-raised text-title font-bold text-accent shadow-overlay transition active:scale-95"
             >
+              <Icon name="how_to_vote" size={24} />
               Vote for {city.name}
             </button>
           )}
         </ActionBar>
 
         <VenueSheet venue={pinned} onClose={() => setPinned(null)} />
-        <ProfileOverlay open={profileOpen} onClose={() => setProfileOpen(false)} />
+        <ProfileOverlay
+          open={profileOpen}
+          onClose={() => setProfileOpen(false)}
+        />
         {prompt}
       </div>
+    </div>
+  );
+}
+
+function renderBadges(tab: VenueKind, venue: Venue) {
+  const badges: string[] = [];
+  if (tab === "bar" && venue.has_food) badges.push("Has Food");
+  if (tab === "food" && venue.has_bar) badges.push("Full Bar");
+  if (venue.descriptor) badges.push(venue.descriptor);
+  if (badges.length === 0) return null;
+  return (
+    <div className="flex shrink-0 flex-wrap gap-1">
+      {badges.map((label) => (
+        <span
+          key={label}
+          className="rounded-full bg-green-dim px-3 py-1 text-[10px] font-bold uppercase tracking-tight text-green"
+        >
+          {label}
+        </span>
+      ))}
     </div>
   );
 }
