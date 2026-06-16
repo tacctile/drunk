@@ -7,7 +7,7 @@ All components use M3-style design tokens from `tailwind.preset.ts`. Import the 
 | OverlayHeader | `OverlayHeader.tsx` | `title`, `onBack?`, `rightSlot?` | Full-width header bar with back button, centered title, and optional right slot |
 | TabBar | `TabBar.tsx` | `tabs`, `activeTab`, `onTabChange` | Horizontal tab navigation with active underline indicator |
 | InitialsAvatar | `InitialsAvatar.tsx` | `initials`, `size?` (xs/sm/md/lg), `color?`, `avatarUrl?`, `statusColor?` | Circular avatar showing initials or an image, with optional status indicator dot |
-| ProfileHero | `ProfileHero.tsx` | `initials`, `name`, `subtitle`, `avatarColor?`, `avatarUrl?`, `onEditPhoto?` | Avatar + display name + subtitle block |
+| ProfileHero | `ProfileHero.tsx` | `initials`, `name`, `subtitle`, `avatarColor?`, `avatarUrl?`, `onEditPhoto?`, `centered?` | Avatar + display name + subtitle block; centered mode stacks vertically for sheets |
 | Card | `Card.tsx` | `children`, `className?`, `glass?` | Surface card with rim-light top border and shadow; glass variant adds backdrop blur |
 | CardHeader | `CardHeader.tsx` | `icon`, `title`, `iconClassName?`, `rightIcon?`, `rightIconClassName?`, `onRightIconClick?` | Icon + title row for card headers with customizable icon color |
 | PinInput | `PinInput.tsx` | `value`, `onChange`, `maxLength?`, `placeholder?`, `hint?` | Centered PIN entry field with visibility toggle |
@@ -29,7 +29,7 @@ All components use M3-style design tokens from `tailwind.preset.ts`. Import the 
 | RatingPill | `RatingPill.tsx` | `rating`, `icon?` | Overlay pill badge with filled icon and rating number |
 | HotelCard | `HotelCard.tsx` | `imageUrl`, `imageAlt?`, `rating?`, `name`, `subtitle`, `preferenceCount?`, `preferenceLabel?`, `price?`, `priceUnit?`, `onClick?` | Image card with rating overlay, hotel info, preference count, and price |
 | HorizontalScroll | `HorizontalScroll.tsx` | `children`, `className?` | Horizontal scroll container with hidden scrollbars and mobile edge bleed |
-| StatusPill | `StatusPill.tsx` | `icon?`, `label`, `iconClassName?`, `className?` | Compact pill indicator with optional leading icon for status display |
+| StatusPill | `StatusPill.tsx` | `icon?`, `label`, `iconClassName?`, `className?`, `size?` (sm/md), `variant?` (default/active/muted) | Compact pill indicator with optional leading icon, size, and color variant |
 | DayDivider | `DayDivider.tsx` | `label` | Centered date/section divider pill for chat or list views |
 | ReactionPill | `ReactionPill.tsx` | `emoji`, `count`, `active?`, `onClick?` | Emoji reaction badge with count for message reactions |
 | ChatBubble | `ChatBubble.tsx` | `variant` (own/other), `text?`, `imageUrl?`, `imageAlt?`, `senderName?`, `senderNameColor?`, `senderInitials?`, `senderColor?`, `senderAvatarUrl?`, `timestamp?`, `grouped?`, `reactions?`, `onReactionClick?`, `onClick?` | Chat message bubble supporting own/other variants, text/image content, grouped messages, and reactions |
@@ -42,3 +42,8 @@ All components use M3-style design tokens from `tailwind.preset.ts`. Import the 
 | DialogModal | `DialogModal.tsx` | `open`, `onClose`, `title`, `children`, `footer?` | Centered modal dialog with blurred backdrop overlay and close button |
 | FloatingPill | `FloatingPill.tsx` | `icon?`, `label`, `onClick?`, `className?` | Centered pill-shaped floating action button |
 | SlidingPanel | `SlidingPanel.tsx` | `title`, `headerRight?`, `children`, `footer?`, `open?`, `onToggle?`, `width?` | Side sliding panel with toggle handle, scrollable content, and footer section |
+| PageTitle | `PageTitle.tsx` | `children` | Display-lg page heading for top-level screen titles |
+| MemberCard | `MemberCard.tsx` | `initials`, `name`, `avatarColor?`, `avatarUrl?`, `statusDotColor?`, `statusText?`, `badge?`, `onClick?` | Glass-card member row with avatar, status dot, location text, and trailing badge |
+| BottomSheet | `BottomSheet.tsx` | `open`, `onClose`, `children` | Bottom sliding sheet with drag handle, backdrop overlay, and animated entry |
+| InfoCard | `InfoCard.tsx` | `label`, `value` | Labeled key-value info display card for detail sheets |
+| ActionButton | `ActionButton.tsx` | `label`, `icon?`, `variant?` (filled/ghost), `onClick?` | Action button with filled or ghost variant and optional leading icon |
