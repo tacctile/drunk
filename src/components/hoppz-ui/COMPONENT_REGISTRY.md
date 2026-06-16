@@ -29,7 +29,7 @@ All components use M3-style design tokens from `tailwind.preset.ts`. Import the 
 | RatingPill | `RatingPill.tsx` | `rating`, `icon?` | Overlay pill badge with filled icon and rating number |
 | HotelCard | `HotelCard.tsx` | `imageUrl`, `imageAlt?`, `rating?`, `name`, `subtitle`, `preferenceCount?`, `preferenceLabel?`, `price?`, `priceUnit?`, `onClick?` | Image card with rating overlay, hotel info, preference count, and price |
 | HorizontalScroll | `HorizontalScroll.tsx` | `children`, `className?` | Horizontal scroll container with hidden scrollbars and mobile edge bleed |
-| StatusPill | `StatusPill.tsx` | `icon?`, `label`, `iconClassName?`, `className?`, `size?` (sm/md), `variant?` (default/active/muted/glass), `dot?`, `dotClassName?` | Compact pill indicator with optional leading icon/dot, glass variant for camera overlays |
+| StatusPill | `StatusPill.tsx` | `icon?`, `label`, `iconClassName?`, `className?`, `size?` (sm/md), `variant?` (default/active/muted/glass/primary), `dot?`, `dotClassName?` | Compact pill indicator with optional leading icon/dot; primary variant for countdown badges, glass for camera overlays |
 | DayDivider | `DayDivider.tsx` | `label` | Centered date/section divider pill for chat or list views |
 | ReactionPill | `ReactionPill.tsx` | `emoji`, `count`, `active?`, `onClick?` | Emoji reaction badge with count for message reactions |
 | ChatBubble | `ChatBubble.tsx` | `variant` (own/other), `text?`, `imageUrl?`, `imageAlt?`, `senderName?`, `senderNameColor?`, `senderInitials?`, `senderColor?`, `senderAvatarUrl?`, `timestamp?`, `grouped?`, `reactions?`, `onReactionClick?`, `onClick?` | Chat message bubble supporting own/other variants, text/image content, grouped messages, and reactions |
@@ -59,3 +59,7 @@ All components use M3-style design tokens from `tailwind.preset.ts`. Import the 
 | WalkScoreDisplay | `WalkScoreDisplay.tsx` | `score`, `grade`, `colorScheme?` (secondary/tertiary/error) | Walk score number with grade badge, color-coded by score quality |
 | ColumnHeaders | `ColumnHeaders.tsx` | `columns`, `sticky?`, `topOffset?` | Sticky column header strip with uppercase labels and backdrop blur |
 | CityListRow | `CityListRow.tsx` | `cityName`, `stateCode`, `district?`, `walkScore`, `grade`, `gradeColor?`, `distance`, `driveTime`, `voted?`, `onVote?`, `onClick?` | City list row with name/state, walk score, distance, and vote button columns |
+| TripHeroCard | `TripHeroCard.tsx` | `label`, `destination`, `countdownValue`, `countdownLabel`, `dateRange?`, `dateIcon?`, `accentClassName?`, `className?` | Hero card with left accent border showing trip destination, countdown, and date range |
+| StatTile | `StatTile.tsx` | `icon`, `iconClassName?`, `value`, `label`, `className?` | Compact stat tile with icon, large value, and label for horizontal scroll rows |
+| QuickActionCard | `QuickActionCard.tsx` | `icon`, `iconClassName?`, `label`, `onClick?`, `className?` | Tall card-style action button with large icon and label for grid layouts |
+| AvatarChip | `AvatarChip.tsx` | `name`, `initials?`, `color?` (primary/secondary/tertiary/error/primary-fixed), `active?`, `invite?`, `icon?`, `onClick?` | Avatar circle with name label; supports colored member and dashed-border invite variants |

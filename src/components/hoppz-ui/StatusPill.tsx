@@ -8,7 +8,7 @@ export type StatusPillProps = {
   iconClassName?: string;
   className?: string;
   size?: "sm" | "md";
-  variant?: "default" | "active" | "muted" | "glass";
+  variant?: "default" | "active" | "muted" | "glass" | "primary";
   dot?: boolean;
   dotClassName?: string;
 };
@@ -23,6 +23,7 @@ const variantClasses = {
   active: "bg-secondary/10 text-secondary",
   muted: "bg-surface-variant text-on-surface-variant",
   glass: "bg-black/50 backdrop-blur-sm border border-white/10",
+  primary: "bg-primary/10 border border-primary/30 text-primary",
 } as const;
 
 export function StatusPill({
@@ -36,13 +37,20 @@ export function StatusPill({
   dotClassName = "bg-error",
 }: StatusPillProps) {
   const resolvedIconClassName =
-    iconClassName ?? (variant === "default" ? "text-secondary" : "");
+    iconClassName ??
+    (variant === "default"
+      ? "text-secondary"
+      : variant === "primary"
+        ? "text-primary"
+        : "");
   const labelColor =
     variant === "default"
       ? "text-on-surface"
       : variant === "glass"
         ? "text-white"
-        : "";
+        : variant === "primary"
+          ? "text-primary"
+          : "";
 
   return (
     <div

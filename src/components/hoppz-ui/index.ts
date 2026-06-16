@@ -162,3 +162,15 @@ export type { ColumnHeadersProps, ColumnHeader } from "./ColumnHeaders";
 
 export { CityListRow } from "./CityListRow";
 export type { CityListRowProps } from "./CityListRow";
+
+export { TripHeroCard } from "./TripHeroCard";
+export type { TripHeroCardProps } from "./TripHeroCard";
+
+export { StatTile } from "./StatTile";
+export type { StatTileProps } from "./StatTile";
+
+export { QuickActionCard } from "./QuickActionCard";
+export type { QuickActionCardProps } from "./QuickActionCard";
+
+export { AvatarChip } from "./AvatarChip";
+export type { AvatarChipProps, AvatarChipColor } from "./AvatarChip";
