@@ -28,8 +28,12 @@ export function ImageViewer({ url, onClose }: ImageViewerProps) {
   const handleDownload = () => {
     const a = document.createElement("a");
     a.href = url;
-    a.download = "";
+    a.download = url.split("/").pop() ?? "image";
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
   };
 
   return (
@@ -58,9 +62,9 @@ export function ImageViewer({ url, onClose }: ImageViewerProps) {
       <button
         type="button"
         onClick={handleDownload}
-        className="fixed bottom-4 right-4 flex h-11 w-11 items-center justify-center rounded-full text-white drop-shadow-lg"
+        className="fixed right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full text-white drop-shadow-lg"
       >
-        <Icon name="download" size={28} />
+        <Icon name="download" size={24} />
       </button>
     </div>
   );

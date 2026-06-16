@@ -7,11 +7,12 @@ last_updated: 2026-06-16
 app_root: app/
 
 last_change: >
-  Added bottomRef scroll anchor to chat message list in social/page.tsx.
-  Chat now always opens scrolled to the newest message and auto-scrolls
-  on new realtime messages via scrollIntoView({ behavior: 'instant' }).
+  Fixed chat scroll to use bottomRef.scrollIntoView via rAF for reliable
+  initial-open and new-message scrolling. Removed old scrollToBottom callback.
+  Updated ImageViewer download handler (proper DOM append/remove, filename
+  extraction, target/rel attrs) and moved download button to top-right at 24px.
 
-last_session: "Fix chat to always open scrolled to bottom"
+last_session: "Fix chat scroll + add image download button"
 
 verification:
   typecheck: pass        # pre-existing module warnings only
