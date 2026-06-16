@@ -1,0 +1,39 @@
+# Hoppz — machine-readable session state.
+# Companion to CONTEXT.md / ARCHITECTURE.md / BUILD_INDEX.md.
+# Update at the end of every session.
+
+current_phase: audit3-design-changes
+last_updated: 2026-06-14
+app_root: app/
+
+last_change: >
+  Audit 3 design changes — 7 items.
+  IdentityCard simplified: PIN-only unlock (removed name + initial confirm fields
+  and all double-entry confirmation). SwitchIdentityRow trigger label changed to
+  "Sign out". Camera back button always visible (pre- and post-capture). Read
+  receipt avatars (1–2 readers) now tappable to open seen-by sheet. Location mute
+  toggle flipped to "Hide from [name]" (checked = muted). Cross-wing tabs (Hopp
+  in PlanNav, Plan in HopNav) use bg-raised background instead of divider. Home
+  screen Open Chat card shows unread message count badge (lightweight fetch, no
+  realtime subscription).
+
+last_session: "Audit 3 design changes — 7 items"
+
+verification:
+  typecheck: pass        # tsc --noEmit
+  lint: pass             # next lint (only pre-existing warnings)
+  build: pass            # next build — 44 routes compiled
+
+known_issues:
+  - App icons are placeholders — public/icons/ needs real PNGs
+    (icon-192.png, icon-512.png, apple-touch-icon.png) before install looks right.
+  - VAPID keys not yet generated — run npx web-push generate-vapid-keys and add
+    to .env.local + Vercel env vars before push notifications will work.
+  - v2_voter_notes table needs to be created in Supabase (migration pending).
+  - v2_voters avatar_url and role columns need to be added in Supabase (migration pending).
+  - v2_trip, v2_trip_hotels, v2_trip_hotel_assignments, v2_trip_members tables
+    need to be created in Supabase (migration pending).
+
+next_up:
+  - Wire push notification triggers (new message, reaction, etc.)
+  - Real PNG app icons (192 / 512 / 180)

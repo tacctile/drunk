@@ -1,0 +1,165 @@
+last_updated: 2026-06-14
+last_session: "Audit 3 code fixes — 13 items"
+current_phase: audit3-code-fixes
+previous_session: >-
+  Admin user disable/enable, disabled users excluded from all group views,
+  single-device location broadcasting. SCHEMA SQL PENDING MANUAL RUN
+  (v2_voters.is_active boolean NOT NULL DEFAULT true; v2_locations.
+  session_id uuid — idempotent block in CONTEXT.md migration log; until it
+  runs the v2_voters selects naming is_active fail and group data falls
+  back local-only/empty). (1) Admin user cards: Active/Disabled chip
+  toggle (optimistic, no confirm); disabling sets is_active false and
+  deletes the live v2_locations row; disabled cards opacity-60; nothing
+  else deleted — re-enable restores all contributions instantly. (2)
+  Filter pattern everywhere group-facing: roster select carries
+  is_active; aggregations drop rows whose voter is KNOWN inactive
+  (is_active === false), personal values unfiltered. useVotes ranking/
+  counts/tags/hotel tallies/totalVotes filtered (myCityId/myHotelPrefFor/
+  hasVoted not); useAvailability byDate/heat/hot dates/breakdowns/
+  noResponse/rosterSize filtered (`mine` never); board leadingHotelPrefs
+  (the one useVotes bypass) filtered; locate mute list hides disabled
+  voters; useLocations.activeLocations drops their rows. Sign-in roster
+  keeps disabled users on purpose — they can still use the whole app,
+  their data stores but doesn't count. (3) Disabled sharing lock:
+  useLocations.amDisabled (reactive via roster realtime + focus refetch)
+  blocks toggle-ON and auto-start, tears down a live row via the off
+  branch, and grays out the sharing Switch (opacity .4, pointer-events
+  none) in the Locate options modal AND profile overlay with "Location
+  sharing disabled by admin." (4) Single-device broadcast: toggle-ON
+  mints a fresh uuid → bh2-session-id (tenth localStorage key) + row
+  session_id; the 60s tick SELECTs the row's session_id first and stops
+  pushing on mismatch (newest activation wins); coord UPDATEs guarded
+  .eq(session_id) so stale devices can't win races; no stored id pairs
+  with NULL session_id so legacy sharers keep working. Toggle-OFF from
+  any device still deletes the row = stops every device. VoterRow +
+  is_active, LocationRow + session_id. City detail map, walkability,
+  AppShell, root index.html untouched. Build green (36 static pages),
+  lint + strict typecheck clean.
+previous_phase: user_disable_enable_session_broadcast
+build_complete: true
+supabase_schema_deployed: false # is_active + session_id SQL pending manual run
+vercel_deployed: false
+known_issues:
+  - SCHEMA SQL PENDING — until the is_active/session_id ALTERs run in the
+    Supabase SQL editor, every v2_voters select naming is_active errors and
+    the app silently falls back to localStorage-only (group data looks
+    empty). Run the migration block in CONTEXT.md before deploying this
+    build.
+  - A device that loses the broadcast to a newer device keeps showing the
+    sharing toggle ON (deliberate: isSharing is the user-level row, one
+    source of truth across devices; only coord-pushing is device-level).
+    Toggle-OFF from any device deletes the row and stops all devices, per
+    spec. The stale device stops pushing within one 60s tick and its
+    updates are session-guarded meanwhile.
+  - The disabled-user auto-start guard depends on the roster having loaded;
+    in the brief window before it loads, a disabled user with no stored
+    sharing preference could auto-start sharing — the force-stop effect
+    tears the row down as soon as the roster shows is_active false
+    (self-healing within one fetch).
+  - Disabling a user does not block their writes (they can still vote, mark
+    dates, even re-create a location row by toggling on a device whose
+    roster is stale) — group views filter them out either way, and the
+    locate force-stop deletes any row that sneaks in once the roster syncs.
+  - The admin Active/Disabled toggle is optimistic with no refetch — a
+    failed update shows the flipped chip until the next refresh.
+  - Venue lat/lng are all NULL until backfilled — the city map renders zero
+    pins until then (expected and correct per spec; tap-to-focus and Show
+    All are silently inert without coords, and the map keeps the city's
+    hardcoded center/zoom)
+  - The city detail map starts a geolocation watch on every mount (per
+    spec), so the FIRST city-detail visit shows the browser permission
+    prompt even before any sharing toggle; denial is silent and remembered
+    by the browser, not the app — each later mount retries quietly against
+    the remembered denial (no visible re-prompt)
+  - The "You" dot renders for unregistered visitors too (spec fallbacks:
+    #FF8C42 fill, no initials label); it reads bh2-pin-color / bh2-voter-name
+    once per map mount, so a mid-visit color re-sync applies next mount
+  - The sharing toggle reflects the live v2_locations row, so the 72h expiry
+    (or admin Force expire) flips it off WITHOUT changing
+    bh2-sharing-preference — sharing never auto-renews, re-enabling is manual
+  - Auto-start sharing fires its geolocation prompt the first time a
+    registered identity mounts /locate or the profile overlay with no stored
+    preference (never on app load); denied/error writes "false" and is never
+    re-attempted — the person must flip the toggle to opt back in
+  - Devices that opened /locate or the profile overlay while UNREGISTERED
+    before this session may already have bh2-sharing-preference="false"
+    burned by the old ungated auto-start — whoever registers on those
+    devices won't auto-start sharing (the manual toggle works fine)
+  - With the locate page and profile overlay both mounted while sharing,
+    each hook instance runs its own 60s coord-refresh interval (duplicate,
+    idempotent updates; pre-existing behavior)
+  - Venue list order relies on physical insertion order (no ORDER BY per
+    spec); Postgres doesn't guarantee it — UPDATEs (e.g. the lat/lng
+    backfill) may visibly reorder lists
+  - Legacy v2_voters rows have no pin_hash — the first PIN entered for that
+    name in the sign-in form silently becomes their PIN
+  - Pre-existing v2_hotel_votes rows keyed by Google place_ids no longer
+    match the uuid-keyed hotel toggles (they still count on The Board, which
+    groups hotel votes by hotel_name)
+  - Board hotel rows join v2_hotels by exact hotel_name match — renamed or
+    sub-3-star hotels show no stars and sort last on the price tie-breaker
+  - The 32px "See Votes"/"See Who" buttons are below the app's 44px tap
+    floor — explicit spec exceptions
+  - Two devices registering at the same instant can read the same COUNT(*)
+    and receive the same pin color (no server-side sequence; acceptable for
+    ~10 friends, and colors repeat past 25 by design anyway)
+  - Devices already signed in keep a stale bh2-pin-color until their first
+    roster refetch after this deploy overwrites it with the server-assigned
+    color (self-healing, no action needed)
+  - Location coords only refresh while a Bar Hoppers tab is open (60s
+    foreground interval — no background tracking, by design); a row from a
+    closed session keeps its last coords until expiry or toggle-off
+  - Anyone can long-press into /admin — it is hidden, not authenticated —
+    and it now shows pin_plain values in plain text and can delete or wipe
+    every user (acceptable for a ~10-friend app, per spec)
+  - Deleting (or wiping) a user does not sign their device out — the next
+    refetch flags the identity invalid and auto-opens sign-in, but if they
+    write again (e.g. vote) ensureVoter re-creates their voter row, and
+    their cached votes/availability resurface (effectively re-registering
+    by usage; pre-existing identity-layer behavior)
+  - The avatar is absent only on /admin now (its own header has no avatar
+    slot); city detail carries the shared ProfileAvatar in its sticky
+    header with its own ProfileOverlay mount
+  - A device registered before the pin-color system shows its initials on a
+    plain --surface-raised avatar until the first roster refetch caches
+    bh2-pin-color (self-healing, no action needed)
+  - pin_plain stores the plain 2-digit PIN when it is changed from the
+    profile or reset from the admin edit modal, and the admin user list
+    displays it in plain text; v2_voters is anon-readable — acceptable for
+    a ~10-friend app whose 00–99 PINs have no lockout, but it is NOT a
+    secret store. Registration/sign-in never write it, so users who never
+    changed their PIN show "PIN not set" in admin even though their hashed
+    PIN works (use the edit modal's PIN reset to backfill it)
+  - Profile PIN confirmation falls back to accepting any valid 2-digit PIN
+    when the row has no pin_hash or the fetch failed (offline) — mirrors the
+    sign-in adoption rule for legacy rows
+  - A PIN change saved while offline is dropped silently (the old PIN keeps
+    working); profile renames converge via ensureVoter on the next write
+  - Switch-identity sign-out leaves an active v2_locations row sharing until
+    it expires or the same person signs back in and toggles off (admin Force
+    expire also works)
+  - Locate "Show All" fitBounds uses a flat 40px padding (per spec), which
+    doesn't account for the 120/160px people strip — a fitted pin can land
+    under the strip on the right edge (collapsing the strip avoids it)
+  - Location Options edits apply on Save only — the ONE sanctioned
+    exception to the app's immediate/optimistic-write rule; enabling
+    sharing on Save can take up to ~20s waiting for a geolocation fix
+    (buttons disable while busy, no spinner per the no-spinner rule)
+  - The collapsed people-strip expand handle is 28px wide (spec'd), below
+    the app's 44px tap floor — an explicit spec exception
+  - Locate map pins are no longer tappable — the pin-tap row highlight was
+    removed along with the bottom drawer; the strip is the only way to
+    target a person
+  - Long display names truncate hard in the 120px strip on mobile (12px
+    Label voice, ellipsis)
+next_up:
+  - "RUN FIRST in the Supabase SQL editor (idempotent): ALTER TABLE
+    v2_voters ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT
+    true; ALTER TABLE v2_locations ADD COLUMN IF NOT EXISTS session_id
+    uuid;"
+  - Backfill lat/lng for the 206 venue rows in the Supabase SQL editor
+  - Create Vercel project with root directory app/ and deploy
+  - Set NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY /
+    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in Vercel (optional — fallbacks baked)
+  - Restrict the Google Maps key to the production domain; only the Maps
+    JavaScript API is needed now (Geocoding + Places can be disabled)
