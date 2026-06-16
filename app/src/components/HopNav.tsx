@@ -11,7 +11,6 @@ const NAV = [
   { href: "/social", icon: "chat_bubble", label: "Chat" },
   { href: "/social/camera", icon: "photo_camera", label: "Camera" },
   { href: "/social/gallery", icon: "photo_library", label: "Gallery" },
-  { href: "/social/locate", icon: "person_pin", label: "Locate" },
 ] as const;
 
 const HOLD_CLASS = "select-none [-webkit-touch-callout:none]";
@@ -22,6 +21,14 @@ export function HopNav() {
   const adminHold = useAdminHold();
   const locateHold = useAdminHold();
   const { onClick: holdClick, ...holdHandlers } = adminHold.handlers;
+  const { onClick: locateHoldClick, ...locateHoldHandlers } = locateHold.handlers;
+
+  const locateClick = (e: MouseEvent) => {
+    locateHoldClick(e);
+    if (!e.defaultPrevented) {
+      router.push("/social/locate");
+    }
+  };
 
   const planClick = (e: MouseEvent) => {
     holdClick(e);
@@ -30,6 +37,8 @@ export function HopNav() {
       router.push("/plan");
     }
   };
+
+  const locateActive = pathname === "/social/locate";
 
   return (
     <nav
@@ -42,22 +51,33 @@ export function HopNav() {
       <div className="flex h-16 items-stretch">
         {NAV.map((tab) => {
           const active = pathname === tab.href;
-          const isLocate = tab.href === "/social/locate";
           return (
             <Link
               key={tab.href}
               href={tab.href}
               aria-current={active ? "page" : undefined}
-              {...(isLocate ? locateHold.handlers : {})}
               className={`flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 text-label font-semibold transition-all ${
                 active ? "text-green font-bold" : "text-ink-muted"
-              } ${isLocate ? HOLD_CLASS : ""} ${isLocate && locateHold.holding ? "anim-hold" : ""}`}
+              }`}
             >
               <Icon name={tab.icon} filled={active} size={24} />
               {tab.label}
             </Link>
           );
         })}
+        <button
+          type="button"
+          {...locateHoldHandlers}
+          onClick={locateClick}
+          aria-label="Locate"
+          aria-current={locateActive ? "page" : undefined}
+          className={`flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 text-label font-semibold transition-all ${
+            locateActive ? "text-green font-bold" : "text-ink-muted"
+          } ${HOLD_CLASS} ${locateHold.holding ? "anim-hold" : ""}`}
+        >
+          <Icon name="person_pin" filled={locateActive} size={24} />
+          Locate
+        </button>
         <button
           type="button"
           {...holdHandlers}

@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
 import { setRoleCookie } from "@/lib/auth";
 import { getVoterId } from "@/lib/identity";
@@ -9,7 +8,6 @@ import { getRoleForVoter } from "@/lib/roles";
 const ADMIN_HOLD_MS = 3000;
 
 export function useAdminHold(holdMs = ADMIN_HOLD_MS, destination = "/plan/admin") {
-  const router = useRouter();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const firedRef = useRef(false);
   const [holding, setHolding] = useState(false);
@@ -35,9 +33,9 @@ export function useAdminHold(holdMs = ADMIN_HOLD_MS, destination = "/plan/admin"
         const role = getRoleForVoter(voterId, null);
         if (role) setRoleCookie(role);
       }
-      router.push(destination);
+      window.location.href = destination;
     }, holdMs);
-  }, [router, holdMs, destination]);
+  }, [holdMs, destination]);
 
   useEffect(() => cancel, [cancel]);
 
