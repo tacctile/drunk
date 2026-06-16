@@ -8,6 +8,7 @@ export type TopAppBarProps = {
   leadingIconClassName?: string;
   centerSlot?: React.ReactNode;
   actions?: React.ReactNode;
+  position?: "sticky" | "fixed";
 };
 
 export function TopAppBar({
@@ -16,9 +17,10 @@ export function TopAppBar({
   leadingIconClassName = "text-primary",
   centerSlot,
   actions,
+  position = "sticky",
 }: TopAppBarProps) {
   return (
-    <header className="sticky top-0 z-50 flex items-center justify-between h-[56px] px-margin-mobile bg-surface-container-high border-b border-outline-variant shadow-sm">
+    <header className={`${position} top-0 z-50 flex items-center justify-between h-[56px] px-margin-mobile bg-surface-container-high border-b border-outline-variant shadow-sm`}>
       <div className="flex items-center gap-3">
         {leadingIcon && (
           <span className={`material-symbols-outlined ${leadingIconClassName}`}>

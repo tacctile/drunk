@@ -138,3 +138,15 @@ export type { ShutterButtonProps } from "./ShutterButton";
 
 export { ViewfinderFrame } from "./ViewfinderFrame";
 export type { ViewfinderFrameProps } from "./ViewfinderFrame";
+
+export { PhotoGrid } from "./PhotoGrid";
+export type { PhotoGridProps } from "./PhotoGrid";
+
+export { PhotoGridItem } from "./PhotoGridItem";
+export type { PhotoGridItemProps } from "./PhotoGridItem";
+
+export { Fab } from "./Fab";
+export type { FabProps } from "./Fab";
+
+export { StickyDateHeader } from "./StickyDateHeader";
+export type { StickyDateHeaderProps } from "./StickyDateHeader";

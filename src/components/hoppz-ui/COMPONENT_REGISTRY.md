@@ -19,7 +19,7 @@ All components use M3-style design tokens from `tailwind.preset.ts`. Import the 
 | BottomNavItem | `BottomNavItem.tsx` | `icon`, `label?`, `active?`, `filled?`, `activeColor?`, `onClick?` | Individual bottom nav icon with optional label and custom active color |
 | FloatingAction | `FloatingAction.tsx` | `icon?`, `label`, `onClick?`, `visible?` | Fixed floating full-width CTA button |
 | LinkRow | `LinkRow.tsx` | `label`, `onClick?` | Navigation row with text and trailing chevron |
-| TopAppBar | `TopAppBar.tsx` | `title`, `leadingIcon?`, `leadingIconClassName?`, `centerSlot?`, `actions?` | Sticky top header bar with optional leading icon, center slot, and right action slot |
+| TopAppBar | `TopAppBar.tsx` | `title`, `leadingIcon?`, `leadingIconClassName?`, `centerSlot?`, `actions?`, `position?` (sticky/fixed) | Sticky or fixed top header bar with optional leading icon, center slot, and right action slot |
 | ProgressBar | `ProgressBar.tsx` | `value`, `colorClassName?` | Thin horizontal progress bar with customizable fill color |
 | GhostButton | `GhostButton.tsx` | `label`, `colorClassName?`, `onClick?` | Semi-transparent full-width action button |
 | VoteRow | `VoteRow.tsx` | `label`, `count`, `countLabel?`, `percentage`, `highlight?`, `actionLabel?`, `onAction?` | City vote row with label, count, progress bar, and optional action |
@@ -51,3 +51,7 @@ All components use M3-style design tokens from `tailwind.preset.ts`. Import the 
 | GalleryThumbnail | `GalleryThumbnail.tsx` | `src`, `alt?`, `onClick?`, `className?` | Square image preview tile for gallery/camera quick access |
 | ShutterButton | `ShutterButton.tsx` | `onClick?`, `disabled?`, `className?` | Camera capture shutter button with press animation |
 | ViewfinderFrame | `ViewfinderFrame.tsx` | `src?`, `alt?`, `children?`, `className?` | Full-screen image background with overlay content slot for camera UIs |
+| PhotoGrid | `PhotoGrid.tsx` | `columns?` (2/3/4), `gap?`, `children`, `className?` | Grid container for photo gallery layouts with configurable column count |
+| PhotoGridItem | `PhotoGridItem.tsx` | `src?`, `alt?`, `onClick?`, `className?` | Square aspect-ratio photo cell with press-scale feedback for gallery grids |
+| Fab | `Fab.tsx` | `icon`, `ariaLabel`, `filled?`, `onClick?`, `className?` | Circular floating action button anchored bottom-right with shadow and rim light |
+| StickyDateHeader | `StickyDateHeader.tsx` | `label`, `topOffset?`, `className?` | Sticky date section divider with backdrop blur, pins below the top app bar |
