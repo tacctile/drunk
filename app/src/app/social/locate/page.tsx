@@ -15,6 +15,7 @@ import { Dialog } from "@/components/Dialog";
 import { Icon } from "@/components/Icon";
 import { NamePrompt } from "@/components/NamePrompt";
 import { Switch } from "@/components/Switch";
+import { Card, ActionButton, SettingsToggleRow } from "@hoppz-ui";
 import type { Coords } from "@/data/types";
 import { useGroupData } from "@/hooks/useGroupData";
 import { useLocations, type LocationsValue } from "@/hooks/useLocations";
@@ -486,26 +487,20 @@ function LocationOptionsModal({ onClose, locations, voters, myId }: LocationOpti
               {others.map((person) => {
                 const isHidden = pendingMuted.includes(person.id);
                 return (
-                  <div key={person.id} className="flex min-h-11 items-center gap-3">
-                    <span
-                      aria-hidden="true"
-                      className="flex-none rounded-full"
-                      style={{ width: 20, height: 20, background: person.color }}
-                    />
-                    <span className="min-w-0 flex-1 truncate text-base text-ink">
-                      Hide from {person.label}
-                    </span>
-                    <Switch
-                      checked={isHidden}
-                      disabled={busy}
-                      onToggle={() =>
-                        setPendingMuted((prev) =>
-                          isHidden ? prev.filter((id) => id !== person.id) : [...prev, person.id],
-                        )
-                      }
-                      ariaLabel={`Hide from ${person.label}`}
-                    />
-                  </div>
+                  <SettingsToggleRow
+                    key={person.id}
+                    icon="visibility_off"
+                    title={`Hide from ${person.label}`}
+                    iconBgClassName="bg-error/10"
+                    iconClassName="text-error"
+                    checked={isHidden}
+                    disabled={busy}
+                    onChange={() =>
+                      setPendingMuted((prev) =>
+                        isHidden ? prev.filter((id) => id !== person.id) : [...prev, person.id],
+                      )
+                    }
+                  />
                 );
               })}
             </div>
@@ -541,16 +536,14 @@ function LocateGate() {
   return (
     <>
       <div className="mx-auto flex max-w-2xl justify-center px-4 pt-16">
-        <div className="card flex w-full max-w-sm flex-col items-center gap-3 text-center">
+        <Card className="flex w-full max-w-sm flex-col items-center gap-3 text-center">
           <Icon name="person_pin" size={40} className="text-ink-dim" />
           <h1 className="text-title font-bold text-ink">Identity required</h1>
           <p className="text-meta font-normal text-ink-muted">
             Create your identity to share and see locations.
           </p>
-          <button type="button" className="btn-accent w-full" onClick={() => setOpen(true)}>
-            Create identity
-          </button>
-        </div>
+          <ActionButton variant="filled" label="Create identity" onClick={() => setOpen(true)} fullWidth />
+        </Card>
       </div>
       <NamePrompt open={open} flow="new" onCancel={() => setOpen(false)} onDone={() => setOpen(false)} />
     </>
@@ -622,10 +615,7 @@ function LocateScreen() {
       {/* The single bottom control, between the map and the bottom nav. */}
       <div className="flex-none px-4 py-2">
         <div className="mx-auto max-w-2xl">
-          <button type="button" className="btn-ghost w-full" onClick={() => setOptionsOpen(true)}>
-            <Icon name="tune" size={20} />
-            Location Options
-          </button>
+          <ActionButton variant="ghost" label="Location Options" icon="tune" onClick={() => setOptionsOpen(true)} fullWidth />
         </div>
       </div>
 

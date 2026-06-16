@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { cityById } from "@/data/cities";
 import type { VenueKind } from "@/data/types";
 import { useGroupData } from "@/hooks/useGroupData";
@@ -13,11 +14,11 @@ import { ActionBar } from "@/components/ActionBar";
 import { CityList, loadSort, type CitySort } from "@/components/CityList";
 import { Stars } from "@/components/Stars";
 import { CITY_DETAIL_HEADER_HEIGHT, CityMap, type CityMapHandle } from "@/components/CityMap";
-import { Icon } from "@/components/Icon";
 import { useNameGate } from "@/components/NamePrompt";
 import { ProfileAvatar } from "@/components/ProfileAvatar";
 import { ProfileOverlay } from "@/components/ProfileOverlay";
 import { VenueSheet } from "@/components/VenueSheet";
+import { TopAppBar, TabBar, PreferButton, TagBadge, ActionButton } from "@hoppz-ui";
 
 const TABS: { kind: VenueKind; label: string }[] = [
   { kind: "hotel", label: "Hotels" },
@@ -39,6 +40,7 @@ export function CityDetail({ cityId }: { cityId: string }) {
   const votingLocked = effectiveStatus === "upcoming" || effectiveStatus === "active";
 
   const [tab, setTab] = useState<VenueKind>("hotel");
+  const router = useRouter();
   const [pinned, setPinned] = useState<Venue | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [listSort, setListSort] = useState<CitySort>("distance");
@@ -88,45 +90,24 @@ export function CityDetail({ cityId }: { cityId: string }) {
       </aside>
 
       <div className="min-w-0">
-        {/* Sticky header — back, city + state, profile avatar. Fully opaque,
-            always. Voting lives in the ActionBar CTA below. */}
-        <header className="sticky top-0 z-30 grid h-14 grid-cols-[44px_1fr_44px] items-center border-b bg-bg px-2">
-          <Link
-            href="/plan/cities"
-            aria-label="Back to cities"
-            className="flex h-11 w-11 items-center justify-center rounded-btn text-ink-muted transition hover:bg-raised hover:text-ink"
-          >
-            <Icon name="arrow_back" size={22} />
-          </Link>
-          <div className="flex items-baseline justify-center gap-1.5 overflow-hidden">
-            <span className="truncate text-title font-bold text-ink">{city.name}</span>
-            <span className="label flex-none">{city.state}</span>
-          </div>
-          <ProfileAvatar onClick={() => setProfileOpen(true)} />
-        </header>
+        <TopAppBar
+          title={city.name}
+          subtitle={city.state}
+          leadingIcon="arrow_back"
+          onLeadingAction={() => router.push("/plan/cities")}
+          actions={<ProfileAvatar onClick={() => setProfileOpen(true)} />}
+          position="sticky"
+        />
 
         <CityMap ref={mapRef} city={city} venues={venues} onPinTap={setPinned} />
 
-        {/* Hotels / Bars / Food */}
-        <div className="sticky z-20 flex h-11 border-b bg-surface" style={{ top: CITY_DETAIL_HEADER_HEIGHT }}>
-          {TABS.map(({ kind, label }) => {
-            const active = tab === kind;
-            return (
-              <button
-                key={kind}
-                type="button"
-                onClick={() => setTab(kind)}
-                aria-pressed={active}
-                className={`relative h-11 flex-1 text-base font-semibold transition ${
-                  active ? "text-accent" : "text-ink-muted hover:text-ink"
-                }`}
-              >
-                {label}
-                {active && <span className="absolute inset-x-0 bottom-0 h-0.5 bg-accent" />}
-              </button>
-            );
-          })}
-        </div>
+        <TabBar
+          tabs={TABS.map((t) => ({ id: t.kind, label: t.label }))}
+          activeTab={tab}
+          onTabChange={(id) => setTab(id as VenueKind)}
+          sticky
+          stickyOffset={CITY_DETAIL_HEADER_HEIGHT}
+        />
 
         {!ready ? (
           <p className="px-4 py-10 text-center text-meta font-normal text-ink-dim">Loading…</p>
@@ -170,64 +151,35 @@ export function CityDetail({ cityId }: { cityId: string }) {
                         </span>
                       )}
                       {(tab === "bar" ? venue.has_food : venue.has_bar) && (
-                        <span className="mt-1.5 inline-flex rounded-full bg-raised px-2.5 py-0.5 text-meta font-normal text-ink-muted">
-                          {tab === "bar" ? "Also serves food" : "Full bar"}
+                        <span className="mt-1.5">
+                          <TagBadge label={tab === "bar" ? "Also serves food" : "Full bar"} variant="tertiary" />
                         </span>
                       )}
                     </>
                   )}
                 </button>
                 {tab === "hotel" && (
-                  <button
-                    type="button"
-                    onClick={() => toggleHotel(venue)}
-                    className="flex h-11 w-11 flex-none flex-col items-center justify-center gap-1"
-                    aria-label={myHotel === venue.id ? "Remove hotel preference" : "Prefer this hotel"}
-                  >
-                    <Icon
-                      name="star"
-                      size={20}
-                      filled={myHotel === venue.id}
-                      className={myHotel === venue.id ? "text-accent" : "text-ink-dim"}
+                  <div className="flex-none">
+                    <PreferButton
+                      preferred={myHotel === venue.id}
+                      onClick={() => toggleHotel(venue)}
                     />
-                    {myHotel !== venue.id && (
-                      <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-dim">
-                        Prefer
-                      </span>
-                    )}
-                  </button>
+                  </div>
                 )}
               </li>
             ))}
           </ul>
         )}
 
-        {/* Vote CTA — replaces the sort pill on this page only */}
         <ActionBar>
           {votingLocked ? (
-            <button
-              type="button"
-              disabled
-              className="h-11 w-full rounded-btn border bg-raised text-base font-bold text-ink-dim opacity-60 shadow-overlay"
-            >
-              Voting locked
-            </button>
+            <div className="pointer-events-none opacity-60">
+              <ActionButton variant="filled" label="Voting locked" fullWidth />
+            </div>
           ) : voted ? (
-            <button
-              type="button"
-              onClick={toggleVote}
-              className="h-11 w-full rounded-btn bg-accent text-base font-bold text-bg shadow-overlay transition hover:brightness-110"
-            >
-              Your pick — {city.name} ✓
-            </button>
+            <ActionButton variant="filled" label={`Your pick — ${city.name} ✓`} onClick={toggleVote} fullWidth />
           ) : (
-            <button
-              type="button"
-              onClick={toggleVote}
-              className="h-11 w-full rounded-btn border bg-raised text-base font-bold text-accent shadow-overlay transition hover:border-border-strong"
-            >
-              Vote for {city.name}
-            </button>
+            <ActionButton variant="ghost" label={`Vote for ${city.name}`} onClick={toggleVote} fullWidth />
           )}
         </ActionBar>
 

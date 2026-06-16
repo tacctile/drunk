@@ -8,7 +8,13 @@ import { useTripData } from "@/hooks/useTripData";
 import { useVotes } from "@/hooks/useVotes";
 import { lsGet, lsSet } from "@/lib/storage";
 import { useNameGate } from "./NamePrompt";
-import { Icon } from "./Icon";
+import {
+  ColumnHeaders,
+  GradeBadge,
+  SectionLabel,
+  VoteButton,
+  WalkScoreDisplay,
+} from "@hoppz-ui";
 
 export type CitySort = "distance" | "walk" | "name" | "state";
 
@@ -53,25 +59,13 @@ const STATE_NAMES: Record<string, string> = {
   SD: "South Dakota",
 };
 
-// Static class lookups so Tailwind sees every grade utility.
-const GRADE_TEXT: Record<string, string> = {
-  a: "text-grade-a",
-  b: "text-grade-b",
-  c: "text-grade-c",
-  d: "text-grade-d",
-  f: "text-grade-f",
-};
-const GRADE_BADGE: Record<string, string> = {
-  a: "bg-grade-a/15 text-grade-a",
-  b: "bg-grade-b/15 text-grade-b",
-  c: "bg-grade-c/15 text-grade-c",
-  d: "bg-grade-d/15 text-grade-d",
-  f: "bg-grade-f/15 text-grade-f",
-};
+import type { GradeBadgeColorScheme } from "@hoppz-ui";
 
-function gradeKey(grade: string): string {
+function gradeColorScheme(grade: string): GradeBadgeColorScheme {
   const k = grade.charAt(0).toLowerCase();
-  return k in GRADE_TEXT ? k : "f";
+  if (k === "a" || k === "b") return "secondary";
+  if (k === "c") return "tertiary";
+  return "error";
 }
 
 interface CityRowProps {
@@ -83,7 +77,7 @@ interface CityRowProps {
 }
 
 function CityRow({ city, active, voted, locked, onVote }: CityRowProps) {
-  const k = gradeKey(city.walkGrade);
+  const colorScheme = gradeColorScheme(city.walkGrade);
 
   return (
     <li className={`border-b ${active ? "bg-raised" : ""}`}>
@@ -101,11 +95,8 @@ function CityRow({ city, active, voted, locked, onVote }: CityRowProps) {
               {city.district}
             </span>
           </span>
-          <span className="flex w-[96px] flex-none items-center justify-center gap-1.5">
-            <span className={`text-display ${GRADE_TEXT[k]}`}>{city.walkScore}</span>
-            <span className={`rounded-full px-2 py-0.5 text-meta font-bold ${GRADE_BADGE[k]}`}>
-              {city.walkGrade}
-            </span>
+          <span className="flex w-[96px] flex-none items-center justify-center">
+            <WalkScoreDisplay score={city.walkScore} grade={city.walkGrade} colorScheme={colorScheme} />
           </span>
           <span className="w-[72px] flex-none text-right">
             <span className="block text-title font-bold text-ink">{city.miles} mi</span>
@@ -114,44 +105,17 @@ function CityRow({ city, active, voted, locked, onVote }: CityRowProps) {
             </span>
           </span>
         </Link>
-        <button
-          type="button"
-          aria-label={locked ? "Voting locked" : voted ? `Remove your vote for ${city.name}` : `Vote for ${city.name}`}
-          aria-pressed={voted}
-          disabled={locked}
-          onClick={() => onVote(city, voted)}
-          className={`flex h-11 w-11 flex-none items-center justify-center rounded-btn transition ${
-            locked
-              ? "opacity-40 pointer-events-none"
-              : voted
-                ? "text-accent"
-                : "text-ink-dim hover:text-ink-muted"
-          }`}
-        >
-          <Icon name="how_to_vote" filled={voted} size={22} />
-        </button>
+        <span className={locked ? "opacity-40 pointer-events-none" : ""}>
+          <VoteButton
+            voted={voted}
+            onClick={(e) => {
+              e.stopPropagation();
+              onVote(city, voted);
+            }}
+          />
+        </span>
       </div>
     </li>
-  );
-}
-
-/**
- * Sticky column labels for the index — rides just below the 56px wordmark
- * bar, fully opaque, and mirrors the row grid exactly (flex-1 name column,
- * 96px walkability, 72px distance, 44px vote, same gaps and padding).
- */
-function ColumnHeader() {
-  return (
-    <div className="sticky top-14 z-10 flex h-9 items-center gap-2 border-b bg-bg pl-4 pr-2">
-      <div className="flex min-w-0 flex-1 items-center gap-3">
-        <span className="label min-w-0 flex-1 !text-ink-dim">City</span>
-        <span className="label w-[96px] flex-none whitespace-nowrap text-center !text-ink-dim">
-          Walkability
-        </span>
-        <span className="label w-[72px] flex-none text-right !text-ink-dim">Distance</span>
-      </div>
-      <span className="label w-11 flex-none text-center !text-ink-dim">Vote</span>
-    </div>
   );
 }
 
@@ -186,10 +150,23 @@ export function CityList({ sort, activeCityId, withHeader = false }: CityListPro
     />
   );
 
+  const columnHeader = withHeader && (
+    <ColumnHeaders
+      columns={[
+        { label: "City", width: "35%", align: "left" },
+        { label: "Walkability", width: "20%", align: "center" },
+        { label: "Distance", width: "25%", align: "right" },
+        { label: "Vote", width: "15%", align: "right" },
+      ]}
+      sticky
+      topOffset={56}
+    />
+  );
+
   if (sort !== "state") {
     return (
       <>
-        {withHeader && <ColumnHeader />}
+        {columnHeader}
         <ul>{sorted.map(row)}</ul>
         {prompt}
       </>
@@ -205,12 +182,12 @@ export function CityList({ sort, activeCityId, withHeader = false }: CityListPro
 
   return (
     <div>
-      {withHeader && <ColumnHeader />}
+      {columnHeader}
       {groups.map((group) => (
         <section key={group.state}>
-          <h2 className="label border-b bg-bg px-4 pb-2 pt-5">
-            {STATE_NAMES[group.state] ?? group.state}
-          </h2>
+          <div className="border-b bg-bg px-4 pb-2 pt-5">
+            <SectionLabel>{STATE_NAMES[group.state] ?? group.state}</SectionLabel>
+          </div>
           <ul>{group.cities.map(row)}</ul>
         </section>
       ))}

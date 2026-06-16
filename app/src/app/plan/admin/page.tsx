@@ -13,9 +13,19 @@ import { Dialog } from "@/components/Dialog";
 import { FieldError } from "@/components/FieldError";
 import { Icon } from "@/components/Icon";
 import { RoleBadge } from "@/components/RoleBadge";
-import { Switch } from "@/components/Switch";
 import { TripResetsPanel } from "@/components/TripResetsPanel";
 import { TripSetupPanel } from "@/components/TripSetupPanel";
+import {
+  TopAppBar,
+  SectionLabel,
+  Card,
+  GlassIconButton,
+  SettingsToggleRow,
+  TextField,
+  PinInput,
+  StatTile,
+  ActionButton,
+} from "@hoppz-ui";
 import { cityById } from "@/data/cities";
 import { useGroupData } from "@/hooks/useGroupData";
 import { useLocations } from "@/hooks/useLocations";
@@ -80,29 +90,6 @@ async function countRows(table: string, onlyActive = false): Promise<number | nu
   }
 }
 
-/** 44px icon button used for the pencil / delete / refresh actions. */
-function IconButton({
-  name,
-  label,
-  onClick,
-  className = "text-ink-dim hover:text-ink",
-}: {
-  name: string;
-  label: string;
-  onClick: () => void;
-  className?: string;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      onClick={onClick}
-      className={`flex h-11 w-11 flex-none items-center justify-center rounded-btn transition hover:bg-raised ${className}`}
-    >
-      <Icon name={name} size={22} />
-    </button>
-  );
-}
 
 interface EditUserDialogProps {
   voter: AdminVoter;
@@ -184,56 +171,40 @@ function EditUserDialog({ voter, onClose, onChanged }: EditUserDialogProps) {
         className="flex flex-col gap-3"
       >
         <div className="flex flex-col gap-1">
-          <input
-            className="input"
-            placeholder="First name"
-            autoComplete="off"
-            autoCapitalize="words"
+          <TextField
+            label="First name"
             value={first}
+            onChange={setFirst}
             maxLength={MAX_FIRST_NAME_LENGTH}
-            onChange={(e) => setFirst(e.target.value)}
-            aria-label="First name"
+            placeholder="First name"
           />
           {errors.first && <FieldError>{errors.first}</FieldError>}
         </div>
         <div className="flex flex-col gap-1">
-          <input
-            className="input"
-            placeholder="Initial"
-            autoComplete="off"
-            autoCapitalize="characters"
+          <TextField
+            label="Last initial"
             value={initial}
+            onChange={(v) => setInitial(v.replace(/[^A-Za-z]/g, "").slice(0, 1).toUpperCase())}
             maxLength={1}
-            onChange={(e) =>
-              setInitial(e.target.value.replace(/[^A-Za-z]/g, "").slice(0, 1).toUpperCase())
-            }
-            aria-label="Last initial"
+            placeholder="Initial"
           />
           {errors.initial && <FieldError>{errors.initial}</FieldError>}
         </div>
         <div className="flex flex-col gap-1">
-          <input
-            className="input"
-            type="text"
-            inputMode="numeric"
-            autoComplete="off"
-            placeholder="New PIN (blank keeps current)"
+          <PinInput
             value={newPin}
+            onChange={(v) => setNewPin(v.replace(/\D/g, "").slice(0, 2))}
             maxLength={2}
-            onChange={(e) => setNewPin(e.target.value.replace(/\D/g, "").slice(0, 2))}
-            aria-label="New 2-digit PIN"
+            placeholder="••"
+            hint="New PIN (blank keeps current)"
           />
           {newPin && (
-            <input
-              className="input"
-              type="text"
-              inputMode="numeric"
-              autoComplete="off"
-              placeholder="Confirm new PIN"
+            <PinInput
               value={confirmPin}
+              onChange={(v) => setConfirmPin(v.replace(/\D/g, "").slice(0, 2))}
               maxLength={2}
-              onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, 2))}
-              aria-label="Confirm new 2-digit PIN"
+              placeholder="••"
+              hint="Confirm new PIN"
             />
           )}
           {errors.pin && <FieldError>{errors.pin}</FieldError>}
@@ -409,23 +380,16 @@ export default function AdminPage() {
 
   return (
     <>
-      <header className="sticky top-0 z-30 border-b bg-bg">
-        <div className="mx-auto flex h-14 max-w-2xl items-center gap-1 px-4">
-          <button
-            type="button"
-            onClick={() => router.push("/plan")}
-            aria-label="Back"
-            className="-ml-2 flex h-11 w-11 flex-none items-center justify-center text-ink-muted transition hover:text-ink"
-          >
-            <Icon name="arrow_back" size={22} />
-          </button>
-          <h1 className="text-title font-bold text-ink">Admin</h1>
-        </div>
-      </header>
+      <TopAppBar
+        title="Admin"
+        leadingIcon="arrow_back"
+        onLeadingAction={() => router.push("/plan")}
+        position="sticky"
+      />
 
       <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 pb-32 pt-4">
         <section className="flex flex-col gap-3">
-          <h2 className="label">Registered users</h2>
+          <SectionLabel>Registered users</SectionLabel>
           {voters.length === 0 &&
             (wiped ? (
               <p className="py-4 text-center text-base text-ink-muted" role="status">
@@ -437,12 +401,7 @@ export default function AdminPage() {
           {voters.map((voter) => {
             const city = lastVoted(voter.voter_id);
             return (
-              <div
-                key={voter.voter_id}
-                className={`rounded-card border bg-surface p-4 ${
-                  voter.is_active ? "" : "opacity-60"
-                }`}
-              >
+              <Card key={voter.voter_id} className={voter.is_active ? "" : "opacity-60"}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
@@ -457,32 +416,31 @@ export default function AdminPage() {
                     <p className="mt-1 text-meta font-normal text-ink-dim">
                       {city ? `Last voted: ${city}` : "No vote"}
                     </p>
-                    <div className="mt-3 flex items-center gap-2">
-                      <Switch
+                    <div className="mt-3">
+                      <SettingsToggleRow
+                        icon={voter.is_active ? "check_circle" : "cancel"}
+                        title={voter.is_active ? "Active" : "Disabled"}
+                        iconBgClassName={voter.is_active ? "bg-green/10" : "bg-error/10"}
+                        iconClassName={voter.is_active ? "text-green" : "text-red"}
                         checked={voter.is_active}
-                        onToggle={() => void toggleUserActive(voter.voter_id, !voter.is_active)}
-                        ariaLabel={voter.is_active ? "Disable user" : "Enable user"}
+                        onChange={() => void toggleUserActive(voter.voter_id, !voter.is_active)}
                       />
-                      <span className={`text-[12px] font-semibold ${voter.is_active ? "text-green" : "text-red"}`}>
-                        {voter.is_active ? "Active" : "Disabled"}
-                      </span>
                     </div>
                   </div>
-                  <div className="flex flex-none">
-                    <IconButton
-                      name="edit"
-                      label={`Edit ${voterLabel(voter)}`}
+                  <div className="flex flex-none gap-1">
+                    <GlassIconButton
+                      icon="edit"
+                      ariaLabel={`Edit ${voterLabel(voter)}`}
                       onClick={() => setEditing(voter)}
                     />
-                    <IconButton
-                      name="delete"
-                      label={`Delete ${voterLabel(voter)}`}
-                      className="text-red"
+                    <GlassIconButton
+                      icon="delete"
+                      ariaLabel={`Delete ${voterLabel(voter)}`}
                       onClick={() => setDeleting(voter)}
                     />
                   </div>
                 </div>
-              </div>
+              </Card>
             );
           })}
         </section>
@@ -495,29 +453,31 @@ export default function AdminPage() {
 
         <section className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <h2 className="label">Data health</h2>
-            <IconButton name="refresh" label="Refresh counts" onClick={() => void refreshStats()} />
+            <SectionLabel>Data health</SectionLabel>
+            <GlassIconButton icon="refresh" ariaLabel="Refresh counts" onClick={() => void refreshStats()} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             {statCells.map((cell) => (
-              <div key={cell.label} className="rounded-card border bg-surface p-4">
-                <p className="text-display text-ink">{cell.value ?? "—"}</p>
-                <p className="mt-1 text-meta font-normal text-ink-muted">{cell.label}</p>
-              </div>
+              <StatTile
+                key={cell.label}
+                icon="database"
+                value={String(cell.value ?? "—")}
+                label={cell.label}
+                className="w-full"
+              />
             ))}
           </div>
         </section>
 
         <section className="flex flex-col gap-3">
-          <h2 className="label text-red">Danger zone</h2>
-          <button
-            type="button"
+          <SectionLabel>Danger zone</SectionLabel>
+          <ActionButton
+            variant="filled"
+            label="Wipe All Users"
+            icon="warning"
             onClick={() => setWipeOpen(true)}
-            className="btn w-full border border-red bg-raised text-red"
-          >
-            <Icon name="warning" size={20} />
-            Wipe All Users
-          </button>
+            fullWidth
+          />
         </section>
       </div>
 
@@ -571,16 +531,11 @@ export default function AdminPage() {
           <p className="text-base font-normal text-ink-muted">
             Type DELETE in the field below to confirm.
           </p>
-          <input
-            className="input"
-            placeholder="Type DELETE to confirm"
-            autoCapitalize="characters"
-            autoCorrect="off"
-            autoComplete="off"
-            spellCheck={false}
+          <TextField
+            label="Confirmation"
             value={wipeText}
-            onChange={(e) => setWipeText(e.target.value)}
-            aria-label="Type DELETE to confirm"
+            onChange={setWipeText}
+            placeholder="Type DELETE to confirm"
           />
           <button
             type="button"

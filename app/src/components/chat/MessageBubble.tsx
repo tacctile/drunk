@@ -8,6 +8,7 @@ import {
   groupReactions,
   type MessageRow,
 } from "@/lib/chat";
+import { ChatBubble, ReactionPill, type ChatReaction } from "@hoppz-ui";
 
 function SenderAvatar({
   name,
@@ -100,6 +101,19 @@ export function MessageBubble({
     ? getVoter(replyMsg.voter_id)
     : null;
 
+  const senderInitials = voter.name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  const reactions: ChatReaction[] = groupedReactions.map((g) => ({
+    emoji: g.emoji,
+    count: g.count,
+    active: g.voterIds.includes(voterId),
+  }));
+
   return (
     <div
       ref={(node) => {
@@ -110,13 +124,6 @@ export function MessageBubble({
         grouped ? "mt-0.5" : "mt-3"
       } ${highlighted ? "rounded-card bg-accent/10 transition-colors duration-[800ms]" : ""}`}
     >
-      {!grouped && !isOwn && (
-        <div className="mb-1 flex items-center gap-1.5">
-          <SenderAvatar name={voter.name} color={voter.color} avatarUrl={voter.avatarUrl} />
-          <span className="text-meta text-ink-muted">{voter.name}</span>
-        </div>
-      )}
-
       {/* Bubble + desktop reply button wrapper */}
       <div
         className={`group relative flex items-center gap-1 max-w-[75%] ${
@@ -130,11 +137,7 @@ export function MessageBubble({
       >
         <div
           ref={bubbleRef}
-          className={`px-3 py-2 ${
-            isOwn
-              ? "rounded-card rounded-br-none bg-accent text-bg"
-              : "rounded-card rounded-bl-none bg-raised text-ink"
-          } transition-transform duration-200`}
+          className="transition-transform duration-200"
           style={{
             transform: nudged ? "translateX(8px)" : undefined,
           }}
@@ -145,7 +148,7 @@ export function MessageBubble({
           onMouseUp={onMouseUp}
           onContextMenu={onContextMenu}
         >
-          {/* Reply quote preview */}
+          {/* Reply quote preview — ChatBubble doesn't have a reply slot */}
           {msg.reply_to_id && (
             <button
               type="button"
@@ -173,30 +176,20 @@ export function MessageBubble({
             </button>
           )}
 
-          {msg.image_url && (
-            <button
-              type="button"
-              onClick={() => onImageExpand(msg.image_url!)}
-              className="block"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={msg.image_url}
-                alt=""
-                loading="lazy"
-                className="block max-h-[300px] max-w-full rounded-card object-contain"
-                style={{ aspectRatio: "4/3" }}
-                onLoad={(e) => {
-                  (e.currentTarget as HTMLImageElement).style.aspectRatio = "";
-                }}
-              />
-            </button>
-          )}
-          {msg.content && (
-            <p className={`text-base${msg.image_url ? " pt-1" : ""}`}>
-              {msg.content}
-            </p>
-          )}
+          <ChatBubble
+            variant={isOwn ? "own" : "other"}
+            text={msg.content ?? undefined}
+            imageUrl={msg.image_url ?? undefined}
+            senderName={!isOwn ? voter.name : undefined}
+            senderInitials={senderInitials}
+            senderColor={voter.color}
+            senderAvatarUrl={voter.avatarUrl ?? undefined}
+            timestamp={isLast ? formatMessageTime(msg.created_at) : undefined}
+            grouped={grouped}
+            reactions={reactions.length > 0 ? reactions : undefined}
+            onReactionClick={onReactionTap}
+            onClick={msg.image_url ? () => onImageExpand(msg.image_url!) : undefined}
+          />
         </div>
 
         {/* Desktop reply button — appears on hover */}
@@ -211,46 +204,7 @@ export function MessageBubble({
         )}
       </div>
 
-      {/* Reaction summary row */}
-      {groupedReactions.length > 0 && (
-        <div
-          className={`flex min-h-[28px] flex-wrap gap-1 mt-0.5 ${
-            isOwn ? "justify-end" : "justify-start"
-          }`}
-        >
-          {groupedReactions.map((g) => {
-            const isOwnReaction = g.voterIds.includes(voterId);
-            return (
-              <button
-                key={g.emoji}
-                type="button"
-                onClick={() => onReactionTap(g.emoji)}
-                className={`flex items-center gap-0.5 rounded-full bg-surface-raised px-2 py-0.5 text-[13px] ${
-                  isOwnReaction
-                    ? "border border-accent"
-                    : "border border-transparent"
-                }`}
-              >
-                <span>{g.emoji}</span>
-                <span className="text-ink-muted">{g.count}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Timestamp */}
-      {isLast && (
-        <span
-          className={`mt-0.5 text-[11px] font-normal text-ink-dim ${
-            isOwn ? "text-right" : "text-left"
-          }`}
-        >
-          {formatMessageTime(msg.created_at)}
-        </span>
-      )}
-
-      {/* Read receipts */}
+      {/* Read receipts — custom, uses Wave 1 Avatar */}
       {msgReads.length > 0 && (
         <div
           className={`mt-0.5 flex items-center ${

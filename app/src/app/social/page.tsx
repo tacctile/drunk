@@ -9,6 +9,12 @@ import { BottomSheet } from "@/components/BottomSheet";
 import { ImageViewer } from "@/components/ImageViewer";
 import { Toast } from "@/components/Toast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import {
+  DayDivider as HoppzDayDivider,
+  ChatInputBar,
+  FloatingPill,
+  PersonRow,
+} from "@hoppz-ui";
 import { useGroupData } from "@/hooks/useGroupData";
 import { useChat } from "@/hooks/useChat";
 import {
@@ -41,17 +47,6 @@ function SenderAvatar({
   );
 }
 
-function DayDivider({ iso }: { iso: string }) {
-  return (
-    <div className="flex items-center gap-3 py-3">
-      <div className="h-px flex-1 bg-border" />
-      <span className="text-meta font-normal text-ink-dim">
-        {formatDayDivider(iso)}
-      </span>
-      <div className="h-px flex-1 bg-border" />
-    </div>
-  );
-}
 
 export default function ChatPage() {
   return (
@@ -462,7 +457,7 @@ function ChatInner() {
       const isOwn = msg.voter_id === voterId;
 
       if (prev && isDifferentDay(prev.created_at, msg.created_at)) {
-        elements.push(<DayDivider key={`day-${msg.id}`} iso={msg.created_at} />);
+        elements.push(<HoppzDayDivider key={`day-${msg.id}`} label={formatDayDivider(msg.created_at)} />);
       }
 
       const grouped = prev ? shouldGroup(prev, msg) : false;
@@ -614,16 +609,17 @@ function ChatInner() {
 
       {showNewPill && (
         <div className="pointer-events-none flex justify-center pb-2">
-          <button
-            type="button"
-            onClick={() => {
-              scrollToBottom("smooth");
-              setShowNewPill(false);
-            }}
-            className="pointer-events-auto rounded-full bg-accent px-4 py-1.5 text-meta font-semibold text-bg shadow-overlay"
-          >
-            New message ↓
-          </button>
+          <div className="pointer-events-auto">
+            <FloatingPill
+              variant="primary"
+              icon="arrow_downward"
+              label="New message"
+              onClick={() => {
+                scrollToBottom("smooth");
+                setShowNewPill(false);
+              }}
+            />
+          </div>
         </div>
       )}
 
@@ -664,10 +660,10 @@ function ChatInner() {
         </div>
       )}
 
-      <div className="flex-none border-t border-border bg-bg py-0 pb-[env(safe-area-inset-bottom)]">
+      <div className="flex-none">
         {/* Reply preview bar */}
         <div
-          className="overflow-hidden transition-all duration-[160ms] ease-out"
+          className="overflow-hidden transition-all duration-[160ms] ease-out border-t border-border bg-bg"
           style={{ maxHeight: replyingTo ? 64 : 0 }}
         >
           {replyingTo && (
@@ -693,61 +689,28 @@ function ChatInner() {
           )}
         </div>
 
-        <div className="flex items-center gap-1 py-2 px-2">
-          <button
-            type="button"
-            onClick={() => router.push("/social/camera?from=chat")}
-            aria-label="Take a photo"
-            className="flex h-10 w-10 flex-none items-center justify-center text-ink-muted"
-          >
-            <Icon name="photo_camera" size={24} />
-          </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,video/*,.heic,.heif,.webp"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) void handleImageUpload(file);
+            e.target.value = "";
+          }}
+        />
 
-          <textarea
-            ref={textareaRef}
-            value={inputValue}
-            onChange={(e) => {
-              setInputValue(e.target.value);
-              handleInput();
-            }}
-            onKeyDown={handleKeyDown}
-            placeholder="Message..."
-            rows={1}
-            className="input flex-1 resize-none !h-auto min-h-[36px] max-h-[96px] overflow-y-auto py-2"
-          />
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*,video/*,.heic,.heif,.webp"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) void handleImageUpload(file);
-              e.target.value = "";
-            }}
-          />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            aria-label="Upload an image"
-            className="flex h-10 w-10 flex-none items-center justify-center text-ink-muted"
-          >
-            <Icon name="add_photo_alternate" size={24} />
-          </button>
-
-          <button
-            type="button"
-            onClick={handleSend}
-            disabled={!hasContent}
-            aria-label="Send message"
-            className={`flex h-10 w-10 flex-none items-center justify-center disabled:opacity-50 ${
-              hasContent ? "text-accent" : "text-ink-dim"
-            }`}
-          >
-            <Icon name="send" size={22} />
-          </button>
-        </div>
+        <ChatInputBar
+          placeholder="Message..."
+          value={inputValue}
+          onChange={setInputValue}
+          onSend={handleSend}
+          leadingActions={[
+            { icon: "photo_camera", ariaLabel: "Take a photo", onClick: () => router.push("/social/camera?from=chat") },
+            { icon: "add_photo_alternate", ariaLabel: "Upload an image", onClick: () => fileInputRef.current?.click() },
+          ]}
+        />
       </div>
 
       {/* Seen-by bottom sheet */}
@@ -773,23 +736,14 @@ function ChatInner() {
           {seenByReads.map((r) => {
             const v = getVoter(r.voter_id);
             return (
-              <div
+              <PersonRow
                 key={r.voter_id}
-                className="flex h-11 items-center gap-3"
-              >
-                <SenderAvatar name={v.name} color={v.color} avatarUrl={v.avatarUrl} />
-                <span className="min-w-0 flex-1 truncate text-base text-ink">
-                  {v.name}
-                </span>
-                <span className="text-meta text-ink-dim">
-                  at{" "}
-                  {new Date(r.read_at).toLocaleTimeString("en-US", {
-                    hour: "numeric",
-                    minute: "2-digit",
-                    hour12: true,
-                  })}
-                </span>
-              </div>
+                initials={v.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
+                name={v.name}
+                subtitle={`at ${new Date(r.read_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}`}
+                avatarColor={v.color}
+                avatarUrl={v.avatarUrl ?? undefined}
+              />
             );
           })}
         </div>

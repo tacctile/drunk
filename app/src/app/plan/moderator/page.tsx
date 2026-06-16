@@ -10,6 +10,7 @@ import { Icon } from "@/components/Icon";
 import { RoleBadge } from "@/components/RoleBadge";
 import { TripResetsPanel } from "@/components/TripResetsPanel";
 import { TripSetupPanel } from "@/components/TripSetupPanel";
+import { TopAppBar, Card, SectionLabel, ActionButton, TextField } from "@hoppz-ui";
 import { useGroupData } from "@/hooks/useGroupData";
 import { useLocations } from "@/hooks/useLocations";
 import { useTripData } from "@/hooks/useTripData";
@@ -172,7 +173,7 @@ function CrewCard({ voter, tripStatus, onTripStatusChange, onNameSaved }: CrewCa
   };
 
   return (
-    <div className="card mb-3">
+    <Card className="mb-3">
       <div className="flex items-center gap-3">
         <Avatar
           voter={{
@@ -199,22 +200,18 @@ function CrewCard({ voter, tripStatus, onTripStatusChange, onNameSaved }: CrewCa
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <button
-          type="button"
+        <ActionButton
+          variant="ghost"
+          label="Edit Name"
+          icon="edit"
           onClick={() => { setEditNameOpen(!editNameOpen); setResetPinOpen(false); }}
-          className="btn-ghost h-9 text-meta"
-        >
-          <Icon name="edit" size={16} />
-          Edit Name
-        </button>
-        <button
-          type="button"
+        />
+        <ActionButton
+          variant="ghost"
+          label="Reset PIN"
+          icon="lock_reset"
           onClick={() => { setResetPinOpen(!resetPinOpen); setEditNameOpen(false); }}
-          className="btn-ghost h-9 text-meta"
-        >
-          <Icon name="lock_reset" size={16} />
-          Reset PIN
-        </button>
+        />
       </div>
 
       <div className="mt-3">
@@ -225,50 +222,29 @@ function CrewCard({ voter, tripStatus, onTripStatusChange, onNameSaved }: CrewCa
         <div className="mt-3 border-t pt-3">
           <div className="flex flex-col gap-2">
             <div className="flex flex-col gap-1">
-              <input
-                className="input"
-                placeholder="First name"
-                autoComplete="off"
-                autoCapitalize="words"
+              <TextField
+                label="First name"
                 value={first}
+                onChange={setFirst}
                 maxLength={MAX_FIRST_NAME_LENGTH}
-                onChange={(e) => setFirst(e.target.value)}
-                aria-label="First name"
+                placeholder="First name"
               />
               {nameErrors.first && <FieldError>{nameErrors.first}</FieldError>}
             </div>
             <div className="flex flex-col gap-1">
-              <input
-                className="input"
-                placeholder="Initial"
-                autoComplete="off"
-                autoCapitalize="characters"
+              <TextField
+                label="Last initial"
                 value={initial}
+                onChange={(v) => setInitial(v.replace(/[^A-Za-z]/g, "").slice(0, 1).toUpperCase())}
                 maxLength={1}
-                onChange={(e) =>
-                  setInitial(e.target.value.replace(/[^A-Za-z]/g, "").slice(0, 1).toUpperCase())
-                }
-                aria-label="Last initial"
+                placeholder="Initial"
               />
               {nameErrors.initial && <FieldError>{nameErrors.initial}</FieldError>}
             </div>
             {nameErrors.save && <FieldError>{nameErrors.save}</FieldError>}
             <div className="flex gap-2">
-              <button
-                type="button"
-                className="btn-ghost flex-1"
-                onClick={() => setEditNameOpen(false)}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn-accent flex-1"
-                disabled={nameBusy}
-                onClick={() => void saveName()}
-              >
-                Save
-              </button>
+              <ActionButton variant="ghost" label="Cancel" onClick={() => setEditNameOpen(false)} />
+              <ActionButton variant="filled" label="Save" onClick={() => void saveName()} />
             </div>
           </div>
         </div>
@@ -278,59 +254,42 @@ function CrewCard({ voter, tripStatus, onTripStatusChange, onNameSaved }: CrewCa
         <div className="mt-3 border-t pt-3">
           <div className="flex flex-col gap-2">
             <div className="flex flex-col gap-1">
-              <input
-                className="input"
-                type="text"
-                inputMode="numeric"
-                autoComplete="off"
-                placeholder="New PIN (2 digits)"
+              <TextField
+                label="New PIN"
                 value={newPin}
+                onChange={(v) => setNewPin(v.replace(/\D/g, "").slice(0, 2))}
                 maxLength={2}
-                onChange={(e) => setNewPin(e.target.value.replace(/\D/g, "").slice(0, 2))}
-                aria-label="New 2-digit PIN"
+                placeholder="New PIN (2 digits)"
               />
               {newPin && (
-                <input
-                  className="input"
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="off"
-                  placeholder="Confirm new PIN"
+                <TextField
+                  label="Confirm PIN"
                   value={confirmPin}
+                  onChange={(v) => setConfirmPin(v.replace(/\D/g, "").slice(0, 2))}
                   maxLength={2}
-                  onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, 2))}
-                  aria-label="Confirm new 2-digit PIN"
+                  placeholder="Confirm new PIN"
                 />
               )}
               {pinErrors.pin && <FieldError>{pinErrors.pin}</FieldError>}
             </div>
             {pinErrors.save && <FieldError>{pinErrors.save}</FieldError>}
             <div className="flex gap-2">
-              <button
-                type="button"
-                className="btn-ghost flex-1"
+              <ActionButton
+                variant="ghost"
+                label="Cancel"
                 onClick={() => {
                   setResetPinOpen(false);
                   setNewPin("");
                   setConfirmPin("");
                   setPinErrors({});
                 }}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn-accent flex-1"
-                disabled={pinBusy}
-                onClick={() => void savePin()}
-              >
-                Save
-              </button>
+              />
+              <ActionButton variant="filled" label="Save" onClick={() => void savePin()} />
             </div>
           </div>
         </div>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -354,23 +313,16 @@ export default function ModeratorPage() {
 
   return (
     <>
-      <header className="sticky top-0 z-30 border-b bg-bg">
-        <div className="mx-auto flex h-14 max-w-2xl items-center gap-1 px-4">
-          <button
-            type="button"
-            onClick={() => router.push("/plan")}
-            aria-label="Back"
-            className="-ml-2 flex h-11 w-11 flex-none items-center justify-center text-ink-muted transition hover:text-ink"
-          >
-            <Icon name="arrow_back" size={22} />
-          </button>
-          <h1 className="text-title font-bold text-ink">Crew Management</h1>
-        </div>
-      </header>
+      <TopAppBar
+        title="Crew Management"
+        leadingIcon="arrow_back"
+        onLeadingAction={() => router.push("/plan")}
+        position="sticky"
+      />
 
       <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 pb-32 pt-4">
         {/* Section 1 — Your Role */}
-        <div className="card mb-6">
+        <Card className="mb-6">
           <RoleBadge role="moderator" size="md" />
           <p className="mt-2 text-base text-ink-muted">
             You have moderator access. You can help manage the crew and trip details.
@@ -399,14 +351,14 @@ export default function ModeratorPage() {
               </ul>
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Section 2 — Trip Setup */}
         <TripSetupPanel canClear={false} />
 
         {/* Section 3 — Crew Members */}
         <section className="flex flex-col gap-3">
-          <h2 className="label">Crew members</h2>
+          <SectionLabel>Crew members</SectionLabel>
           {activeVoters.length === 0 && (
             <p className="text-meta font-normal text-ink-dim">No crew members.</p>
           )}
