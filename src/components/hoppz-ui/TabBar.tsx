@@ -11,11 +11,26 @@ export type TabBarProps = {
   tabs: Tab[];
   activeTab: string;
   onTabChange: (id: string) => void;
+  sticky?: boolean;
+  stickyOffset?: number;
+  activeColor?: string;
 };
 
-export function TabBar({ tabs, activeTab, onTabChange }: TabBarProps) {
+export function TabBar({
+  tabs,
+  activeTab,
+  onTabChange,
+  sticky = false,
+  stickyOffset,
+  activeColor = "border-primary text-primary",
+}: TabBarProps) {
+  const stickyClass = sticky ? "sticky z-50 bg-surface shadow-md" : "";
+
   return (
-    <nav className="flex border-b border-white/5 px-margin-mobile bg-[#202124]">
+    <nav
+      className={`flex border-b border-outline-variant px-margin-mobile ${stickyClass}`}
+      style={sticky && stickyOffset != null ? { top: stickyOffset } : undefined}
+    >
       {tabs.map((tab) => {
         const isActive = tab.id === activeTab;
         return (
@@ -23,9 +38,9 @@ export function TabBar({ tabs, activeTab, onTabChange }: TabBarProps) {
             key={tab.id}
             type="button"
             className={[
-              "flex-1 py-4 text-center font-label-sm text-label-sm border-b-2 transition-all duration-300",
+              "flex-1 py-4 text-center font-label-sm text-label-sm uppercase tracking-wider border-b-2 transition-all duration-300",
               isActive
-                ? "border-primary text-primary"
+                ? activeColor
                 : "border-transparent text-on-surface-variant",
             ].join(" ")}
             onClick={() => onTabChange(tab.id)}
