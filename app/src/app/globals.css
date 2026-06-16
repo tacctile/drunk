@@ -144,6 +144,20 @@ body {
   100% { opacity: 0; }
 }
 .anim-flash { animation: bh-capture-flash 300ms ease-out forwards; }
+@keyframes bh-tray {
+  0% { transform: translateY(-100%); opacity: 0; }
+  15% { transform: translateY(0); opacity: 1; }
+  75% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-100%); opacity: 0; }
+}
+.anim-tray { animation: bh-tray 2s ease both; }
+@keyframes bh-focus-ring {
+  0% { transform: scale(1.5); opacity: 0; }
+  20% { transform: scale(1); opacity: 1; }
+  80% { transform: scale(1); opacity: 0.7; }
+  100% { transform: scale(0.9); opacity: 0; }
+}
+.anim-focus { animation: bh-focus-ring 800ms ease-out forwards; }
 
 @media (prefers-reduced-motion: reduce) {
   *,
