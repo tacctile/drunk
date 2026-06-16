@@ -7,17 +7,13 @@ last_updated: 2026-06-16
 app_root: app/
 
 last_change: >
-  Rebuilt /home screen and added persistent Home icon to TopBar. TopBar now has
-  a house icon button (home, 24px, --ink-muted, "HOME" label) as the first
-  element on the left, navigating to /home. Home page completely rebuilt with
-  four sections: Trip Anchor Card (top city with walkGrade badge, top hotel from
-  hotel tallies, best weekend date pair as pills), Who's Going (overlapping
-  avatar stack with +N overflow chip and Dialog modal), My Status (Going/Remote/
-  Out segmented buttons + location sharing toggle), My Trip Actions (Vote and
-  Availability pills). Removed Quick Stats Row, Quick Actions grid, remote voter
-  sub-row, and all horizontal scrolling.
+  Repositioned scroll-to-bottom button higher (88px above nav+safe-area) so it
+  sits inside the chat body without overlapping the input bar. Replaced
+  ImageViewer anchor-click download with fetch-based blob download for reliable
+  mobile save-to-device. Added downloading spinner state and Toast confirmation
+  ("Image saved to device" / "Download failed. Try again.").
 
-last_session: "Rebuild /home screen and add persistent Home icon to TopBar"
+last_session: "Scroll button position + image download toast"
 
 verification:
   typecheck: pass        # pre-existing module warnings only

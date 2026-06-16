@@ -80,7 +80,9 @@ function ChatInner() {
   } = useChat();
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
   const [showNewPill, setShowNewPill] = useState(false);
+  const [showScrollButton, setShowScrollButton] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const initialScrollDone = useRef(false);
@@ -129,19 +131,17 @@ function ChatInner() {
     return el.scrollHeight - el.scrollTop - el.clientHeight < 100;
   }, []);
 
-  const scrollToBottom = useCallback((behavior: ScrollBehavior = "auto") => {
-    requestAnimationFrame(() => {
-      if (scrollRef.current) {
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-      }
-    });
-  }, []);
-
   useEffect(() => {
-    if (loading || messages.length === 0) return;
+    if (loading) return;
+    if (messages.length === 0) return;
+
     if (!initialScrollDone.current) {
       initialScrollDone.current = true;
-      scrollToBottom("auto");
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          bottomRef.current?.scrollIntoView({ behavior: "instant" });
+        });
+      });
       prevMessageCount.current = messages.length;
       return;
     }
@@ -151,14 +151,17 @@ function ChatInner() {
       const hasOwnNew = newMessages.some((m) => m.voter_id === voterId);
 
       if (hasOwnNew || isNearBottom()) {
-        scrollToBottom("smooth");
+        requestAnimationFrame(() => {
+          bottomRef.current?.scrollIntoView({ behavior: "instant" });
+        });
         setShowNewPill(false);
+        setShowScrollButton(false);
       } else {
         setShowNewPill(true);
       }
     }
     prevMessageCount.current = messages.length;
-  }, [messages, loading, voterId, isNearBottom, scrollToBottom]);
+  }, [messages, loading, voterId, isNearBottom]);
 
   useEffect(() => {
     if (!loadingMore) return;
@@ -182,7 +185,9 @@ function ChatInner() {
     if (el.scrollTop < 100 && hasMore && !loadingMore) {
       void loadMore();
     }
-    if (isNearBottom()) {
+    const nearBottom = isNearBottom();
+    setShowScrollButton(!nearBottom);
+    if (nearBottom) {
       setShowNewPill(false);
     }
   }, [hasMore, loadingMore, loadMore, isNearBottom]);
@@ -195,8 +200,10 @@ function ChatInner() {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
-    scrollToBottom("smooth");
-  }, [inputValue, sendMessage, scrollToBottom]);
+    requestAnimationFrame(() => {
+      bottomRef.current?.scrollIntoView({ behavior: "instant" });
+    });
+  }, [inputValue, sendMessage]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -446,9 +453,11 @@ function ChatInner() {
         return;
       }
       await sendMessage(null, result.url);
-      scrollToBottom("smooth");
+      requestAnimationFrame(() => {
+        bottomRef.current?.scrollIntoView({ behavior: "instant" });
+      });
     },
-    [sendMessage, scrollToBottom]
+    [sendMessage]
   );
 
   const renderedMessages = useMemo(() => {
@@ -611,6 +620,8 @@ function ChatInner() {
             </div>
           </div>
         )}
+
+        <div ref={bottomRef} />
       </div>
 
       {showNewPill && (
@@ -618,7 +629,9 @@ function ChatInner() {
           <button
             type="button"
             onClick={() => {
-              scrollToBottom("smooth");
+              requestAnimationFrame(() => {
+                bottomRef.current?.scrollIntoView({ behavior: "instant" });
+              });
               setShowNewPill(false);
             }}
             className="pointer-events-auto rounded-full bg-green px-4 py-1.5 text-meta font-semibold text-bg shadow-overlay"
@@ -626,6 +639,25 @@ function ChatInner() {
             New message ↓
           </button>
         </div>
+      )}
+
+      {showScrollButton && (
+        <button
+          type="button"
+          aria-label="Scroll to bottom"
+          onClick={() => {
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                bottomRef.current?.scrollIntoView({ behavior: "instant" });
+              });
+            });
+            setShowScrollButton(false);
+          }}
+          className="fixed left-1/2 -translate-x-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-surface border border-border shadow-overlay text-ink-muted"
+          style={{ bottom: "calc(64px + env(safe-area-inset-bottom) + 88px)" }}
+        >
+          <Icon name="expand_circle_down" size={24} />
+        </button>
       )}
 
       {/* Reaction picker overlay */}

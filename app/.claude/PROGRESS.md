@@ -1,6 +1,28 @@
 # Hoppz — Progress
 > Feature checklist for the v2 Next.js app (`app/`). Newest phase on top.
 
+### 2026-06-16 — audit-fix: Scroll button position + image download toast
+
+**What:** Repositioned scroll-to-bottom button from 12px to 88px above nav+safe-area so it sits clearly inside the chat body. Replaced ImageViewer anchor-click download with fetch-based blob download for reliable mobile save-to-device. Added downloading spinner and Toast confirmation on success/failure.
+
+**Status:** Complete. Both files pass typecheck (pre-existing module warnings only).
+
+### 2026-06-16 — audit-fix: Fix initial chat scroll + add scroll-to-bottom button
+
+**What:** Fixed initial-load scroll miss by using double requestAnimationFrame to guarantee DOM paint before scrollIntoView fires. Added a scroll-to-bottom arrow button (expand_circle_down icon, 44px circle, bg-surface with border and shadow-overlay) that appears when the user scrolls up and hides on tap or when at bottom. Existing "New message" pill kept intact for the different use case.
+
+**Key Decisions:** Double-rAF only on initial scroll branch — subsequent new-message scrolls keep single rAF since DOM nodes are already present. showScrollButton state separate from showNewPill to serve distinct UX purposes.
+
+**Status:** Complete. Typecheck passes (pre-existing module warnings only).
+
+### 2026-06-16 — audit-fix: Fix chat scroll + add image download button
+
+**What:** Replaced unreliable scrollToBottom callback with bottomRef.scrollIntoView via requestAnimationFrame for initial mount, new messages, send, and image upload. Updated ImageViewer download handler to properly append/remove the anchor element, extract filename from URL, and set target/rel attributes. Moved download button from bottom-right to top-right (24px icon, matching close button styling).
+
+**Key Decisions:** Used `behavior: "instant"` everywhere instead of mixing auto/smooth — eliminates visible jump on mount and keeps scroll snappy on new messages.
+
+**Status:** Complete. Both files pass typecheck (pre-existing module warnings only).
+
 ## Phase: Home Rebuild + TopBar Home Icon (2026-06-16)
 - [x] TopBar: persistent Home icon button (home, 24px, --ink-muted) at top-left
 - [x] TopBar: "HOME" label below icon (text-label uppercase, --ink-muted)
