@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useTripData } from "@/hooks/useTripData";
 import { Icon } from "./Icon";
@@ -10,6 +9,7 @@ import { ProfileOverlay } from "./ProfileOverlay";
 
 export function TopBar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [profileOpen, setProfileOpen] = useState(false);
   const { effectiveStatus, daysUntil } = useTripData();
 
@@ -22,13 +22,14 @@ export function TopBar() {
     <>
       <header className="sticky top-0 z-30 border-b border-border-strong bg-raised">
         <div className="mx-auto flex h-14 max-w-2xl items-center justify-between px-4">
-          <Link
-            href="/home"
-            className="flex h-11 flex-none items-center gap-3"
+          <button
+            type="button"
+            onClick={() => router.push("/home")}
+            className="flex min-h-[44px] min-w-[44px] flex-none flex-col items-center justify-center text-ink-muted"
           >
-            <Icon name="map" size={24} className="text-accent" />
-            <span className="text-title font-extrabold tracking-tight">Hoppz</span>
-          </Link>
+            <Icon name="home" size={24} />
+            <span className="text-label uppercase">Home</span>
+          </button>
           <div className="flex items-center gap-3">
             {effectiveStatus === "upcoming" && daysUntil !== null && (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-border-strong bg-surface px-3 py-1 text-label font-semibold">

@@ -2,22 +2,22 @@
 # Companion to CONTEXT.md / ARCHITECTURE.md / BUILD_INDEX.md.
 # Update at the end of every session.
 
-current_phase: reskin-gallery
+current_phase: home-rebuild
 last_updated: 2026-06-16
 app_root: app/
 
 last_change: >
-  Reskinned Gallery (Photos) screen to match Stitch reference. Photo grid now
-  uses 2px gap with surface-colored placeholders, 1:1 aspect ratio items, and
-  active:scale-[0.98] tap feedback. Day section headers are fully opaque
-  sticky bars with uppercase label-voice typography (12px/bold/tracking-widest).
-  Upload button replaced with green FloatingActionButton (56px circle, filled
-  icon, rim-light, deep shadow) positioned bottom-right matching the Stitch FAB
-  pattern. Jump-to-date restyled as a compact pill with label-voice text. Loading
-  skeleton uses 3-col grid with 2px gap and surface placeholders. One new UI
-  component: FloatingActionButton.
+  Rebuilt /home screen and added persistent Home icon to TopBar. TopBar now has
+  a house icon button (home, 24px, --ink-muted, "HOME" label) as the first
+  element on the left, navigating to /home. Home page completely rebuilt with
+  four sections: Trip Anchor Card (top city with walkGrade badge, top hotel from
+  hotel tallies, best weekend date pair as pills), Who's Going (overlapping
+  avatar stack with +N overflow chip and Dialog modal), My Status (Going/Remote/
+  Out segmented buttons + location sharing toggle), My Trip Actions (Vote and
+  Availability pills). Removed Quick Stats Row, Quick Actions grid, remote voter
+  sub-row, and all horizontal scrolling.
 
-last_session: "Reskin Gallery screen to Stitch reference"
+last_session: "Rebuild /home screen and add persistent Home icon to TopBar"
 
 verification:
   typecheck: pass        # pre-existing module warnings only
