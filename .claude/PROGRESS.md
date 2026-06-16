@@ -1,6 +1,48 @@
 # Hoppz — Progress
 > Feature checklist for the v2 Next.js app (`app/`). Newest phase on top.
 
+## Phase: Home Rebuild + TopBar Home Icon (2026-06-16)
+- [x] TopBar: persistent Home icon button (home, 24px, --ink-muted) at top-left
+- [x] TopBar: "HOME" label below icon (text-label uppercase, --ink-muted)
+- [x] TopBar: Home button min 44px tap target, navigates to /home
+- [x] TopBar: Home button persists on all screens (via TopBar global render)
+- [x] Home: removed Quick Stats Row (4 horizontal stat chips)
+- [x] Home: removed Quick Actions grid (2×2 card grid)
+- [x] Home: removed Remote voter sub-row (merged into single avatar stack)
+- [x] Home: removed all overflow-x-auto (no horizontal scrolling)
+- [x] Home Section 1: Trip Anchor Card (rounded-card bg-surface border p-4 mx-4 mt-4)
+- [x] Home Section 1: Top City with walkGrade badge inline (grade color tokens)
+- [x] Home Section 1: Top Hotel from ranking[0] hotelPrefs[0] (highest tally)
+- [x] Home Section 1: Best Weekend date pair as two equal-width pills
+- [x] Home Section 1: Weekend pair label for Fri–Sat / Sat–Sun
+- [x] Home Section 1: Thin --border dividers between sub-sections
+- [x] Home Section 1: Empty states ("No votes yet", "No preference yet", "No dates yet")
+- [x] Home Section 2: Who's Going header (text-label uppercase text-ink-muted)
+- [x] Home Section 2: Avatar stack (44px, -ml-3 overlap, group-chat style)
+- [x] Home Section 2: Order — city voters first, then remaining alphabetically
+- [x] Home Section 2: Collapse threshold 7 (first 6 + overflow +N chip)
+- [x] Home Section 2: Overflow chip opens Dialog with alphabetical voter list
+- [x] Home Section 2: Dialog close button top-right (44px)
+- [x] Home Section 2: No name labels under avatars in stacked row
+- [x] Home Section 3: My Status (text-label uppercase text-ink-muted)
+- [x] Home Section 3: Trip status Going/Remote/Out segmented buttons
+- [x] Home Section 3: Going active: bg-green-dim border-green text-green
+- [x] Home Section 3: Remote active: bg-accent-dim border-accent text-accent
+- [x] Home Section 3: Out active: bg-red-dim border-red text-red
+- [x] Home Section 3: Trip status mutation via useTripData().setMemberStatus
+- [x] Home Section 3: Location sharing toggle (Switch, useLocations().toggleSharing)
+- [x] Home Section 3: amDisabled opacity-40 pointer-events-none + "Disabled by admin."
+- [x] Home Section 3: "This only affects Hoppz." helper text
+- [x] Home Section 4: My Trip Actions (flex gap-3 px-4 pt-6 pb-32)
+- [x] Home Section 4: Vote pill — how_to_vote icon, accent/green states, → /plan/cities
+- [x] Home Section 4: Availability pill — event_available icon, accent/green states, → /plan/calendar
+- [x] Home: Kept inline bottom bar (Plan / Hopp tabs) as-is
+- [x] Home: No new Supabase queries (existing hooks only)
+- [x] Home: Every interactive element ≥44px tall
+- [x] Home: Dark only, all existing CSS variable tokens
+- [x] Next.js build passes clean (44 routes)
+- [x] .claude/ files updated (STATE.yml, PROGRESS.md)
+
 ## Phase: Audit 2 Remediation — Architecture Health Fixes (2026-06-14)
 - [x] Middleware: bh2-role cookie check for /plan/admin (super_admin) and /plan/moderator (moderator|super_admin)
 - [x] auth.ts: setRoleCookie, clearRoleCookie functions
