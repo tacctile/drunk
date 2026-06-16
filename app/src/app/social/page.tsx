@@ -80,6 +80,7 @@ function ChatInner() {
   } = useChat();
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
   const [showNewPill, setShowNewPill] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -122,6 +123,10 @@ function ChatInner() {
       router.replace("/social", { scroll: false });
     }
   }, [searchParams, sendMessage, router]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "instant" });
+  }, [messages]);
 
   const isNearBottom = useCallback(() => {
     const el = scrollRef.current;
@@ -611,6 +616,8 @@ function ChatInner() {
             </div>
           </div>
         )}
+
+        <div ref={bottomRef} />
       </div>
 
       {showNewPill && (
