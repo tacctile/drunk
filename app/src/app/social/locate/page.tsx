@@ -2,7 +2,7 @@
 
 // LOCATE — live group map. Registered users only; everyone else gets the
 // identity gate. Full-bleed dark map with a collapsible right-side people
-// strip ("Show All" sticky on top, sharers A–Z below in their pin colors)
+// panel ("Nearby Hopperz" header, sharers A–Z below with avatar rows)
 // and a single "Location Options" pill between the map and the bottom nav
 // that opens a centered modal (drafted edits, Save/Cancel). Sharing is ON
 // by default for registered users (useLocations auto-starts it once; off is
@@ -11,15 +11,17 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Dialog } from "@/components/Dialog";
 import { Icon } from "@/components/Icon";
 import { NamePrompt } from "@/components/NamePrompt";
 import { Switch } from "@/components/Switch";
+import { SettingToggle } from "@/components/ui/SettingToggle";
 import type { Coords } from "@/data/types";
 import { useGroupData } from "@/hooks/useGroupData";
 import { useLocations, type LocationsValue } from "@/hooks/useLocations";
-import { contrastColor } from "@/lib/colors";
+import { useTripData } from "@/hooks/useTripData";
+import { contrastColor, getInitials } from "@/lib/colors";
 import { BASE_MAP_OPTIONS, DARK_MAP_STYLE, loadGoogleMaps } from "@/lib/maps";
+import { lockBodyScroll, unlockBodyScroll } from "@/lib/scrollLock";
 import type { LocationRow, VoterRow } from "@/lib/supabase";
 
 const RALSTON: Coords = { lat: 41.172, lng: -96.1358 };
@@ -69,9 +71,11 @@ function createNameLabel(text: string, coords: Coords) {
   const div = document.createElement("div");
   div.textContent = text;
   div.style.cssText =
-    "position:absolute;transform:translate(-50%,-100%);padding:2px 6px;" +
-    "border-radius:4px;background:rgba(10,13,20,0.9);color:#e8ecf4;" +
-    "font-size:11px;line-height:16px;white-space:nowrap;pointer-events:none;";
+    "position:absolute;transform:translate(-50%,-100%);padding:2px 8px;" +
+    "border-radius:9999px;background:rgba(26,31,43,0.92);color:#e8ecf4;" +
+    "font-size:12px;font-weight:600;line-height:16px;letter-spacing:0.05em;" +
+    "white-space:nowrap;pointer-events:none;border:1px solid rgba(255,255,255,0.1);" +
+    "box-shadow:0 2px 8px rgba(0,0,0,0.4);";
   let position = new google.maps.LatLng(coords.lat, coords.lng);
   const overlay = new google.maps.OverlayView();
   overlay.onAdd = () => {
@@ -263,24 +267,37 @@ function LocateMap({ locations, myId, command }: LocateMapProps) {
   );
 }
 
+/** Haversine distance between two lat/lng pairs, returned as a formatted string. */
+function formatDistance(a: Coords, b: Coords): string {
+  const R = 6371e3;
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const sinLat = Math.sin(dLat / 2);
+  const sinLng = Math.sin(dLng / 2);
+  const h = sinLat * sinLat + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * sinLng * sinLng;
+  const m = R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+  if (m < 1000) return `${Math.round(m)}m away`;
+  return `${(m / 1000).toFixed(1)}km away`;
+}
+
 interface PeoplePanelProps {
   locations: LocationRow[];
   myId: string;
+  myLocation: LocationRow | undefined;
   onShowAll: () => void;
   onRowTap: (voterId: string) => void;
 }
 
 /**
- * Collapsible right-side strip over the map: a sticky "Show All" row on top
- * of the scrollable list (it never scrolls away), then every active sharer
- * A–Z. Each name row is filled with that person's auto-assigned pin color
- * (contrast text); your own row says "(you)" and wears a soft white outline.
- * Tapping a name flies the map to that person. A "Hide" bar at the bottom
- * collapses the strip to nothing; a small floating chevron on the map's
- * right edge brings it back.
+ * Right-side panel over the map — Stitch-style "Nearby Hopperz" list.
+ * Avatar-based person rows with name, distance, and near_me icon.
+ * Collapsible via a handle on the left edge.
  */
-function PeoplePanel({ locations, myId, onShowAll, onRowTap }: PeoplePanelProps) {
+function PeoplePanel({ locations, myId, myLocation, onShowAll, onRowTap }: PeoplePanelProps) {
   const [panelCollapsed, setPanelCollapsed] = useState(false);
+  const { effectiveStatus } = useTripData();
+
   const sorted = useMemo(
     () => [...locations].sort((a, b) => a.display_name.localeCompare(b.display_name)),
     [locations],
@@ -288,84 +305,128 @@ function PeoplePanel({ locations, myId, onShowAll, onRowTap }: PeoplePanelProps)
 
   return (
     <>
-      <section
+      <aside
         aria-label="People sharing their location"
         aria-hidden={panelCollapsed}
-        className={`absolute inset-y-0 right-0 z-10 flex flex-col overflow-hidden ${
-          panelCollapsed ? "pointer-events-none w-0" : "w-[120px] border-l sm:w-[160px]"
-        }`}
-        style={{ background: "rgba(10, 13, 20, 0.85)", transition: "width 200ms ease" }}
+        className="absolute top-0 right-0 h-full z-10 flex transition-transform duration-300 ease-out"
+        style={{
+          transform: panelCollapsed ? "translateX(280px)" : "translateX(0)",
+        }}
       >
-        <div className="relative min-h-0 flex-1 overflow-y-auto">
-          {/* Show All — sticky so it never scrolls away */}
-          <button
-            type="button"
-            onClick={onShowAll}
-            className="sticky top-0 z-10 flex h-11 w-full items-center justify-center gap-1.5 border-b bg-raised"
-          >
-            <Icon name="zoom_out_map" size={16} className="text-accent" />
-            <span className="text-label text-accent">Show All</span>
-          </button>
+        {/* Handle */}
+        <button
+          type="button"
+          onClick={() => setPanelCollapsed((v) => !v)}
+          className="flex h-16 w-8 flex-none items-center justify-center self-center rounded-l-card border-y border-l border-border bg-raised"
+          aria-label={panelCollapsed ? "Show people panel" : "Hide people panel"}
+        >
+          <Icon
+            name={panelCollapsed ? "chevron_left" : "chevron_right"}
+            size={20}
+            className="text-ink-muted"
+          />
+        </button>
 
-          {sorted.length === 0 ? (
-            <p className="flex h-11 items-center justify-center px-2 text-center text-label text-ink-dim">
-              No one sharing
-            </p>
-          ) : (
-            sorted.map((loc) => {
-              const isMe = loc.voter_id === myId;
-              return (
-                <button
-                  key={loc.voter_id}
-                  type="button"
-                  onClick={() => onRowTap(loc.voter_id)}
-                  className="flex min-h-11 w-full items-center px-2"
-                  style={{
-                    background: loc.pin_color,
-                    color: contrastColor(loc.pin_color),
-                    // Your own row wears a soft white outline to stand out
-                    // (inset so the scroll container can't clip it).
-                    ...(isMe
-                      ? {
-                          outline: "1.5px solid rgba(255,255,255,0.4)",
-                          outlineOffset: "-1.5px",
-                        }
-                      : undefined),
-                  }}
-                >
-                  <span className="w-full truncate text-left text-label">
-                    {loc.display_name}
-                    {isMe ? " (you)" : ""}
-                  </span>
-                </button>
-              );
-            })
+        {/* Panel Content */}
+        <div className="flex w-[248px] flex-col border-l border-border bg-surface/[0.92] sm:w-[280px]">
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3">
+            <h2 className="text-title font-bold text-ink">Nearby Hopperz</h2>
+            <span className="rounded bg-raised px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-ink-muted">
+              Live
+            </span>
+          </div>
+
+          {/* People list */}
+          <div className="flex-1 space-y-1 overflow-y-auto px-2 pb-2">
+            {/* Show All row */}
+            <button
+              type="button"
+              onClick={onShowAll}
+              className="flex min-h-11 w-full items-center justify-between rounded-card px-2 transition-colors hover:bg-white/5"
+            >
+              <div className="flex items-center gap-2">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent/15">
+                  <Icon name="zoom_out_map" size={18} className="text-accent" />
+                </div>
+                <span className="text-base font-bold text-accent">Show All</span>
+              </div>
+            </button>
+
+            {sorted.length === 0 ? (
+              <p className="py-6 text-center text-meta text-ink-dim">No one sharing</p>
+            ) : (
+              sorted.map((loc) => {
+                const isMe = loc.voter_id === myId;
+                const distText =
+                  isMe
+                    ? "You"
+                    : myLocation
+                      ? formatDistance(
+                          { lat: myLocation.lat, lng: myLocation.lng },
+                          { lat: loc.lat, lng: loc.lng },
+                        )
+                      : "Sharing";
+                return (
+                  <button
+                    key={loc.voter_id}
+                    type="button"
+                    onClick={() => onRowTap(loc.voter_id)}
+                    className="flex min-h-11 w-full items-center justify-between rounded-card p-2 transition-colors hover:bg-white/5"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="relative">
+                        <div
+                          className="flex h-9 w-9 items-center justify-center rounded-full font-bold"
+                          style={{
+                            background: loc.pin_color,
+                            color: contrastColor(loc.pin_color),
+                            fontSize: 14,
+                          }}
+                        >
+                          {getInitials(loc.display_name)}
+                        </div>
+                        <div
+                          className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2"
+                          style={{
+                            background: loc.pin_color,
+                            borderColor: "var(--surface)",
+                          }}
+                        />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-base font-bold text-ink">{loc.display_name}</p>
+                        <p className="text-meta text-ink-muted">{distText}</p>
+                      </div>
+                    </div>
+                    <Icon name="near_me" size={18} className="text-ink-muted" />
+                  </button>
+                );
+              })
+            )}
+          </div>
+
+          {/* Active group card */}
+          {effectiveStatus !== "planning" && (
+            <div className="border-t border-border/50 px-4 py-3">
+              <p className="mb-2 text-label font-semibold uppercase tracking-label text-ink-muted">
+                Active Group
+              </p>
+              <div className="flex items-center gap-2 rounded-card bg-surface p-2">
+                <div className="flex h-10 w-10 items-center justify-center rounded-btn bg-green/15">
+                  <Icon name="groups" size={22} className="text-green" />
+                </div>
+                <div>
+                  <p className="text-base font-bold text-ink">Hoppz Crew</p>
+                  <p className="text-meta font-bold text-green">
+                    {effectiveStatus === "active" ? "In Progress" : "Upcoming"}
+                  </p>
+                </div>
+              </div>
+            </div>
           )}
         </div>
-
-        {/* Collapse — tuck the whole strip away */}
-        <button
-          type="button"
-          onClick={() => setPanelCollapsed(true)}
-          className="flex h-11 w-full flex-none items-center justify-center gap-1 border-t bg-raised"
-        >
-          <Icon name="chevron_right" size={20} className="text-ink-dim" />
-          <span className="text-label text-ink-dim">Hide</span>
-        </button>
-      </section>
-
-      {/* Floating expand handle — flush against the map's right edge */}
-      {panelCollapsed && (
-        <button
-          type="button"
-          onClick={() => setPanelCollapsed(false)}
-          aria-label="Show people panel"
-          className="absolute right-0 top-1/2 z-10 flex h-14 w-11 -translate-y-1/2 items-center justify-center border"
-          style={{ background: "rgba(26, 31, 43, 0.9)", borderRadius: "6px 0 0 6px" }}
-        >
-          <Icon name="chevron_left" size={20} className="text-ink-dim" />
-        </button>
-      )}
+      </aside>
     </>
   );
 }
@@ -378,28 +439,33 @@ interface LocationOptionsModalProps {
 }
 
 /**
- * The "Location Options" centered modal (replaced the old bottom sheet,
- * which kept getting stuck). Edits are drafted: the sharing toggle and the
- * "Who can see me" mute list copy the live values on open and nothing is
- * written until Save — toggleSharing if the switch moved, muteUser/
- * unmuteUser per changed row. Cancel, Escape, or tapping the scrim discards
- * the draft. If enabling sharing fails (permission denied / no fix), the
- * modal stays open with the inline error so the person sees why. Pin colors
- * are auto-assigned — there is no picker here.
+ * The "Location Options" centered modal. Edits are drafted: the sharing
+ * toggle and the mute list copy the live values on open and nothing is
+ * written until Save. Cancel, Escape, or tapping the scrim discards the
+ * draft.
  */
 function LocationOptionsModal({ onClose, locations, voters, myId }: LocationOptionsModalProps) {
   const { isSharing, amDisabled, mutedIds, toggleSharing, muteUser, unmuteUser } = locations;
-  // Drafts seeded from the live values — the modal mounts fresh per open.
   const [pendingSharing, setPendingSharing] = useState(isSharing);
   const [pendingMuted, setPendingMuted] = useState<string[]>(mutedIds);
   const [busy, setBusy] = useState(false);
   const [shareError, setShareError] = useState("");
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    lockBodyScroll();
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      unlockBodyScroll();
+    };
+  }, [onClose]);
+
   const others = useMemo(
     () =>
       voters
-        // Disabled voters are off every group-facing people list, the mute
-        // list included — they can't share a pin to hide anyway.
         .filter((v) => v.voter_id !== myId && v.is_active !== false)
         .map((v) => {
           const fromLocation = locations.activeLocations.find(
@@ -422,7 +488,6 @@ function LocationOptionsModal({ onClose, locations, voters, myId }: LocationOpti
     if (busy) return;
     setBusy(true);
     setShareError("");
-    // Mutes first so a share enabled in the same Save carries them.
     for (const id of pendingMuted) {
       if (!mutedIds.includes(id)) await muteUser(id);
     }
@@ -437,7 +502,7 @@ function LocationOptionsModal({ onClose, locations, voters, myId }: LocationOpti
             ? "Location permission denied. Enable it in your browser settings."
             : "Couldn't get your location. Try again.",
         );
-        setPendingSharing(false); // sharing didn't start — reflect reality
+        setPendingSharing(false);
         setBusy(false);
         return;
       }
@@ -447,91 +512,114 @@ function LocationOptionsModal({ onClose, locations, voters, myId }: LocationOpti
   };
 
   return (
-    <Dialog open onClose={handleCancel} title="Location Options">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-base text-ink">Share my location</p>
-        {/* Locked off while admin-disabled — grayed out, untappable. */}
-        <span style={amDisabled ? { pointerEvents: "none", opacity: 0.4 } : undefined}>
-          <Switch
-            checked={pendingSharing}
-            disabled={busy || amDisabled}
-            onToggle={() => setPendingSharing((v) => !v)}
-            ariaLabel="Share my location"
-          />
-        </span>
-      </div>
-      {amDisabled && (
-        <p className="text-meta font-normal text-ink-dim">
-          Location sharing disabled by admin.
-        </p>
-      )}
-      <p className="text-meta font-normal text-ink-dim">
-        This only affects Hoppz. Your device location settings are unchanged.
-      </p>
-      {shareError && (
-        <p className="mt-2 text-meta font-medium text-red" role="alert">
-          {shareError}
-        </p>
-      )}
+    <div
+      className="anim-fade fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.6)" }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) handleCancel();
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Location Settings"
+        className="anim-rise w-full max-w-sm overflow-hidden rounded-[24px] border border-border bg-raised shadow-overlay"
+      >
+        <div className="p-6">
+          {/* Header */}
+          <div className="mb-8 flex items-center justify-between">
+            <h3 className="text-display font-extrabold text-ink">Settings</h3>
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="flex h-11 w-11 items-center justify-center rounded-full transition hover:bg-white/5"
+              aria-label="Close"
+            >
+              <Icon name="close" size={24} className="text-ink-muted" />
+            </button>
+          </div>
 
-      {pendingSharing && (
-        <div className="mt-5">
-          <h3 className="label">Hide from</h3>
-          {others.length === 0 ? (
-            <p className="py-2 text-meta font-normal text-ink-dim">
-              No one else is registered yet.
-            </p>
-          ) : (
-            <div className="max-h-[35vh] overflow-y-auto">
-              {others.map((person) => {
-                const isHidden = pendingMuted.includes(person.id);
-                return (
-                  <div key={person.id} className="flex min-h-11 items-center gap-3">
-                    <span
-                      aria-hidden="true"
-                      className="flex-none rounded-full"
-                      style={{ width: 20, height: 20, background: person.color }}
-                    />
-                    <span className="min-w-0 flex-1 truncate text-base text-ink">
-                      Hide from {person.label}
-                    </span>
-                    <Switch
-                      checked={isHidden}
-                      disabled={busy}
-                      onToggle={() =>
-                        setPendingMuted((prev) =>
-                          isHidden ? prev.filter((id) => id !== person.id) : [...prev, person.id],
-                        )
-                      }
-                      ariaLabel={`Hide from ${person.label}`}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          {/* Toggles */}
+          <div className="space-y-6">
+            <SettingToggle
+              icon="visibility"
+              iconClassName="text-accent"
+              iconBgClassName="bg-accent/10"
+              title="Share Live Position"
+              subtitle="Let the group see you"
+              checked={pendingSharing}
+              disabled={busy || amDisabled}
+              dimmed={amDisabled}
+              onToggle={() => setPendingSharing((v) => !v)}
+              ariaLabel="Share live position"
+            />
+
+            {amDisabled && (
+              <p className="text-meta font-normal text-ink-dim">
+                Location sharing disabled by admin.
+              </p>
+            )}
+
+            {shareError && (
+              <p className="text-meta font-medium text-red" role="alert">
+                {shareError}
+              </p>
+            )}
+
+            {/* Mute list when sharing is on */}
+            {pendingSharing && others.length > 0 && (
+              <div>
+                <h4 className="label mb-3">Hide from</h4>
+                <div className="max-h-[30vh] space-y-1 overflow-y-auto">
+                  {others.map((person) => {
+                    const isHidden = pendingMuted.includes(person.id);
+                    return (
+                      <div key={person.id} className="flex min-h-11 items-center gap-3">
+                        <span
+                          aria-hidden="true"
+                          className="flex h-8 w-8 flex-none items-center justify-center rounded-full text-[11px] font-bold"
+                          style={{
+                            background: person.color,
+                            color: contrastColor(person.color),
+                          }}
+                        >
+                          {getInitials(person.label)}
+                        </span>
+                        <span className="min-w-0 flex-1 truncate text-base text-ink">
+                          {person.label}
+                        </span>
+                        <Switch
+                          checked={isHidden}
+                          disabled={busy}
+                          onToggle={() =>
+                            setPendingMuted((prev) =>
+                              isHidden
+                                ? prev.filter((id) => id !== person.id)
+                                : [...prev, person.id],
+                            )
+                          }
+                          ariaLabel={`Hide from ${person.label}`}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Save button */}
+          <button
+            type="button"
+            className="mt-8 flex h-14 w-full items-center justify-center rounded-card bg-ink font-bold text-bg transition active:scale-[0.97] disabled:opacity-50"
+            disabled={busy}
+            onClick={() => void handleSave()}
+          >
+            Save Preferences
+          </button>
         </div>
-      )}
-
-      <div className="mt-4 flex flex-col gap-2">
-        <button
-          type="button"
-          className="btn-accent w-full"
-          disabled={busy}
-          onClick={() => void handleSave()}
-        >
-          Save
-        </button>
-        <button
-          type="button"
-          className="flex h-11 w-full items-center justify-center text-base font-medium text-ink-muted transition hover:text-ink disabled:opacity-50"
-          disabled={busy}
-          onClick={handleCancel}
-        >
-          Cancel
-        </button>
       </div>
-    </Dialog>
+    </div>
   );
 }
 
@@ -558,10 +646,8 @@ function LocateGate() {
 }
 
 /**
- * The registered experience: a full-bleed map with the people strip overlaid
- * on its right edge, and the single "Location Options" pill in normal flow
- * between the map and the bottom nav — the same visual slot the sort pill
- * and vote button occupy elsewhere.
+ * The registered experience: a full-bleed map with the people panel overlaid
+ * on its right side, and a floating "Location Options" pill above the bottom nav.
  */
 function LocateScreen() {
   const { voterId, voters } = useGroupData();
@@ -572,6 +658,11 @@ function LocateScreen() {
   const [command, setCommand] = useState<MapCommand | null>(null);
   const [optionsOpen, setOptionsOpen] = useState(false);
   const focusHandledRef = useRef(false);
+
+  const myLocation = useMemo(
+    () => locations.activeLocations.find((l) => l.voter_id === voterId),
+    [locations.activeLocations, voterId],
+  );
 
   useEffect(() => {
     if (!focusVoterId || focusHandledRef.current) return;
@@ -607,24 +698,26 @@ function LocateScreen() {
 
   return (
     <div className="fixed inset-x-0 bottom-[calc(64px+env(safe-area-inset-bottom))] top-14 z-10 flex flex-col min-[840px]:bottom-0 min-[840px]:left-20">
-      {/* Map fills everything above the options pill; the people panel
-          overlays its right side. */}
+      {/* Map fills everything; people panel overlays right side. */}
       <div className="relative w-full min-h-0 flex-1">
         <LocateMap locations={locations.activeLocations} myId={voterId} command={command} />
         <PeoplePanel
           locations={locations.activeLocations}
           myId={voterId}
+          myLocation={myLocation}
           onShowAll={handleShowAll}
           onRowTap={handleRowTap}
         />
-      </div>
 
-      {/* The single bottom control, between the map and the bottom nav. */}
-      <div className="flex-none px-4 py-2">
-        <div className="mx-auto max-w-2xl">
-          <button type="button" className="btn-ghost w-full" onClick={() => setOptionsOpen(true)}>
-            <Icon name="tune" size={20} />
-            Location Options
+        {/* Floating Location Options pill */}
+        <div className="absolute bottom-4 left-1/2 z-30 -translate-x-1/2">
+          <button
+            type="button"
+            onClick={() => setOptionsOpen(true)}
+            className="flex h-11 items-center gap-2 rounded-full bg-accent px-6 font-bold text-bg shadow-overlay transition active:scale-95"
+          >
+            <Icon name="share_location" size={20} />
+            <span className="text-base font-bold">Location Options</span>
           </button>
         </div>
       </div>

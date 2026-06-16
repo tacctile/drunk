@@ -4,4 +4,9 @@ Shared visual primitives for the Hoppz reskin. Single source of truth — check 
 
 ---
 
-_No new shared components added yet. Existing primitives in `src/components/` (Icon, Avatar, BottomSheet, Dialog, Toast, etc.) remain the canonical set. Components will be added here when a visual pattern appears on 2+ screens._
+## SettingToggle
+
+- **File:** `src/components/ui/SettingToggle.tsx`
+- **Props:** `icon` (Material Symbols name), `iconClassName` (icon color class, default `text-ink-muted`), `iconBgClassName` (icon circle bg class, default `bg-raised`), `title`, `subtitle?`, `checked`, `disabled?`, `dimmed?` (reduces opacity), `onToggle`, `ariaLabel`
+- **What it does:** A settings row with a leading icon circle, title + subtitle, and a trailing Switch toggle. 44px touch target via the Switch component.
+- **Used by:** `/social/locate` (Location Options modal — Share Live Position toggle)

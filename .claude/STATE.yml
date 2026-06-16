@@ -2,28 +2,29 @@
 # Companion to CONTEXT.md / ARCHITECTURE.md / BUILD_INDEX.md.
 # Update at the end of every session.
 
-current_phase: reskin-group-chat
+current_phase: reskin-live-locate
 last_updated: 2026-06-16
 app_root: app/
 
 last_change: >
-  Reskinned Group Chat screen (/social) to match Stitch reference design.
-  MessageBubble: own messages use green bg with dark bold text, rounded
-  12px/12px/4px/12px shape. Other messages use raised bg with 4px/12px/12px/12px
-  shape, glass-highlight border, 32px avatar at bottom-left (spacer when grouped),
-  sender name in accent color above bubble. Reaction pills use translucent bg
-  with white/10 border. Input bar: raised bg with upward shadow, photo_camera +
-  photo_library buttons, rounded-card textarea wrapper with focus ring, circular
-  green send button. DayDivider: centered pill (no lines). HopNav: green active
-  state, raised bg, shadow, subtle border. TopBar: raised bg, map icon before
-  wordmark, trip pill as bordered chip on right next to avatar.
+  Reskinned Live Locate screen (/social/locate) to match Stitch reference design.
+  PeoplePanel: 280px right-side panel with "Nearby Hopperz" header + "Live" badge,
+  avatar-based person rows (pin_color circle with initials, name, haversine distance,
+  near_me trailing icon), "Show All" row with accent avatar, active trip card at
+  bottom (using useTripData context), collapsible via left-edge chevron handle.
+  Location Options pill: floating rounded-full accent button centered above bottom
+  nav with share_location icon. LocationOptionsModal: custom modal (no Dialog) with
+  rounded-3xl card, display-size "Settings" header with close X, SettingToggle for
+  share position with icon circle, avatar-based mute list, full-width "Save
+  Preferences" button in ink color. Map pin name labels restyled as rounded-full
+  pills with border and shadow. Created SettingToggle UI component.
 
-last_session: "Reskin Group Chat screen to Stitch reference"
+last_session: "Reskin Live Locate screen to Stitch reference"
 
 verification:
   typecheck: pass        # pre-existing module warnings only
   lint: pass             # pre-existing warnings only
-  build: pass            # next build — all routes compiled
+  build: pass            # next build — all 44 routes compiled
 
 known_issues:
   - App icons are placeholders — public/icons/ needs real PNGs
