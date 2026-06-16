@@ -10,11 +10,12 @@ last_change: >
   Restored 3-second admin long-press on the Locate tab in HopNav. A second
   useAdminHold instance drives the Locate Link: hold 3s → navigate to
   /plan/admin with anim-hold opacity pulse; normal tap navigates to
-  /social/locate; release click swallowed after hold fires. HOLD_CLASS
-  applied to prevent text selection during hold. Existing Plan tab admin
-  hold preserved.
+  /social/locate; release click swallowed after hold fires. Fixed admin
+  hold middleware bounce: useAdminHold now ensures the bh2-role cookie is
+  set (via getRoleForVoter) before router.push, so the middleware no longer
+  redirects super_admin users to /plan/cities.
 
-last_session: "Restore admin long-press on Locate tab in HopNav"
+last_session: "Restore admin long-press on Locate tab + fix middleware cookie bounce"
 
 verification:
   typecheck: pass
