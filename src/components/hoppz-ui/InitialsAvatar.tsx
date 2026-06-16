@@ -6,8 +6,11 @@ export type InitialsAvatarProps = {
   initials: string;
   size?: "xs" | "sm" | "md" | "lg";
   color?: string;
+  colorClassName?: string;
   avatarUrl?: string;
   statusColor?: string;
+  bordered?: boolean;
+  borderClassName?: string;
 };
 
 const sizeClasses = {
@@ -28,19 +31,24 @@ export function InitialsAvatar({
   initials,
   size = "lg",
   color = "#0D9488",
+  colorClassName,
   avatarUrl,
   statusColor,
+  bordered = false,
+  borderClassName = "border-outline-variant",
 }: InitialsAvatarProps) {
+  const borderCls = bordered ? `border ${borderClassName}` : "";
+
   const avatar = avatarUrl ? (
     <img
       src={avatarUrl}
       alt={initials}
-      className={`${sizeClasses[size]} rounded-full object-cover shadow-lg`}
+      className={`${sizeClasses[size]} rounded-full object-cover shadow-lg ${borderCls}`}
     />
   ) : (
     <div
-      className={`${sizeClasses[size]} rounded-full flex items-center justify-center text-white font-bold shadow-lg`}
-      style={{ backgroundColor: color }}
+      className={`${sizeClasses[size]} rounded-full flex items-center justify-center font-bold shadow-lg ${borderCls} ${colorClassName ?? "text-white"}`}
+      style={colorClassName ? undefined : { backgroundColor: color }}
     >
       {initials}
     </div>

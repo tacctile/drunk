@@ -38,7 +38,7 @@ export { BottomNavItem } from "./BottomNavItem";
 export type { BottomNavItemProps } from "./BottomNavItem";
 
 export { FloatingAction } from "./FloatingAction";
-export type { FloatingActionProps } from "./FloatingAction";
+export type { FloatingActionProps, FloatingActionVariant } from "./FloatingAction";
 
 export { LinkRow } from "./LinkRow";
 export type { LinkRowProps } from "./LinkRow";
@@ -89,7 +89,7 @@ export { ChatInputBar } from "./ChatInputBar";
 export type { ChatInputBarProps, ChatInputAction } from "./ChatInputBar";
 
 export { MapPin } from "./MapPin";
-export type { MapPinProps } from "./MapPin";
+export type { MapPinProps, MapPinVariant } from "./MapPin";
 
 export { PersonRow } from "./PersonRow";
 export type { PersonRowProps } from "./PersonRow";
@@ -174,3 +174,18 @@ export type { QuickActionCardProps } from "./QuickActionCard";
 
 export { AvatarChip } from "./AvatarChip";
 export type { AvatarChipProps, AvatarChipColor } from "./AvatarChip";
+
+export { StarRating } from "./StarRating";
+export type { StarRatingProps } from "./StarRating";
+
+export { PreferButton } from "./PreferButton";
+export type { PreferButtonProps } from "./PreferButton";
+
+export { TagBadge } from "./TagBadge";
+export type { TagBadgeProps, TagBadgeVariant } from "./TagBadge";
+
+export { VenueListCard } from "./VenueListCard";
+export type { VenueListCardProps } from "./VenueListCard";
+
+export { MapHero } from "./MapHero";
+export type { MapHeroProps } from "./MapHero";

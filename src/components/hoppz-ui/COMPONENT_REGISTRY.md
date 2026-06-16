@@ -5,8 +5,8 @@ All components use M3-style design tokens from `tailwind.preset.ts`. Import the 
 | Component | File | Props | Description |
 |---|---|---|---|
 | OverlayHeader | `OverlayHeader.tsx` | `title`, `onBack?`, `rightSlot?` | Full-width header bar with back button, centered title, and optional right slot |
-| TabBar | `TabBar.tsx` | `tabs`, `activeTab`, `onTabChange` | Horizontal tab navigation with active underline indicator |
-| InitialsAvatar | `InitialsAvatar.tsx` | `initials`, `size?` (xs/sm/md/lg), `color?`, `avatarUrl?`, `statusColor?` | Circular avatar showing initials or an image, with optional status indicator dot |
+| TabBar | `TabBar.tsx` | `tabs`, `activeTab`, `onTabChange`, `sticky?`, `stickyOffset?`, `activeColor?` | Horizontal tab navigation with active underline indicator; sticky mode pins below header with configurable offset and active color |
+| InitialsAvatar | `InitialsAvatar.tsx` | `initials`, `size?` (xs/sm/md/lg), `color?`, `colorClassName?`, `avatarUrl?`, `statusColor?`, `bordered?`, `borderClassName?` | Circular avatar showing initials or an image, with optional status dot, border ring, and Tailwind color class support |
 | ProfileHero | `ProfileHero.tsx` | `initials`, `name`, `subtitle`, `avatarColor?`, `avatarUrl?`, `onEditPhoto?`, `centered?` | Avatar + display name + subtitle block; centered mode stacks vertically for sheets |
 | Card | `Card.tsx` | `children`, `className?`, `glass?` | Surface card with rim-light top border and shadow; glass variant adds backdrop blur |
 | CardHeader | `CardHeader.tsx` | `icon`, `title`, `iconClassName?`, `rightIcon?`, `rightIconClassName?`, `onRightIconClick?` | Icon + title row for card headers with customizable icon color |
@@ -15,11 +15,11 @@ All components use M3-style design tokens from `tailwind.preset.ts`. Import the 
 | ActionRow | `ActionRow.tsx` | `icon`, `label`, `onClick?`, `variant?` | Full-width icon + text button row (default or danger variant) |
 | SectionLabel | `SectionLabel.tsx` | `children` | Uppercase tracking-wider section header text |
 | GradeBadge | `GradeBadge.tsx` | `grade`, `colorScheme?` (secondary/tertiary/error), `pill?` | Colored pill badge for letter grades with configurable color scheme and pill shape |
-| BottomNav | `BottomNav.tsx` | `children`, `className?`, `height?`, `elevated?` | Bottom navigation bar container with safe-area padding and optional drop shadow |
+| BottomNav | `BottomNav.tsx` | `children`, `className?`, `height?`, `elevated?`, `fixed?` | Bottom navigation bar container with safe-area padding, optional drop shadow, and fixed positioning |
 | BottomNavItem | `BottomNavItem.tsx` | `icon`, `label?`, `active?`, `filled?`, `activeColor?`, `fill?`, `onClick?` | Individual bottom nav icon with optional label; fill mode expands to fill parent |
-| FloatingAction | `FloatingAction.tsx` | `icon?`, `label`, `onClick?`, `visible?` | Fixed floating full-width CTA button |
+| FloatingAction | `FloatingAction.tsx` | `icon?`, `label`, `onClick?`, `visible?`, `toggled?`, `iconFilled?`, `variant?` (solid/glass) | Fixed floating full-width CTA button; glass variant with toggle state for vote-style FABs |
 | LinkRow | `LinkRow.tsx` | `label`, `onClick?` | Navigation row with text and trailing chevron |
-| TopAppBar | `TopAppBar.tsx` | `title`, `leadingIcon?`, `leadingIconClassName?`, `centerSlot?`, `actions?`, `position?` (sticky/fixed) | Sticky or fixed top header bar with optional leading icon, center slot, and right action slot |
+| TopAppBar | `TopAppBar.tsx` | `title`, `subtitle?`, `leadingIcon?`, `leadingIconClassName?`, `onLeadingAction?`, `centerSlot?`, `actions?`, `position?` (sticky/fixed), `glass?` | Sticky or fixed top header bar with glass blur variant, subtitle, clickable leading icon, center slot, and right action slot |
 | ProgressBar | `ProgressBar.tsx` | `value`, `colorClassName?` | Thin horizontal progress bar with customizable fill color |
 | GhostButton | `GhostButton.tsx` | `label`, `colorClassName?`, `onClick?` | Semi-transparent full-width action button |
 | VoteRow | `VoteRow.tsx` | `label`, `count`, `countLabel?`, `percentage`, `highlight?`, `actionLabel?`, `onAction?` | City vote row with label, count, progress bar, and optional action |
@@ -34,7 +34,7 @@ All components use M3-style design tokens from `tailwind.preset.ts`. Import the 
 | ReactionPill | `ReactionPill.tsx` | `emoji`, `count`, `active?`, `onClick?` | Emoji reaction badge with count for message reactions |
 | ChatBubble | `ChatBubble.tsx` | `variant` (own/other), `text?`, `imageUrl?`, `imageAlt?`, `senderName?`, `senderNameColor?`, `senderInitials?`, `senderColor?`, `senderAvatarUrl?`, `timestamp?`, `grouped?`, `reactions?`, `onReactionClick?`, `onClick?` | Chat message bubble supporting own/other variants, text/image content, grouped messages, and reactions |
 | ChatInputBar | `ChatInputBar.tsx` | `placeholder?`, `leadingActions?`, `value?`, `onChange?`, `onSend?` | Message composition bar with media action buttons, auto-growing textarea, and send button |
-| MapPin | `MapPin.tsx` | `label`, `color?`, `glowColor?`, `animated?`, `onClick?` | Animated map pin with name label and colored dot indicator |
+| MapPin | `MapPin.tsx` | `label`, `color?`, `glowColor?`, `animated?`, `variant?` (dot/icon), `labelClassName?`, `labelTextClassName?`, `iconClassName?`, `onClick?` | Map pin with name label; dot variant shows colored pulse dot, icon variant shows filled location_on icon with colored label |
 | PersonRow | `PersonRow.tsx` | `initials`, `name`, `subtitle?`, `avatarColor?`, `avatarUrl?`, `statusColor?`, `trailingIcon?`, `onClick?` | Person list item with avatar, status dot, name, subtitle, and trailing action icon |
 | GroupCard | `GroupCard.tsx` | `icon`, `name`, `status`, `statusClassName?`, `iconBgClassName?`, `iconClassName?`, `onClick?` | Group info card with icon, name, and status text |
 | ToggleSwitch | `ToggleSwitch.tsx` | `checked?`, `onChange?`, `disabled?`, `ariaLabel?` | iOS-style toggle switch with peer-checked Tailwind styling |
@@ -63,3 +63,8 @@ All components use M3-style design tokens from `tailwind.preset.ts`. Import the 
 | StatTile | `StatTile.tsx` | `icon`, `iconClassName?`, `value`, `label`, `className?` | Compact stat tile with icon, large value, and label for horizontal scroll rows |
 | QuickActionCard | `QuickActionCard.tsx` | `icon`, `iconClassName?`, `label`, `onClick?`, `className?` | Tall card-style action button with large icon and label for grid layouts |
 | AvatarChip | `AvatarChip.tsx` | `name`, `initials?`, `color?` (primary/secondary/tertiary/error/primary-fixed), `active?`, `invite?`, `icon?`, `onClick?` | Avatar circle with name label; supports colored member and dashed-border invite variants |
+| StarRating | `StarRating.tsx` | `rating`, `max?`, `size?`, `colorClassName?` | Star rating display with filled/empty stars using Material Symbols |
+| PreferButton | `PreferButton.tsx` | `preferred?`, `label?`, `preferredLabel?`, `onClick?` | Toggle button for prefer/preferred state with heart icon and filled/outlined variants |
+| TagBadge | `TagBadge.tsx` | `label`, `variant?` (secondary/primary/tertiary), `className?` | Small pill badge for venue category tags with bordered color variants |
+| VenueListCard | `VenueListCard.tsx` | `name`, `address?`, `imageUrl?`, `imageAlt?`, `price?`, `tags?`, `rating?`, `action?`, `onClick?` | Horizontal list card for venues; shows thumbnail when imageUrl provided, otherwise compact title+tags layout |
+| MapHero | `MapHero.tsx` | `imageUrl`, `imageAlt?`, `height?`, `grayscale?`, `opacity?`, `children?` | Full-width map image hero section with grayscale overlay and children slot for pins/markers |
