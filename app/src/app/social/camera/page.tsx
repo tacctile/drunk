@@ -55,7 +55,12 @@ function CameraInner() {
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [showFlash, setShowFlash] = useState(false);
+  const [galleryImage, setGalleryImage] = useState<string | null>(null);
   const capturedFacingRef = useRef(facingMode);
+  const galleryFileRef = useRef<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const activeImage = capturedImage || galleryImage;
 
   useEffect(() => {
     navigator.mediaDevices.enumerateDevices().then((devices) => {
@@ -77,24 +82,50 @@ function CameraInner() {
     setTimeout(() => setShowFlash(false), 300);
   }, [capturePhoto, facingMode]);
 
+  const handleGalleryPick = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      galleryFileRef.current = file;
+      const reader = new FileReader();
+      reader.onload = () => setGalleryImage(reader.result as string);
+      reader.readAsDataURL(file);
+      e.target.value = "";
+    },
+    []
+  );
+
   const handleSend = useCallback(async () => {
-    if (!capturedImage) return;
+    if (!activeImage) return;
     setSending(true);
     setSendError(null);
-    const file = dataUrlToFile(capturedImage, `camera-${Date.now()}.jpg`);
+
+    let file: File;
+    if (galleryFileRef.current && galleryImage) {
+      file = galleryFileRef.current;
+    } else if (capturedImage) {
+      file = dataUrlToFile(capturedImage, `camera-${Date.now()}.jpg`);
+    } else {
+      return;
+    }
+
     const result = await uploadChatImage(file);
     if (!result.ok) {
       setSending(false);
       setSendError("Couldn't send. Try again.");
       return;
     }
-    saveToDevice(capturedImage, `hoppz-${Date.now()}.jpg`);
+    if (capturedImage) {
+      saveToDevice(capturedImage, `hoppz-${Date.now()}.jpg`);
+    }
     stopCamera();
     router.push(`/social?pendingImage=${encodeURIComponent(result.url)}`);
-  }, [capturedImage, stopCamera, router]);
+  }, [activeImage, galleryImage, capturedImage, stopCamera, router]);
 
   const handleRetake = useCallback(() => {
     retake();
+    setGalleryImage(null);
+    galleryFileRef.current = null;
     setSendError(null);
   }, [retake]);
 
@@ -159,11 +190,11 @@ function CameraInner() {
       </div>
 
       {/* Pre-capture UI overlay */}
-      {!capturedImage && (
-        <div className="relative z-10 flex h-full w-full flex-col justify-between pointer-events-none">
+      {!activeImage && (
+        <div className="absolute inset-0 z-10 flex h-full w-full flex-col justify-between pointer-events-none">
           {/* Top controls */}
           <header
-            className="w-full px-4 pt-2 flex items-center justify-between pointer-events-auto"
+            className="w-full px-4 flex items-center justify-between pointer-events-auto"
             style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)" }}
           >
             <GlassIconButton
@@ -171,12 +202,6 @@ function CameraInner() {
               onClick={() => router.back()}
               ariaLabel="Go back"
             />
-            <div className="flex items-center gap-1 rounded-full border border-white/10 bg-black/40 px-4 py-1 backdrop-blur-md">
-              <span className="h-2 w-2 rounded-full bg-red animate-pulse" />
-              <span className="text-[12px] font-semibold uppercase tracking-widest text-white">
-                Live
-              </span>
-            </div>
             <div className="h-11 w-11" />
           </header>
 
@@ -186,12 +211,13 @@ function CameraInner() {
             style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 32px)" }}
           >
             <div className="flex w-full items-center justify-between">
+              {/* Gallery — opens device photo picker */}
               <GlassIconButton
                 icon="photo_library"
                 iconSize={28}
                 label="Gallery"
-                onClick={() => router.push("/social/gallery")}
-                ariaLabel="Gallery"
+                onClick={() => fileInputRef.current?.click()}
+                ariaLabel="Pick from gallery"
               />
 
               {/* Shutter button */}
@@ -205,6 +231,7 @@ function CameraInner() {
                 <div className="h-[66px] w-[66px] rounded-full bg-white shadow-inner" />
               </button>
 
+              {/* Flip camera */}
               {hasMultipleCameras ? (
                 <GlassIconButton
                   icon="flip_camera_ios"
@@ -222,21 +249,25 @@ function CameraInner() {
       )}
 
       {/* Post-capture review overlay */}
-      {capturedImage && (
+      {activeImage && (
         <div className="absolute inset-0 z-40">
           <div className="relative h-full w-full">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={capturedImage}
+              src={activeImage}
               alt=""
               className="h-full w-full object-cover"
-              style={mirrorCapture ? { transform: "scaleX(-1)" } : undefined}
+              style={
+                capturedImage && mirrorCapture
+                  ? { transform: "scaleX(-1)" }
+                  : undefined
+              }
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30" />
 
-            {/* Review top controls */}
+            {/* Back button */}
             <div
-              className="absolute top-0 w-full px-4 flex items-center gap-2"
+              className="absolute top-0 w-full px-4 flex items-center pointer-events-auto"
               style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)" }}
             >
               <GlassIconButton
@@ -244,31 +275,30 @@ function CameraInner() {
                 onClick={() => router.back()}
                 ariaLabel="Go back"
               />
-              <button
-                type="button"
-                onClick={handleRetake}
-                className="flex items-center gap-1 rounded-full border border-white/10 bg-black/60 px-4 py-2 shadow-2xl backdrop-blur-xl transition-transform active:scale-95"
-              >
-                <Icon name="close" size={24} className="text-white" />
-                <span className="text-title font-bold text-white">Retake</span>
-              </button>
             </div>
 
-            {/* Review bottom controls */}
+            {/* Action buttons */}
             <div
-              className="absolute bottom-0 w-full px-4 flex flex-col items-center gap-2"
+              className="absolute bottom-0 w-full px-4 flex flex-col items-center gap-3"
               style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 32px)" }}
             >
-              <button
-                type="button"
-                onClick={() => void handleSend()}
-                disabled={sending}
-                className="flex h-11 w-full max-w-sm items-center justify-center gap-2 rounded-full border border-white/20 bg-accent text-bg shadow-[0_4px_24px_rgba(255,140,66,0.5)] transition-all active:scale-[0.98] disabled:opacity-50"
-              >
-                <span className="text-title font-bold">
-                  {sending ? "Sending…" : "Post to Hopp"}
-                </span>
-              </button>
+              <div className="flex w-full max-w-sm gap-3">
+                <button
+                  type="button"
+                  onClick={handleRetake}
+                  className="btn-ghost flex-1"
+                >
+                  Retake Picture
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleSend()}
+                  disabled={sending}
+                  className="btn-accent flex-1"
+                >
+                  {sending ? "Sending…" : "Send to Chat"}
+                </button>
+              </div>
               {sendError && (
                 <p className="text-base font-semibold text-white drop-shadow-md">
                   {sendError}
@@ -278,6 +308,15 @@ function CameraInner() {
           </div>
         </div>
       )}
+
+      {/* Hidden file input for device gallery */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleGalleryPick}
+      />
 
       {/* Capture flash overlay */}
       {showFlash && (
