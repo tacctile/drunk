@@ -2,27 +2,28 @@
 # Companion to CONTEXT.md / ARCHITECTURE.md / BUILD_INDEX.md.
 # Update at the end of every session.
 
-current_phase: audit3-design-changes
-last_updated: 2026-06-14
+current_phase: reskin-group-chat
+last_updated: 2026-06-16
 app_root: app/
 
 last_change: >
-  Audit 3 design changes — 7 items.
-  IdentityCard simplified: PIN-only unlock (removed name + initial confirm fields
-  and all double-entry confirmation). SwitchIdentityRow trigger label changed to
-  "Sign out". Camera back button always visible (pre- and post-capture). Read
-  receipt avatars (1–2 readers) now tappable to open seen-by sheet. Location mute
-  toggle flipped to "Hide from [name]" (checked = muted). Cross-wing tabs (Hopp
-  in PlanNav, Plan in HopNav) use bg-raised background instead of divider. Home
-  screen Open Chat card shows unread message count badge (lightweight fetch, no
-  realtime subscription).
+  Reskinned Group Chat screen (/social) to match Stitch reference design.
+  MessageBubble: own messages use green bg with dark bold text, rounded
+  12px/12px/4px/12px shape. Other messages use raised bg with 4px/12px/12px/12px
+  shape, glass-highlight border, 32px avatar at bottom-left (spacer when grouped),
+  sender name in accent color above bubble. Reaction pills use translucent bg
+  with white/10 border. Input bar: raised bg with upward shadow, photo_camera +
+  photo_library buttons, rounded-card textarea wrapper with focus ring, circular
+  green send button. DayDivider: centered pill (no lines). HopNav: green active
+  state, raised bg, shadow, subtle border. TopBar: raised bg, map icon before
+  wordmark, trip pill as bordered chip on right next to avatar.
 
-last_session: "Audit 3 design changes — 7 items"
+last_session: "Reskin Group Chat screen to Stitch reference"
 
 verification:
-  typecheck: pass        # tsc --noEmit
-  lint: pass             # next lint (only pre-existing warnings)
-  build: pass            # next build — 44 routes compiled
+  typecheck: pass        # pre-existing module warnings only
+  lint: pass             # pre-existing warnings only
+  build: pass            # next build — all routes compiled
 
 known_issues:
   - App icons are placeholders — public/icons/ needs real PNGs
@@ -37,3 +38,4 @@ known_issues:
 next_up:
   - Wire push notification triggers (new message, reaction, etc.)
   - Real PNG app icons (192 / 512 / 180)
+  - Reskin remaining screens to match Stitch reference

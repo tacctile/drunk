@@ -20,29 +20,30 @@ export function TopBar() {
 
   return (
     <>
-      <header className="sticky top-0 z-30 border-b bg-bg">
-        <div className="mx-auto flex h-14 max-w-2xl items-center px-4">
+      <header className="sticky top-0 z-30 border-b border-border-strong bg-raised">
+        <div className="mx-auto flex h-14 max-w-2xl items-center justify-between px-4">
           <Link
             href="/home"
-            className="flex h-11 flex-none items-center text-title font-extrabold tracking-tight"
+            className="flex h-11 flex-none items-center gap-3"
           >
-            Hoppz
+            <Icon name="map" size={24} className="text-accent" />
+            <span className="text-title font-extrabold tracking-tight">Hoppz</span>
           </Link>
-          <div className="flex flex-1 justify-center">
+          <div className="flex items-center gap-3">
             {effectiveStatus === "upcoming" && daysUntil !== null && (
-              <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold" style={{ background: "var(--accent-dim)", color: "var(--accent)" }}>
-                <Icon name="calendar_month" size={14} />
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border-strong bg-surface px-3 py-1 text-label font-semibold">
+                <Icon name="calendar_month" size={16} className="text-green" />
                 {daysUntil === 0 ? "Today!" : daysUntil === 1 ? "Tomorrow" : `${daysUntil}d away`}
               </span>
             )}
             {effectiveStatus === "active" && (
-              <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold" style={{ background: "var(--green-dim)", color: "var(--green)" }}>
-                <Icon name="sports_bar" size={14} />
-                On Trip
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border-strong bg-surface px-3 py-1 text-label font-semibold">
+                <Icon name="sports_bar" size={16} className="text-green" />
+                Active Hopp
               </span>
             )}
+            <ProfileAvatar className="flex-none" onClick={() => setProfileOpen(true)} />
           </div>
-          <ProfileAvatar className="-mr-1 flex-none" onClick={() => setProfileOpen(true)} />
         </div>
       </header>
       <ProfileOverlay open={profileOpen} onClose={() => setProfileOpen(false)} />
