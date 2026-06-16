@@ -40,26 +40,17 @@ export function ImageViewer({ url, onClose }: ImageViewerProps) {
       const response = await fetch(url);
       const blob = await response.blob();
       const filename = url.split("/").pop()?.split("?")[0] ?? "image.jpg";
-
-      if (navigator.canShare && navigator.canShare({ files: [new File([blob], filename, { type: blob.type })] })) {
-        const file = new File([blob], filename, { type: blob.type });
-        await navigator.share({ files: [file], title: "Hoppz photo" });
-        setShowTray(true);
-      } else {
-        const blobUrl = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = blobUrl;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-        setShowTray(true);
-      }
-    } catch (err: unknown) {
-      if (err instanceof Error && err.name !== "AbortError") {
-        setShowTray(false);
-      }
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+      setShowTray(true);
+    } catch {
+      // silent fail — no error UI
     } finally {
       setDownloading(false);
     }

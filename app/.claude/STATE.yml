@@ -7,13 +7,12 @@ last_updated: 2026-06-16
 app_root: app/
 
 last_change: >
-  Replaced ImageViewer anchor-based download with Web Share API (native share
-  sheet on iOS/Android, saves to Photos) with desktop anchor fallback. Removed
-  Toast import/render and replaced with slide-down tray notification matching
-  the camera screen style ("Image saved", auto-hides after 2s via anim-tray).
-  Cancelling the share sheet shows no tray and no error.
+  Reverted ImageViewer download from Web Share API back to simple blob anchor
+  download. Removed all navigator.share/canShare/AbortError logic. Kept tray
+  notification ("Image saved", auto-hides after 2s via anim-tray) and
+  downloading spinner state.
 
-last_session: "ImageViewer: Web Share API download + tray notification"
+last_session: "ImageViewer: revert to blob anchor download, keep tray"
 
 verification:
   typecheck: pass        # pre-existing module warnings only
