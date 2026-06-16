@@ -29,7 +29,7 @@ All components use M3-style design tokens from `tailwind.preset.ts`. Import the 
 | RatingPill | `RatingPill.tsx` | `rating`, `icon?` | Overlay pill badge with filled icon and rating number |
 | HotelCard | `HotelCard.tsx` | `imageUrl`, `imageAlt?`, `rating?`, `name`, `subtitle`, `preferenceCount?`, `preferenceLabel?`, `price?`, `priceUnit?`, `onClick?` | Image card with rating overlay, hotel info, preference count, and price |
 | HorizontalScroll | `HorizontalScroll.tsx` | `children`, `className?` | Horizontal scroll container with hidden scrollbars and mobile edge bleed |
-| StatusPill | `StatusPill.tsx` | `icon?`, `label`, `iconClassName?`, `className?`, `size?` (sm/md), `variant?` (default/active/muted) | Compact pill indicator with optional leading icon, size, and color variant |
+| StatusPill | `StatusPill.tsx` | `icon?`, `label`, `iconClassName?`, `className?`, `size?` (sm/md), `variant?` (default/active/muted/glass), `dot?`, `dotClassName?` | Compact pill indicator with optional leading icon/dot, glass variant for camera overlays |
 | DayDivider | `DayDivider.tsx` | `label` | Centered date/section divider pill for chat or list views |
 | ReactionPill | `ReactionPill.tsx` | `emoji`, `count`, `active?`, `onClick?` | Emoji reaction badge with count for message reactions |
 | ChatBubble | `ChatBubble.tsx` | `variant` (own/other), `text?`, `imageUrl?`, `imageAlt?`, `senderName?`, `senderNameColor?`, `senderInitials?`, `senderColor?`, `senderAvatarUrl?`, `timestamp?`, `grouped?`, `reactions?`, `onReactionClick?`, `onClick?` | Chat message bubble supporting own/other variants, text/image content, grouped messages, and reactions |
@@ -40,10 +40,14 @@ All components use M3-style design tokens from `tailwind.preset.ts`. Import the 
 | ToggleSwitch | `ToggleSwitch.tsx` | `checked?`, `onChange?`, `disabled?`, `ariaLabel?` | iOS-style toggle switch with peer-checked Tailwind styling |
 | SettingsToggleRow | `SettingsToggleRow.tsx` | `icon`, `title`, `description?`, `iconBgClassName?`, `iconClassName?`, `checked?`, `onChange?`, `disabled?` | Settings row with icon, title, description, and toggle switch |
 | DialogModal | `DialogModal.tsx` | `open`, `onClose`, `title`, `children`, `footer?` | Centered modal dialog with blurred backdrop overlay and close button |
-| FloatingPill | `FloatingPill.tsx` | `icon?`, `label`, `onClick?`, `className?` | Centered pill-shaped floating action button |
+| FloatingPill | `FloatingPill.tsx` | `icon?`, `label`, `onClick?`, `className?`, `variant?` (primary/glass) | Pill-shaped floating button; glass variant for camera overlay retake-style actions |
 | SlidingPanel | `SlidingPanel.tsx` | `title`, `headerRight?`, `children`, `footer?`, `open?`, `onToggle?`, `width?` | Side sliding panel with toggle handle, scrollable content, and footer section |
 | PageTitle | `PageTitle.tsx` | `children` | Display-lg page heading for top-level screen titles |
 | MemberCard | `MemberCard.tsx` | `initials`, `name`, `avatarColor?`, `avatarUrl?`, `statusDotColor?`, `statusText?`, `badge?`, `onClick?` | Glass-card member row with avatar, status dot, location text, and trailing badge |
 | BottomSheet | `BottomSheet.tsx` | `open`, `onClose`, `children` | Bottom sliding sheet with drag handle, backdrop overlay, and animated entry |
 | InfoCard | `InfoCard.tsx` | `label`, `value` | Labeled key-value info display card for detail sheets |
-| ActionButton | `ActionButton.tsx` | `label`, `icon?`, `variant?` (filled/ghost), `onClick?` | Action button with filled or ghost variant and optional leading icon |
+| ActionButton | `ActionButton.tsx` | `label`, `icon?`, `variant?` (filled/ghost/glow), `iconPosition?` (leading/trailing), `fullWidth?`, `onClick?` | Action button with filled, ghost, or glow variant; supports trailing icon and full-width mode |
+| GlassIconButton | `GlassIconButton.tsx` | `icon`, `ariaLabel`, `size?` (sm/md), `onClick?`, `className?` | Circular frosted-glass icon button for camera/media overlays |
+| GalleryThumbnail | `GalleryThumbnail.tsx` | `src`, `alt?`, `onClick?`, `className?` | Square image preview tile for gallery/camera quick access |
+| ShutterButton | `ShutterButton.tsx` | `onClick?`, `disabled?`, `className?` | Camera capture shutter button with press animation |
+| ViewfinderFrame | `ViewfinderFrame.tsx` | `src?`, `alt?`, `children?`, `className?` | Full-screen image background with overlay content slot for camera UIs |

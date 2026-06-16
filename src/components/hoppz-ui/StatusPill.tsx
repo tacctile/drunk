@@ -8,7 +8,9 @@ export type StatusPillProps = {
   iconClassName?: string;
   className?: string;
   size?: "sm" | "md";
-  variant?: "default" | "active" | "muted";
+  variant?: "default" | "active" | "muted" | "glass";
+  dot?: boolean;
+  dotClassName?: string;
 };
 
 const sizeClasses = {
@@ -20,6 +22,7 @@ const variantClasses = {
   default: "bg-surface-variant/50 border border-outline-variant",
   active: "bg-secondary/10 text-secondary",
   muted: "bg-surface-variant text-on-surface-variant",
+  glass: "bg-black/50 backdrop-blur-sm border border-white/10",
 } as const;
 
 export function StatusPill({
@@ -29,15 +32,23 @@ export function StatusPill({
   className = "",
   size = "md",
   variant = "default",
+  dot,
+  dotClassName = "bg-error",
 }: StatusPillProps) {
   const resolvedIconClassName =
     iconClassName ?? (variant === "default" ? "text-secondary" : "");
-  const labelColor = variant === "default" ? "text-on-surface" : "";
+  const labelColor =
+    variant === "default"
+      ? "text-on-surface"
+      : variant === "glass"
+        ? "text-white"
+        : "";
 
   return (
     <div
       className={`flex items-center rounded-full ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
     >
+      {dot && <span className={`w-2 h-2 rounded-full ${dotClassName}`} />}
       {icon && (
         <span
           className={`material-symbols-outlined ${resolvedIconClassName}`}
@@ -46,7 +57,9 @@ export function StatusPill({
           {icon}
         </span>
       )}
-      <span className={`font-label-sm text-label-sm ${labelColor}`}>
+      <span
+        className={`font-label-sm text-label-sm ${labelColor} ${variant === "glass" ? "uppercase tracking-widest" : ""}`}
+      >
         {label}
       </span>
     </div>

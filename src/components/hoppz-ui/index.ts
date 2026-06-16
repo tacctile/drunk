@@ -126,3 +126,15 @@ export type { InfoCardProps } from "./InfoCard";
 
 export { ActionButton } from "./ActionButton";
 export type { ActionButtonProps } from "./ActionButton";
+
+export { GlassIconButton } from "./GlassIconButton";
+export type { GlassIconButtonProps } from "./GlassIconButton";
+
+export { GalleryThumbnail } from "./GalleryThumbnail";
+export type { GalleryThumbnailProps } from "./GalleryThumbnail";
+
+export { ShutterButton } from "./ShutterButton";
+export type { ShutterButtonProps } from "./ShutterButton";
+
+export { ViewfinderFrame } from "./ViewfinderFrame";
+export type { ViewfinderFrameProps } from "./ViewfinderFrame";
