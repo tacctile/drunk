@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { lockBodyScroll, unlockBodyScroll } from "@/lib/scrollLock";
 import { Icon } from "./Icon";
-import { Toast } from "./Toast";
 
 interface ImageViewerProps {
   url: string;
@@ -13,7 +12,7 @@ interface ImageViewerProps {
 export function ImageViewer({ url, onClose }: ImageViewerProps) {
   const [visible, setVisible] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  const [downloadToast, setDownloadToast] = useState<string | null>(null);
+  const [showTray, setShowTray] = useState(false);
 
   useEffect(() => {
     lockBodyScroll();
@@ -28,23 +27,30 @@ export function ImageViewer({ url, onClose }: ImageViewerProps) {
     };
   }, [onClose]);
 
+  useEffect(() => {
+    if (!showTray) return;
+    const t = setTimeout(() => setShowTray(false), 2000);
+    return () => clearTimeout(t);
+  }, [showTray]);
+
   const handleDownload = async () => {
     if (downloading) return;
     setDownloading(true);
     try {
       const response = await fetch(url);
       const blob = await response.blob();
+      const filename = url.split("/").pop()?.split("?")[0] ?? "image.jpg";
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = blobUrl;
-      a.download = url.split("/").pop()?.split("?")[0] ?? "image";
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-      setDownloadToast("Image saved to device");
+      setShowTray(true);
     } catch {
-      setDownloadToast("Download failed. Try again.");
+      // silent fail — no error UI
     } finally {
       setDownloading(false);
     }
@@ -85,8 +91,15 @@ export function ImageViewer({ url, onClose }: ImageViewerProps) {
         )}
       </button>
 
-      {downloadToast && (
-        <Toast message={downloadToast} onDismiss={() => setDownloadToast(null)} />
+      {showTray && (
+        <div
+          className="fixed left-0 right-0 z-[60] flex justify-center px-4 anim-tray"
+          style={{ top: "calc(env(safe-area-inset-top, 0px) + 8px)" }}
+        >
+          <div className="rounded-btn border bg-surface px-5 py-3 text-base font-semibold text-ink shadow-overlay">
+            Image saved
+          </div>
+        </div>
       )}
     </div>
   );

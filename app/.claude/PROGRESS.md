@@ -1,6 +1,20 @@
 # Hoppz — Progress
 > Feature checklist for the v2 Next.js app (`app/`). Newest phase on top.
 
+### 2026-06-16 — audit-fix: ImageViewer revert to blob anchor download
+
+**What:** Reverted ImageViewer download from Web Share API back to simple blob anchor download. Removed all navigator.share/canShare/AbortError logic. Kept the slide-down tray notification ("Image saved", anim-tray, auto-hides after 2s) and the downloading spinner state.
+
+**Status:** Complete. TypeScript passes (pre-existing module warnings only). Build passes clean.
+
+### 2026-06-16 — audit-fix: ImageViewer Web Share API download + tray notification
+
+**What:** Replaced anchor-based download in ImageViewer with Web Share API for native save-to-Photos on iOS/Android, falling back to blob anchor on desktop. Removed Toast component import/render and replaced with the same slide-down tray notification used on the camera screen (anim-tray class, "Image saved", auto-hides after 2s). Cancelling the share sheet shows no tray and no error (AbortError suppressed).
+
+**Key Decisions:** Reused existing anim-tray CSS keyframe rather than adding new animation — matches camera screen UX exactly. useEffect auto-dismiss timer (2s) for tray vs relying on CSS animation-end, since tray state needs to be cleaned up for re-trigger.
+
+**Status:** Complete. TypeScript passes (pre-existing module warnings only). Build passes clean.
+
 ### 2026-06-16 — audit-fix: Scroll button position + image download toast
 
 **What:** Repositioned scroll-to-bottom button from 12px to 88px above nav+safe-area so it sits clearly inside the chat body. Replaced ImageViewer anchor-click download with fetch-based blob download for reliable mobile save-to-device. Added downloading spinner and Toast confirmation on success/failure.
