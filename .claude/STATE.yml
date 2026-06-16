@@ -2,25 +2,20 @@
 # Companion to CONTEXT.md / ARCHITECTURE.md / BUILD_INDEX.md.
 # Update at the end of every session.
 
-current_phase: reskin-board
+current_phase: reskin-hopperz
 last_updated: 2026-06-16
 app_root: app/
 
 last_change: >
-  Reskinned Results Board screen to match Stitch reference. Two-column grid
-  now uses GlassCard containers (elevated surface cards with depth shadow)
-  instead of flat card rows. Top Cities column: section header with
-  leaderboard icon in accent, per-city ProgressBar showing vote proportion,
-  full-width "See Votes" buttons with accent/muted coloring for leader vs
-  others. Hot Dates column: section header with event icon in green,
-  DateBadge components (40px month+day squares with green/muted variants),
-  full-width "See Who" buttons. Hotel section converted from vertical list
-  to horizontal scroll carousel with gradient-placeholder cards showing
-  star-rating badge, hotel name, district location, heart preference count,
-  and extracted price-per-night. Added scrollbar-hide utility to globals.css.
-  Three new UI components: GlassCard, ProgressBar, DateBadge.
+  Reskinned Hopperz (Crew Roster) screen to match Stitch reference. List view
+  now uses GlassCard containers with presence indicator dots on avatars (green
+  for sharing, dim for offline), StatusChip pills for Remote/Out trip status,
+  "Sharing location" secondary text with green dot prefix, and display-scale
+  "Crew Roster" heading. Grid view updated with GlassCard wrappers and
+  presence dots. Removed chevron_right arrows. Added active:scale-[0.98]
+  tap feedback on all cards. One new UI component: StatusChip.
 
-last_session: "Reskin Results Board screen to Stitch reference"
+last_session: "Reskin Hopperz screen to Stitch reference"
 
 verification:
   typecheck: pass        # pre-existing module warnings only
