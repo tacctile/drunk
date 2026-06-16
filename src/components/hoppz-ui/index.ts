@@ -29,7 +29,7 @@ export { SectionLabel } from "./SectionLabel";
 export type { SectionLabelProps } from "./SectionLabel";
 
 export { GradeBadge } from "./GradeBadge";
-export type { GradeBadgeProps } from "./GradeBadge";
+export type { GradeBadgeProps, GradeBadgeColorScheme } from "./GradeBadge";
 
 export { BottomNav } from "./BottomNav";
 export type { BottomNavProps } from "./BottomNav";
@@ -150,3 +150,15 @@ export type { FabProps } from "./Fab";
 
 export { StickyDateHeader } from "./StickyDateHeader";
 export type { StickyDateHeaderProps } from "./StickyDateHeader";
+
+export { VoteButton } from "./VoteButton";
+export type { VoteButtonProps } from "./VoteButton";
+
+export { WalkScoreDisplay } from "./WalkScoreDisplay";
+export type { WalkScoreDisplayProps } from "./WalkScoreDisplay";
+
+export { ColumnHeaders } from "./ColumnHeaders";
+export type { ColumnHeadersProps, ColumnHeader } from "./ColumnHeaders";
+
+export { CityListRow } from "./CityListRow";
+export type { CityListRowProps } from "./CityListRow";
