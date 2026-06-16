@@ -82,6 +82,7 @@ function ChatInner() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const [showNewPill, setShowNewPill] = useState(false);
+  const [showScrollButton, setShowScrollButton] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const initialScrollDone = useRef(false);
@@ -137,7 +138,9 @@ function ChatInner() {
     if (!initialScrollDone.current) {
       initialScrollDone.current = true;
       requestAnimationFrame(() => {
-        bottomRef.current?.scrollIntoView({ behavior: "instant" });
+        requestAnimationFrame(() => {
+          bottomRef.current?.scrollIntoView({ behavior: "instant" });
+        });
       });
       prevMessageCount.current = messages.length;
       return;
@@ -152,6 +155,7 @@ function ChatInner() {
           bottomRef.current?.scrollIntoView({ behavior: "instant" });
         });
         setShowNewPill(false);
+        setShowScrollButton(false);
       } else {
         setShowNewPill(true);
       }
@@ -181,7 +185,9 @@ function ChatInner() {
     if (el.scrollTop < 100 && hasMore && !loadingMore) {
       void loadMore();
     }
-    if (isNearBottom()) {
+    const nearBottom = isNearBottom();
+    setShowScrollButton(!nearBottom);
+    if (nearBottom) {
       setShowNewPill(false);
     }
   }, [hasMore, loadingMore, loadMore, isNearBottom]);
@@ -633,6 +639,25 @@ function ChatInner() {
             New message ↓
           </button>
         </div>
+      )}
+
+      {showScrollButton && (
+        <button
+          type="button"
+          aria-label="Scroll to bottom"
+          onClick={() => {
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                bottomRef.current?.scrollIntoView({ behavior: "instant" });
+              });
+            });
+            setShowScrollButton(false);
+          }}
+          className="fixed left-1/2 -translate-x-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-surface border border-border shadow-overlay text-ink-muted"
+          style={{ bottom: "calc(64px + env(safe-area-inset-bottom) + 12px)" }}
+        >
+          <Icon name="expand_circle_down" size={24} />
+        </button>
       )}
 
       {/* Reaction picker overlay */}

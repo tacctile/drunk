@@ -7,12 +7,12 @@ last_updated: 2026-06-16
 app_root: app/
 
 last_change: >
-  Fixed chat scroll to use bottomRef.scrollIntoView via rAF for reliable
-  initial-open and new-message scrolling. Removed old scrollToBottom callback.
-  Updated ImageViewer download handler (proper DOM append/remove, filename
-  extraction, target/rel attrs) and moved download button to top-right at 24px.
+  Fixed initial chat scroll with double-rAF to guarantee DOM paint before
+  scrollIntoView. Added scroll-to-bottom arrow button (expand_circle_down,
+  44px circle, bg-surface, border, shadow-overlay) that appears when user
+  scrolls up and hides when at bottom or tapped.
 
-last_session: "Fix chat scroll + add image download button"
+last_session: "Fix initial chat scroll + add scroll-to-bottom button"
 
 verification:
   typecheck: pass        # pre-existing module warnings only
