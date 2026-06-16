@@ -43,12 +43,10 @@ function SenderAvatar({
 
 function DayDivider({ iso }: { iso: string }) {
   return (
-    <div className="flex items-center gap-3 py-3">
-      <div className="h-px flex-1 bg-border" />
-      <span className="text-meta font-normal text-ink-dim">
+    <div className="flex justify-center my-6">
+      <span className="bg-raised text-ink-muted text-label font-semibold uppercase tracking-label px-4 py-1 rounded-full">
         {formatDayDivider(iso)}
       </span>
-      <div className="h-px flex-1 bg-border" />
     </div>
   );
 }
@@ -491,10 +489,10 @@ function ChatInner() {
               if (node) messageRefs.current.set(msg.id, node);
             }}
             className={`flex ${isOwn ? "justify-end" : "justify-start"} ${
-              grouped ? "mt-0.5" : "mt-3"
+              grouped ? "mt-[2px]" : "mt-4"
             } ${highlightedId === msg.id ? "rounded-card bg-accent/10 transition-colors duration-[800ms]" : ""}`}
           >
-            <p className="max-w-[75%] px-3 py-2 text-base italic text-ink-dim">
+            <p className="max-w-[85%] px-3 py-2 text-base italic text-ink-dim">
               This message was deleted
             </p>
           </div>
@@ -570,7 +568,7 @@ function ChatInner() {
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex flex-1 flex-col justify-start overflow-y-scroll px-4"
+        className="flex flex-1 flex-col justify-start overflow-y-scroll px-4 pt-6 pb-6"
       >
         {loadingMore && (
           <div className="flex justify-center py-3">
@@ -603,10 +601,13 @@ function ChatInner() {
         </ErrorBoundary>
 
         {uploadingId && (
-          <div className="mt-3 flex justify-end">
-            <div className="flex max-w-[75%] items-center gap-2 rounded-card rounded-br-none bg-accent px-3 py-3 opacity-60">
+          <div className="mt-4 flex justify-end">
+            <div
+              className="flex max-w-[85%] items-center gap-2 bg-green px-3 py-3 opacity-60 shadow-sm"
+              style={{ borderRadius: "12px 12px 4px 12px" }}
+            >
               <Icon name="progress_activity" size={20} className="animate-spin text-bg" />
-              <span className="text-base text-bg">Uploading...</span>
+              <span className="text-base font-bold text-bg">Uploading...</span>
             </div>
           </div>
         )}
@@ -620,7 +621,7 @@ function ChatInner() {
               scrollToBottom("smooth");
               setShowNewPill(false);
             }}
-            className="pointer-events-auto rounded-full bg-accent px-4 py-1.5 text-meta font-semibold text-bg shadow-overlay"
+            className="pointer-events-auto rounded-full bg-green px-4 py-1.5 text-meta font-semibold text-bg shadow-overlay"
           >
             New message ↓
           </button>
@@ -631,7 +632,7 @@ function ChatInner() {
       {pickerMessageId && pickerPos && (
         <div
           data-reaction-picker
-          className="fixed z-50 flex items-center gap-1 rounded-full border border-border bg-surface-raised px-3 py-2 shadow-overlay"
+          className="fixed z-50 flex items-center gap-1 rounded-full border border-border-strong bg-raised px-3 py-2 shadow-overlay"
           style={{
             left: pickerPos.x,
             top: pickerPos.y,
@@ -664,21 +665,21 @@ function ChatInner() {
         </div>
       )}
 
-      <div className="flex-none border-t border-border bg-bg py-0 pb-[env(safe-area-inset-bottom)]">
+      <div className="flex-none bg-raised border-t border-white/[0.07] py-0 pb-[env(safe-area-inset-bottom)]" style={{ boxShadow: "0 -4px 16px rgba(0,0,0,0.5)" }}>
         {/* Reply preview bar */}
         <div
           className="overflow-hidden transition-all duration-[160ms] ease-out"
           style={{ maxHeight: replyingTo ? 64 : 0 }}
         >
           {replyingTo && (
-            <div className="flex items-center gap-2 border-l-2 border-accent bg-surface-raised px-3 py-2 mb-2">
+            <div className="flex items-center gap-2 border-l-2 border-accent bg-surface px-3 py-2 mb-1">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-meta text-ink-muted">
                   Replying to {getVoter(replyingTo.voter_id).name}
                 </p>
                 <p className="truncate text-meta text-ink-dim">
                   {replyingTo.image_url && !replyingTo.content
-                    ? "📷 Photo"
+                    ? "Photo"
                     : replyingTo.content ?? ""}
                 </p>
               </div>
@@ -693,28 +694,15 @@ function ChatInner() {
           )}
         </div>
 
-        <div className="flex items-center gap-1 py-2 px-2">
+        <div className="flex items-end gap-2 py-3 px-4">
           <button
             type="button"
             onClick={() => router.push("/social/camera?from=chat")}
             aria-label="Take a photo"
-            className="flex h-10 w-10 flex-none items-center justify-center text-ink-muted"
+            className="flex h-11 w-11 flex-none items-center justify-center text-ink-muted transition-opacity hover:opacity-80"
           >
             <Icon name="photo_camera" size={24} />
           </button>
-
-          <textarea
-            ref={textareaRef}
-            value={inputValue}
-            onChange={(e) => {
-              setInputValue(e.target.value);
-              handleInput();
-            }}
-            onKeyDown={handleKeyDown}
-            placeholder="Message..."
-            rows={1}
-            className="input flex-1 resize-none !h-auto min-h-[36px] max-h-[96px] overflow-y-auto py-2"
-          />
 
           <input
             ref={fileInputRef}
@@ -731,21 +719,34 @@ function ChatInner() {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             aria-label="Upload an image"
-            className="flex h-10 w-10 flex-none items-center justify-center text-ink-muted"
+            className="flex h-11 w-11 flex-none items-center justify-center text-ink-muted transition-opacity hover:opacity-80"
           >
-            <Icon name="add_photo_alternate" size={24} />
+            <Icon name="photo_library" size={24} />
           </button>
+
+          <div className="flex-1 flex items-center bg-surface rounded-card px-4 py-2 min-h-[44px] focus-within:ring-2 ring-accent transition-all">
+            <textarea
+              ref={textareaRef}
+              value={inputValue}
+              onChange={(e) => {
+                setInputValue(e.target.value);
+                handleInput();
+              }}
+              onKeyDown={handleKeyDown}
+              placeholder="Message..."
+              rows={1}
+              className="w-full bg-transparent border-none focus:ring-0 focus:outline-none text-base text-ink resize-none py-1 h-auto max-h-[120px] placeholder:text-ink-dim"
+            />
+          </div>
 
           <button
             type="button"
             onClick={handleSend}
             disabled={!hasContent}
             aria-label="Send message"
-            className={`flex h-10 w-10 flex-none items-center justify-center disabled:opacity-50 ${
-              hasContent ? "text-accent" : "text-ink-dim"
-            }`}
+            className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-green text-bg active:scale-95 transition-all disabled:opacity-50 shadow-lg"
           >
-            <Icon name="send" size={22} />
+            <Icon name="send" size={24} />
           </button>
         </div>
       </div>

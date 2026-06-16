@@ -13,7 +13,7 @@ function SenderAvatar({
   name,
   color,
   avatarUrl,
-  size = 24,
+  size = 32,
 }: {
   name: string;
   color: string;
@@ -100,202 +100,252 @@ export function MessageBubble({
     ? getVoter(replyMsg.voter_id)
     : null;
 
+  const replyQuote = msg.reply_to_id ? (
+    <button
+      type="button"
+      className={`mb-1 block w-full rounded-lg border-l-2 border-accent px-2 py-1 text-left ${
+        isOwn ? "bg-black/15" : "bg-surface"
+      }`}
+      onClick={() => {
+        if (msg.reply_to_id) onScrollToReply(msg.reply_to_id);
+      }}
+    >
+      <p className={`text-[11px] ${isOwn ? "text-bg/70" : "text-ink-muted"}`}>
+        {replyVoter ? replyVoter.name : "Someone"}
+      </p>
+      <p className={`truncate text-[12px] ${isOwn ? "text-bg/60" : "text-ink-dim"}`}>
+        {replyMsg
+          ? replyMsg.is_deleted
+            ? "Original message deleted"
+            : replyMsg.image_url && !replyMsg.content
+              ? "Photo"
+              : replyMsg.content ?? ""
+          : "Original message deleted"}
+      </p>
+    </button>
+  ) : null;
+
+  const imageBlock = msg.image_url ? (
+    <button
+      type="button"
+      onClick={() => onImageExpand(msg.image_url!)}
+      className="block"
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={msg.image_url}
+        alt=""
+        loading="lazy"
+        className="block max-h-[300px] max-w-full rounded-card object-contain"
+        style={{ aspectRatio: "4/3" }}
+        onLoad={(e) => {
+          (e.currentTarget as HTMLImageElement).style.aspectRatio = "";
+        }}
+      />
+    </button>
+  ) : null;
+
+  const textBlock = msg.content ? (
+    <p className={`text-base${msg.image_url ? " pt-1" : ""} ${isOwn ? "font-bold" : ""}`}>
+      {msg.content}
+    </p>
+  ) : null;
+
+  const reactionRow = groupedReactions.length > 0 ? (
+    <div className={`flex min-h-[28px] flex-wrap gap-1 mt-1 ${isOwn ? "justify-end" : "justify-start"}`}>
+      {groupedReactions.map((g) => {
+        const isOwnReaction = g.voterIds.includes(voterId);
+        return (
+          <button
+            key={g.emoji}
+            type="button"
+            onClick={() => onReactionTap(g.emoji)}
+            className={`flex items-center gap-1 rounded-full px-2 py-1 text-[13px] ${
+              isOwnReaction
+                ? "border border-accent bg-white/5"
+                : "border border-white/10 bg-white/5"
+            }`}
+          >
+            <span className="text-[12px]">{g.emoji}</span>
+            <span className="text-ink-muted text-label">{g.count}</span>
+          </button>
+        );
+      })}
+    </div>
+  ) : null;
+
+  const timestamp = isLast ? (
+    <span className={`mt-1 text-[11px] font-normal text-ink-dim opacity-60 ${isOwn ? "text-right" : "text-left"}`}>
+      {formatMessageTime(msg.created_at)}
+    </span>
+  ) : null;
+
+  const readReceipts = msgReads.length > 0 ? (
+    <div className={`mt-0.5 flex items-center ${isOwn ? "justify-end" : "justify-start"}`}>
+      {msgReads.length === 1 && (
+        <button type="button" onClick={onSeenByTap}>
+          <SenderAvatar
+            name={getVoter(msgReads[0].voter_id).name}
+            color={getVoter(msgReads[0].voter_id).color}
+            avatarUrl={getVoter(msgReads[0].voter_id).avatarUrl}
+            size={16}
+          />
+        </button>
+      )}
+      {msgReads.length === 2 && (
+        <button type="button" onClick={onSeenByTap} className="flex">
+          <SenderAvatar
+            name={getVoter(msgReads[0].voter_id).name}
+            color={getVoter(msgReads[0].voter_id).color}
+            avatarUrl={getVoter(msgReads[0].voter_id).avatarUrl}
+            size={16}
+          />
+          <div className="-ml-1 relative z-10">
+            <SenderAvatar
+              name={getVoter(msgReads[1].voter_id).name}
+              color={getVoter(msgReads[1].voter_id).color}
+              avatarUrl={getVoter(msgReads[1].voter_id).avatarUrl}
+              size={16}
+            />
+          </div>
+        </button>
+      )}
+      {msgReads.length >= 3 && (
+        <button
+          type="button"
+          onClick={onSeenByTap}
+          className="text-[11px] text-ink-dim"
+        >
+          Seen by {msgReads.length}
+        </button>
+      )}
+    </div>
+  ) : null;
+
+  const desktopReplyBtn = hovered ? (
+    <button
+      type="button"
+      onClick={onReplyTap}
+      className="flex h-8 w-8 items-center justify-center rounded-full text-ink-dim transition hover:bg-raised hover:text-ink-muted"
+    >
+      <Icon name="reply" size={18} />
+    </button>
+  ) : null;
+
+  const bubbleHandlers = {
+    onTouchStart: (e: React.TouchEvent) => onTouchStart(e, msg, bubbleRef.current),
+    onTouchMove: (e: React.TouchEvent) => onTouchMove(e, msg),
+    onTouchEnd,
+    onMouseDown: (e: React.MouseEvent) => onMouseDown(e, msg, bubbleRef.current),
+    onMouseUp,
+    onContextMenu,
+  };
+
+  if (isOwn) {
+    return (
+      <div
+        ref={(node) => {
+          onObserve(node, msg);
+          onRefSet(node);
+        }}
+        className={`flex flex-col items-end gap-1 max-w-[85%] self-end ${
+          grouped ? "mt-[2px]" : "mt-4"
+        } ${highlighted ? "rounded-card bg-accent/10 transition-colors duration-[800ms]" : ""}`}
+      >
+        <div
+          className="group relative flex items-center gap-1 flex-row-reverse"
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => {
+            setHovered(false);
+            onMouseLeave();
+          }}
+        >
+          <div
+            ref={bubbleRef}
+            className={`p-3 bg-green text-bg shadow-sm transition-transform duration-200 ${
+              msg.image_url ? "p-1" : ""
+            }`}
+            style={{
+              borderRadius: "12px 12px 4px 12px",
+              transform: nudged ? "translateX(8px)" : undefined,
+            }}
+            {...bubbleHandlers}
+          >
+            {replyQuote}
+            {msg.image_url ? (
+              <>
+                <div className="rounded-[10px] overflow-hidden">
+                  {imageBlock}
+                </div>
+                {msg.content && (
+                  <div className="px-2 py-2">
+                    <p className="text-base font-bold text-bg">{msg.content}</p>
+                  </div>
+                )}
+              </>
+            ) : (
+              textBlock
+            )}
+          </div>
+          {desktopReplyBtn}
+        </div>
+        {reactionRow}
+        <div className="flex gap-1 items-center">
+          {timestamp}
+        </div>
+        {readReceipts}
+      </div>
+    );
+  }
+
   return (
     <div
       ref={(node) => {
         onObserve(node, msg);
         onRefSet(node);
       }}
-      className={`flex flex-col ${isOwn ? "items-end" : "items-start"} ${
-        grouped ? "mt-0.5" : "mt-3"
+      className={`flex items-end gap-2 max-w-[85%] ${
+        grouped ? "mt-[2px]" : "mt-6"
       } ${highlighted ? "rounded-card bg-accent/10 transition-colors duration-[800ms]" : ""}`}
     >
-      {!grouped && !isOwn && (
-        <div className="mb-1 flex items-center gap-1.5">
-          <SenderAvatar name={voter.name} color={voter.color} avatarUrl={voter.avatarUrl} />
-          <span className="text-meta text-ink-muted">{voter.name}</span>
+      {grouped ? (
+        <div className="h-8 w-8 flex-shrink-0" />
+      ) : (
+        <div className="flex-shrink-0">
+          <SenderAvatar name={voter.name} color={voter.color} avatarUrl={voter.avatarUrl} size={32} />
         </div>
       )}
-
-      {/* Bubble + desktop reply button wrapper */}
-      <div
-        className={`group relative flex items-center gap-1 max-w-[75%] ${
-          isOwn ? "flex-row-reverse" : "flex-row"
-        }`}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => {
-          setHovered(false);
-          onMouseLeave();
-        }}
-      >
-        <div
-          ref={bubbleRef}
-          className={`px-3 py-2 ${
-            isOwn
-              ? "rounded-card rounded-br-none bg-accent text-bg"
-              : "rounded-card rounded-bl-none bg-raised text-ink"
-          } transition-transform duration-200`}
-          style={{
-            transform: nudged ? "translateX(8px)" : undefined,
-          }}
-          onTouchStart={(e) => onTouchStart(e, msg, bubbleRef.current)}
-          onTouchMove={(e) => onTouchMove(e, msg)}
-          onTouchEnd={onTouchEnd}
-          onMouseDown={(e) => onMouseDown(e, msg, bubbleRef.current)}
-          onMouseUp={onMouseUp}
-          onContextMenu={onContextMenu}
-        >
-          {/* Reply quote preview */}
-          {msg.reply_to_id && (
-            <button
-              type="button"
-              className={`mb-1 block w-full rounded-t-lg border-l-2 border-accent px-2 py-1 text-left ${
-                isOwn ? "bg-black/15" : "bg-surface"
-              }`}
-              onClick={() => {
-                if (msg.reply_to_id) onScrollToReply(msg.reply_to_id);
-              }}
-            >
-              <p className={`text-[11px] ${isOwn ? "text-bg/70" : "text-ink-muted"}`}>
-                {replyVoter
-                  ? replyVoter.name
-                  : "Someone"}
-              </p>
-              <p className={`truncate text-[12px] ${isOwn ? "text-bg/60" : "text-ink-dim"}`}>
-                {replyMsg
-                  ? replyMsg.is_deleted
-                    ? "Original message deleted"
-                    : replyMsg.image_url && !replyMsg.content
-                      ? "📷 Photo"
-                      : replyMsg.content ?? ""
-                  : "Original message deleted"}
-              </p>
-            </button>
-          )}
-
-          {msg.image_url && (
-            <button
-              type="button"
-              onClick={() => onImageExpand(msg.image_url!)}
-              className="block"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={msg.image_url}
-                alt=""
-                loading="lazy"
-                className="block max-h-[300px] max-w-full rounded-card object-contain"
-                style={{ aspectRatio: "4/3" }}
-                onLoad={(e) => {
-                  (e.currentTarget as HTMLImageElement).style.aspectRatio = "";
-                }}
-              />
-            </button>
-          )}
-          {msg.content && (
-            <p className={`text-base${msg.image_url ? " pt-1" : ""}`}>
-              {msg.content}
-            </p>
-          )}
-        </div>
-
-        {/* Desktop reply button — appears on hover */}
-        {hovered && (
-          <button
-            type="button"
-            onClick={onReplyTap}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-ink-dim transition hover:bg-surface-raised hover:text-ink-muted"
-          >
-            <Icon name="reply" size={18} />
-          </button>
+      <div className="flex flex-col gap-1 min-w-0">
+        {!grouped && (
+          <span className="text-label font-semibold text-accent ml-1">{voter.name}</span>
         )}
+        <div
+          className="group relative flex items-center gap-1 flex-row"
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => {
+            setHovered(false);
+            onMouseLeave();
+          }}
+        >
+          <div
+            ref={bubbleRef}
+            className="p-3 bg-raised text-ink border-t border-white/[0.07] shadow-sm transition-transform duration-200"
+            style={{
+              borderRadius: "4px 12px 12px 12px",
+              transform: nudged ? "translateX(8px)" : undefined,
+            }}
+            {...bubbleHandlers}
+          >
+            {replyQuote}
+            {imageBlock}
+            {textBlock}
+          </div>
+          {desktopReplyBtn}
+        </div>
+        {reactionRow}
+        {timestamp}
+        {readReceipts}
       </div>
-
-      {/* Reaction summary row */}
-      {groupedReactions.length > 0 && (
-        <div
-          className={`flex min-h-[28px] flex-wrap gap-1 mt-0.5 ${
-            isOwn ? "justify-end" : "justify-start"
-          }`}
-        >
-          {groupedReactions.map((g) => {
-            const isOwnReaction = g.voterIds.includes(voterId);
-            return (
-              <button
-                key={g.emoji}
-                type="button"
-                onClick={() => onReactionTap(g.emoji)}
-                className={`flex items-center gap-0.5 rounded-full bg-surface-raised px-2 py-0.5 text-[13px] ${
-                  isOwnReaction
-                    ? "border border-accent"
-                    : "border border-transparent"
-                }`}
-              >
-                <span>{g.emoji}</span>
-                <span className="text-ink-muted">{g.count}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Timestamp */}
-      {isLast && (
-        <span
-          className={`mt-0.5 text-[11px] font-normal text-ink-dim ${
-            isOwn ? "text-right" : "text-left"
-          }`}
-        >
-          {formatMessageTime(msg.created_at)}
-        </span>
-      )}
-
-      {/* Read receipts */}
-      {msgReads.length > 0 && (
-        <div
-          className={`mt-0.5 flex items-center ${
-            isOwn ? "justify-end" : "justify-start"
-          }`}
-        >
-          {msgReads.length === 1 && (
-            <button type="button" onClick={onSeenByTap}>
-              <SenderAvatar
-                name={getVoter(msgReads[0].voter_id).name}
-                color={getVoter(msgReads[0].voter_id).color}
-                avatarUrl={getVoter(msgReads[0].voter_id).avatarUrl}
-                size={16}
-              />
-            </button>
-          )}
-          {msgReads.length === 2 && (
-            <button type="button" onClick={onSeenByTap} className="flex">
-              <SenderAvatar
-                name={getVoter(msgReads[0].voter_id).name}
-                color={getVoter(msgReads[0].voter_id).color}
-                avatarUrl={getVoter(msgReads[0].voter_id).avatarUrl}
-                size={16}
-              />
-              <div className="-ml-1 relative z-10">
-                <SenderAvatar
-                  name={getVoter(msgReads[1].voter_id).name}
-                  color={getVoter(msgReads[1].voter_id).color}
-                  avatarUrl={getVoter(msgReads[1].voter_id).avatarUrl}
-                  size={16}
-                />
-              </div>
-            </button>
-          )}
-          {msgReads.length >= 3 && (
-            <button
-              type="button"
-              onClick={onSeenByTap}
-              className="text-[11px] text-ink-dim"
-            >
-              Seen by {msgReads.length}
-            </button>
-          )}
-        </div>
-      )}
     </div>
   );
 }
