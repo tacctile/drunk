@@ -16,15 +16,6 @@ function dataUrlToFile(dataUrl: string, filename: string): File {
   return new File([u8arr], filename, { type: mime });
 }
 
-function saveToDevice(dataUrl: string, filename: string) {
-  const a = document.createElement("a");
-  a.href = dataUrl;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-}
-
 function touchDist(a: Touch, b: Touch): number {
   const dx = a.clientX - b.clientX;
   const dy = a.clientY - b.clientY;
@@ -65,7 +56,6 @@ function CameraInner() {
   const [galleryImage, setGalleryImage] = useState<string | null>(null);
   const [showTray, setShowTray] = useState(false);
   const [trayMessage, setTrayMessage] = useState("");
-  const [zoomDisplay, setZoomDisplay] = useState<number | null>(null);
   const [focusPoint, setFocusPoint] = useState<{ x: number; y: number } | null>(null);
 
   const capturedFacingRef = useRef(facingMode);
@@ -77,7 +67,6 @@ function CameraInner() {
   const pinchDistRef = useRef(0);
   const pinchZoomRef = useRef(1);
   const wasPinchingRef = useRef(false);
-  const zoomTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   const activeImage = capturedImage || galleryImage;
 
@@ -117,7 +106,6 @@ function CameraInner() {
     }
 
     zoomRef.current = 1;
-    setZoomDisplay(null);
   }, [stream]);
 
   // Pinch-to-zoom via native listeners (need non-passive touchmove)
@@ -151,9 +139,6 @@ function CameraInner() {
       try {
         track.applyConstraints({ advanced: [{ zoom: clamped } as any] });
         zoomRef.current = clamped;
-        setZoomDisplay(clamped);
-        clearTimeout(zoomTimerRef.current);
-        zoomTimerRef.current = setTimeout(() => setZoomDisplay(null), 1000);
       } catch {}
     };
 
@@ -252,12 +237,7 @@ function CameraInner() {
       return;
     }
 
-    if (capturedImage) {
-      saveToDevice(capturedImage, `hoppz-${Date.now()}.jpg`);
-      setTrayMessage("Image sent and saved to device");
-    } else {
-      setTrayMessage("Image sent to chat");
-    }
+    setTrayMessage("Image sent to chat");
     setShowTray(true);
 
     const url = result.url;
@@ -357,15 +337,6 @@ function CameraInner() {
               }}
             >
               <div className="h-full w-full rounded border-2 border-white/80 anim-focus" />
-            </div>
-          )}
-
-          {/* Zoom level indicator */}
-          {zoomDisplay !== null && zoomDisplay > 1.05 && (
-            <div className="absolute left-1/2 top-1/2 z-[15] -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-              <div className="rounded-full bg-black/50 px-4 py-2 text-title font-bold text-white backdrop-blur-sm">
-                {zoomDisplay.toFixed(1)}×
-              </div>
             </div>
           )}
 
