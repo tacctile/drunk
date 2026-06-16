@@ -2,20 +2,22 @@
 # Companion to CONTEXT.md / ARCHITECTURE.md / BUILD_INDEX.md.
 # Update at the end of every session.
 
-current_phase: reskin-hopperz
+current_phase: reskin-gallery
 last_updated: 2026-06-16
 app_root: app/
 
 last_change: >
-  Reskinned Hopperz (Crew Roster) screen to match Stitch reference. List view
-  now uses GlassCard containers with presence indicator dots on avatars (green
-  for sharing, dim for offline), StatusChip pills for Remote/Out trip status,
-  "Sharing location" secondary text with green dot prefix, and display-scale
-  "Crew Roster" heading. Grid view updated with GlassCard wrappers and
-  presence dots. Removed chevron_right arrows. Added active:scale-[0.98]
-  tap feedback on all cards. One new UI component: StatusChip.
+  Reskinned Gallery (Photos) screen to match Stitch reference. Photo grid now
+  uses 2px gap with surface-colored placeholders, 1:1 aspect ratio items, and
+  active:scale-[0.98] tap feedback. Day section headers are fully opaque
+  sticky bars with uppercase label-voice typography (12px/bold/tracking-widest).
+  Upload button replaced with green FloatingActionButton (56px circle, filled
+  icon, rim-light, deep shadow) positioned bottom-right matching the Stitch FAB
+  pattern. Jump-to-date restyled as a compact pill with label-voice text. Loading
+  skeleton uses 3-col grid with 2px gap and surface placeholders. One new UI
+  component: FloatingActionButton.
 
-last_session: "Reskin Hopperz screen to Stitch reference"
+last_session: "Reskin Gallery screen to Stitch reference"
 
 verification:
   typecheck: pass        # pre-existing module warnings only

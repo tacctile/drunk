@@ -5,6 +5,7 @@ import { Icon } from "@/components/Icon";
 import { BottomSheet } from "@/components/BottomSheet";
 import { ImageViewer } from "@/components/ImageViewer";
 import { Toast } from "@/components/Toast";
+import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
 import { getSupabase } from "@/lib/supabase";
 import { uploadChatImage } from "@/lib/storage";
 import { useGroupData } from "@/hooks/useGroupData";
@@ -154,25 +155,29 @@ export default function GalleryPage() {
 
   const days = groupByDay(images);
 
+  // Loading skeleton
   if (loading) {
     return (
-      <div className="px-0">
-        <div className="flex items-center justify-between px-4 pt-4 pb-2">
-          <h1 className="text-title font-bold text-ink">Photos</h1>
+      <div>
+        <div className="sticky top-0 z-10 flex items-center justify-between bg-bg px-4 py-2">
+          <h2 className="text-[12px] font-bold uppercase tracking-widest text-ink-muted">
+            Photos
+          </h2>
         </div>
-        <div className="grid grid-cols-3 gap-0.5">
+        <div className="grid grid-cols-3 gap-[2px]">
           {Array.from({ length: 9 }).map((_, i) => (
-            <div key={i} className="aspect-square bg-surface-raised" />
+            <div key={i} className="aspect-square bg-surface" />
           ))}
         </div>
       </div>
     );
   }
 
+  // Empty state
   if (images.length === 0) {
     return (
-      <div className="flex h-[calc(100dvh-3.5rem-64px-env(safe-area-inset-bottom))] flex-col items-center justify-center gap-3 text-center">
-        <Icon name="photo" size={48} className="text-ink-dim" />
+      <div className="flex h-[calc(100dvh-3.5rem-64px-env(safe-area-inset-bottom))] flex-col items-center justify-center gap-3 text-center px-4">
+        <Icon name="photo_library" size={48} className="text-ink-dim" />
         <h2 className="text-title font-bold text-ink">No photos yet</h2>
         <p className="text-meta font-normal text-ink-muted">
           Photos shared in chat will appear here
@@ -188,15 +193,13 @@ export default function GalleryPage() {
             e.target.value = "";
           }}
         />
-        <button
-          type="button"
+        <FloatingActionButton
+          icon="add_photo_alternate"
           onClick={() => uploadInputRef.current?.click()}
+          ariaLabel="Upload photo"
           disabled={uploading}
-          className={`btn-ghost rounded-btn h-11 px-4 flex items-center gap-2 ${uploading ? "animate-pulse opacity-50" : ""}`}
-        >
-          <Icon name="add_photo_alternate" size={20} />
-          Upload
-        </button>
+          className={`mt-4 ${uploading ? "animate-pulse" : ""}`}
+        />
         {toastMsg && (
           <Toast message={toastMsg} onDismiss={() => setToastMsg(null)} />
         )}
@@ -205,45 +208,43 @@ export default function GalleryPage() {
   }
 
   return (
-    <div className="h-[calc(100dvh-3.5rem-64px-env(safe-area-inset-bottom))] overflow-y-auto">
-      <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <h1 className="text-title font-bold text-ink">Photos</h1>
-        <button
-          type="button"
-          onClick={() => void handleRefresh()}
-          aria-label="Refresh gallery"
-          className="flex h-11 w-11 items-center justify-center text-ink-muted"
-        >
-          <Icon name="refresh" size={24} />
-        </button>
-      </div>
-
+    <div className="h-[calc(100dvh-3.5rem-64px-env(safe-area-inset-bottom))] overflow-y-auto pb-32">
       {days.map((day) => (
-        <div key={day.key} id={`gallery-day-${day.key}`}>
-          <div className="sticky top-0 z-10 bg-bg px-4 py-2">
-            <span className="text-label text-ink-muted">
+        <section key={day.key} id={`gallery-day-${day.key}`}>
+          <div className="sticky top-0 z-10 flex items-center justify-between bg-bg px-4 py-2">
+            <h2 className="text-[12px] font-bold uppercase tracking-widest text-ink-muted">
               {formatDayDivider(day.iso)}
-            </span>
+            </h2>
+            {day === days[0] && (
+              <button
+                type="button"
+                onClick={() => void handleRefresh()}
+                aria-label="Refresh gallery"
+                className="flex h-11 w-11 items-center justify-center text-ink-muted"
+              >
+                <Icon name="refresh" size={24} />
+              </button>
+            )}
           </div>
-          <div className="grid grid-cols-3 gap-0.5">
+          <div className="grid grid-cols-3 gap-[2px]">
             {day.items.map((img) => (
               <button
                 key={img.id}
                 type="button"
                 onClick={() => setViewerUrl(img.image_url)}
-                className="aspect-square overflow-hidden"
+                className="aspect-square overflow-hidden bg-surface transition-transform duration-100 active:scale-[0.98]"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={img.image_url}
                   alt=""
                   loading="lazy"
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-cover transition-opacity duration-300"
                 />
               </button>
             ))}
           </div>
-        </div>
+        </section>
       ))}
 
       {loadingMore && (
@@ -254,7 +255,7 @@ export default function GalleryPage() {
 
       <div ref={sentinelRef} className="h-1" />
 
-      {/* Upload button — bottom-left */}
+      {/* Hidden file input for upload */}
       <input
         ref={uploadInputRef}
         type="file"
@@ -266,24 +267,24 @@ export default function GalleryPage() {
           e.target.value = "";
         }}
       />
-      <button
-        type="button"
-        onClick={() => uploadInputRef.current?.click()}
-        disabled={uploading}
-        className={`fixed bottom-[calc(80px+env(safe-area-inset-bottom))] left-4 z-20 flex items-center gap-1.5 rounded-btn bg-surface-raised border border-border px-3 py-2 text-meta font-semibold text-ink shadow-overlay ${uploading ? "animate-pulse opacity-50" : ""}`}
-      >
-        <Icon name="add_photo_alternate" size={18} />
-        Upload
-      </button>
 
-      {/* Jump to date pill — bottom-right */}
+      {/* Upload FAB — bottom right */}
+      <FloatingActionButton
+        icon="add_photo_alternate"
+        onClick={() => uploadInputRef.current?.click()}
+        ariaLabel="Upload photo"
+        disabled={uploading}
+        className={`fixed right-6 bottom-24 z-40 ${uploading ? "animate-pulse" : ""}`}
+      />
+
+      {/* Jump to date — bottom left */}
       <button
         type="button"
         onClick={() => setJumpSheetOpen(true)}
-        className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] right-4 z-20 flex items-center gap-1.5 rounded-btn bg-surface-raised border border-border px-3 py-2 text-meta font-semibold text-ink shadow-overlay"
+        className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] left-4 z-20 flex h-11 items-center gap-1.5 rounded-full border bg-surface px-3 text-[12px] font-semibold uppercase tracking-widest text-ink-muted shadow-[0_4px_16px_rgba(0,0,0,0.5)]"
       >
         <Icon name="calendar_month" size={18} />
-        Jump to date
+        Jump
       </button>
 
       <BottomSheet
@@ -315,7 +316,7 @@ export default function GalleryPage() {
                     ?.scrollIntoView({ behavior: "smooth" });
                 }, 200);
               }}
-              className="flex h-11 w-full items-center justify-between px-1"
+              className="flex h-11 w-full items-center justify-between px-1 active:scale-[0.98] transition-transform"
             >
               <span className="text-base text-ink">
                 {formatDayDivider(day.iso)}

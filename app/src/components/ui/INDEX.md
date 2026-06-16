@@ -45,3 +45,10 @@ Shared visual primitives for the Hoppz reskin. Single source of truth — check 
 - **Props:** `icon` (Material Symbols name), `iconSize?` (default 24), `label?` (text below icon), `onClick?`, `ariaLabel`, `className?`
 - **What it does:** A translucent circular icon button with frosted glass effect (bg-black/40, backdrop-blur-md, border-white/10). 48px touch target. Optional label renders below in 12px semibold white text with drop shadow. Active state scales down to 95%.
 - **Used by:** `/social/camera` (back button, gallery button, flip camera button, review back button)
+
+## FloatingActionButton
+
+- **File:** `src/components/ui/FloatingActionButton.tsx`
+- **Props:** `icon` (Material Symbols name), `onClick?`, `ariaLabel`, `disabled?`, `className?`
+- **What it does:** Circular 56px floating action button with green accent background, deep shadow, rim-light top border, and filled icon in bg color. Active state scales to 95%. Matches the Stitch FAB pattern for primary page actions. Caller positions via className (e.g. `fixed right-6 bottom-24`).
+- **Used by:** `/social/gallery` (upload photo FAB)
