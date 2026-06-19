@@ -148,6 +148,27 @@ export function useChat() {
 
       channel.on(
         "postgres_changes",
+        { event: "DELETE", schema: "public", table: "v2_messages" },
+        (payload) => {
+          const old = payload.old as Partial<MessageRow>;
+          if (!old.id) return;
+          const id = old.id;
+          setMessages((prev) => prev.filter((m) => m.id !== id));
+          setReactions((prev) => {
+            const next = { ...prev };
+            delete next[id];
+            return next;
+          });
+          setReads((prev) => {
+            const next = { ...prev };
+            delete next[id];
+            return next;
+          });
+        }
+      );
+
+      channel.on(
+        "postgres_changes",
         { event: "INSERT", schema: "public", table: "v2_message_reactions" },
         (payload) => {
           const row = payload.new as ReactionRow;
@@ -423,6 +444,29 @@ export function useChat() {
     []
   );
 
+  const hardDeleteMessage = useCallback(async (messageId: string) => {
+    setMessages((prev) => prev.filter((m) => m.id !== messageId));
+    setReactions((prev) => {
+      const next = { ...prev };
+      delete next[messageId];
+      return next;
+    });
+    setReads((prev) => {
+      const next = { ...prev };
+      delete next[messageId];
+      return next;
+    });
+    const sb = getSupabase();
+    if (!sb) return;
+    try {
+      await sb.from("v2_message_reads").delete().eq("message_id", messageId);
+      await sb.from("v2_message_reactions").delete().eq("message_id", messageId);
+      await sb.from("v2_messages").delete().eq("id", messageId);
+    } catch {
+      // silent
+    }
+  }, []);
+
   return {
     messages,
     reactions,
@@ -435,6 +479,7 @@ export function useChat() {
     loadMore,
     sendMessage,
     deleteMessage,
+    hardDeleteMessage,
     markRead,
     addReaction,
     removeReaction,

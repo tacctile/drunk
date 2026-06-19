@@ -37,6 +37,7 @@ import { setRoleCookie, clearRoleCookie } from "@/lib/auth";
 import { getRoleForVoter } from "@/lib/roles";
 import { lsGetJson, lsSetJson, lsRemove } from "@/lib/storage";
 import { resetLocationStore } from "@/hooks/useLocations";
+import { ensureSuperadmin } from "@/lib/superadmin";
 
 const CITY_VOTE_CACHE = "bh2-city-vote-cache";
 const HOTEL_VOTE_CACHE = "bh2-hotel-vote-cache";
@@ -215,6 +216,7 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
     void refetch();
 
     const sb = getSupabase();
+    if (sb) void ensureSuperadmin(sb);
     let channel: ReturnType<NonNullable<typeof sb>["channel"]> | null = null;
     let timer: ReturnType<typeof setTimeout> | null = null;
     const queueRefetch = () => {

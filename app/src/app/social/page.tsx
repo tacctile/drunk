@@ -21,6 +21,7 @@ import {
   type MessageRow,
 } from "@/lib/chat";
 import { uploadChatImage } from "@/lib/storage";
+import { SUPERADMIN_VOTER_ID } from "@/lib/superadmin";
 
 function SenderAvatar({
   name,
@@ -77,6 +78,7 @@ function ChatInner() {
     markRead,
     addReaction,
     removeReaction,
+    hardDeleteMessage,
   } = useChat();
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -694,6 +696,20 @@ function ChatInner() {
               {emoji}
             </button>
           ))}
+          {voterId === SUPERADMIN_VOTER_ID && (
+            <button
+              type="button"
+              className="flex h-8 w-8 items-center justify-center text-red"
+              aria-label="Delete message (admin)"
+              onClick={() => {
+                void hardDeleteMessage(pickerMessageId);
+                setPickerMessageId(null);
+                setPickerPos(null);
+              }}
+            >
+              <Icon name="delete" size={20} />
+            </button>
+          )}
         </div>
       )}
 
