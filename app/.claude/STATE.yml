@@ -7,21 +7,18 @@ last_updated: 2026-06-19
 app_root: app/
 
 last_change: >
-  audit-fix: Rebuilt the 3s admin long-press hold mechanic from scratch after
-  two prior attempts still failed on device. useAdminHold.ts now uses Pointer
-  Events only: onPointerDown starts a 3000ms setTimeout; on fire it calls
-  router.push(destination) directly and sets a module-level didFire flag;
-  onPointerUp/onPointerLeave/onPointerCancel clear the timer. Removed onClick,
-  firedRef, e.preventDefault, onContextMenu, draggable, and all mouse/touch
-  handlers from the hook — it returns { holding, handlers } where handlers is
-  { onPointerDown, onPointerUp, onPointerLeave, onPointerCancel }. PlanNav and
-  HopNav now spread {...adminHold.handlers} on every nav button and handle
-  normal navigation with a SEPARATE onClick={() => router.push(href)} — no
-  conflict because the hold mechanic no longer touches onClick. ProfileAvatar
-  (third consumer, 500ms moderator hold) updated to the same separated pattern
-  to keep TypeScript green. Opacity pulse (anim-hold) preserved on all tabs.
+  audit-fix: Fixed /plan/admin redirecting away after the long-press because
+  the bh2-role cookie was not yet super_admin at navigation time. Middleware
+  now ALSO allows the hardcoded superadmin through independent of the role
+  cookie: the /plan/admin guard passes when roleCookie === "super_admin" OR a
+  bh2-voter-id cookie equals "00000000-0000-0000-0000-000000000001". auth.ts
+  gained mirrorVoterIdCookie(voterId) (same pattern as mirrorAuthCookie —
+  writes bh2-voter-id into a SameSite=Lax cookie; not a security boundary).
+  useGroupData's bootstrap useEffect calls mirrorVoterIdCookie(id) immediately
+  after getVoterId() so the cookie always tracks localStorage. The role cookie
+  path is unchanged for moderators and non-superadmin users.
 
-last_session: "audit-fix: rebuild admin long-press hold mechanic with Pointer Events"
+last_session: "audit-fix: middleware allows hardcoded superadmin voter_id into /plan/admin via mirrored cookie"
 
 verification:
   typecheck: pass        # npx tsc --noEmit — clean

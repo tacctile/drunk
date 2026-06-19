@@ -33,7 +33,7 @@ import {
   storeIdentity,
   storePinColor,
 } from "@/lib/identity";
-import { setRoleCookie, clearRoleCookie } from "@/lib/auth";
+import { setRoleCookie, clearRoleCookie, mirrorVoterIdCookie } from "@/lib/auth";
 import { getRoleForVoter } from "@/lib/roles";
 import { lsGetJson, lsSetJson, lsRemove } from "@/lib/storage";
 import { resetLocationStore } from "@/hooks/useLocations";
@@ -207,6 +207,7 @@ export function GroupDataProvider({ children }: { children: ReactNode }) {
   // Bootstrap identity, first fetch, realtime, and refresh-on-focus.
   useEffect(() => {
     const id = getVoterId();
+    mirrorVoterIdCookie(id);
     voterIdRef.current = id;
     setVoterId(id);
     const storedName = getStoredName();
