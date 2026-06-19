@@ -7,14 +7,16 @@ last_updated: 2026-06-19
 app_root: app/
 
 last_change: >
-  Superadmin seed name corrected: 'Nick V' → 'Knox V' in both name and
-  display_name fields of superadmin.ts. Verified all three superadmin guards
-  in admin/page.tsx (deleteUser early return, wipeAllUsers neq guard +
-  ensureSuperadmin call, delete button hidden). Verified ensureSuperadmin
-  called in useGroupData bootstrap useEffect. Deleted misplaced
-  .claude/CONTEXT.md, .claude/PROGRESS.md, .claude/STATE.yml from repo root.
+  audit-fix: Corrected superadmin seed name back to 'Nick V' in both name and
+  display_name fields of superadmin.ts. Hardcoded SUPER_ADMIN_ID fallback
+  ('00000000-0000-0000-0000-000000000001') in roles.ts so the env var is
+  optional. Extended admin hold (3s long-press → /plan/admin) to ALL bottom nav
+  tabs in PlanNav (desktop rail + mobile bar) and HopNav; previously only the
+  Results tab in PlanNav and the Plan button in HopNav had the hold.
+  Verified wipeAllUsers guards Nick V row on all 5 tables and calls
+  ensureSuperadmin — already correct, no changes needed.
 
-last_session: "audit-fix: superadmin Knox V rename + root .claude cleanup"
+last_session: "audit-fix: Nick V superadmin + hardcoded ID + nav hold on all tabs"
 
 verification:
   typecheck: pass        # pre-existing module warnings only
