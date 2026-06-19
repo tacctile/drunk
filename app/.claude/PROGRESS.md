@@ -1,6 +1,14 @@
 # Hoppz — Progress
 > Feature checklist for the v2 Next.js app (`app/`). Newest phase on top.
 
+### 2026-06-19 — audit-fix: Rebuild admin long-press hold mechanic from scratch
+
+**What:** The 3-second long-press still did not navigate to /plan/admin after two prior fix attempts, so the hold mechanic was rebuilt from scratch on Pointer Events. `useAdminHold.ts` now: `onPointerDown` starts a 3000ms `setTimeout`; on fire it calls `router.push(destination)` directly and sets a module-level `didFire` flag; `onPointerUp` / `onPointerLeave` / `onPointerCancel` clear the timer. All of `onClick`, `firedRef`, `e.preventDefault()`, `onContextMenu`, `draggable`, and the mouse/touch handlers were removed. The hook returns `{ holding, handlers }` with `handlers = { onPointerDown, onPointerUp, onPointerLeave, onPointerCancel }`. PlanNav and HopNav spread `{...adminHold.handlers}` on every nav button and handle normal navigation with a SEPARATE `onClick={() => router.push(href)}`.
+
+**Key Decisions:** The hold and the tap are now fully independent — the hold mechanic never touches `onClick`, so there is no synthetic-click conflict to swallow (the previous root cause). `didFire` is module-level per spec. ProfileAvatar (a third consumer using a 500ms moderator hold → /plan/moderator) was migrated to the same separated pattern (`{...modHold.handlers}` + plain `onClick={onClick}`) because the hook signature change made its old `holdClick` destructure uncompilable; this was the minimal change required to keep `tsc` green.
+
+**Status:** Complete. `npx tsc --noEmit` passes clean. Device verification of the 3s hold pending.
+
 ### 2026-06-19 — audit-fix: Fix admin long-press not navigating to /plan/admin
 
 **What:** The 3-second long-press on bottom nav icons was not navigating to /plan/admin. Root cause: NAV items in PlanNav (desktop rail + mobile bar) and HopNav were `<Link>` elements with all of `adminHold.handlers` spread on them. When the hold fires, `router.push('/plan/admin')` is called, but the subsequent synthetic click event on the Link triggers Next.js navigation to the tab's own `href`, overriding the admin navigation. Fix: converted all NAV `<Link>` items to `<button>` elements that call `holdClick(e)` then conditionally `router.push(href)` if not prevented — the same pattern already used by the Hopp/Plan cross-wing buttons.

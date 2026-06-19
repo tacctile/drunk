@@ -1,17 +1,20 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const ADMIN_HOLD_MS = 3000;
+
+// Module-level flag set true the moment a hold fires. Lets consuming
+// components know a long-press just triggered navigation if they need it.
+let didFire = false;
 
 export function useAdminHold(holdMs = ADMIN_HOLD_MS, destination = "/plan/admin") {
   const router = useRouter();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const firedRef = useRef(false);
   const [holding, setHolding] = useState(false);
 
-  const cancel = useCallback(() => {
+  const clear = useCallback(() => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
@@ -21,37 +24,25 @@ export function useAdminHold(holdMs = ADMIN_HOLD_MS, destination = "/plan/admin"
 
   const start = useCallback(() => {
     if (timerRef.current) return;
-    firedRef.current = false;
+    didFire = false;
     setHolding(true);
     timerRef.current = setTimeout(() => {
       timerRef.current = null;
-      firedRef.current = true;
+      didFire = true;
       setHolding(false);
       router.push(destination);
     }, holdMs);
   }, [router, holdMs, destination]);
 
-  useEffect(() => cancel, [cancel]);
-
-  const onClick = useCallback((e: MouseEvent) => {
-    if (firedRef.current) {
-      e.preventDefault();
-      firedRef.current = false;
-    }
-  }, []);
+  useEffect(() => clear, [clear]);
 
   return {
     holding,
     handlers: {
-      onMouseDown: start,
-      onTouchStart: start,
-      onMouseUp: cancel,
-      onMouseLeave: cancel,
-      onTouchEnd: cancel,
-      onTouchCancel: cancel,
-      onClick,
-      onContextMenu: (e: MouseEvent) => e.preventDefault(),
-      draggable: false,
+      onPointerDown: start,
+      onPointerUp: clear,
+      onPointerLeave: clear,
+      onPointerCancel: clear,
     },
   };
 }
