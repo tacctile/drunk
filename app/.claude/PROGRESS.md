@@ -1,6 +1,14 @@
 # Hoppz — Progress
 > Feature checklist for the v2 Next.js app (`app/`). Newest phase on top.
 
+### 2026-06-19 — audit-fix: Nick V superadmin + hardcoded ID + nav hold on all tabs
+
+**What:** Corrected superadmin seed name back to 'Nick V' (both name and display_name) in superadmin.ts. Hardcoded the SUPER_ADMIN_ID fallback UUID in roles.ts so the env var is optional — the superadmin works on any deploy without it set. Extended the 3-second admin hold (→ /plan/admin) to every bottom nav tab in PlanNav (both desktop rail and mobile bar) and HopNav; previously only the Results tab in PlanNav fired the hold. Verified wipeAllUsers in admin/page.tsx already guards all 5 tables with `.neq(voter_id, SUPERADMIN_VOTER_ID)` and calls ensureSuperadmin after — no change needed.
+
+**Key Decisions:** All NAV Link items in PlanNav now spread `adminHold.handlers` directly (including onClick to swallow post-hold release taps), matching the existing pattern on the Results tab. HopNav nav Links get the same treatment; the Plan cross-wing button already had the hold via `holdHandlers` + `planClick`. HOLD_CLASS applied to all tabs so native context menus don't hijack long-press.
+
+**Status:** Complete. TypeScript passes (pre-existing module warnings only).
+
 ### 2026-06-19 — audit-fix: Superadmin Knox V rename + root .claude cleanup
 
 **What:** Corrected superadmin seed name from 'Nick V' to 'Knox V' in both `name` and `display_name` fields of `app/src/lib/superadmin.ts`. Verified all three superadmin guards are present in `admin/page.tsx` (deleteUser early return, wipeAllUsers neq chain + ensureSuperadmin call, delete button hidden). Verified ensureSuperadmin is called in useGroupData bootstrap useEffect. Deleted three misplaced files from repo root `.claude/` (CONTEXT.md, PROGRESS.md, STATE.yml).

@@ -1,6 +1,6 @@
 export type UserRole = "super_admin" | "moderator" | null;
 
-const SUPER_ADMIN_ID = process.env.NEXT_PUBLIC_SUPER_ADMIN_ID ?? "";
+const SUPER_ADMIN_ID = process.env.NEXT_PUBLIC_SUPER_ADMIN_ID ?? '00000000-0000-0000-0000-000000000001';
 
 export function getRoleForVoter(voterId: string, roleField: string | null): UserRole {
   if (!voterId) return null;

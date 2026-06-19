@@ -46,9 +46,10 @@ export function HopNav() {
               key={tab.href}
               href={tab.href}
               aria-current={active ? "page" : undefined}
+              {...adminHold.handlers}
               className={`flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 text-label font-semibold transition-all ${
                 active ? "text-green font-bold" : "text-ink-muted"
-              }`}
+              } ${HOLD_CLASS} ${adminHold.holding ? "anim-hold" : ""}`}
             >
               <Icon name={tab.icon} filled={active} size={24} />
               {tab.label}
