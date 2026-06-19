@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 import { setLastWing } from "@/lib/auth";
@@ -31,6 +30,11 @@ export function PlanNav() {
   const inPlan = pathname.startsWith("/plan");
   if (!inPlan) return null;
 
+  const navClick = (e: MouseEvent, href: string) => {
+    holdClick(e);
+    if (!e.defaultPrevented) router.push(href);
+  };
+
   const hoppClick = (e: MouseEvent) => {
     holdClick(e);
     if (!e.defaultPrevented) {
@@ -46,19 +50,20 @@ export function PlanNav() {
         {NAV.map((item) => {
           const active = isActive(pathname, item.href);
           return (
-            <Link
+            <button
               key={item.href}
-              href={item.href}
+              type="button"
               title={item.label}
               aria-label={item.label}
               aria-current={active ? "page" : undefined}
-              {...adminHold.handlers}
+              {...holdHandlers}
+              onClick={(e: MouseEvent) => navClick(e, item.href)}
               className={`flex h-11 w-11 items-center justify-center rounded-btn transition ${
                 active ? "bg-accent-dim text-accent" : "text-ink-muted hover:bg-raised hover:text-ink"
               } ${HOLD_CLASS} ${adminHold.holding ? "anim-hold" : ""}`}
             >
               <Icon name={item.icon} filled={active} size={24} />
-            </Link>
+            </button>
           );
         })}
         <button
@@ -79,25 +84,27 @@ export function PlanNav() {
           {NAV.map((item) => {
             const active = isActive(pathname, item.href);
             return (
-              <Link
+              <button
                 key={item.href}
-                href={item.href}
+                type="button"
+                aria-label={item.label}
                 aria-current={active ? "page" : undefined}
-                {...adminHold.handlers}
+                {...holdHandlers}
+                onClick={(e: MouseEvent) => navClick(e, item.href)}
                 className={`flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 text-label font-semibold transition ${
                   active ? "text-accent" : "text-ink-muted"
                 } ${HOLD_CLASS} ${adminHold.holding ? "anim-hold" : ""}`}
               >
                 <Icon name={item.icon} filled={active} size={24} />
                 {item.label}
-              </Link>
+              </button>
             );
           })}
           <button
             type="button"
+            {...holdHandlers}
             onClick={hoppClick}
             aria-label="Hopp"
-            {...holdHandlers}
             className={`flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 bg-raised text-label font-semibold text-ink-dim transition ${HOLD_CLASS} ${adminHold.holding ? "anim-hold" : ""}`}
           >
             <Icon name="sports_bar" size={24} />

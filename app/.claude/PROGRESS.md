@@ -1,6 +1,14 @@
 # Hoppz — Progress
 > Feature checklist for the v2 Next.js app (`app/`). Newest phase on top.
 
+### 2026-06-19 — audit-fix: Fix admin long-press not navigating to /plan/admin
+
+**What:** The 3-second long-press on bottom nav icons was not navigating to /plan/admin. Root cause: NAV items in PlanNav (desktop rail + mobile bar) and HopNav were `<Link>` elements with all of `adminHold.handlers` spread on them. When the hold fires, `router.push('/plan/admin')` is called, but the subsequent synthetic click event on the Link triggers Next.js navigation to the tab's own `href`, overriding the admin navigation. Fix: converted all NAV `<Link>` items to `<button>` elements that call `holdClick(e)` then conditionally `router.push(href)` if not prevented — the same pattern already used by the Hopp/Plan cross-wing buttons.
+
+**Key Decisions:** The Hopp (PlanNav) and Plan (HopNav) cross-wing buttons already used the correct `<button>` + `router.push` pattern; extended that to all NAV items. Inline lambda `onClick={(e: MouseEvent) => navClick(e, href)}` uses explicit type annotation to avoid TS7006 implicit-any error on the `e` parameter.
+
+**Status:** Complete. TypeScript passes (pre-existing module warnings only).
+
 ### 2026-06-19 — audit-fix: Nick V superadmin + hardcoded ID + nav hold on all tabs
 
 **What:** Corrected superadmin seed name back to 'Nick V' (both name and display_name) in superadmin.ts. Hardcoded the SUPER_ADMIN_ID fallback UUID in roles.ts so the env var is optional — the superadmin works on any deploy without it set. Extended the 3-second admin hold (→ /plan/admin) to every bottom nav tab in PlanNav (both desktop rail and mobile bar) and HopNav; previously only the Results tab in PlanNav fired the hold. Verified wipeAllUsers in admin/page.tsx already guards all 5 tables with `.neq(voter_id, SUPERADMIN_VOTER_ID)` and calls ensureSuperadmin after — no change needed.
