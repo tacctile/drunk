@@ -22,6 +22,7 @@ import { useLocations } from "@/hooks/useLocations";
 import { MAX_FIRST_NAME_LENGTH, buildDisplayName, isValidPin } from "@/lib/identity";
 import { getRoleForVoter } from "@/lib/roles";
 import { getSupabase, safeSelect } from "@/lib/supabase";
+import { SUPERADMIN_VOTER_ID, ensureSuperadmin } from "@/lib/superadmin";
 
 interface AdminVoter {
   voter_id: string;
@@ -265,10 +266,16 @@ export default function AdminPage() {
   const [wipeBusy, setWipeBusy] = useState(false);
   const [wiped, setWiped] = useState(false);
   const wipedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [chatWipeOpen, setChatWipeOpen] = useState(false);
+  const [chatWipeText, setChatWipeText] = useState("");
+  const [chatWipeBusy, setChatWipeBusy] = useState(false);
+  const [chatWiped, setChatWiped] = useState(false);
+  const chatWipedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(
     () => () => {
       if (wipedTimer.current) clearTimeout(wipedTimer.current);
+      if (chatWipedTimer.current) clearTimeout(chatWipedTimer.current);
     },
     [],
   );
@@ -342,6 +349,7 @@ export default function AdminPage() {
 
   const deleteUser = useCallback(
     async (voterId: string) => {
+      if (voterId === SUPERADMIN_VOTER_ID) return;
       const sb = getSupabase();
       if (sb) {
         try {
@@ -379,11 +387,12 @@ export default function AdminPage() {
     const sb = getSupabase();
     if (sb) {
       try {
-        await sb.from("v2_locations").delete().neq("voter_id", NIL_UUID);
-        await sb.from("v2_availability").delete().neq("voter_id", NIL_UUID);
-        await sb.from("v2_hotel_votes").delete().neq("voter_id", NIL_UUID);
-        await sb.from("v2_city_votes").delete().neq("voter_id", NIL_UUID);
-        await sb.from("v2_voters").delete().neq("voter_id", NIL_UUID);
+        await sb.from("v2_locations").delete().neq("voter_id", NIL_UUID).neq("voter_id", SUPERADMIN_VOTER_ID);
+        await sb.from("v2_availability").delete().neq("voter_id", NIL_UUID).neq("voter_id", SUPERADMIN_VOTER_ID);
+        await sb.from("v2_hotel_votes").delete().neq("voter_id", NIL_UUID).neq("voter_id", SUPERADMIN_VOTER_ID);
+        await sb.from("v2_city_votes").delete().neq("voter_id", NIL_UUID).neq("voter_id", SUPERADMIN_VOTER_ID);
+        await sb.from("v2_voters").delete().neq("voter_id", NIL_UUID).neq("voter_id", SUPERADMIN_VOTER_ID);
+        await ensureSuperadmin(sb);
       } catch {
         // a partial wipe surfaces in the refreshed list
       }
@@ -395,6 +404,33 @@ export default function AdminPage() {
     setWiped(true);
     if (wipedTimer.current) clearTimeout(wipedTimer.current);
     wipedTimer.current = setTimeout(() => setWiped(false), WIPED_FLASH_MS);
+  };
+
+  const closeChatWipeSheet = () => {
+    if (chatWipeBusy) return;
+    setChatWipeOpen(false);
+    setChatWipeText("");
+  };
+
+  const wipeAllChat = async () => {
+    if (chatWipeBusy || chatWipeText !== "DELETE") return;
+    setChatWipeBusy(true);
+    const sb = getSupabase();
+    if (sb) {
+      try {
+        await sb.from("v2_message_reads").delete().neq("message_id", NIL_UUID);
+        await sb.from("v2_message_reactions").delete().neq("message_id", NIL_UUID);
+        await sb.from("v2_messages").delete().neq("id", NIL_UUID);
+      } catch {
+        // a partial wipe surfaces on next load
+      }
+    }
+    setChatWipeBusy(false);
+    setChatWipeOpen(false);
+    setChatWipeText("");
+    setChatWiped(true);
+    if (chatWipedTimer.current) clearTimeout(chatWipedTimer.current);
+    chatWipedTimer.current = setTimeout(() => setChatWiped(false), WIPED_FLASH_MS);
   };
 
   const statCells: { label: string; value: number | null }[] = [
@@ -474,12 +510,14 @@ export default function AdminPage() {
                       label={`Edit ${voterLabel(voter)}`}
                       onClick={() => setEditing(voter)}
                     />
-                    <IconButton
-                      name="delete"
-                      label={`Delete ${voterLabel(voter)}`}
-                      className="text-red"
-                      onClick={() => setDeleting(voter)}
-                    />
+                    {voter.voter_id !== SUPERADMIN_VOTER_ID && (
+                      <IconButton
+                        name="delete"
+                        label={`Delete ${voterLabel(voter)}`}
+                        className="text-red"
+                        onClick={() => setDeleting(voter)}
+                      />
+                    )}
                   </div>
                 </div>
               </div>
@@ -518,6 +556,19 @@ export default function AdminPage() {
             <Icon name="warning" size={20} />
             Wipe All Users
           </button>
+          <button
+            type="button"
+            onClick={() => setChatWipeOpen(true)}
+            className="btn w-full border border-red bg-raised text-red"
+          >
+            <Icon name="warning" size={20} />
+            Wipe All Chat Messages
+          </button>
+          {chatWiped && (
+            <p className="py-2 text-center text-base text-ink-muted" role="status">
+              All messages wiped.
+            </p>
+          )}
         </section>
       </div>
 
@@ -594,6 +645,43 @@ export default function AdminPage() {
             type="button"
             onClick={() => void wipeAllUsers()}
             disabled={wipeText !== "DELETE" || wipeBusy}
+            className="btn w-full bg-red text-bg hover:brightness-110"
+          >
+            Wipe Everything
+          </button>
+        </div>
+      </BottomSheet>
+
+      <BottomSheet open={chatWipeOpen} onClose={closeChatWipeSheet} label="Wipe all chat messages">
+        <div className="flex flex-col gap-3 px-1 pb-1">
+          <h2 className="text-title text-red">Wipe All Chat Messages</h2>
+          <p className="text-base font-normal text-ink-muted">
+            This permanently deletes every message, reaction, and read receipt. Cannot be undone.
+          </p>
+          <input
+            className="input"
+            style={{ height: 44 }}
+            placeholder="Type DELETE to confirm"
+            autoCapitalize="characters"
+            autoCorrect="off"
+            autoComplete="off"
+            spellCheck={false}
+            value={chatWipeText}
+            onChange={(e) => setChatWipeText(e.target.value)}
+            aria-label="Type DELETE to confirm"
+          />
+          <button
+            type="button"
+            onClick={closeChatWipeSheet}
+            disabled={chatWipeBusy}
+            className="flex h-11 w-full items-center justify-center text-base font-medium text-ink-muted"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => void wipeAllChat()}
+            disabled={chatWipeText !== "DELETE" || chatWipeBusy}
             className="btn w-full bg-red text-bg hover:brightness-110"
           >
             Wipe Everything

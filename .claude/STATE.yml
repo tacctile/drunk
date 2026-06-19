@@ -1,0 +1,62 @@
+session: feature-build
+branch: claude/nice-knuth-habt9e
+date: 2026-06-19
+
+completed_tasks:
+  - id: superadmin-protection
+    title: Superadmin voter record (Nick V / PIN "12")
+    status: done
+    files:
+      - app/src/lib/superadmin.ts (new)
+      - app/src/hooks/useGroupData.tsx (ensureSuperadmin call on cold load)
+    notes: >
+      SUPERADMIN_VOTER_ID = "00000000-0000-0000-0000-000000000001".
+      ensureSuperadmin upserts the Nick V row idempotently on every cold app load.
+      PIN "12" is bcrypt-hashed at runtime; role = "super_admin".
+
+  - id: admin-superadmin-guard
+    title: Block deletion of SUPERADMIN_VOTER_ID in admin page
+    status: done
+    files:
+      - app/src/app/plan/admin/page.tsx
+    notes: >
+      deleteUser has early return guard.
+      wipeAllUsers excludes superadmin via .neq() on all 5 tables.
+      ensureSuperadmin called after wipe to restore row.
+      Delete button hidden for superadmin voter card.
+
+  - id: chat-wipe-danger-zone
+    title: "Wipe All Chat Messages" in admin danger zone
+    status: done
+    files:
+      - app/src/app/plan/admin/page.tsx
+    notes: >
+      New BottomSheet with DELETE confirmation.
+      Deletes v2_message_reads, v2_message_reactions, v2_messages in FK order.
+      Shows "All messages wiped." flash for 4s after close.
+
+  - id: hard-delete-message
+    title: hardDeleteMessage in useChat + realtime DELETE listener
+    status: done
+    files:
+      - app/src/hooks/useChat.ts
+    notes: >
+      hardDeleteMessage removes reads+reactions first, then message row.
+      Added DELETE realtime listener for v2_messages so all clients update.
+      Exposed in useChat return value.
+
+  - id: superadmin-chat-delete
+    title: Superadmin hard-delete option on every message in chat
+    status: done
+    files:
+      - app/src/app/social/page.tsx
+    notes: >
+      Trash icon appended to reaction picker overlay when voterId === SUPERADMIN_VOTER_ID.
+      Calls hardDeleteMessage; message disappears entirely (no is_deleted placeholder).
+
+schema_notes:
+  - role column exists and is in use; included in superadmin upsert.
+  - Chat table names: v2_messages, v2_message_reads, v2_message_reactions.
+
+build_status: passing
+tsc_status: 0 new errors (pre-existing module resolution errors unchanged)
