@@ -7,18 +7,17 @@ last_updated: 2026-06-19
 app_root: app/
 
 last_change: >
-  audit-fix: Fixed /plan/admin redirecting away after the long-press because
-  the bh2-role cookie was not yet super_admin at navigation time. Middleware
-  now ALSO allows the hardcoded superadmin through independent of the role
-  cookie: the /plan/admin guard passes when roleCookie === "super_admin" OR a
-  bh2-voter-id cookie equals "00000000-0000-0000-0000-000000000001". auth.ts
-  gained mirrorVoterIdCookie(voterId) (same pattern as mirrorAuthCookie —
-  writes bh2-voter-id into a SameSite=Lax cookie; not a security boundary).
-  useGroupData's bootstrap useEffect calls mirrorVoterIdCookie(id) immediately
-  after getVoterId() so the cookie always tracks localStorage. The role cookie
-  path is unchanged for moderators and non-superadmin users.
+  feature-build: Added Knox V (PIN 12, voter_id ...0002) as a second hardcoded
+  superadmin alongside Nick V (...0001). superadmin.ts seeds both via a
+  SUPERADMIN_SEEDS loop and exports SUPERADMIN_VOTER_ID_2 + SUPERADMIN_VOTER_IDS.
+  roles.ts checks a SUPER_ADMIN_IDS list (both UUIDs + optional env id) in
+  getRoleForVoter/isSuperAdmin. Middleware allows either UUID into /plan/admin.
+  Admin page protects both ids from per-user delete, wipe-all, and the delete
+  button via isSuperAdmin; social chat admin delete uses isSuperAdmin too. Now
+  on main from prior sessions: the "Open Admin" button on the profile Me tab and
+  the bh2-voter-id cookie mirror. Sign in as Nick V or Knox V (PIN 12) for admin.
 
-last_session: "audit-fix: middleware allows hardcoded superadmin voter_id into /plan/admin via mirrored cookie"
+last_session: "feature-build: add Knox V as a second hardcoded superadmin (PIN 12)"
 
 verification:
   typecheck: pass        # npx tsc --noEmit — clean

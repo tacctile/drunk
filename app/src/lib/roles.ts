@@ -1,16 +1,27 @@
 export type UserRole = "super_admin" | "moderator" | null;
 
-const SUPER_ADMIN_ID = process.env.NEXT_PUBLIC_SUPER_ADMIN_ID ?? '00000000-0000-0000-0000-000000000001';
+// Hardcoded superadmin voter ids. Kept in sync with SUPERADMIN_SEEDS in
+// lib/superadmin.ts (and the matching list in middleware.ts, which can't import
+// from here without pulling bcrypt into the edge bundle). An optional env id is
+// appended so a deploy can name its own superadmin.
+const SUPER_ADMIN_IDS: string[] = [
+  "00000000-0000-0000-0000-000000000001", // Nick V
+  "00000000-0000-0000-0000-000000000002", // Knox V
+];
+const ENV_SUPER_ADMIN_ID = process.env.NEXT_PUBLIC_SUPER_ADMIN_ID;
+if (ENV_SUPER_ADMIN_ID && !SUPER_ADMIN_IDS.includes(ENV_SUPER_ADMIN_ID)) {
+  SUPER_ADMIN_IDS.push(ENV_SUPER_ADMIN_ID);
+}
 
 export function getRoleForVoter(voterId: string, roleField: string | null): UserRole {
   if (!voterId) return null;
-  if (SUPER_ADMIN_ID && voterId === SUPER_ADMIN_ID) return "super_admin";
+  if (isSuperAdmin(voterId)) return "super_admin";
   if (roleField === "moderator") return "moderator";
   return null;
 }
 
 export function isSuperAdmin(voterId: string): boolean {
-  return Boolean(SUPER_ADMIN_ID && voterId === SUPER_ADMIN_ID);
+  return Boolean(voterId) && SUPER_ADMIN_IDS.includes(voterId);
 }
 
 export function isModerator(roleField: string | null): boolean {

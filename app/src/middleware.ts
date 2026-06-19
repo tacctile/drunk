@@ -11,8 +11,15 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
+  // Hardcoded superadmin ids — kept in sync with lib/roles.ts / lib/superadmin.ts.
+  // Duplicated here so the edge middleware stays free of bcrypt imports.
+  const SUPER_ADMIN_IDS = [
+    "00000000-0000-0000-0000-000000000001", // Nick V
+    "00000000-0000-0000-0000-000000000002", // Knox V
+  ];
+
   if (pathname.startsWith("/plan/admin")) {
-    if (roleCookie !== "super_admin" && voterId !== "00000000-0000-0000-0000-000000000001") {
+    if (roleCookie !== "super_admin" && !(voterId && SUPER_ADMIN_IDS.includes(voterId))) {
       return NextResponse.redirect(new URL("/plan", request.url));
     }
   }
