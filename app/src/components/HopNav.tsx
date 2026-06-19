@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 import { setLastWing } from "@/lib/auth";
@@ -22,6 +21,11 @@ export function HopNav() {
   const adminHold = useAdminHold();
   const { onClick: holdClick, ...holdHandlers } = adminHold.handlers;
 
+  const navClick = (e: MouseEvent, href: string) => {
+    holdClick(e);
+    if (!e.defaultPrevented) router.push(href);
+  };
+
   const planClick = (e: MouseEvent) => {
     holdClick(e);
     if (!e.defaultPrevented) {
@@ -42,18 +46,20 @@ export function HopNav() {
         {NAV.map((tab) => {
           const active = pathname === tab.href;
           return (
-            <Link
+            <button
               key={tab.href}
-              href={tab.href}
+              type="button"
+              aria-label={tab.label}
               aria-current={active ? "page" : undefined}
-              {...adminHold.handlers}
+              {...holdHandlers}
+              onClick={(e: MouseEvent) => navClick(e, tab.href)}
               className={`flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 text-label font-semibold transition-all ${
                 active ? "text-green font-bold" : "text-ink-muted"
               } ${HOLD_CLASS} ${adminHold.holding ? "anim-hold" : ""}`}
             >
               <Icon name={tab.icon} filled={active} size={24} />
               {tab.label}
-            </Link>
+            </button>
           );
         })}
         <button

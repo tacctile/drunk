@@ -7,16 +7,18 @@ last_updated: 2026-06-19
 app_root: app/
 
 last_change: >
-  audit-fix: Corrected superadmin seed name back to 'Nick V' in both name and
-  display_name fields of superadmin.ts. Hardcoded SUPER_ADMIN_ID fallback
-  ('00000000-0000-0000-0000-000000000001') in roles.ts so the env var is
-  optional. Extended admin hold (3s long-press → /plan/admin) to ALL bottom nav
-  tabs in PlanNav (desktop rail + mobile bar) and HopNav; previously only the
-  Results tab in PlanNav and the Plan button in HopNav had the hold.
-  Verified wipeAllUsers guards Nick V row on all 5 tables and calls
-  ensureSuperadmin — already correct, no changes needed.
+  audit-fix: Fixed admin long-press not navigating to /plan/admin. Root cause:
+  NAV items in PlanNav (desktop rail + mobile bar) and HopNav were <Link>
+  elements with adminHold.handlers spread on them. After the 3s hold fires and
+  router.push('/plan/admin') is called, the subsequent synthetic click event on
+  the Link still triggers Next.js navigation to the tab's own href, overriding
+  the admin navigation. Fix: converted all NAV <Link> items to <button> elements
+  using the same router.push pattern already used by the Hopp/Plan cross-wing
+  buttons — holdClick(e) is called first; if not preventDefault'd, router.push
+  navigates to the tab's href. Normal taps work; hold taps swallow the click and
+  go to /plan/admin. Opacity pulse (anim-hold) preserved on all tabs.
 
-last_session: "audit-fix: Nick V superadmin + hardcoded ID + nav hold on all tabs"
+last_session: "audit-fix: fix admin long-press nav on all tabs"
 
 verification:
   typecheck: pass        # pre-existing module warnings only
