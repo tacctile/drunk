@@ -29,7 +29,6 @@ export function ProfileAvatar({
   const role = getRoleForVoter(voterId, myRow?.role ?? null);
   const isMod = role === "moderator";
   const modHold = useAdminHold(500, "/plan/moderator");
-  const { onClick: holdClick, ...holdHandlers } = modHold.handlers;
 
   useEffect(() => {
     const read = () => {
@@ -52,21 +51,12 @@ export function ProfileAvatar({
   const registered = profile.name.length > 0;
   const avatarUrl = myRow?.avatar_url ?? profile.avatarUrl;
 
-  const handleClick = (e: React.MouseEvent) => {
-    if (isMod) {
-      holdClick(e);
-      if (!e.defaultPrevented) onClick();
-    } else {
-      onClick();
-    }
-  };
-
   return (
     <button
       type="button"
       aria-label="Your profile"
-      {...(isMod ? holdHandlers : {})}
-      onClick={handleClick}
+      {...(isMod ? modHold.handlers : {})}
+      onClick={onClick}
       className={`flex h-11 w-11 flex-none items-center justify-center ${isMod ? HOLD_CLASS : ""} ${className}`}
     >
       {registered ? (

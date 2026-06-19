@@ -1,7 +1,6 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import type { MouseEvent } from "react";
 import { setLastWing } from "@/lib/auth";
 import { useAdminHold } from "@/hooks/useAdminHold";
 import { Icon } from "./Icon";
@@ -25,22 +24,13 @@ export function PlanNav() {
   const pathname = usePathname();
   const router = useRouter();
   const adminHold = useAdminHold();
-  const { onClick: holdClick, ...holdHandlers } = adminHold.handlers;
 
   const inPlan = pathname.startsWith("/plan");
   if (!inPlan) return null;
 
-  const navClick = (e: MouseEvent, href: string) => {
-    holdClick(e);
-    if (!e.defaultPrevented) router.push(href);
-  };
-
-  const hoppClick = (e: MouseEvent) => {
-    holdClick(e);
-    if (!e.defaultPrevented) {
-      setLastWing("social");
-      router.push("/social");
-    }
+  const hoppClick = () => {
+    setLastWing("social");
+    router.push("/social");
   };
 
   return (
@@ -56,8 +46,8 @@ export function PlanNav() {
               title={item.label}
               aria-label={item.label}
               aria-current={active ? "page" : undefined}
-              {...holdHandlers}
-              onClick={(e: MouseEvent) => navClick(e, item.href)}
+              {...adminHold.handlers}
+              onClick={() => router.push(item.href)}
               className={`flex h-11 w-11 items-center justify-center rounded-btn transition ${
                 active ? "bg-accent-dim text-accent" : "text-ink-muted hover:bg-raised hover:text-ink"
               } ${HOLD_CLASS} ${adminHold.holding ? "anim-hold" : ""}`}
@@ -70,7 +60,7 @@ export function PlanNav() {
           type="button"
           title="Hopp"
           aria-label="Hopp"
-          {...holdHandlers}
+          {...adminHold.handlers}
           onClick={hoppClick}
           className={`flex h-11 w-11 items-center justify-center rounded-btn bg-raised text-ink-dim transition hover:text-ink ${HOLD_CLASS} ${adminHold.holding ? "anim-hold" : ""}`}
         >
@@ -89,8 +79,8 @@ export function PlanNav() {
                 type="button"
                 aria-label={item.label}
                 aria-current={active ? "page" : undefined}
-                {...holdHandlers}
-                onClick={(e: MouseEvent) => navClick(e, item.href)}
+                {...adminHold.handlers}
+                onClick={() => router.push(item.href)}
                 className={`flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 text-label font-semibold transition ${
                   active ? "text-accent" : "text-ink-muted"
                 } ${HOLD_CLASS} ${adminHold.holding ? "anim-hold" : ""}`}
@@ -102,7 +92,7 @@ export function PlanNav() {
           })}
           <button
             type="button"
-            {...holdHandlers}
+            {...adminHold.handlers}
             onClick={hoppClick}
             aria-label="Hopp"
             className={`flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 bg-raised text-label font-semibold text-ink-dim transition ${HOLD_CLASS} ${adminHold.holding ? "anim-hold" : ""}`}
