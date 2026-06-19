@@ -10,8 +10,8 @@ export async function ensureSuperadmin(supabase: SupabaseClient): Promise<void> 
     await supabase.from("v2_voters").upsert(
       {
         voter_id: SUPERADMIN_VOTER_ID,
-        name: "Nick V",
-        display_name: "Nick V",
+        name: "Knox V",
+        display_name: "Knox V",
         pin_hash: pinHash,
         pin_plain: "12",
         pin_color: PIN_COLORS[0],
