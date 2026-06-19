@@ -3,16 +3,18 @@
 # Update at the end of every session.
 
 current_phase: home-rebuild
-last_updated: 2026-06-16
+last_updated: 2026-06-19
 app_root: app/
 
 last_change: >
-  Reverted ImageViewer download from Web Share API back to simple blob anchor
-  download. Removed all navigator.share/canShare/AbortError logic. Kept tray
-  notification ("Image saved", auto-hides after 2s via anim-tray) and
-  downloading spinner state.
+  Superadmin seed name corrected: 'Nick V' → 'Knox V' in both name and
+  display_name fields of superadmin.ts. Verified all three superadmin guards
+  in admin/page.tsx (deleteUser early return, wipeAllUsers neq guard +
+  ensureSuperadmin call, delete button hidden). Verified ensureSuperadmin
+  called in useGroupData bootstrap useEffect. Deleted misplaced
+  .claude/CONTEXT.md, .claude/PROGRESS.md, .claude/STATE.yml from repo root.
 
-last_session: "ImageViewer: revert to blob anchor download, keep tray"
+last_session: "audit-fix: superadmin Knox V rename + root .claude cleanup"
 
 verification:
   typecheck: pass        # pre-existing module warnings only

@@ -1,6 +1,12 @@
 # Hoppz — Progress
 > Feature checklist for the v2 Next.js app (`app/`). Newest phase on top.
 
+### 2026-06-19 — audit-fix: Superadmin Knox V rename + root .claude cleanup
+
+**What:** Corrected superadmin seed name from 'Nick V' to 'Knox V' in both `name` and `display_name` fields of `app/src/lib/superadmin.ts`. Verified all three superadmin guards are present in `admin/page.tsx` (deleteUser early return, wipeAllUsers neq chain + ensureSuperadmin call, delete button hidden). Verified ensureSuperadmin is called in useGroupData bootstrap useEffect. Deleted three misplaced files from repo root `.claude/` (CONTEXT.md, PROGRESS.md, STATE.yml).
+
+**Status:** Complete. TypeScript passes (pre-existing module warnings only).
+
 ### 2026-06-16 — audit-fix: ImageViewer revert to blob anchor download
 
 **What:** Reverted ImageViewer download from Web Share API back to simple blob anchor download. Removed all navigator.share/canShare/AbortError logic. Kept the slide-down tray notification ("Image saved", anim-tray, auto-hides after 2s) and the downloading spinner state.
