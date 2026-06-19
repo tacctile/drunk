@@ -38,6 +38,17 @@ export function mirrorAuthCookie(): void {
   }
 }
 
+/**
+ * Mirror the stored voter id into a cookie so the middleware can recognize the
+ * hardcoded superadmin before the role cookie is set. Same pattern as
+ * mirrorAuthCookie — not a security boundary.
+ */
+export function mirrorVoterIdCookie(voterId: string): void {
+  try {
+    document.cookie = `bh2-voter-id=${voterId}; path=/; SameSite=Lax`;
+  } catch {}
+}
+
 /** Drop the presence flag — called from clearIdentity on sign-out. */
 export function clearAuthCookie(): void {
   try {

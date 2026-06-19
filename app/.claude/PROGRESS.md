@@ -1,6 +1,14 @@
 # Hoppz — Progress
 > Feature checklist for the v2 Next.js app (`app/`). Newest phase on top.
 
+### 2026-06-19 — audit-fix: Middleware allows hardcoded superadmin into /plan/admin
+
+**What:** The 3s long-press fires and pushes to /plan/admin, but middleware immediately redirected back to /plan because the `bh2-role` cookie was not yet set to `super_admin` at navigation time (the role cookie is only written after the async refetch resolves). Fixed by making the /plan/admin guard ALSO allow the hardcoded superadmin through independent of the role cookie: it now passes when `roleCookie === "super_admin"` OR a `bh2-voter-id` cookie equals `"00000000-0000-0000-0000-000000000001"`. Added `mirrorVoterIdCookie(voterId)` to `lib/auth.ts` (same pattern as `mirrorAuthCookie` — writes `bh2-voter-id` into a `SameSite=Lax` cookie) and call it in `useGroupData`'s bootstrap useEffect right after `getVoterId()` so the cookie stays in sync with localStorage from first mount.
+
+**Key Decisions:** Mirroring the voter id into a cookie (rather than waiting on the role cookie) removes the timing dependency entirely — the superadmin is recognized on the very first protected navigation. The cookie is not a security boundary (matching the existing `bh2-auth` mirror); non-superadmin users still can't reach /plan/admin because their voter id won't match the hardcoded UUID and their role cookie won't be `super_admin`. The moderator guard (`/plan/moderator`) is untouched.
+
+**Status:** Complete. `npx tsc --noEmit` passes clean.
+
 ### 2026-06-19 — audit-fix: Rebuild admin long-press hold mechanic from scratch
 
 **What:** The 3-second long-press still did not navigate to /plan/admin after two prior fix attempts, so the hold mechanic was rebuilt from scratch on Pointer Events. `useAdminHold.ts` now: `onPointerDown` starts a 3000ms `setTimeout`; on fire it calls `router.push(destination)` directly and sets a module-level `didFire` flag; `onPointerUp` / `onPointerLeave` / `onPointerCancel` clear the timer. All of `onClick`, `firedRef`, `e.preventDefault()`, `onContextMenu`, `draggable`, and the mouse/touch handlers were removed. The hook returns `{ holding, handlers }` with `handlers = { onPointerDown, onPointerUp, onPointerLeave, onPointerCancel }`. PlanNav and HopNav spread `{...adminHold.handlers}` on every nav button and handle normal navigation with a SEPARATE `onClick={() => router.push(href)}`.
