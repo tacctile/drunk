@@ -202,6 +202,17 @@ export function ProfileBody({
 
               {role && <RoleCard role={role} />}
 
+              {role === "super_admin" && (
+                <button
+                  type="button"
+                  onClick={() => onNavigate("/plan/admin")}
+                  className="flex h-11 w-full items-center justify-center gap-2 rounded-btn border border-accent bg-accent-dim text-label font-semibold text-accent transition active:opacity-80"
+                >
+                  <Icon name="admin_panel_settings" size={20} />
+                  Open Admin
+                </button>
+              )}
+
               <IdentityCard
                 storedFirst={storedFirst}
                 storedInitial={storedInitial}
