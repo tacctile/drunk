@@ -1,6 +1,14 @@
 # Hoppz — Progress
 > Feature checklist for the v2 Next.js app (`app/`). Newest phase on top.
 
+### 2026-06-19 — feature-build: Second hardcoded superadmin (Knox V)
+
+**What:** Added Knox V (PIN 12, voter_id `...0002`) as a second hardcoded superadmin alongside Nick V (`...0001`). `superadmin.ts` now seeds both via a `SUPERADMIN_SEEDS` loop in `ensureSuperadmin` and exports `SUPERADMIN_VOTER_ID_2` + `SUPERADMIN_VOTER_IDS`. `roles.ts` recognizes a list `SUPER_ADMIN_IDS` (both UUIDs + optional `NEXT_PUBLIC_SUPER_ADMIN_ID`) — `getRoleForVoter`/`isSuperAdmin` now check membership. Middleware allows either UUID into `/plan/admin`. Admin page protects both from per-user delete (`isSuperAdmin`), the wipe-all neq chains (added `SUPERADMIN_VOTER_ID_2`), and the hidden delete button. Social chat's admin delete-message control uses `isSuperAdmin(voterId)`.
+
+**Key Decisions:** The two UUIDs are duplicated in `middleware.ts` (kept bcrypt-free for the edge runtime) and `roles.ts`; `superadmin.ts` owns the seed metadata (names/pins). Switched call sites from `=== SUPERADMIN_VOTER_ID` to `isSuperAdmin()` so any future superadmin id is covered in one place.
+
+**Status:** Complete. `npx tsc --noEmit` passes clean. To become admin, sign in as Nick V or Knox V (PIN 12) — the "Open Admin" button then appears on the profile Me tab.
+
 ### 2026-06-19 — audit-fix: Middleware allows hardcoded superadmin into /plan/admin
 
 **What:** The 3s long-press fires and pushes to /plan/admin, but middleware immediately redirected back to /plan because the `bh2-role` cookie was not yet set to `super_admin` at navigation time (the role cookie is only written after the async refetch resolves). Fixed by making the /plan/admin guard ALSO allow the hardcoded superadmin through independent of the role cookie: it now passes when `roleCookie === "super_admin"` OR a `bh2-voter-id` cookie equals `"00000000-0000-0000-0000-000000000001"`. Added `mirrorVoterIdCookie(voterId)` to `lib/auth.ts` (same pattern as `mirrorAuthCookie` — writes `bh2-voter-id` into a `SameSite=Lax` cookie) and call it in `useGroupData`'s bootstrap useEffect right after `getVoterId()` so the cookie stays in sync with localStorage from first mount.

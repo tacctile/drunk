@@ -20,9 +20,9 @@ import { cityById } from "@/data/cities";
 import { useGroupData } from "@/hooks/useGroupData";
 import { useLocations } from "@/hooks/useLocations";
 import { MAX_FIRST_NAME_LENGTH, buildDisplayName, isValidPin } from "@/lib/identity";
-import { getRoleForVoter } from "@/lib/roles";
+import { getRoleForVoter, isSuperAdmin } from "@/lib/roles";
 import { getSupabase, safeSelect } from "@/lib/supabase";
-import { SUPERADMIN_VOTER_ID, ensureSuperadmin } from "@/lib/superadmin";
+import { SUPERADMIN_VOTER_ID, SUPERADMIN_VOTER_ID_2, ensureSuperadmin } from "@/lib/superadmin";
 
 interface AdminVoter {
   voter_id: string;
@@ -349,7 +349,7 @@ export default function AdminPage() {
 
   const deleteUser = useCallback(
     async (voterId: string) => {
-      if (voterId === SUPERADMIN_VOTER_ID) return;
+      if (isSuperAdmin(voterId)) return;
       const sb = getSupabase();
       if (sb) {
         try {
@@ -387,11 +387,11 @@ export default function AdminPage() {
     const sb = getSupabase();
     if (sb) {
       try {
-        await sb.from("v2_locations").delete().neq("voter_id", NIL_UUID).neq("voter_id", SUPERADMIN_VOTER_ID);
-        await sb.from("v2_availability").delete().neq("voter_id", NIL_UUID).neq("voter_id", SUPERADMIN_VOTER_ID);
-        await sb.from("v2_hotel_votes").delete().neq("voter_id", NIL_UUID).neq("voter_id", SUPERADMIN_VOTER_ID);
-        await sb.from("v2_city_votes").delete().neq("voter_id", NIL_UUID).neq("voter_id", SUPERADMIN_VOTER_ID);
-        await sb.from("v2_voters").delete().neq("voter_id", NIL_UUID).neq("voter_id", SUPERADMIN_VOTER_ID);
+        await sb.from("v2_locations").delete().neq("voter_id", NIL_UUID).neq("voter_id", SUPERADMIN_VOTER_ID).neq("voter_id", SUPERADMIN_VOTER_ID_2);
+        await sb.from("v2_availability").delete().neq("voter_id", NIL_UUID).neq("voter_id", SUPERADMIN_VOTER_ID).neq("voter_id", SUPERADMIN_VOTER_ID_2);
+        await sb.from("v2_hotel_votes").delete().neq("voter_id", NIL_UUID).neq("voter_id", SUPERADMIN_VOTER_ID).neq("voter_id", SUPERADMIN_VOTER_ID_2);
+        await sb.from("v2_city_votes").delete().neq("voter_id", NIL_UUID).neq("voter_id", SUPERADMIN_VOTER_ID).neq("voter_id", SUPERADMIN_VOTER_ID_2);
+        await sb.from("v2_voters").delete().neq("voter_id", NIL_UUID).neq("voter_id", SUPERADMIN_VOTER_ID).neq("voter_id", SUPERADMIN_VOTER_ID_2);
         await ensureSuperadmin(sb);
       } catch {
         // a partial wipe surfaces in the refreshed list
@@ -510,7 +510,7 @@ export default function AdminPage() {
                       label={`Edit ${voterLabel(voter)}`}
                       onClick={() => setEditing(voter)}
                     />
-                    {voter.voter_id !== SUPERADMIN_VOTER_ID && (
+                    {!isSuperAdmin(voter.voter_id) && (
                       <IconButton
                         name="delete"
                         label={`Delete ${voterLabel(voter)}`}

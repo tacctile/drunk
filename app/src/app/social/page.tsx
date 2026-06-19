@@ -21,7 +21,7 @@ import {
   type MessageRow,
 } from "@/lib/chat";
 import { uploadChatImage } from "@/lib/storage";
-import { SUPERADMIN_VOTER_ID } from "@/lib/superadmin";
+import { isSuperAdmin } from "@/lib/roles";
 
 function SenderAvatar({
   name,
@@ -696,7 +696,7 @@ function ChatInner() {
               {emoji}
             </button>
           ))}
-          {voterId === SUPERADMIN_VOTER_ID && (
+          {isSuperAdmin(voterId) && (
             <button
               type="button"
               className="flex h-8 w-8 items-center justify-center text-red"
