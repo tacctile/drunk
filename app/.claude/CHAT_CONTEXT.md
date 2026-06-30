@@ -1,8 +1,8 @@
-# Bar Hoppers — Chat Context
+# Hoppz — Chat Context
 
 > Guide for Claude Chat when generating prompts for Claude Code, and for operating directly in conversation.
 >
-> Last Updated: 2026-06-16
+> Last Updated: 2026-06-30
 
 ---
 

@@ -1,6 +1,14 @@
 # Hoppz — Progress
 > Feature checklist for the v2 Next.js app (`app/`). Newest phase on top.
 
+### 2026-06-30 — non-code: Reconcile all .claude/ docs to live code + live schema
+
+**What:** Full documentation reconciliation. All `.claude/` context files were rewritten to match the actual source tree (103 files under `app/src/`) and the live Supabase schema (17 `v2_*` tables verified via MCP). Removed stale references to deleted files (usePlaces.ts, score.ts, geo.ts) and deleted architecture (TripPage, VotePage, DatesPage, ConstellationMap, WalkStrip, HotelCard). Updated routes from flat (`/cities`, `/calendar`, `/board`, `/locate`) to dual-wing (`/plan/*`, `/social/*`). Confirmed all "migration pending" items from STATE.yml (avatar_url, role, v2_voter_notes, v2_trip*, v2_messages, v2_message_reactions, v2_message_reads, v2_push_subscriptions) are present in the live schema. Migrated dated changelog entries from CONTEXT.md into PROGRESS.md.
+
+**Key Decisions:** ARCHITECTURE.md was rewritten (not replaced with a pointer) because it carries unique structural content (stack rationale, data flow, hook responsibilities) that doesn't belong in CONTEXT.md. CONTEXT.md stripped of all dated changelog and current-status lines — those live in PROGRESS.md and STATE.yml respectively.
+
+**Status:** Complete. Zero source code changes. Zero Supabase writes.
+
 ### 2026-06-19 — feature-build: Second hardcoded superadmin (Knox V)
 
 **What:** Added Knox V (PIN 12, voter_id `...0002`) as a second hardcoded superadmin alongside Nick V (`...0001`). `superadmin.ts` now seeds both via a `SUPERADMIN_SEEDS` loop in `ensureSuperadmin` and exports `SUPERADMIN_VOTER_ID_2` + `SUPERADMIN_VOTER_IDS`. `roles.ts` recognizes a list `SUPER_ADMIN_IDS` (both UUIDs + optional `NEXT_PUBLIC_SUPER_ADMIN_ID`) — `getRoleForVoter`/`isSuperAdmin` now check membership. Middleware allows either UUID into `/plan/admin`. Admin page protects both from per-user delete (`isSuperAdmin`), the wipe-all neq chains (added `SUPERADMIN_VOTER_ID_2`), and the hidden delete button. Social chat's admin delete-message control uses `isSuperAdmin(voterId)`.
@@ -21,7 +29,7 @@
 
 **What:** The 3-second long-press still did not navigate to /plan/admin after two prior fix attempts, so the hold mechanic was rebuilt from scratch on Pointer Events. `useAdminHold.ts` now: `onPointerDown` starts a 3000ms `setTimeout`; on fire it calls `router.push(destination)` directly and sets a module-level `didFire` flag; `onPointerUp` / `onPointerLeave` / `onPointerCancel` clear the timer. All of `onClick`, `firedRef`, `e.preventDefault()`, `onContextMenu`, `draggable`, and the mouse/touch handlers were removed. The hook returns `{ holding, handlers }` with `handlers = { onPointerDown, onPointerUp, onPointerLeave, onPointerCancel }`. PlanNav and HopNav spread `{...adminHold.handlers}` on every nav button and handle normal navigation with a SEPARATE `onClick={() => router.push(href)}`.
 
-**Key Decisions:** The hold and the tap are now fully independent — the hold mechanic never touches `onClick`, so there is no synthetic-click conflict to swallow (the previous root cause). `didFire` is module-level per spec. ProfileAvatar (a third consumer using a 500ms moderator hold → /plan/moderator) was migrated to the same separated pattern (`{...modHold.handlers}` + plain `onClick={onClick}`) because the hook signature change made its old `holdClick` destructure uncompilable; this was the minimal change required to keep `tsc` green.
+**Key Decisions:** The hold and the tap are now fully independent — the hold mechanic never touches `onClick`, so there is no synthetic-click conflict to swallow (the previous root cause). `didFire` is module-level per spec. ProfileAvatar (a third consumer using a 500ms moderator hold -> /plan/moderator) was migrated to the same separated pattern (`{...modHold.handlers}` + plain `onClick={onClick}`) because the hook signature change made its old `holdClick` destructure uncompilable; this was the minimal change required to keep `tsc` green.
 
 **Status:** Complete. `npx tsc --noEmit` passes clean. Device verification of the 3s hold pending.
 
@@ -35,7 +43,7 @@
 
 ### 2026-06-19 — audit-fix: Nick V superadmin + hardcoded ID + nav hold on all tabs
 
-**What:** Corrected superadmin seed name back to 'Nick V' (both name and display_name) in superadmin.ts. Hardcoded the SUPER_ADMIN_ID fallback UUID in roles.ts so the env var is optional — the superadmin works on any deploy without it set. Extended the 3-second admin hold (→ /plan/admin) to every bottom nav tab in PlanNav (both desktop rail and mobile bar) and HopNav; previously only the Results tab in PlanNav fired the hold. Verified wipeAllUsers in admin/page.tsx already guards all 5 tables with `.neq(voter_id, SUPERADMIN_VOTER_ID)` and calls ensureSuperadmin after — no change needed.
+**What:** Corrected superadmin seed name back to 'Nick V' (both name and display_name) in superadmin.ts. Hardcoded the SUPER_ADMIN_ID fallback UUID in roles.ts so the env var is optional — the superadmin works on any deploy without it set. Extended the 3-second admin hold (-> /plan/admin) to every bottom nav tab in PlanNav (both desktop rail and mobile bar) and HopNav; previously only the Results tab in PlanNav fired the hold. Verified wipeAllUsers in admin/page.tsx already guards all 5 tables with `.neq(voter_id, SUPERADMIN_VOTER_ID)` and calls ensureSuperadmin after — no change needed.
 
 **Key Decisions:** All NAV Link items in PlanNav now spread `adminHold.handlers` directly (including onClick to swallow post-hold release taps), matching the existing pattern on the Results tab. HopNav nav Links get the same treatment; the Plan cross-wing button already had the hold via `holdHandlers` + `planClick`. HOLD_CLASS applied to all tabs so native context menus don't hijack long-press.
 
@@ -89,14 +97,14 @@
 - [x] TopBar: Home button min 44px tap target, navigates to /home
 - [x] TopBar: Home button persists on all screens (via TopBar global render)
 - [x] Home: removed Quick Stats Row (4 horizontal stat chips)
-- [x] Home: removed Quick Actions grid (2×2 card grid)
+- [x] Home: removed Quick Actions grid (2x2 card grid)
 - [x] Home: removed Remote voter sub-row (merged into single avatar stack)
 - [x] Home: removed all overflow-x-auto (no horizontal scrolling)
 - [x] Home Section 1: Trip Anchor Card (rounded-card bg-surface border p-4 mx-4 mt-4)
 - [x] Home Section 1: Top City with walkGrade badge inline (grade color tokens)
 - [x] Home Section 1: Top Hotel from ranking[0] hotelPrefs[0] (highest tally)
 - [x] Home Section 1: Best Weekend date pair as two equal-width pills
-- [x] Home Section 1: Weekend pair label for Fri–Sat / Sat–Sun
+- [x] Home Section 1: Weekend pair label for Fri-Sat / Sat-Sun
 - [x] Home Section 1: Thin --border dividers between sub-sections
 - [x] Home Section 1: Empty states ("No votes yet", "No preference yet", "No dates yet")
 - [x] Home Section 2: Who's Going header (text-label uppercase text-ink-muted)
@@ -116,11 +124,11 @@
 - [x] Home Section 3: amDisabled opacity-40 pointer-events-none + "Disabled by admin."
 - [x] Home Section 3: "This only affects Hoppz." helper text
 - [x] Home Section 4: My Trip Actions (flex gap-3 px-4 pt-6 pb-32)
-- [x] Home Section 4: Vote pill — how_to_vote icon, accent/green states, → /plan/cities
-- [x] Home Section 4: Availability pill — event_available icon, accent/green states, → /plan/calendar
+- [x] Home Section 4: Vote pill — how_to_vote icon, accent/green states, -> /plan/cities
+- [x] Home Section 4: Availability pill — event_available icon, accent/green states, -> /plan/calendar
 - [x] Home: Kept inline bottom bar (Plan / Hopp tabs) as-is
 - [x] Home: No new Supabase queries (existing hooks only)
-- [x] Home: Every interactive element ≥44px tall
+- [x] Home: Every interactive element >=44px tall
 - [x] Home: Dark only, all existing CSS variable tokens
 - [x] Next.js build passes clean (44 routes)
 - [x] .claude/ files updated (STATE.yml, PROGRESS.md)
@@ -139,8 +147,8 @@
 - [x] useLocations: voterColors derived from useGroupData voters (removed redundant v2_voters fetch)
 - [x] useLocations: resetLocationStore() export added, called on sign-out
 - [x] useHopperz: note count useEffect depends on stable voterIds string
-- [x] Board SeeButton: h-8 → h-11 (44px minimum tap target)
-- [x] Admin back button: /social/locate → /plan
+- [x] Board SeeButton: h-8 -> h-11 (44px minimum tap target)
+- [x] Admin back button: /social/locate -> /plan
 - [x] Admin EditUserDialog first name: autoCapitalize="words"
 - [x] Moderator CrewCard first name: autoCapitalize="words"
 - [x] Chat input bar: aria-label on camera, upload, send buttons
@@ -159,7 +167,7 @@
 - [x] Camera: shutter centering verified (absolute left:50% translateX(-50%))
 - [x] Camera: icon styling verified (white + drop shadow, no bg fills)
 - [x] Camera: retake verified (video always mounted, overlay pattern)
-- [x] Camera: send + auto-save verified (upload → save → navigate)
+- [x] Camera: send + auto-save verified (upload -> save -> navigate)
 - [x] Camera: flip label verified ("Flip" below cameraswitch icon)
 - [x] Camera: back button verified (pre-capture top-left, post-capture absent)
 - [x] Chat: scroll implementation verified (rAF + scrollTop, overflow-y-scroll)
@@ -177,7 +185,7 @@
 - [x] Supabase: voter select includes avatar_url and role verified
 - [x] Supabase: overlayLocal includes both fields verified
 - [x] Supabase: refetch syncs avatar_url to localStorage verified
-- [x] ProfileAvatar: moderator 500ms long-press → /plan/moderator verified
+- [x] ProfileAvatar: moderator 500ms long-press -> /plan/moderator verified
 - [x] CONTEXT.md: localStorage contract updated (added bh2-hopperz-view)
 - [x] TypeScript check passes clean
 - [x] ESLint passes (only pre-existing warnings)
@@ -186,7 +194,7 @@
 
 ## Phase: Home Screen Dashboard Overhaul (2026-06-14)
 - [x] AppShell suppressNav: /home gets TopBar only (no PlanNav, no desktop flex)
-- [x] Trip status hero: planning mode (edit_location_alt icon, CTA → /plan/cities)
+- [x] Trip status hero: planning mode (edit_location_alt icon, CTA -> /plan/cities)
 - [x] Trip status hero: upcoming mode (city name, dates, countdown, hotels link)
 - [x] Trip status hero: active mode (green bg, city, dates, Open Hopp CTA)
 - [x] Countdown: "N days away" / "Tomorrow!" / "Today!" with accent/green coloring
@@ -195,11 +203,11 @@
 - [x] Who's In section: header with count, avatar row of on_trip members
 - [x] Who's In: remote sub-row with wifi icon overlay (14px, bottom-right)
 - [x] Who's In: empty state ("No crew yet — share the app with your crew.")
-- [x] Who's In: tap avatar → /plan/hopperz
+- [x] Who's In: tap avatar -> /plan/hopperz
 - [x] Who's In: if no members set status, all active voters shown as on_trip
 - [x] Quick actions: 2x2 grid (Vote, Availability, Chat, Locate)
-- [x] Quick actions: Vote completion state (green icon + "Vote Cast ✓")
-- [x] Quick actions: Availability completion state (green icon + "Dates Marked ✓")
+- [x] Quick actions: Vote completion state (green icon + "Vote Cast check")
+- [x] Quick actions: Availability completion state (green icon + "Dates Marked check")
 - [x] Quick actions: hover:bg-raised transition on all cards
 - [x] Home bottom bar: fixed, 64px + safe area, bg-surface, border-t
 - [x] Home bottom bar: Plan (map icon) + Hopp (sports_bar icon) with divider
@@ -214,7 +222,7 @@
 ## Phase: Moderator Admin Screen (2026-06-14)
 - [x] /plan/moderator route created (client component)
 - [x] Moderator access guard: redirects non-moderators to /plan
-- [x] Sticky header: back arrow → /plan, title "Crew Management"
+- [x] Sticky header: back arrow -> /plan, title "Crew Management"
 - [x] Section 1: Your Role card (RoleBadge md, permissions/restrictions columns)
 - [x] Section 2: TripSetupPanel (shared) with canClear=false
 - [x] Section 3: Crew Members (active voters, A-Z sorted)
@@ -234,7 +242,7 @@
 - [x] useAdminHold accepts destination parameter (default /plan/admin)
 - [x] TopBar hides on /plan/moderator (page has own header)
 - [x] MODERATOR_PERMISSIONS updated: "Edit user display names", "Reset user PINs"
-- [x] RBAC system complete (super_admin → admin, moderator → moderator screen)
+- [x] RBAC system complete (super_admin -> admin, moderator -> moderator screen)
 - [x] Middleware /plan/:path* already covers /plan/moderator — verified
 - [x] TypeScript check passes clean
 - [x] ESLint passes (only pre-existing warnings)
@@ -272,7 +280,7 @@
 - [x] VoterProfileSheet.tsx: status change buttons for own sheet
 - [x] VoterProfileSheet.tsx: status change buttons for super admin + moderator viewing others
 - [x] useHopperz.ts: tripStatus field on HopperzVoter
-- [x] useHopperz.ts: sort by status group (on_trip → remote → out, then A-Z)
+- [x] useHopperz.ts: sort by status group (on_trip -> remote -> out, then A-Z)
 - [x] hopperz/page.tsx: remote indicator (wifi icon + "Remote") in list view
 - [x] hopperz/page.tsx: out chip in list view
 - [x] hopperz/page.tsx: remote wifi icon in grid view
@@ -296,9 +304,9 @@
 - [x] Hopperz member count in page header
 - [x] Hopperz empty state (group icon + "No crew yet")
 - [x] Hopperz "You" row highlighted with bg-raised
-- [x] useHopperz hook: voters + locations + roles + note counts → HopperzVoter[]
+- [x] useHopperz hook: voters + locations + roles + note counts -> HopperzVoter[]
 - [x] useHopperz fetches v2_voter_notes count per voter on mount
-- [x] useHopperz sorted: you first, then display_name A–Z
+- [x] useHopperz sorted: you first, then display_name A-Z
 - [x] RoleBadge component (sm: 14px icon + 11px text, md: 16px icon + 13px text)
 - [x] RoleBadge: super_admin = crown + bg-accent-dim, moderator = shield + bg-green-dim
 - [x] RoleBadge imported into Hopperz page (list + grid)
@@ -315,7 +323,7 @@
 - [x] Hopperz onLocate handler: setLastWing("social") + router.push
 - [x] HopNav updated: flex row with vertical divider before cross-wing Plan tab
 - [x] HopNav Plan tab uses --ink-dim color
-- [x] Moderator 500ms long-press on ProfileAvatar → /plan/admin
+- [x] Moderator 500ms long-press on ProfileAvatar -> /plan/admin
 - [x] useAdminHold accepts optional holdMs parameter (default 3000)
 - [x] Admin page AdminVoter interface includes role field
 - [x] Admin page fetch select includes role column
@@ -333,7 +341,7 @@
 - [x] About tab: voter notes with add/delete (v2_voter_notes)
 - [x] Avatar component (src/components/Avatar.tsx) — photo or initials fallback
 - [x] AvatarCropper component (src/components/AvatarCropper.tsx) — canvas crop overlay
-- [x] Avatar upload flow: file picker → cropper → uploadAvatar → updateProfile
+- [x] Avatar upload flow: file picker -> cropper -> uploadAvatar -> updateProfile
 - [x] ProfileAvatar updated to use Avatar component with avatar_url support
 - [x] Chat SenderAvatar updated to use Avatar component with avatar_url
 - [x] src/lib/roles.ts — role system foundation (super_admin, moderator)
@@ -382,14 +390,14 @@
 - [x] No auto-prompt — permission requested only via profile toggle
 - [x] All Session A/B/C/D features verified intact (typecheck + lint + build pass clean)
 - [x] .claude/ files updated (CONTEXT.md, BUILD_INDEX.md, STATE.yml, PROGRESS.md)
-- [x] Chat foundation complete (Sessions A–E)
+- [x] Chat foundation complete (Sessions A-E)
 
 ## Phase: Chat Session D — Camera Capture + Send (2026-06-14)
 - [x] src/hooks/useCamera.ts — getUserMedia, flip, canvas capture, retake, permission/error
 - [x] src/app/social/camera/layout.tsx — bare layout (no HopShell, full-bleed camera)
 - [x] src/app/social/camera/page.tsx — full-screen camera: viewfinder, shutter, flip, post-capture
 - [x] Camera context detection via ?from=chat search param
-- [x] Post-capture from chat: upload → navigate /social?pendingImage=...
+- [x] Post-capture from chat: upload -> navigate /social?pendingImage=...
 - [x] Post-capture standalone: Send to Chat + Save to Device options
 - [x] Chat page handles pendingImage query param (auto-sends, clears URL)
 - [x] Camera icon in chat input bar wired to /social/camera?from=chat
@@ -407,7 +415,7 @@
 - [x] sendMessage signature updated: (content: string | null, imageUrl?: string | null)
 - [x] Image display in chat bubbles — lazy loading, aspect-ratio 4/3 placeholder, pt-1 spacing
 - [x] ImageViewer component — full-screen overlay, close/download, escape, scroll lock, fade-in
-- [x] Tap image in bubble → opens ImageViewer (replaced console.log placeholder)
+- [x] Tap image in bubble -> opens ImageViewer (replaced console.log placeholder)
 - [x] Gallery page at /social/gallery — 3-col square grid, day grouping, sticky headers
 - [x] Gallery cursor pagination (30/page via GALLERY_PAGE_SIZE, IntersectionObserver sentinel)
 - [x] Gallery jump-to-date BottomSheet with date list and image counts
@@ -425,8 +433,8 @@
 - [x] Reaction pills below bubbles — grouped by emoji, count, own-reaction accent border
 - [x] One reaction per person per message (swap behavior via remove + add)
 - [x] Optimistic addReaction / removeReaction in useChat hook
-- [x] Read receipts: 1 reader → 16px avatar, 2 readers → overlapping avatars, 3+ → "Seen by X"
-- [x] "Seen by X" tap → BottomSheet with reader list (avatar + name + time)
+- [x] Read receipts: 1 reader -> 16px avatar, 2 readers -> overlapping avatars, 3+ -> "Seen by X"
+- [x] "Seen by X" tap -> BottomSheet with reader list (avatar + name + time)
 - [x] markRead fires optimistically (updates local reads state before server call)
 - [x] Reply: swipe right on mobile (40px threshold, 8px nudge animation)
 - [x] Reply: hover reply button on desktop (appears to side of bubble)
@@ -444,18 +452,18 @@
 - [x] Fixed double TopBar on /social/* routes (AppShell bypasses shell for social)
 - [x] Chat page at /social — full message list with grouping, day dividers, scroll behavior
 - [x] useChat hook — messages, reactions, reads, realtime (channel "hoppz-chat")
-- [x] Optimistic sendMessage with temp id → server id swap
+- [x] Optimistic sendMessage with temp id -> server id swap
 - [x] deleteMessage — optimistic is_deleted flip + server update
 - [x] markRead via IntersectionObserver (fire-and-forget upsert)
 - [x] Pagination — loadMore when scrolled near top, scroll position preserved
 - [x] Input bar — auto-grow textarea, Enter to send (desktop), camera/gallery/send buttons
 - [x] Empty state — sports_bar icon + "No messages yet" + "Send the first one"
-- [x] "New message ↓" pill when scrolled up and new messages arrive
+- [x] "New message" pill when scrolled up and new messages arrive
 - [x] lib/chat.ts — MessageRow, ReactionRow, ReadRow types; helpers; constants
 - [x] supabase.ts — re-exports MessageRow; adds MessageReadRow, MessageReactionRow
 - [x] typecheck and build pass clean
-- [x] Gallery button → file upload picker (Session C)
-- [x] Image expand → ImageViewer overlay (Session C)
+- [x] Gallery button -> file upload picker (Session C)
+- [x] Image expand -> ImageViewer overlay (Session C)
 - [x] Camera button wired to /social/camera?from=chat (Session D)
 
 ## Phase: Component Architecture Cleanup + Nav Refactor (2026-06-14)
@@ -483,7 +491,7 @@
 - [x] Hopp nav matches plan nav dimensions (64px + safe-area, grid-cols-4)
 
 ## Phase: Hoppz Rebrand + Login Overhaul (2026-06-14)
-- [x] Rebrand all "Bar Hoppers" → "Hoppz" (manifest, sw, offline page, layout,
+- [x] Rebrand all "Bar Hoppers" -> "Hoppz" (manifest, sw, offline page, layout,
       AppShell header, locate page, profile overlay, comments)
 - [x] Login screen defaults to Sign In (free-form name + initial + PIN lookup)
 - [x] Create account is now the secondary toggle option
@@ -500,7 +508,7 @@
 - [x] PWA `<head>` tags (manifest + apple-mobile-web-app meta + apple-touch-icon)
 - [x] Soft auth layer (`lib/auth.ts`): `isAuthenticated`, `getLastWing`/`setLastWing`,
       `bh2-auth` cookie mirror; `clearIdentity` clears the cookie
-- [x] Root cold-open gate (`app/page.tsx`) → `/home` or `/login`
+- [x] Root cold-open gate (`app/page.tsx`) -> `/home` or `/login`
 - [x] Login / create screen (`/login`) with shared `IdentityForm` + Install App
 - [x] Home wing picker (`/home`) — Plan a Trip / Hopp cards
 - [x] Plan wing (`/plan/*`) — layout sets last wing; existing pages relocated
@@ -508,13 +516,91 @@
 - [x] Pathname-aware AppShell — TopBar + PlanNav scoped to `/plan/*`
 - [x] Auth-guard middleware (`src/middleware.ts`) over `/home`, `/plan/*`, `/social/*`
 
-## Earlier — v2 rebuild (Next.js)
-- [x] Cities walkability index + sort
-- [x] City detail (Hotels / Bars / Food) + Google Maps venue pins
-- [x] City + hotel voting (PIN identity, optimistic, offline fallback)
-- [x] Availability (My Dates) + The Board (group results)
-- [x] Locate — live group map with location sharing
-- [x] Profile overlay + admin
+## Earlier — v2 rebuild sessions (2026-06-12)
+
+### 2026-06-12 — feature-build: Admin disable/enable + single-device broadcast
+
+**What:** Admin user disable/enable via is_active column, disabled users excluded from every group view, single-device location broadcasting via session_id. Admin cards gained Active/Disabled chip toggle (optimistic, no confirm). The is_active filter pattern established for all group-facing queries. Disabled users' location sharing locked off (amDisabled in useLocations).
+
+**Status:** Complete.
+
+### 2026-06-12 — feature-build: City map focus + sharing default
+
+**What:** Four city-detail map features (venue pin sizing, venue row tap -> map focus, Show All button, your-own-location dot) plus sharing-default-on for registered users. Sharing state moved to module-scoped shared store in useLocations. getInitials moved to lib/colors.ts.
+
+**Status:** Complete.
+
+### 2026-06-12 — feature-build: Locate polish + shared avatar
+
+**What:** Location Options converted from BottomSheet to Dialog with drafted edits (Save/Cancel instead of immediate writes — one sanctioned exception). People strip collapsible with Hide bar + floating handle. ProfileAvatar extracted to shared component. Floating-pill radius unified at 8px.
+
+**Status:** Complete.
+
+### 2026-06-12 — feature-build: Locate layout rebuild
+
+**What:** Locate screen rebuilt with full-bleed map + right-side people strip overlay + single "Location Options" pill in normal flow. Old bottom drawer (drag handle, pointer drag handlers) completely deleted. Pin taps no longer interactive (clickable: false).
+
+**Status:** Complete.
+
+### 2026-06-12 — feature-build: Admin hardening + back-nav
+
+**What:** ProfileOverlay back-button interception (dummy history entry + popstate). Admin user cards made always-visible (eyeball toggle deleted). Cascade delete fixed (v2_voters anon DELETE RLS policy added). Counter-based scroll lock (lib/scrollLock.ts). Danger Zone wipe-all section added.
+
+**Status:** Complete.
+
+### 2026-06-12 — feature-build: Profile overlay (Prompt 3)
+
+**What:** New ProfileOverlay component — full-screen sheet from avatar tap. Five sections: avatar + member-since, my vote card, my availability card, location sharing toggle, confirm-then-change identity form, switch identity sign-out. useGroupData gained updateProfile and signOut. v2_voters.pin_plain column added.
+
+**Status:** Complete.
+
+### 2026-06-12 — feature-build: Avatar and locate polish (Prompt 2)
+
+**What:** AppShell wordmark bar gained ProfileAvatar (36px circle, initials on pin_color). Locate options simplified to two sections (Sharing + Visibility). People panel rows redesigned (single-line, pin-color fill). Color picker deleted everywhere.
+
+**Status:** Complete.
+
+### 2026-06-12 — feature-build: Pin color foundation
+
+**What:** Auto-assigned pin colors via 25-color pool in lib/colors.ts. v2_voters.pin_color column added. createIdentity assigns color by registration order. signIn caches color. Color picker deleted from useLocations and locate page.
+
+**Status:** Complete.
+
+### 2026-06-12 — feature-build: Locate and admin
+
+**What:** Fourth tab "Locate" added. Full-screen dark map with person pins from v2_locations realtime. Controls card for sharing toggle + mute list. Hidden admin screen via 3s long-press. Admin: user cards, edit modal, cascade delete, trip resets, active locations, data health grid. v2_locations table created.
+
+**Status:** Complete.
+
+### 2026-06-12 — feature-build: Surgical polish
+
+**What:** Board columns always side-by-side (removed <480px stacking). Wordmark bar fully opaque (removed bg/90 backdrop-blur). Nav renames: Calendar -> Availability, The Board -> Results.
+
+**Status:** Complete.
+
+### 2026-06-12 — feature-build: Simplification
+
+**What:** NamePrompt consolidated to single-screen modal (no steps). The Board rebuilt: two equal columns (Top Cities + Hot Dates), top-3 hotel section for leading city, "Not you?" switcher.
+
+**Status:** Complete.
+
+### 2026-06-12 — feature-build: Foundation fixes
+
+**What:** Identity system changed to name + last initial + 2-digit PIN (bcryptjs). Sign-in via roster dropdown + PIN verify. Hotel preference changed to star toggle. Map pins read venue lat/lng (null = no pin). All geocoding deleted. Board rebuilt with standings + hot dates + hotel sub-rows.
+
+**Status:** Complete.
+
+### 2026-06-12 — feature-build: Venue data layer flip
+
+**What:** Venue data flipped to Supabase-primary (usePlaces.ts deleted, useVenues.ts created). Places Nearby Search removed. Maps loader no longer loads places library. All external links removed (addresses are plain text). City detail sticky header made opaque. City list gained sticky column header. Map pins diffed by venue id with zoom-gated name labels.
+
+**Status:** Complete.
+
+### 2026-06-12 — feature-build: Ground-up UI/UX rebuild
+
+**What:** Complete v2 rebuild. Three-tab IA (Cities / Calendar / The Board). Walkability index with hardcoded scores/grades/districts. City detail with dark map + Google Places venue tabs. Personal tri-state calendar. Board with heat map + vote standings. Deleted: Trip dashboard, /vote flow, /dates page, WalkStrip, ConstellationMap, CityCard, HotelCard, VenueRow, VoterAvatars, Stars, score.ts, geo.ts.
+
+**Status:** Complete.
 
 ## Backlog
 - [ ] Real PNG app icons (192 / 512 / 180)

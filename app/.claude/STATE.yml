@@ -2,37 +2,33 @@
 # Companion to CONTEXT.md / ARCHITECTURE.md / BUILD_INDEX.md.
 # Update at the end of every session.
 
-current_phase: home-rebuild
-last_updated: 2026-06-19
+current_phase: docs-reconciled
+last_updated: 2026-06-30
 app_root: app/
 
 last_change: >
-  feature-build: Added Knox V (PIN 12, voter_id ...0002) as a second hardcoded
-  superadmin alongside Nick V (...0001). superadmin.ts seeds both via a
-  SUPERADMIN_SEEDS loop and exports SUPERADMIN_VOTER_ID_2 + SUPERADMIN_VOTER_IDS.
-  roles.ts checks a SUPER_ADMIN_IDS list (both UUIDs + optional env id) in
-  getRoleForVoter/isSuperAdmin. Middleware allows either UUID into /plan/admin.
-  Admin page protects both ids from per-user delete, wipe-all, and the delete
-  button via isSuperAdmin; social chat admin delete uses isSuperAdmin too. Now
-  on main from prior sessions: the "Open Admin" button on the profile Me tab and
-  the bh2-voter-id cookie mirror. Sign in as Nick V or Knox V (PIN 12) for admin.
+  non-code: Reconciled all .claude/ context files against live code and
+  Supabase schema. Rewrote CONTEXT.md, ARCHITECTURE.md, BUILD_INDEX.md,
+  PROGRESS.md, MASTER_CONTEXT.md. Updated CHAT_CONTEXT.md and
+  COMPLETION_TEMPLATES.md (name + date). Removed all references to deleted
+  components (TripPage, VotePage, DatesPage, WalkStrip, ConstellationMap,
+  score.ts, geo.ts, usePlaces.ts), old flat routes (/cities, /calendar,
+  /board, /locate), stale "Bar Hoppers" branding, and the "light mode
+  equally finished" claim. All 17 v2_* tables verified present in live
+  schema. Zero source code changes. Zero Supabase writes.
 
-last_session: "feature-build: add Knox V as a second hardcoded superadmin (PIN 12)"
+last_session: "non-code: reconcile all .claude/ docs to match live code and schema"
 
 verification:
-  typecheck: pass        # npx tsc --noEmit — clean
-  lint: pass             # pre-existing warnings only
-  build: pass            # next build — all routes compiled
+  typecheck: not-run      # non-code session — no source changes
+  lint: not-run
+  build: not-run
 
 known_issues:
   - App icons are placeholders — public/icons/ needs real PNGs
     (icon-192.png, icon-512.png, apple-touch-icon.png) before install looks right.
   - VAPID keys not yet generated — run npx web-push generate-vapid-keys and add
     to .env.local + Vercel env vars before push notifications will work.
-  - v2_voter_notes table needs to be created in Supabase (migration pending).
-  - v2_voters avatar_url and role columns need to be added in Supabase (migration pending).
-  - v2_trip, v2_trip_hotels, v2_trip_hotel_assignments, v2_trip_members tables
-    need to be created in Supabase (migration pending).
 
 next_up:
   - Wire push notification triggers (new message, reaction, etc.)
