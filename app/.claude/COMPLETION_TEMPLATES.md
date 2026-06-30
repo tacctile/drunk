@@ -1,9 +1,9 @@
-# Bar Hoppers — Completion Templates
+# Hoppz — Completion Templates
 
 > Every Claude Code session ends with a completion report in this format.
 > Declare session type at the START of every session.
 >
-> Last Updated: 2026-06-16
+> Last Updated: 2026-06-30
 
 ---
 
